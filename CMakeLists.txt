@@ -1,9 +1,9 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 
 ## CUSTOMISE
 
 # Define the application name and version.
-project (fastq_to_fasta VERSION 1.0.0)
+project (jstmap VERSION 0.0.1 LANGUAGES CXX)
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -27,10 +27,16 @@ set (FontBold "${Esc}[1m")
 set (FontReset "${Esc}[m")
 
 # Dependency: SeqAn3.
-find_package (SeqAn3 QUIET REQUIRED HINTS lib/seqan3/build_system)
+find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
 
-add_subdirectory (src)
-message (STATUS "${FontBold}You can run `make` to build the application.${FontReset}")
+# Dependency: SeqAn.
+set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
+find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
+
+## APPLICATION
+
+add_subdirectory (jstmap-index)
+add_subdirectory (jstmap)
 
 ## DOCUMENTATION
 

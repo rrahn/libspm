@@ -32,9 +32,10 @@ macro (add_app_test test_filename test_alternative)
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
     get_filename_component (target "${source_file}" NAME_WE)
 
+    include_directories (${SEQAN_INCLUDE_DIRS})
     # Create the test target.
     add_executable (${target} ${test_filename})
-    target_link_libraries (${target} "${PROJECT_NAME}_lib" seqan3::seqan3 gtest_all pthread)
+    target_link_libraries (${target} "${PROJECT_NAME}_lib" seqan3::seqan3 gtest_all pthread ${SEQAN_LIBRARIES})
 
     # Add the test to its general target (cli or api).
     if (${test_alternative} STREQUAL "CLI_TEST")
