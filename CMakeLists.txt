@@ -33,9 +33,6 @@ find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
 find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
 
-add_subdirectory (src)
-message (STATUS "${FontBold}You can run `make` to build the application.${FontReset}")
-
 ## DOCUMENTATION
 
 add_subdirectory (doc EXCLUDE_FROM_ALL)
