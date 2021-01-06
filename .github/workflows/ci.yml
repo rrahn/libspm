@@ -145,13 +145,15 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             OS="Linux"
+            ARCH="x86_64"
           else
-            OS="Darwin"
+            OS="macos"
+            ARCH="universal"
           fi
           mkdir -p /tmp/cmake-download
-          wget --retry-connrefused --waitretry=30 --read-timeout=30 --timeout=30 --tries=20 --no-clobber --quiet --directory-prefix=/tmp/cmake-download/ https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${OS}-x86_64.tar.gz
-          tar -C /tmp/ -zxf /tmp/cmake-download/cmake-${CMAKE_VERSION}-${OS}-x86_64.tar.gz
-          echo "/tmp/cmake-${CMAKE_VERSION}-${OS}-x86_64/bin" >> $GITHUB_PATH # Only available in subsequent steps!
+          wget --retry-connrefused --waitretry=30 --read-timeout=30 --timeout=30 --tries=20 --no-clobber --quiet --directory-prefix=/tmp/cmake-download/ https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-${OS}-${ARCH}.tar.gz
+          tar -C /tmp/ -zxf /tmp/cmake-download/cmake-${CMAKE_VERSION}-${OS}-${ARCH}.tar.gz
+          echo "/tmp/cmake-${CMAKE_VERSION}-${OS}-${ARCH}/bin" >> $GITHUB_PATH # Only available in subsequent steps!
 
       - name: Get cached Doxygen
         if: matrix.build == 'documentation'
