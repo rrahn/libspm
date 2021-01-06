@@ -15,8 +15,11 @@ list (APPEND APP_TEMPLATE_EXTERNAL_PROJECT_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${
 list (APPEND APP_TEMPLATE_EXTERNAL_PROJECT_CMAKE_ARGS "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}")
 
 # Download and build Googletest module. The interface target 'gtest_all' contains all libs and header paths.
+find_path (JSTMAP_TEST_CMAKE_MODULE_DIR NAMES app_datasources.cmake HINTS "${CMAKE_CURRENT_LIST_DIR}/cmake/")
+list(APPEND CMAKE_MODULE_PATH "${JSTMAP_TEST_CMAKE_MODULE_DIR}")
+
 message (STATUS "Configuring tests. Googletest will be downloaded on demand only.")
-include (cmake/build_googletest.cmake)
+include (build_googletest)
 
 # Build tests just before their execution, because they have not been built with "all" target.
 # The trick is here to provide a cmake file as a directory property that executes the build command.
@@ -34,8 +37,16 @@ unset (CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
 unset (CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 unset (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
+# Define some helper interface libraries for the test
+add_library (jstmap_test INTERFACE)
+target_include_directories (jstmap_test INTERFACE "gtest_all")
+target_compile_options (jstmap_test INTERFACE "-pedantic"  "-Wall" "-Wextra" "-Werror")
+target_link_libraries (jstmap_test INTERFACE "gtest_all" "pthread")
+add_library (jstmap::test ALIAS jstmap_test)
+
 # A macro that adds an api or cli test.
-macro (add_app_test test_filename test_alternative)
+macro (add_app_test test_filename test_alternative target_dependencies)
+    enable_testing ()
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
     get_filename_component (target "${source_file}" NAME_WE)
@@ -43,7 +54,7 @@ macro (add_app_test test_filename test_alternative)
     include_directories (${SEQAN_INCLUDE_DIRS})
     # Create the test target.
     add_executable (${target} ${test_filename})
-    target_link_libraries (${target} jstmap::index seqan3::seqan3 gtest_all pthread)
+    target_link_libraries (${target} "jstmap::test" "${target_dependencies}")
 
     # Add the test to its general target (cli or api).
     if (${test_alternative} STREQUAL "CLI_TEST")
@@ -69,18 +80,16 @@ macro (add_app_test test_filename test_alternative)
 endmacro ()
 
 # A macro that adds an api test.
-macro (add_api_test test_filename)
-    add_app_test (${test_filename} API_TEST)
+macro (add_api_test test_filename target_dependencies)
+    add_app_test (${test_filename} API_TEST ${target_dependencies})
 endmacro ()
 
 # A macro that adds a cli test.
-macro (add_cli_test test_filename)
-    add_app_test (${test_filename} CLI_TEST)
+macro (add_cli_test test_filename target_dependencies)
+    add_app_test (${test_filename} CLI_TEST ${target_dependencies})
 endmacro ()
 
 # Fetch data and add the tests.
-include (data/datasources.cmake)
-add_subdirectory (api)
-add_subdirectory (cli)
+include (app_datasources)
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")
