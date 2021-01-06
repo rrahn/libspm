@@ -62,7 +62,9 @@ OUTPUT_DIRECTORY       = ${APP_TEMPLATE_DOXYGEN_OUTPUT_DIR}
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           = ${CMAKE_SOURCE_DIR}/include
+INCLUDE_PATH           = ${CMAKE_SOURCE_DIR}/jstmap         \
+                         ${CMAKE_SOURCE_DIR}/jstmap-index   \
+                         ${CMAKE_SOURCE_DIR}/libjst
 
 # The INPUT tag is used to specify the files and/or directories that contain
 # documented source files. You may enter file names like myfile.cpp or
@@ -70,8 +72,9 @@ INCLUDE_PATH           = ${CMAKE_SOURCE_DIR}/include
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ${CMAKE_SOURCE_DIR}/include        \
-                         ${CMAKE_SOURCE_DIR}/src            \
+INPUT                  = ${CMAKE_SOURCE_DIR}/jstmap         \
+                         ${CMAKE_SOURCE_DIR}/jstmap-index   \
+                         ${CMAKE_SOURCE_DIR}/libjst         \
                          ${CMAKE_SOURCE_DIR}/LICENSE.md     \
 
 # The STRIP_FROM_PATH tag can be used to strip a user-defined part of the path.
