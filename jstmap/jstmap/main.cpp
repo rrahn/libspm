@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------------------------------
-// Copyright (c) 2006-2019, Knut Reinert & Freie Universität Berlin
-// Copyright (c) 2016-2019, Knut Reinert & MPI für molekulare Genetik
+// Copyright (c) 2006-2021, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2021, Knut Reinert & MPI für molekulare Genetik
 // This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
@@ -18,17 +18,14 @@ namespace jstmap
 
 struct tool_names
 {
-    static const std::string base;
-    static const std::string index;
+    inline static const std::string base{"jstmap"};
+    inline static const std::string index{"index"};
 
     static std::string subparser_name_for(std::string_view subcommand)
     {
         return std::string{base.data()} + "-" + std::string{subcommand.data()};
     }
 };
-
-const std::string tool_names::base{"jstmap"};
-const std::string tool_names::index{"index"};
 
 } // namespace jstmap
 

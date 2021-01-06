@@ -35,6 +35,7 @@ find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
 
 ## APPLICATION
 
+add_subdirectory (libjst)
 add_subdirectory (jstmap-index)
 add_subdirectory (jstmap)
 
