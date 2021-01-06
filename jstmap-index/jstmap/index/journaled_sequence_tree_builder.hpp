@@ -6,21 +6,21 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides .
+ * \brief Provides build function to create the journaled sequence tree.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
 #pragma once
 
-#include <filesystem>
+#include <libjst/journaled_sequence_tree.hpp>
+
+#include <jstmap/index/global_types.hpp>
 
 namespace jstmap
 {
 
-struct index_options
-{
-    std::filesystem::path input_file{}; //!< The file path contianing the sequences to index.
-    std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
-};
+using jst_t = libjst::journaled_sequence_tree<std::vector<raw_sequence_t>>;
+
+jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> &&);
 
 }  // namespace jstmap

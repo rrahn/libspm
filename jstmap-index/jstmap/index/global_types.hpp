@@ -6,21 +6,20 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides .
+ * \brief Provides globally defined types for the index subprogram.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
 #pragma once
 
-#include <filesystem>
+#include <vector>
+
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
 
 namespace jstmap
 {
 
-struct index_options
-{
-    std::filesystem::path input_file{}; //!< The file path contianing the sequences to index.
-    std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
-};
+//!\brief The sequence type loaded from the disk.
+using raw_sequence_t = std::vector<seqan3::dna5>;
 
 }  // namespace jstmap
