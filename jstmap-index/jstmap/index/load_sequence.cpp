@@ -5,23 +5,26 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-/*!\file
- * \brief Provides the main entry point of the just_map indexer.
- * \author Rene Rahn <rene.rahn AT fu-berlin.de>
- */
+#include <seqan3/std/algorithm>
 
-#pragma once
+#include <seqan3/io/sequence_file/input.hpp>
 
-namespace seqan3
-{
-
-class argument_parser;
-
-} // namespace seqan3
+#include <jstmap/index/load_sequence.hpp>
 
 namespace jstmap
 {
 
-int index_main(seqan3::argument_parser &);
+std::vector<raw_sequence_t> load_sequences(std::filesystem::path const & sequence_file)
+{
+    std::vector<raw_sequence_t> sequences{};
+
+    seqan3::sequence_file_input fin{sequence_file.c_str()};
+    std::ranges::for_each(fin, [&] (auto const & sequence_record)
+    {
+        sequences.push_back(seqan3::get<seqan3::field::seq>(sequence_record));
+    });
+
+    return sequences;
+}
 
 } // namespace jstmap

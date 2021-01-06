@@ -5,22 +5,11 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-/*!\file
- * \brief Provides .
- * \author Rene Rahn <rene.rahn AT fu-berlin.de>
- */
+#include <gtest/gtest.h>
 
-#pragma once
+#include <jstmap/index/load_sequence.hpp>
 
-#include <filesystem>
-
-namespace jstmap
+TEST(jstmap_index, load_sequence)
 {
-
-struct index_options
-{
-    std::filesystem::path input_file{}; //!< The file path contianing the sequences to index.
-    std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
-};
-
-}  // namespace jstmap
+    //TODO: write me!
+}

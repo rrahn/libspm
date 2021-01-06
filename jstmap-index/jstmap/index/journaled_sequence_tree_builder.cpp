@@ -5,22 +5,14 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-/*!\file
- * \brief Provides .
- * \author Rene Rahn <rene.rahn AT fu-berlin.de>
- */
-
-#pragma once
-
-#include <filesystem>
+#include <jstmap/index/journaled_sequence_tree_builder.hpp>
 
 namespace jstmap
 {
 
-struct index_options
+jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences)
 {
-    std::filesystem::path input_file{}; //!< The file path contianing the sequences to index.
-    std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
-};
+    return jst_t{std::move(sequences)};
+}
 
 }  // namespace jstmap
