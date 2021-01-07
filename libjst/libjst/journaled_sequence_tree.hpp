@@ -20,8 +20,11 @@
 
 #include <cereal/types/vector.hpp>
 
+#include <seqan3/alphabet/concept.hpp>
+#include <seqan3/alphabet/gap/gapped.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/range/concept.hpp>
+#include <seqan3/range/views/convert.hpp>
 
 namespace libjst::no_adl
 {
@@ -97,18 +100,26 @@ public:
     template <typename alignment_t>
     void add(alignment_t && alignment)
     {
+        using alphabet_t = std::ranges::range_value_t<sequence_t>;
+        using gapped_alphabet_t = seqan3::gapped<alphabet_t>;
+
         auto & [ref, target] = alignment;
 
-        constexpr auto without_gap  = [] (char const c) -> bool { return c != '-'; };
+        constexpr auto out_gaps = [] (gapped_alphabet_t const c) -> bool { return c != seqan3::gap{}; };
 
-        auto pure_target_view = target | std::views::filter(without_gap);
-
-        if (!std::ranges::equal(ref | std::views::filter(without_gap), _reference))
+        if (!std::ranges::equal(ref | std::views::filter(out_gaps), _reference))
+        {
             throw std::invalid_argument{"The first aligned sequence must be equal to the reference sequence of this "
                                         "journaled sequence tree without the gaps."};
+        }
 
         sequence_t pure_target_sequence;
-        std::ranges::copy(target | std::views::filter(without_gap), std::cpp20::back_inserter(pure_target_sequence));
+        std::ranges::copy(target | std::views::filter(out_gaps)
+                                 | std::views::transform([](gapped_alphabet_t const c)
+                                   {
+                                        return c.template convert_to<alphabet_t>();
+                                   }),
+                          std::cpp20::back_inserter(pure_target_sequence));
         _sequences.push_back(std::move(pure_target_sequence));
     }
 
