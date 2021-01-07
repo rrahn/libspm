@@ -19,7 +19,7 @@
 namespace jstmap
 {
 
-using jst_t = libjst::journaled_sequence_tree<std::vector<raw_sequence_t>>;
+using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 
 jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> &&);
 

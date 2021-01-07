@@ -10,6 +10,8 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
+#include <cereal/archives/binary.hpp>
+
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
@@ -48,7 +50,10 @@ int index_main(seqan3::argument_parser & index_parser)
         auto sequences = load_sequences(options.input_file);
 
         libjst::journaled_sequence_tree tree = build_journaled_sequence_tree(std::move(sequences));
-        tree.save(options.output_file);
+
+        std::ofstream output_stream{options.output_file.c_str()};
+        cereal::BinaryOutputArchive binary_archive{output_stream};
+        tree.save(binary_archive);
     }
     catch (std::exception const & ex)
     {
