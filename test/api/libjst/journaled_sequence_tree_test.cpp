@@ -19,17 +19,38 @@
 
 #include <libjst/journaled_sequence_tree.hpp>
 
+using namespace std::literals;
+
 struct journaled_sequence_tree_fixture : public ::testing::Test
 {
     using sequence_t = std::string;
     using jst_t = libjst::journaled_sequence_tree<sequence_t>;
-    using alignment_t = std::pair<sequence_t, sequence_t>;
+
+    using aligned_sequence_t = std::vector<seqan3::gapped<char>>;
+    using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
 
     sequence_t reference{"aaaabbbbcccc"};
 
-    alignment_t alignment1{"aaaabbbbcccc-----", "------------aabbcc"};
-    alignment_t alignment2{"aaaabbbbcccc-----", "------------abcabc"};
-    alignment_t alignment3{"aaaa--bbbb--cccc--", "----cc----aa----bb"};
+    alignment_t alignment1{make_gapped("aaaabbbbcccc------"sv), make_gapped("------------aabbcc"sv)};
+    alignment_t alignment2{make_gapped("aaaabbbbcccc------"sv), make_gapped("------------abcabc"sv)};
+    alignment_t alignment3{make_gapped("aaaa--bbbb--cccc--"sv), make_gapped("----cc----aa----bb"sv)};
+
+    static aligned_sequence_t make_gapped(std::string_view const seq)
+    {
+        aligned_sequence_t tmp{};
+        tmp.reserve(seq.size());
+
+        std::for_each(seq.begin(), seq.end(), [&] (char const c)
+        {
+            if (c == '-')
+                tmp.emplace_back(seqan3::gap{});
+            else
+                tmp.emplace_back(c);
+        });
+
+        return tmp;
+    }
+
 };
 
 TEST_F(journaled_sequence_tree_fixture, construction)
@@ -75,7 +96,7 @@ TEST_F(journaled_sequence_tree_fixture, add)
     jst.add(alignment3); // Yes we can verify that the first sequence is the
     EXPECT_EQ(jst.size(), 3u);
 
-    alignment_t alignment_wrong_reference{"aaaabbbbccc-----x", alignment1.second};
+    alignment_t alignment_wrong_reference{make_gapped("aaaabbbbccc-----x"sv), alignment1.second};
     EXPECT_THROW(jst.add(alignment_wrong_reference), std::invalid_argument);
 
     alignment_t alignment_wrong_order{alignment1.second, alignment1.first};
