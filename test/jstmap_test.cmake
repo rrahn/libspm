@@ -38,8 +38,11 @@ unset (CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 unset (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
 # Define some helper interface libraries for the test
+find_path (SEQAN3_TEST_INCLUDE_DIR NAMES seqan3/test/expect_range_eq.hpp
+                                   HINTS "${CMAKE_SOURCE_DIR}/lib/seqan3/test/include/")
+
 add_library (jstmap_test INTERFACE)
-target_include_directories (jstmap_test INTERFACE "gtest_all")
+target_include_directories (jstmap_test INTERFACE "gtest_all" "${SEQAN3_TEST_INCLUDE_DIR}")
 target_compile_options (jstmap_test INTERFACE "-pedantic"  "-Wall" "-Wextra" "-Werror")
 target_link_libraries (jstmap_test INTERFACE "gtest_all" "pthread")
 add_library (jstmap::test ALIAS jstmap_test)
@@ -91,5 +94,6 @@ endmacro ()
 
 # Fetch data and add the tests.
 include (app_datasources)
+include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")
