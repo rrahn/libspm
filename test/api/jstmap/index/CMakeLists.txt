@@ -5,3 +5,4 @@ macro (add_jstmap_index_test test_filename)
 endmacro ()
 
 add_jstmap_index_test (load_sequence_test.cpp)
+target_use_datasources (load_sequence_test FILES in.fasta)
