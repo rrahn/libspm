@@ -12,7 +12,9 @@ namespace jstmap
 
 jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences)
 {
-    return jst_t{std::move(sequences)};
+    assert(!sequences.empty());
+
+    return jst_t{std::move(sequences[0])};
 }
 
 }  // namespace jstmap
