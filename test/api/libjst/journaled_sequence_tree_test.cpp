@@ -103,11 +103,20 @@ TEST_F(journaled_sequence_tree_fixture, add)
     EXPECT_THROW(jst.add(alignment_wrong_order), std::invalid_argument);
 }
 
+// The test data serialised to disk.
+inline constexpr std::string_view expected_output =
+R"json({
+    "value0": "aaaabbbbcccc",
+    "value1": [
+        "aabbcc",
+        "abcabc",
+        "ccaabb"
+    ]
+})json";
+
 TEST_F(journaled_sequence_tree_fixture, save)
 {
-
     std::stringstream output_stream{};
-    cereal::JSONOutputArchive output_archive(output_stream);
 
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
@@ -116,15 +125,24 @@ TEST_F(journaled_sequence_tree_fixture, save)
     jst.add(alignment2);
     jst.add(alignment3);
 
-    jst.save(output_archive);
-
-    std::string_view expected_output = R"json({
-    "value0": "aaaabbbbcccc",
-    "value1": [
-        "aabbcc",
-        "abcabc",
-        "ccaabb"
-    ])json";
+    {
+        cereal::JSONOutputArchive output_archive(output_stream);
+        jst.save(output_archive);
+    }
 
     EXPECT_EQ(output_stream.str(), expected_output);
+}
+
+TEST_F(journaled_sequence_tree_fixture, load)
+{
+    std::stringstream archive_stream{expected_output.data()};
+    jst_t jst{};
+
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        jst.load(input_archive);
+    }
+
+    EXPECT_EQ(jst.size(), 3u);
+    EXPECT_EQ(jst.reference(), "aaaabbbbcccc"sv);
 }

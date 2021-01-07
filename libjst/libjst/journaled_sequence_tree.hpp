@@ -134,6 +134,18 @@ public:
     {
         archive(_reference, _sequences);
     }
+
+    /*!\brief Loads the journaled sequence tree from the given input archive.
+     *
+     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     *
+     * \param[in] archive The archive to serialise this object to.
+     */
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        archive(_reference, _sequences);
+    }
 };
 } // namespace libjst::no_adl
 
