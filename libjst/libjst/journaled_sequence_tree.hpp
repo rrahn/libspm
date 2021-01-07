@@ -23,26 +23,19 @@
 #include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/range/concept.hpp>
 
-namespace libjst
+namespace libjst::no_adl
 {
-
-// Whenever this is used inside of a function we will have automatically ADL.
-
-/*!\brief A referentially compressed sequence tree over collection of sequences.
- *
- * \tparam sequence_t The type of the sequences to store; must model seqan3::sequence.
- *
- * \details
- *
- * This class stores a collection of sequences in a referentially compressed way to tremendously reduce the
- * memory footprint for storing large collections of sequences with a high similarity. Sequences can be added by
- * adding an alignment between the stored reference sequence and the respective target sequence. This class further
- * supports a special cursor to enable an efficient, compression parallel traversal over the stored sequences.
- * This can be used in conjunction with any context based streaming algorithm to speed-up the search against large
- * collection of sequences.
- */
+//!\brief Specific class implementation in no_adl namespace to avoid ADL of template arguments.
 template <seqan3::sequence sequence_t>
 class journaled_sequence_tree
+{
+public:
+    class type;
+};
+
+//!\brief Implements the actual journaled sequence tree type.
+template <seqan3::sequence sequence_t>
+class journaled_sequence_tree<sequence_t>::type
 {
 private:
     sequence_t _reference; //!< The internal reference used for referential compression.
@@ -52,12 +45,12 @@ public:
     /*!\name Constructors, destructor and assignment
      * \{
      */
-    constexpr journaled_sequence_tree() = default; //!< Default.
-    constexpr journaled_sequence_tree(journaled_sequence_tree const &) = default; //!< Default.
-    constexpr journaled_sequence_tree(journaled_sequence_tree &&) = default; //!< Default.
-    constexpr journaled_sequence_tree & operator=(journaled_sequence_tree const &) = default; //!< Default.
-    constexpr journaled_sequence_tree & operator=(journaled_sequence_tree &&) = default; //!< Default.
-    ~journaled_sequence_tree() = default; //!< Default.
+    constexpr type() = default; //!< Default.
+    constexpr type(type const &) = default; //!< Default.
+    constexpr type(type &&) = default; //!< Default.
+    constexpr type & operator=(type const &) = default; //!< Default.
+    constexpr type & operator=(type &&) = default; //!< Default.
+    ~type() = default; //!< Default.
 
     /*!\brief Constructs the journaled sequence tree with a given reference sequence.
      *
@@ -70,7 +63,7 @@ public:
      * libjst::journaled_sequence_tree::reference member function to access the stored reference.
      * Thus, one can use this reference sequence as long as the journaled sequence tree is valid.
      */
-    journaled_sequence_tree(sequence_t && reference) : _reference{std::move(reference)}
+    type(sequence_t && reference) : _reference{std::move(reference)}
     {}
     //!\}
 
@@ -131,4 +124,24 @@ public:
         archive(_reference, _sequences);
     }
 };
+} // namespace libjst::no_adl
+
+namespace libjst
+{
+
+/*!\brief A referentially compressed sequence tree over collection of sequences.
+ *
+ * \tparam sequence_t The type of the sequences to store; must model seqan3::sequence.
+ *
+ * \details
+ *
+ * This class stores a collection of sequences in a referentially compressed way to tremendously reduce the
+ * memory footprint for storing large collections of sequences with a high similarity. Sequences can be added by
+ * adding an alignment between the stored reference sequence and the respective target sequence. This class further
+ * supports a special cursor to enable an efficient, compression parallel traversal over the stored sequences.
+ * This can be used in conjunction with any context based streaming algorithm to speed-up the search against large
+ * collection of sequences.
+ */
+template <seqan3::sequence sequence_t>
+using journaled_sequence_tree = typename no_adl::journaled_sequence_tree<sequence_t>::type;
 }  // namespace libjst
