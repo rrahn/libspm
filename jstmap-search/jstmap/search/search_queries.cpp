@@ -1,0 +1,53 @@
+// -----------------------------------------------------------------------------------------------------
+// Copyright (c) 2006-2021, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2021, Knut Reinert & MPI für molekulare Genetik
+// This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
+// shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
+// -----------------------------------------------------------------------------------------------------
+
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <tuple>
+#include <ranges>
+
+#include <libjst/journaled_sequence_tree.hpp>
+
+#include <jstmap/search/write_results.hpp>
+#include <jstmap/search/search_queries.hpp>
+
+namespace jstmap
+{
+
+void process_hits(std::vector<libjst::context_position> & results,
+                  std::vector<libjst::context_position> const & cursor_positions)
+{
+    std::ranges::for_each(cursor_positions, [&] (libjst::context_position const & mapping_position)
+    {
+        results.push_back(mapping_position);
+    });
+}
+
+std::vector<libjst::context_position> search_queries(jst_t && jst, std::vector<raw_sequence_t> && queries)
+{
+    assert(!queries.empty());
+
+    std::vector<libjst::context_position> results{};
+
+    std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
+    {
+        auto jst_cursor = jst.cursor(query.size());
+
+        while (!jst_cursor.at_end())
+        {
+            if (std::ranges::equal(jst_cursor.context(), query))
+                process_hits(results, jst_cursor.positions());
+
+            jst_cursor.advance(); // moves the context to the next element.
+        }
+    });
+
+    return results;
+}
+
+}  // namespace jstmap
