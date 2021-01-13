@@ -16,6 +16,7 @@
 #include <cereal/types/string.hpp> // sereialise std::string
 
 #include <seqan3/alphabet/adaptation/char.hpp> // allow std::string be recognised as seqan3::sequence
+#include <seqan3/test/expect_range_eq.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
 
@@ -57,9 +58,9 @@ TEST_F(journaled_sequence_tree_fixture, construction)
 {
     EXPECT_TRUE(std::is_default_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_constructible_v<jst_t>);
-    EXPECT_TRUE(std::is_move_constructible_v<jst_t>);
+    EXPECT_TRUE(std::is_nothrow_move_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_assignable_v<jst_t>);
-    EXPECT_TRUE(std::is_move_assignable_v<jst_t>);
+    EXPECT_TRUE(std::is_nothrow_move_assignable_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_destructible_v<jst_t>);
     EXPECT_TRUE((std::is_constructible_v<jst_t, sequence_t>)); // Set explicit reference sequence.
     EXPECT_TRUE((std::is_constructible_v<jst_t, sequence_t &&>)); // Set explicit reference sequence.
@@ -101,6 +102,38 @@ TEST_F(journaled_sequence_tree_fixture, add)
 
     alignment_t alignment_wrong_order{alignment1.second, alignment1.first};
     EXPECT_THROW(jst.add(alignment_wrong_order), std::invalid_argument);
+}
+
+TEST_F(journaled_sequence_tree_fixture, cursor)
+{
+    sequence_t tmp_reference{reference};
+    jst_t jst{std::move(tmp_reference)};
+
+    jst.add(alignment1);
+    jst.add(alignment2);
+    jst.add(alignment3);
+
+    auto jst_cursor = jst.cursor(4u);
+
+    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "abbc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "bbcc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "abca"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "bcab"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "cabc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "ccaa"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "caab"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
+    jst_cursor.advance();
+    EXPECT_TRUE(jst_cursor.at_end());
 }
 
 // The test data serialised to disk.

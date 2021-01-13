@@ -26,6 +26,8 @@
 #include <seqan3/range/concept.hpp>
 #include <seqan3/range/views/convert.hpp>
 
+#include <libjst/journaled_sequence_tree_cursor.hpp>
+
 namespace libjst::no_adl
 {
 //!\brief Specific class implementation in no_adl namespace to avoid ADL of template arguments.
@@ -41,10 +43,19 @@ template <seqan3::sequence sequence_t>
 class journaled_sequence_tree<sequence_t>::type
 {
 private:
+
+    using sequence_collection_type = std::vector<sequence_t>; //!< The type to store the sequence collection.
+
+    //!\brief Befriend the cursor type.
+    template <typename>
+    friend class journaled_sequence_tree_cursor;
+
     sequence_t _reference; //!< The internal reference used for referential compression.
-    std::vector<sequence_t> _sequences; //!< The stored sequences.
+    sequence_collection_type _sequences; //!< The stored sequences.
 
 public:
+    using sequence_type = sequence_t; //!< The type of the underlying sequence.
+
     /*!\name Constructors, destructor and assignment
      * \{
      */
@@ -121,6 +132,12 @@ public:
                                    }),
                           std::cpp20::back_inserter(pure_target_sequence));
         _sequences.push_back(std::move(pure_target_sequence));
+    }
+
+    //!\brief Returns a new cursor over the current journaled sequence tree.
+    auto cursor(size_t const context_size) const noexcept
+    {
+        return libjst::journaled_sequence_tree_cursor<type>{this, context_size};
     }
 
     /*!\brief Saves the journaled sequence tree to the given output archive.
