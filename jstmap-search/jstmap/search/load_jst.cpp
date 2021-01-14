@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 #include <fstream>
+#include <string>
 
 #include <cereal/archives/binary.hpp>
 
@@ -16,7 +17,14 @@ namespace jstmap
 
 jst_t load_jst(std::filesystem::path const & jst_input_file_path)
 {
+    using namespace std::literals;
+
     std::fstream jst_input_stream{jst_input_file_path};
+
+    if (!jst_input_stream.good())
+        throw std::runtime_error{"Couldn't open path for loading the jst! The path is ["s +
+                                 jst_input_file_path.string() +
+                                 "]"s};
 
     jst_t jst{};
 
