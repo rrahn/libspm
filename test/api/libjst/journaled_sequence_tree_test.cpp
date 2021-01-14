@@ -16,6 +16,7 @@
 #include <cereal/types/string.hpp> // sereialise std::string
 
 #include <seqan3/alphabet/adaptation/char.hpp> // allow std::string be recognised as seqan3::sequence
+#include <seqan3/test/expect_range_eq.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
 
@@ -57,9 +58,9 @@ TEST_F(journaled_sequence_tree_fixture, construction)
 {
     EXPECT_TRUE(std::is_default_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_constructible_v<jst_t>);
-    EXPECT_TRUE(std::is_move_constructible_v<jst_t>);
+    EXPECT_TRUE(std::is_nothrow_move_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_assignable_v<jst_t>);
-    EXPECT_TRUE(std::is_move_assignable_v<jst_t>);
+    EXPECT_TRUE(std::is_nothrow_move_assignable_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_destructible_v<jst_t>);
     EXPECT_TRUE((std::is_constructible_v<jst_t, sequence_t>)); // Set explicit reference sequence.
     EXPECT_TRUE((std::is_constructible_v<jst_t, sequence_t &&>)); // Set explicit reference sequence.
@@ -103,11 +104,52 @@ TEST_F(journaled_sequence_tree_fixture, add)
     EXPECT_THROW(jst.add(alignment_wrong_order), std::invalid_argument);
 }
 
+TEST_F(journaled_sequence_tree_fixture, cursor)
+{
+    sequence_t tmp_reference{reference};
+    jst_t jst{std::move(tmp_reference)};
+
+    jst.add(alignment1);
+    jst.add(alignment2);
+    jst.add(alignment3);
+
+    auto jst_cursor = jst.cursor(4u);
+
+    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "abbc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "bbcc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "abca"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "bcab"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "cabc"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "ccaa"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "caab"sv);
+    jst_cursor.advance();
+    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
+    jst_cursor.advance();
+    EXPECT_TRUE(jst_cursor.at_end());
+}
+
+// The test data serialised to disk.
+inline constexpr std::string_view expected_output =
+R"json({
+    "value0": "aaaabbbbcccc",
+    "value1": [
+        "aabbcc",
+        "abcabc",
+        "ccaabb"
+    ]
+})json";
+
 TEST_F(journaled_sequence_tree_fixture, save)
 {
-
     std::stringstream output_stream{};
-    cereal::JSONOutputArchive output_archive(output_stream);
 
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
@@ -116,15 +158,24 @@ TEST_F(journaled_sequence_tree_fixture, save)
     jst.add(alignment2);
     jst.add(alignment3);
 
-    jst.save(output_archive);
-
-    std::string_view expected_output = R"json({
-    "value0": "aaaabbbbcccc",
-    "value1": [
-        "aabbcc",
-        "abcabc",
-        "ccaabb"
-    ])json";
+    {
+        cereal::JSONOutputArchive output_archive(output_stream);
+        jst.save(output_archive);
+    }
 
     EXPECT_EQ(output_stream.str(), expected_output);
+}
+
+TEST_F(journaled_sequence_tree_fixture, load)
+{
+    std::stringstream archive_stream{expected_output.data()};
+    jst_t jst{};
+
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        jst.load(input_archive);
+    }
+
+    EXPECT_EQ(jst.size(), 3u);
+    EXPECT_EQ(jst.reference(), "aaaabbbbcccc"sv);
 }

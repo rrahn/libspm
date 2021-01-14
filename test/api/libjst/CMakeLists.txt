@@ -5,3 +5,4 @@ macro (add_libjst_test test_filename)
 endmacro()
 
 add_libjst_test (journaled_sequence_tree_test.cpp)
+add_libjst_test (journaled_sequence_tree_cursor_test.cpp)

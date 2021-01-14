@@ -41,7 +41,10 @@ int index_main(seqan3::argument_parser & index_parser)
     index_parser.add_positional_option(options.input_file,
                                        "The input file.",
                                        seqan3::input_file_validator{{"fa", "fasta"}});
-    index_parser.add_positional_option(options.output_file, "The output file.");
+    index_parser.add_positional_option(options.output_file,
+                                       "The output file.",
+                                       seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
+                                                                     {"jst"}});
 
     try
     {

@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.12)
 
 # Define the application name and version.
 project (jstmap VERSION 0.0.1 LANGUAGES CXX)
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## BUILD
@@ -37,6 +37,7 @@ find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
 
 add_subdirectory (libjst)
 add_subdirectory (jstmap-index)
+add_subdirectory (jstmap-search)
 add_subdirectory (jstmap)
 
 ## DOCUMENTATION
