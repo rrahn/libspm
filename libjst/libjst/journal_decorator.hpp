@@ -246,9 +246,12 @@ private:
     using segment_iterator = std::ranges::iterator_t<maybe_const_segment_t>;
     using dictionary_iterator = std::ranges::iterator_t<dictionary_type>;
 
-    journal_decorator * _host{};
+    journal_decorator const * _host{};
     segment_iterator _segment_it{};
     dictionary_iterator _entry_it{};
+
+    template <bool>
+    friend class iterator;
 
 public:
 
@@ -265,7 +268,7 @@ public:
     iterator & operator=(iterator &&) = default;
     ~iterator() = default;
 
-    iterator(journal_decorator * host, bool const is_end) : _host{host}
+    iterator(journal_decorator const * host, bool const is_end) : _host{host}
     {
         if (!_host->_dictionary.empty())
         {
@@ -285,6 +288,14 @@ public:
             _entry_it = _host->_dictionary.end();
         }
     }
+
+    iterator(iterator<!is_const_range> other)
+        requires is_const_range
+    :
+        _host{other._host},
+        _segment_it{other._segment_it},
+        _entry_it{other._entry_it}
+    {}
 
     /*!\name Element access
      * \{
@@ -361,7 +372,7 @@ public:
         {
             int32_t offset = -(_entry_it != _host->_dictionary.begin());
             std::advance(_entry_it, offset);
-            _entry_it = (offset == 0) ? _entry_it : std::ranges::prev(segment_end());
+            _segment_it = (offset == 0) ? _segment_it : std::ranges::prev(segment_end());
         }
         else
         {
