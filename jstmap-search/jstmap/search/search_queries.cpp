@@ -36,9 +36,9 @@ std::vector<libjst::context_position> search_queries(jst_t && jst, std::vector<r
 
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
-        auto jst_cursor = jst.cursor(query.size());
+        auto context_enumerator = jst.context_enumerator(query.size());
 
-        for (auto it = jst_cursor.begin(); it != jst_cursor.end(); ++it)
+        for (auto it = context_enumerator.begin(); it != context_enumerator.end(); ++it)
         {
             if (std::ranges::equal(*it, query))
                 process_hits(results, it.positions());

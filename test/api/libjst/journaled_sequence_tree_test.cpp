@@ -104,7 +104,7 @@ TEST_F(journaled_sequence_tree_fixture, add)
     EXPECT_THROW(jst.add(alignment_wrong_order), std::invalid_argument);
 }
 
-TEST_F(journaled_sequence_tree_fixture, cursor)
+TEST_F(journaled_sequence_tree_fixture, context_enumerator)
 {
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
@@ -113,27 +113,28 @@ TEST_F(journaled_sequence_tree_fixture, cursor)
     jst.add(alignment2);
     jst.add(alignment3);
 
-    auto jst_cursor = jst.cursor(4u);
+    auto context_enumerator = jst.context_enumerator(4u);
 
-    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "abbc"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "bbcc"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "abca"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "bcab"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "cabc"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "ccaa"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "caab"sv);
-    jst_cursor.advance();
-    EXPECT_RANGE_EQ(jst_cursor.context(), "aabb"sv);
-    jst_cursor.advance();
-    EXPECT_TRUE(jst_cursor.at_end());
+    auto it = context_enumerator.begin();
+    EXPECT_RANGE_EQ(*it, "aabb"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "abbc"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "bbcc"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "abca"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "bcab"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "cabc"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "ccaa"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "caab"sv);
+    ++it;
+    EXPECT_RANGE_EQ(*it, "aabb"sv);
+    ++it;
+    EXPECT_TRUE(it == context_enumerator.end());
 }
 
 // The test data serialised to disk.
