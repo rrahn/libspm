@@ -38,12 +38,10 @@ std::vector<libjst::context_position> search_queries(jst_t && jst, std::vector<r
     {
         auto jst_cursor = jst.cursor(query.size());
 
-        while (!jst_cursor.at_end())
+        for (auto it = jst_cursor.begin(); it != jst_cursor.end(); ++it)
         {
-            if (std::ranges::equal(jst_cursor.context(), query))
-                process_hits(results, jst_cursor.positions());
-
-            jst_cursor.advance(); // moves the context to the next element.
+            if (std::ranges::equal(*it, query))
+                process_hits(results, it.positions());
         }
     });
 

@@ -54,6 +54,9 @@ public:
 
     using context_position_type = context_position; //!< The type representing a single context position.
 
+    // The iterator.
+    class iterator;
+
     /*!\name Constructors, destructor and assignment
      * \{
      */
@@ -83,6 +86,28 @@ public:
         _sequence_collection_it = std::ranges::begin(_jst_ptr->_sequences);
         init_next_sequence_window();
     }
+    //!\}
+
+    /*!\name Iterators
+     * \{
+     */
+    //!\brief Returns an iterator for the current context enumerator.
+    iterator begin() noexcept
+    {
+        return iterator{this};
+    }
+
+    //!\overload
+    iterator begin() const = delete;
+
+    //!\brief Returns a sentinel for the current context enumerator.
+    std::default_sentinel_t end()
+    {
+        return std::default_sentinel;
+    }
+
+    //!\overload
+    std::default_sentinel_t end() const = delete;
     //!\}
 
     //!\brief Returns the current sequence context.
@@ -165,6 +190,106 @@ private:
             advance();
         }
     }
+};
+
+/*!\brief The context iterator.
+ * \implements std::input_iterator
+ *
+ * \details
+ *
+ * This iterator implements the C++20 input iterator concept. It is not copyable and allows only comparison with
+ * the sentinel.
+ */
+template <typename jst_t>
+class journaled_sequence_tree_cursor<jst_t>::type::iterator
+{
+private:
+    //!\brief The pointer to the underlying host.
+    type * _host{nullptr};
+
+public:
+    /*!\name Associated types
+     * \{
+     */
+    //!\brief The value type.
+    using value_type = typename type::sequence_context_type;
+    //!\brief The reference type.
+    using reference = value_type;
+    //!\brief The difference type.
+    using difference_type = std::ptrdiff_t;
+    //!\brief The pointer type.
+    using pointer = void;
+    //!\brief The iterator category.
+    using iterator_category = std::input_iterator_tag;
+    //!\}
+
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    iterator() = default; //!< Default.
+    iterator(iterator const &) = delete; //!< Deleted.
+    iterator(iterator &&) = default; //!< Default.
+    iterator & operator=(iterator const &) = delete; //!< Deleted.
+    iterator & operator=(iterator &&) = default; //!< Default.
+    ~iterator() = default; //!< Default.
+
+    /*!\brief Constructs an iterator with the host.
+     * \param[in] host The pointer to the host.
+     */
+    explicit iterator(type * host) : _host{host}
+    {}
+    //!\}
+
+    /*!\name Member access
+     * \{
+     */
+    //!\brief Returns the pointed to context.
+    reference operator*() const
+    {
+        assert(_host != nullptr);
+
+        return _host->context();
+    }
+
+    //!\brief Returns the positions of all sequences that share this context.
+    typename type::context_positions_type positions() const
+    {
+        assert(_host != nullptr);
+
+        return _host->positions();
+    }
+    //!\}
+
+    /*!\name Arithmetic operators
+     * \{
+     */
+    //!\brief Increments this by one.
+    iterator & operator++() noexcept
+    {
+        assert(_host != nullptr);
+
+        _host->advance();
+        return *this;
+    }
+
+    //!\brief Increments this by one.
+    void operator++(int) noexcept
+    {
+        ++(*this);
+    }
+    //!\}
+
+    /*!\name Comparison
+     * \{
+     */
+    //!\brief Compares this with the sentinel.
+    bool operator==(std::default_sentinel_t const &) const noexcept
+    {
+        assert(_host != nullptr);
+
+        return _host->at_end();
+    }
+    //!\}
 };
 
 } // namespace libjst::no_adl
