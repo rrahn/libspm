@@ -132,3 +132,15 @@ TEST_F(journaled_sequence_tree_cursor_fixture, context_too_large)
 
     EXPECT_TRUE(jst_cursor.at_end());
 }
+
+TEST_F(journaled_sequence_tree_cursor_fixture, iterate)
+{
+    jst_cursor_t jst_cursor{std::addressof(jst), 4u};
+
+    auto it = jst_cursor.begin();
+
+    for (; it != jst_cursor.end(); ++it)
+        EXPECT_EQ(std::ranges::distance(*it), 4);
+
+    EXPECT_TRUE(jst_cursor.at_end());
+}

@@ -134,8 +134,8 @@ public:
         _sequences.push_back(std::move(pure_target_sequence));
     }
 
-    //!\brief Returns a new cursor over the current journaled sequence tree.
-    auto cursor(size_t const context_size) const noexcept
+    //!\brief Returns a new context enumerator over the current journaled sequence tree.
+    auto context_enumerator(size_t const context_size) const noexcept
     {
         return libjst::journaled_sequence_tree_cursor<type>{this, context_size};
     }
