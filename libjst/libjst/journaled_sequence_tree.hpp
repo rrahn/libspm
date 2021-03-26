@@ -65,6 +65,9 @@ private:
     //!\brief The container type that stores all delta events.
     using event_list_type = std::list<delta_event_shared_type>;
 
+    using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
+    using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
+
     //!\cond
     template <typename>
     friend class detail::journal_sequence_tree_context_enumerator;
@@ -115,6 +118,79 @@ public:
     sequence_type const & reference() const
     {
         return _reference;
+    }
+
+    /*!\brief Returns the target sequence at the specified index.
+     *
+     * \param index The index to get the target sequence from.
+     *
+     * \returns An immutable target sequence at the specified index.
+     *
+     * \details
+     *
+     * This function reconstructs the original target sequence. It generates a libjst::journal_decorator from the
+     * shared delta events and the reference sequence.
+     *
+     * ### Complexity
+     *
+     * Linear in the number of delta events.
+     *
+     * ### Exception
+     *
+     * Strong exception guarantee.
+     * Throws std::out_of_range exception if the index is out of range.
+     */
+    journal_decorator_type sequence_at(size_type const index) const
+    {
+        using namespace std::literals;
+
+        if (index >= size())
+            throw std::out_of_range{"The index "s + std::to_string(index) +
+                                    " is out of range [0, "s + std::to_string(size()) + ")"s};
+
+        journal_decorator_type target_sequence{reference()};
+        int32_t target_position_offset = 0;
+
+        // Go over the branch event list since it is sorted by the reference position.
+        std::ranges::for_each(_branch_event_queue, [&] (branch_event_type const & branch_event)
+        {
+            delta_event_shared_type const * delta_event = branch_event.event_handle();
+
+            if (!delta_event->coverage()[index]) // Continue if event is not covered by target sequence.
+                return;
+
+            // Record the event in the journal decorator.
+            std::visit([&] (auto const & event_kind)
+            {
+                using substitution_t = typename delta_event_shared_type::substitution_type;
+                using insertion_t = typename delta_event_shared_type::insertion_type;
+                using deletion_t = typename delta_event_shared_type::deletion_type;
+
+                size_type target_position = delta_event->position() + target_position_offset;
+
+                seqan3::detail::multi_invocable
+                {
+                    [&] (substitution_t const & e)
+                    {
+                        target_sequence.record_substitution(target_position, segment_type{e.value()});
+                    },
+                    [&] (insertion_t const & e)
+                    {
+                        target_sequence.record_insertion(target_position, segment_type{e.value()});
+                    },
+                    [&] (deletion_t const & e)
+                    {
+                        target_sequence.record_deletion(target_position, target_position + e.value());
+                    }
+                }(event_kind);
+            }, delta_event->delta_variant());
+
+            // Update the target position offset by the insertion and deletion size.
+            target_position_offset += static_cast<int32_t>(delta_event->insertion_size() -
+                                                           delta_event->deletion_size());
+        });
+
+        return target_sequence;
     }
 
     //!\brief Returns the number of stored sequences.
@@ -331,39 +407,6 @@ private:
     template <typename aligned_sequence_t>
     bool validate_added_sequence_with(size_t const idx, aligned_sequence_t && target) const
     {
-        // Create journal decorator and register all events.
-        libjst::journal_decorator jd{std::span{reference()}};
-        int32_t target_position_offset = 0;
-
-        // We need to go over the list but it is not sorted.
-        for (branch_event_type const & branch_event : _branch_event_queue) // sorted by reference postion
-        {
-            delta_event_shared_type const * delta_event = branch_event.event_handle();
-
-            if (!delta_event->coverage()[idx]) // Continue if event is not covered by target sequence.
-                continue;
-
-            // Record the event in the journal decorator.
-            std::visit([&] (auto const & event_kind)
-            {
-                using substitution_t = typename delta_event_shared_type::substitution_type;
-                using insertion_t = typename delta_event_shared_type::insertion_type;
-                using deletion_t = typename delta_event_shared_type::deletion_type;
-
-                size_type target_position = delta_event->position() + target_position_offset;
-
-                seqan3::detail::multi_invocable
-                {
-                    [&] (substitution_t const & e) { jd.record_substitution(target_position, std::span{e.value()}); },
-                    [&] (insertion_t const & e) { jd.record_insertion(target_position, std::span{e.value()}); },
-                    [&] (deletion_t const & e) { jd.record_deletion(target_position, target_position + e.value()); }
-                }(event_kind);
-            }, delta_event->delta_variant());
-
-            // Update the target position offset by the insertion and deletion size.
-            target_position_offset += delta_event->insertion_size() - static_cast<int32_t>(delta_event->deletion_size());
-        }
-
         using alphabet_t = std::ranges::range_value_t<sequence_t>;
         using gapped_alphabet_t = seqan3::gapped<alphabet_t>;
         sequence_t pure_target_sequence;
@@ -375,7 +418,7 @@ private:
                           std::cpp20::back_inserter(pure_target_sequence));
 
         // The target sequence and the journal decorator must be equal.
-        return std::ranges::equal(jd, pure_target_sequence);
+        return std::ranges::equal(sequence_at(idx), pure_target_sequence);
     }
 };
 } // namespace libjst::no_adl

@@ -76,13 +76,13 @@ TEST_F(journaled_sequence_tree_fixture, add)
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
 
-    jst.add(alignment1); // Yes we can verify that the first sequence is the
+    jst.add(alignment1);
     EXPECT_EQ(jst.size(), 1u);
 
-    jst.add(alignment2); // Yes we can verify that the first sequence is the
+    jst.add(alignment2);
     EXPECT_EQ(jst.size(), 2u);
 
-    jst.add(alignment3); // Yes we can verify that the first sequence is the
+    jst.add(alignment3);
     EXPECT_EQ(jst.size(), 3u);
 
     alignment_t alignment_wrong_reference{libjst::test::make_gapped("aaaabbbbccc-----x"sv), alignment1.second};
@@ -90,6 +90,35 @@ TEST_F(journaled_sequence_tree_fixture, add)
 
     alignment_t alignment_wrong_order{alignment1.second, alignment1.first};
     EXPECT_THROW(jst.add(alignment_wrong_order), std::invalid_argument);
+}
+
+TEST_F(journaled_sequence_tree_fixture, sequence_at)
+{
+    sequence_t tmp_reference{reference};
+    jst_t jst{std::move(tmp_reference)};
+
+    jst.add(alignment1);
+    jst.add(alignment2);
+    jst.add(alignment3);
+
+    auto target_sequence = [] (auto const & alignment)
+    {
+        std::string sequence;
+        std::ranges::for_each(std::get<1>(alignment), [&] <typename alphabet_t> (seqan3::gapped<alphabet_t> const & c)
+        {
+            sequence.push_back(seqan3::to_char(c));
+        });
+
+        auto const tmp = std::ranges::remove_if(sequence, [] (char const c) { return c == '-'; });
+        sequence.erase(tmp.begin(), tmp.end());
+        return sequence;
+    };
+
+    EXPECT_RANGE_EQ(jst.sequence_at(0),  target_sequence(alignment1));
+    EXPECT_RANGE_EQ(jst.sequence_at(1),  target_sequence(alignment2));
+    EXPECT_RANGE_EQ(jst.sequence_at(2),  target_sequence(alignment3));
+    EXPECT_THROW(jst.sequence_at(3), std::out_of_range);
+    EXPECT_THROW(jst.sequence_at(-1), std::out_of_range);
 }
 
 TEST_F(journaled_sequence_tree_fixture, context_enumerator)
