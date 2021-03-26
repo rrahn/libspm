@@ -76,13 +76,13 @@ TEST_F(journaled_sequence_tree_fixture, add)
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
 
-    jst.add(alignment1); // Yes we can verify that the first sequence is the
+    jst.add(alignment1);
     EXPECT_EQ(jst.size(), 1u);
 
-    jst.add(alignment2); // Yes we can verify that the first sequence is the
+    jst.add(alignment2);
     EXPECT_EQ(jst.size(), 2u);
 
-    jst.add(alignment3); // Yes we can verify that the first sequence is the
+    jst.add(alignment3);
     EXPECT_EQ(jst.size(), 3u);
 
     alignment_t alignment_wrong_reference{libjst::test::make_gapped("aaaabbbbccc-----x"sv), alignment1.second};

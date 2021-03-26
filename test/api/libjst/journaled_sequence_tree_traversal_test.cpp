@@ -57,9 +57,6 @@ struct traversal_test : public ::testing::TestWithParam<traversal_fixture>
     {
         generate_alignments();
         generate_context_map();
-
-        // for (std::string seq : sequences)
-        //     std::cout << seq << "\n";
     }
 
     bool all_contexts_enumerated() const
