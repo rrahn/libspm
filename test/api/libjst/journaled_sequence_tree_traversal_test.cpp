@@ -14,6 +14,8 @@
 #include <span>
 
 #include <seqan3/alphabet/adaptation/char.hpp>
+#include <seqan3/core/detail/debug_stream_type.hpp>
+#include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
@@ -37,6 +39,17 @@ struct traversal_fixture
     size_t sequence_count{};
     jst_events_t events{};
     size_t context_size{};
+
+    template <typename char_t>
+    friend seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,
+                                                          traversal_fixture const & fixture)
+    {
+        return stream << "["
+                      << "reference: " << fixture.reference << ", "
+                      << "sequence_count: " << fixture.sequence_count << ", "
+                      << "events: " << fixture.events << ", "
+                      << "context_size: " << fixture.context_size << "]";
+    }
 };
 
 struct traversal_test : public ::testing::TestWithParam<traversal_fixture>
@@ -210,9 +223,8 @@ TEST_P(traversal_test, construct)
 
     EXPECT_EQ(jst.size(), this->sequences.size());
 
-    // TODO: jst-> range of sequence interface.
-    // for (size_t i = 0; i < jst.size(); ++i)
-    //     EXPECT_RANGE_EQ(jst[i], this->sequences[i]);
+    for (size_t i = 0; i < jst.size(); ++i)
+        EXPECT_RANGE_EQ(jst.sequence_at(i), this->sequences[i]);
 }
 
 TEST_P(traversal_test, enumerate_contexts)
