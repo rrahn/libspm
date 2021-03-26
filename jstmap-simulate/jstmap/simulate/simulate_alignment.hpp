@@ -5,21 +5,13 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-
 #pragma once
 
 #include <jstmap/simulate/global_types.hpp>
 
-namespace seqan3
-{
-
-class argument_parser;
-
-} // namespace seqan3
-
 namespace jstmap
 {
 
-int simulate_main(seqan3::argument_parser &);
+alignment_t simulate_alignment(sequence_t & reference, double error_rate);
 
-} // namespace jstmap
+}
