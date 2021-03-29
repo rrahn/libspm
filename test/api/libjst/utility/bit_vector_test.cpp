@@ -205,7 +205,7 @@ struct iterator_fixture<bit_vector_iterator> : public ::testing::Test
 {
     using iterator_tag = std::random_access_iterator_tag;
 
-    static constexpr bool const_iterable = false;
+    static constexpr bool const_iterable = true;
 
     libjst::bit_vector<> test_range = libjst::bit_vector<>(100, true);
     std::vector<bool> expected_range = std::vector<bool>(100, true);

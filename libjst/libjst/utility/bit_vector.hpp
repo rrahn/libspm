@@ -253,6 +253,10 @@ template <bool is_const>
 class bit_vector<allocator_t>::bit_iterator
 {
 private:
+    //!\brief Befriend the bit_iterator types with different constness.
+    template <bool>
+    friend class bit_iterator;
+
     //!\brief The type of the chunk.
     using maybe_const_chunk_type = std::conditional_t<is_const, chunk_type const, chunk_type>;
 
@@ -280,6 +284,15 @@ public:
      * \param[in] chunk A pointer to the chunk that contains the represented bit.
      */
     explicit constexpr bit_iterator(maybe_const_chunk_type * chunk) noexcept : _chunk{chunk}, _chunk_position{0}
+    {}
+
+    /*!\brief Copyies from a non-const iterator.
+     *
+     * \param[in] other The other non-const iterator to copy from.
+     */
+    constexpr bit_iterator(bit_iterator<!is_const> const & other) noexcept requires (is_const) :
+        _chunk{other._chunk},
+        _chunk_position{other._chunk_position}
     {}
     //!\}
 
@@ -382,7 +395,8 @@ public:
     }
 
     //!\brief Returns the distance between this and the `rhs` iterator.
-    constexpr difference_type operator-(bit_iterator rhs) const noexcept
+    template <bool is_const_other>
+    constexpr difference_type operator-(bit_iterator<is_const_other> rhs) const noexcept
     {
         return ((_chunk - rhs._chunk) << division_mask) - // number of bits between chunks.
                to_local_chunk_position(rhs._chunk_position) + // minus the first bits in rhs.
@@ -394,14 +408,16 @@ public:
      * \{
      */
     //!\brief Compares with another iterator.
-    bool operator==(bit_iterator const & rhs) const
+    template <bool is_const_other>
+    bool operator==(bit_iterator<is_const_other> const & rhs) const
     {
         return _chunk == rhs._chunk &&
               (to_local_chunk_position(_chunk_position) == to_local_chunk_position(rhs._chunk_position));
     }
 
     //!\brief Compares the two iterator by their chunk position and local chunk position.
-    std::strong_ordering operator<=>(bit_iterator const & rhs) const
+    template <bool is_const_other>
+    std::strong_ordering operator<=>(bit_iterator<is_const_other> const & rhs) const
     {
         if (std::strong_ordering order = _chunk <=> rhs._chunk; order == std::strong_ordering::equivalent)
             return to_local_chunk_position(_chunk_position) <=> to_local_chunk_position(rhs._chunk_position);
