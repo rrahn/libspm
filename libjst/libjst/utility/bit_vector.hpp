@@ -325,7 +325,7 @@ public:
     explicit constexpr bit_iterator(maybe_const_chunk_type * chunk) noexcept : _chunk{chunk}, _chunk_position{0}
     {}
 
-    /*!\brief Copyies from a non-const iterator.
+    /*!\brief Copies from a non-const iterator.
      *
      * \param[in] other The other non-const iterator to copy from.
      */
@@ -338,13 +338,13 @@ public:
     /*!\name Element access
      * \{
      */
-    //!\brief Returns the currently pointer-to bit.
+    //!\brief Returns the currently pointer-to element.
     constexpr reference operator*() const noexcept
     {
         return reference{_chunk, _chunk_position};
     }
 
-    //!\brief Returns the bit at `count` position right from the current iterator position.
+    //!\brief Returns the element `count` positions away from the current iterator position.
     constexpr reference operator[](difference_type const count) const noexcept
     {
         return *((*this) + count);
@@ -392,14 +392,14 @@ public:
         return *this;
     }
 
-    //!\brief Returns a new iterator incremented by `count` many elements.
+    //!\brief Returns a new iterator advanced by `count` many elements.
     constexpr bit_iterator operator+(difference_type const count) const noexcept
     {
         bit_iterator tmp{*this};
         return tmp += count;
     }
 
-    //!\brief Returns a new iterator incremented by `count` many elements.
+    //!\brief Returns a new iterator advanced by `count` many elements.
     friend constexpr bit_iterator operator+(difference_type const count, bit_iterator rhs) noexcept
     {
         return rhs + count;
@@ -420,20 +420,20 @@ public:
         return tmp;
     }
 
-    //!\brief Decrements the iterator by `count` many elements.
+    //!\brief Advances the iterator by `count` many elements.
     constexpr bit_iterator & operator-=(difference_type const count) noexcept
     {
         return *this += -count;
     }
 
-    //!\brief Returns a new iterator decremented by `count` many elements.
+    //!\brief Returns a new iterator advances by `count` many elements.
     constexpr bit_iterator operator-(difference_type const count) const noexcept
     {
         bit_iterator tmp{*this};
         return tmp -= count;
     }
 
-    //!\brief Returns the distance between this and the `rhs` iterator.
+    //!\brief Returns the distance between `this` and the `rhs` iterator.
     template <bool is_const_other>
     constexpr difference_type operator-(bit_iterator<is_const_other> rhs) const noexcept
     {
@@ -443,7 +443,7 @@ public:
     }
     //!\}
 
-    /*!\name Comparison operator
+    /*!\name Comparison operators
      * \{
      */
     //!\brief Compares with another iterator.
