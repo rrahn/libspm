@@ -5,7 +5,6 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-
 #pragma once
 
 #include <jstmap/simulate/global_types.hpp>

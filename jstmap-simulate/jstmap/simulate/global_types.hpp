@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides globally defined types for the index subprogram.
+ * \brief Provides globally defined types for the simulate subprogram.
  * \author Tom Lukas Lankenau <tom.lankenau AT fu-berlin.de>
  */
 

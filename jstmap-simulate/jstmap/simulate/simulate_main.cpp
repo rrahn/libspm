@@ -6,21 +6,20 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides the main entry point of the just_map simulateer.
+ * \brief Provides the main entry point of the just_map simulator.
  * \author Tom Lukas Lankenau <tom.lankenau AT fu-berlin.de>
  */
 
-// ./jstmap simulate ../test/api/data/in.fasta ../test/api/output/tmp.jst
 
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
-#include <jstmap/simulate/simulate_main.hpp>
-#include <jstmap/simulate/options.hpp>
-#include <jstmap/simulate/load_reference.hpp>
-#include <jstmap/simulate/simulate_alignment.hpp>
 #include <jstmap/index/serialise_jst.hpp>
+#include <jstmap/simulate/load_reference.hpp>
+#include <jstmap/simulate/options.hpp>
+#include <jstmap/simulate/simulate_alignment.hpp>
+#include <jstmap/simulate/simulate_main.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
 
@@ -32,18 +31,18 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     simulate_options options{};
 
     simulate_parser.add_positional_option(options.input_file,
-                                       "The input file.",
-                                       seqan3::input_file_validator{{"fa", "fasta"}});
+                                          "The input file.",
+                                          seqan3::input_file_validator{{"fa", "fasta"}});
     simulate_parser.add_positional_option(options.output_file,
-                                       "The output file.",
-                                       seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
-                                                                     {"jst"}});
+                                          "The output file.",
+                                          seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
+                                                                        {"jst"}});
     simulate_parser.add_option(options.error_rate,
-                                       'e',
-                                       "error-rate",
-                                       "The relative error rate.",
-                                       seqan3::option_spec::standard,
-                                       seqan3::arithmetic_range_validator{0,1});
+                               'e',
+                               "error-rate",
+                               "The relative error rate.",
+                               seqan3::option_spec::standard,
+                               seqan3::arithmetic_range_validator{0,1});
 
     try
     {
