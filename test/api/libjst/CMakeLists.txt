@@ -10,3 +10,4 @@ add_libjst_test (journal_decorator_test.cpp)
 add_libjst_test (journal_decorator_iterator_test.cpp)
 
 add_subdirectory (detail)
+add_subdirectory (utility)
