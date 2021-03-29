@@ -217,7 +217,7 @@ private:
     using maybe_const_chunk_type = std::conditional_t<is_const, chunk_type const, chunk_type>;
 
     maybe_const_chunk_type * _chunk{}; //!< The underlying chunk.
-    size_type _chunk_position{}; //!< The bit position within the chunk.
+    chunk_type _chunk_mask{}; //!< The mask selecting the bit for this chunk.
 
     /*!\brief Constructs the refernce with represented bit position within the container.
      *
@@ -226,7 +226,7 @@ private:
      */
     constexpr bit_reference(maybe_const_chunk_type * chunk, size_type const local_chunk_position) noexcept :
         _chunk{chunk},
-        _chunk_position{to_local_chunk_position(local_chunk_position)}
+        _chunk_mask{static_cast<chunk_type>(1) << to_local_chunk_position(local_chunk_position)}
     {}
 
 public:
@@ -234,12 +234,51 @@ public:
      * \{
      */
     bit_reference() = delete; //!< Deleted.
+    bit_reference(bit_reference const & other) = default;
+    bit_reference(bit_reference && other) = default;
+    bit_reference & operator=(bit_reference const & other) = default;
+    bit_reference & operator=(bit_reference && other) = default;
+
+    /*!\brief Assigns a bit to the referenced bit.
+     *
+     * \param[in] bit The bit to set.
+     */
+    constexpr bit_reference & operator=(bool const bit) noexcept
+    {
+        bit ? set() : clear();
+        return *this;
+    }
+
+    //!\overload
+    // Needed to model std::output_iterator<bit_iterator, bool>, which requires the assignment to an const && version
+    // of the proxy.
+    constexpr bit_reference const & operator=(bool const bit) const noexcept
+    //!\cond
+        requires (!is_const)
+    //!\endcond
+    {
+        bit ? set() : clear();
+        return *this;
+    }
     //!\}
 
     //!\brief Converts this proxy to a bool.
     constexpr operator bool() const noexcept
     {
-        return *_chunk & (1 << _chunk_position);
+        return *_chunk & _chunk_mask;
+    }
+
+private:
+    //!\brief Sets the bit at the specific position.
+    constexpr void set() noexcept
+    {
+        *_chunk |= _chunk_mask;
+    }
+
+    //!\brief Clears the bit at the specific position.
+    constexpr void clear() noexcept
+    {
+        *_chunk &= ~_chunk_mask;
     }
 };
 
