@@ -10,6 +10,8 @@
 #include <concepts>
 #include <type_traits>
 
+ #include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
+
 #include <libjst/utility/bit_vector.hpp>
 
 // ----------------------------------------------------------------------------
@@ -192,3 +194,23 @@ TEST(bit_vector_test, size)
     }
 }
 
+// ----------------------------------------------------------------------------
+// Iterator test
+// ----------------------------------------------------------------------------
+
+using bit_vector_iterator = typename libjst::bit_vector<>::iterator;
+
+template <>
+struct iterator_fixture<bit_vector_iterator> : public ::testing::Test
+{
+    using iterator_tag = std::random_access_iterator_tag;
+
+    static constexpr bool const_iterable = false;
+
+    libjst::bit_vector<> test_range = libjst::bit_vector<>(100, true);
+    std::vector<bool> expected_range = std::vector<bool>(100, true);
+};
+
+INSTANTIATE_TYPED_TEST_SUITE_P(bit_vector_iterator_test,
+                               iterator_fixture,
+                               ::testing::Types<bit_vector_iterator>, );

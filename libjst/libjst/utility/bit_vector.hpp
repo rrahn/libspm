@@ -217,7 +217,7 @@ private:
     using maybe_const_chunk_type = std::conditional_t<is_const, chunk_type const, chunk_type>;
 
     maybe_const_chunk_type * _chunk{}; //!< The underlying chunk.
-    size_type _local_chunk_position{}; //!< The bit position within the chunk.
+    size_type _chunk_position{}; //!< The bit position within the chunk.
 
     /*!\brief Constructs the refernce with represented bit position within the container.
      *
@@ -226,7 +226,7 @@ private:
      */
     constexpr bit_reference(maybe_const_chunk_type * chunk, size_type const local_chunk_position) noexcept :
         _chunk{chunk},
-        _local_chunk_position{to_local_chunk_position(local_chunk_position)}
+        _chunk_position{to_local_chunk_position(local_chunk_position)}
     {}
 
 public:
@@ -239,7 +239,7 @@ public:
     //!\brief Converts this proxy to a bool.
     constexpr operator bool() const noexcept
     {
-        return *_chunk & (1 << _local_chunk_position);
+        return *_chunk & (1 << _chunk_position);
     }
 };
 
@@ -257,7 +257,7 @@ private:
     using maybe_const_chunk_type = std::conditional_t<is_const, chunk_type const, chunk_type>;
 
     maybe_const_chunk_type * _chunk{}; //!< The underlying chunk.
-    size_type _local_chunk_position{}; //!< The bit position within the chunk.
+    size_type _chunk_position{}; //!< The bit position within the chunk.
 
 public:
     /*!\name Associated types
@@ -279,7 +279,7 @@ public:
      *
      * \param[in] chunk A pointer to the chunk that contains the represented bit.
      */
-    explicit constexpr bit_iterator(maybe_const_chunk_type * chunk) noexcept : _chunk{chunk}, _local_chunk_position{0}
+    explicit constexpr bit_iterator(maybe_const_chunk_type * chunk) noexcept : _chunk{chunk}, _chunk_position{0}
     {}
     //!\}
 
@@ -289,21 +289,27 @@ public:
     //!\brief Returns the currently pointer-to bit.
     constexpr reference operator*() const noexcept
     {
-        return reference{_chunk, _local_chunk_position};
+        return reference{_chunk, _chunk_position};
+    }
+
+    //!\brief Returns the bit at `count` position right from the current iterator position.
+    constexpr reference operator[](difference_type const count) const noexcept
+    {
+        return *((*this) + count);
     }
     //!\}
 
     /*!\name Arithmetic operator
      * \{
      */
-    //!\brief Advances to the next bit.
+    //!\brief Increments the iterator by one.
     constexpr bit_iterator & operator++() noexcept
     {
-        _chunk += !static_cast<bool>(to_local_chunk_position(++_local_chunk_position));
+        _chunk += !static_cast<bool>(to_local_chunk_position(++_chunk_position));
         return *this;
     }
 
-    //!\brief Advances to the next bit and returns an iterator pointing to the bit before.
+    //!\brief Increments the iterator by one and returns the iterator before the increment.
     constexpr bit_iterator operator++(int) noexcept
     {
         bit_iterator tmp{*this};
@@ -311,19 +317,76 @@ public:
         return tmp;
     }
 
-    //!\brief Advances the iterator by `count` many bits.
+    //!\brief Advances the iterator by `count` many elements.
     constexpr bit_iterator & operator+=(difference_type const count) noexcept
     {
-        _chunk += to_chunk_position(to_local_chunk_position(_local_chunk_position) + count);
-        _local_chunk_position = to_local_chunk_position(_local_chunk_position + count);
+        //           chunk:|    0   |    1   |    2   |    3   |    4   |    5   |
+        //                 |--------|--------|--------|--------|-x------|--------|
+        //  chunk_position:|01234567|01234567|01234567|01234567|01234567|01234567|
+        // global position:|01234567|89012345|67890123|45678901|23456789|01234567|
+        //                 |0       |  1     |    2   |      3 |        |4       |
+        if (count < 0)
+        {
+            size_type updated_count = modulo_mask - to_local_chunk_position(_chunk_position) - count;
+            _chunk_position = modulo_mask - to_local_chunk_position(updated_count);
+            _chunk -= to_chunk_position(updated_count); //(to_chunk_position(-count) + (old_chunk_position < _chunk_position));
+        }
+        else
+        {
+            _chunk += to_chunk_position(to_local_chunk_position(_chunk_position) + count);
+            _chunk_position = to_local_chunk_position(_chunk_position + count);
+        }
+
         return *this;
     }
 
-    //!\brief Returns a new iterator advanced by `count` many bits.
-    constexpr bit_iterator operator+(difference_type const offset) const noexcept
+    //!\brief Returns a new iterator incremented by `count` many elements.
+    constexpr bit_iterator operator+(difference_type const count) const noexcept
     {
         bit_iterator tmp{*this};
-        return tmp += offset;
+        return tmp += count;
+    }
+
+    //!\brief Returns a new iterator incremented by `count` many elements.
+    friend constexpr bit_iterator operator+(difference_type const count, bit_iterator rhs) noexcept
+    {
+        return rhs + count;
+    }
+
+    //!\brief Decrements the iterator by one.
+    constexpr bit_iterator & operator--() noexcept
+    {
+        _chunk -= !static_cast<bool>(to_local_chunk_position(--_chunk_position));
+        return *this;
+    }
+
+    //!\brief Decrements the iterator by one and returns the iterator before the decrement.
+    constexpr bit_iterator operator--(int) noexcept
+    {
+        bit_iterator tmp{*this};
+        --(*this);
+        return tmp;
+    }
+
+    //!\brief Decrements the iterator by `count` many elements.
+    constexpr bit_iterator & operator-=(difference_type const count) noexcept
+    {
+        return *this += -count;
+    }
+
+    //!\brief Returns a new iterator decremented by `count` many elements.
+    constexpr bit_iterator operator-(difference_type const count) const noexcept
+    {
+        bit_iterator tmp{*this};
+        return tmp -= count;
+    }
+
+    //!\brief Returns the distance between this and the `rhs` iterator.
+    constexpr difference_type operator-(bit_iterator rhs) const noexcept
+    {
+        return ((_chunk - rhs._chunk) << division_mask) - // number of bits between chunks.
+               to_local_chunk_position(rhs._chunk_position) + // minus the first bits in rhs.
+               to_local_chunk_position(_chunk_position); // plus the first bits of the lhs
     }
     //!\}
 
@@ -333,14 +396,15 @@ public:
     //!\brief Compares with another iterator.
     bool operator==(bit_iterator const & rhs) const
     {
-        return _chunk == rhs._chunk && (to_local_chunk_position(_local_chunk_position) == to_local_chunk_position(rhs._local_chunk_position));
+        return _chunk == rhs._chunk &&
+              (to_local_chunk_position(_chunk_position) == to_local_chunk_position(rhs._chunk_position));
     }
 
     //!\brief Compares the two iterator by their chunk position and local chunk position.
     std::strong_ordering operator<=>(bit_iterator const & rhs) const
     {
         if (std::strong_ordering order = _chunk <=> rhs._chunk; order == std::strong_ordering::equivalent)
-            return to_local_chunk_position(_local_chunk_position) <=> to_local_chunk_position(rhs._local_chunk_position);
+            return to_local_chunk_position(_chunk_position) <=> to_local_chunk_position(rhs._chunk_position);
         else
             return order;
     }
