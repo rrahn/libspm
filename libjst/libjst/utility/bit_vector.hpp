@@ -12,8 +12,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <compare>
 #include <concepts>
+#include <initializer_list>
 #include <vector>
 
 #include <seqan3/std/bit>
@@ -58,18 +60,20 @@ public:
     /*!\name Associated types
      * \{
      */
-    //!\brief The value type is `bool`.
-    using value_type = bool;
-    //!\brief The reference type which is implemented as a proxy.
-    using reference = bit_reference<false>;
-    //!\brief The const reference type which is implemented as a proxy.
-    using const_reference = bit_reference<true>;
-    //!\brief The size_type.
-    using size_type = size_t;
     //!\brief The iterator over the bits.
     using iterator = bit_iterator<false>;
     //!\brief The const iterator over the bits.
     using const_iterator = bit_iterator<true>;
+    //!\brief The value type is `bool`.
+    using value_type = std::iter_value_t<iterator>;
+    //!\brief The reference type which is implemented as a proxy.
+    using reference = std::iter_reference_t<iterator>;
+    //!\brief The const reference type which is implemented as a proxy.
+    using const_reference = std::iter_reference_t<const_iterator>;
+    //!\brief The size_type.
+    using size_type = size_t;
+    //!\brief The difference type.
+    using difference_type = std::iter_difference_t<iterator>;
     //!\}
 
 private:
@@ -107,6 +111,19 @@ public:
         _size{count}
     {}
 
+    /*!\brief Constructs the container initialised with the elements in `list`.
+     *
+     * \param[in] list An initialiser list with the bits set.
+     * \param[in] alloc The allocator to use [optional].
+     */
+    constexpr bit_vector(std::initializer_list<bool> list, allocator_t const & alloc = allocator_t{})
+        : base_t{alloc}
+    {
+        _size = std::ranges::size(list);
+        base_t::reserve(chunks_needed(size()));
+        std::ranges::copy(list, this->begin());
+    }
+
     /*!\brief Constructs the container with `count` default-inserted instances of `bool`. No copies are made.
      *
      * \param[in] count The number of elements to create the bit vector with.
@@ -117,6 +134,53 @@ public:
     {}
     //!\}
 
+    /*!\name Element access
+     * \{
+     */
+    //!\brief Access specified element.
+    constexpr reference operator[](difference_type const position) noexcept
+    {
+        assert(position >= 0);
+        assert(static_cast<size_type>(position) < size());
+
+        return *std::ranges::next(begin(), position);
+    }
+
+    //!\brief Access specified element.
+    constexpr const_reference operator[](difference_type const position) const noexcept
+    {
+        assert(position >= 0);
+        assert(static_cast<size_type>(position) < size());
+
+        return *std::ranges::next(begin(), position);
+    }
+
+    //!\brief Checks if all bits are set to `true`.
+    constexpr bool all() const noexcept
+    {
+        chunk_type result_mask = ~static_cast<chunk_type>(0);
+        std::ranges::for_each(*as_base(), [&] (chunk_type const & chunk) { result_mask &= chunk; });
+
+        // TODO: maybe popcount == 64?
+        return !(result_mask ^ ~static_cast<chunk_type>(0)) && size() > 0;
+    }
+
+    //!\brief Checks if any bit is set to `true`.
+    constexpr bool any() const noexcept
+    {
+        bool result = false;
+        std::ranges::for_each(*as_base(), [&] (chunk_type const & chunk) { result |= chunk; });
+
+        return result;
+    }
+
+    //!\brief Checks if none of the bits is set to `true`.
+    constexpr bool none() const noexcept
+    {
+        return !any();
+    }
+    //!\}
+
     /*!\name Capacity
      * \{
      */
@@ -124,6 +188,90 @@ public:
     constexpr size_type size() const noexcept
     {
         return _size;
+    }
+    //!\}
+
+    /*!\name Modifiers
+     * \{
+     */
+    //!\brief Changes the number of elements stored, where additional copies of `bit` are appended.
+    constexpr void resize(size_type const count, bool const bit)
+    {
+        base_t::resize(chunks_needed(count), fill_chunk(bit));
+        _size = count;
+    }
+
+    //!\brief Changes the number of elements stored, where additional default-initialised elements are appended.
+    constexpr void resize(size_type const count)
+    {
+        resize(count, bool{});
+    }
+
+    //!\brief Performs binary AND between `this` and `rhs`.
+    constexpr bit_vector & operator&=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk & right_chunk;
+        });
+    }
+
+    //!\brief Performs binary OR between `this` and `rhs`.
+    constexpr bit_vector & operator|=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk | right_chunk;
+        });
+    }
+
+    //!\brief Performs binary XOR between `this` and `rhs`.
+    constexpr bit_vector & operator^=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk ^ right_chunk;
+        });
+    }
+
+    //!\brief Performs binary NOT.
+    constexpr bit_vector operator~() const noexcept
+    {
+        bit_vector tmp{*this};
+        return tmp.flip();
+    }
+
+    //!\brief Flips all bits in-place.
+    constexpr bit_vector & flip() noexcept
+    {
+        std::ranges::for_each(*as_base(), [] (chunk_type & chunk) { chunk = ~chunk; });
+        return *this;
+    }
+
+    //!\brief Flips the bit at the given position.
+    constexpr bit_vector & flip(size_type position)
+    {
+        using namespace std::literals;
+
+        if (position >= size())
+            throw std::out_of_range{"The given posisiton "s +  std::to_string(position) +
+                                    " is out of the range [0, "s + std::to_string(size()) + ")!"s};
+
+        (*this)[position].flip();
+        return *this;
+    }
+
+    //!\brief Exchanges the contents of the container with those of others.
+    constexpr void swap(bit_vector & other) noexcept
+    {
+        base_t::swap(*other.as_base());
+        std::swap(_size, other._size);
     }
     //!\}
 
@@ -168,6 +316,50 @@ public:
     //!\}
 
 private:
+    /*!\brief Performs chunk wise transformation on this with the given binary operator.
+     *
+     * \tparam binary_operator_t The type of the binary operator to invoke on the two chunks; must model
+     *                           std::invocable.
+     *
+     * \param[in] rhs The right hand side of the transform operation.
+     * \param[in] op The binary operator.
+     *
+     * \details
+     *
+     * Efficiently applies the binary operator on the chunks rather than single bits.
+     */
+    template <typename binary_operator_t>
+    //!\cond
+        requires std::invocable<binary_operator_t, chunk_type const &, chunk_type const &> &&
+                 std::same_as<std::invoke_result_t<binary_operator_t, chunk_type const &, chunk_type const &>,
+                              chunk_type>
+    //!\endcond
+    constexpr bit_vector & chunk_wise_transform(bit_vector const & rhs, binary_operator_t && op) noexcept
+    {
+        bit_vector tmp;
+        tmp.resize(size()); // Is this more efficient to make an extra copy?
+        std::ranges::transform(*as_base(), *rhs.as_base(), tmp.data(),
+                               [&] (chunk_type const & left_chunk, chunk_type const & right_chunk) -> chunk_type
+        {
+            return op(left_chunk, right_chunk);
+        });
+
+        swap(tmp);
+        return *this;
+    }
+
+    //!\brief Casts `this` to its base class.
+    base_t const * as_base() const noexcept
+    {
+        return static_cast<base_t const *>(this);
+    }
+
+    //!\overload
+    base_t * as_base() noexcept
+    {
+        return static_cast<base_t *>(this);
+    }
+
     //!\brief Returns how many chunks are needed to store `count` many elements.
     constexpr size_type chunks_needed(size_type const count) const noexcept
     {
@@ -266,6 +458,13 @@ public:
     constexpr operator bool() const noexcept
     {
         return *_chunk & _chunk_mask;
+    }
+
+    //!\brief Flips the referenced bit.
+    constexpr bit_reference & flip() noexcept
+    {
+        (*this) ? clear() : set();
+        return *this;
     }
 
 private:
