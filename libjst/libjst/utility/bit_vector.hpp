@@ -59,18 +59,20 @@ public:
     /*!\name Associated types
      * \{
      */
-    //!\brief The value type is `bool`.
-    using value_type = bool;
-    //!\brief The reference type which is implemented as a proxy.
-    using reference = bit_reference<false>;
-    //!\brief The const reference type which is implemented as a proxy.
-    using const_reference = bit_reference<true>;
-    //!\brief The size_type.
-    using size_type = size_t;
     //!\brief The iterator over the bits.
     using iterator = bit_iterator<false>;
     //!\brief The const iterator over the bits.
     using const_iterator = bit_iterator<true>;
+    //!\brief The value type is `bool`.
+    using value_type = std::iter_value_t<iterator>;
+    //!\brief The reference type which is implemented as a proxy.
+    using reference = std::iter_reference_t<iterator>;
+    //!\brief The const reference type which is implemented as a proxy.
+    using const_reference = std::iter_reference_t<const_iterator>;
+    //!\brief The size_type.
+    using size_type = size_t;
+    //!\brief The difference type.
+    using difference_type = std::iter_difference_t<iterator>;
     //!\}
 
 private:

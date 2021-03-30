@@ -28,6 +28,11 @@ TEST(bit_vector_test, size_type)
     EXPECT_TRUE((std::same_as<typename libjst::bit_vector<>::size_type, size_t>));
 }
 
+TEST(bit_vector_test, difference_type)
+{
+    EXPECT_TRUE((std::integral<typename libjst::bit_vector<>::difference_type>));
+}
+
 TEST(bit_vector_test, reference)
 {
     EXPECT_TRUE((std::convertible_to<typename libjst::bit_vector<>::reference, bool>));
