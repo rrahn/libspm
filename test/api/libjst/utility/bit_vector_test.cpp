@@ -45,25 +45,25 @@ TEST(bit_vector_test, const_reference)
 TEST(bit_vector_test, construct_with_count)
 {
     {
-        libjst::bit_vector test_vector{1000};
+        libjst::bit_vector test_vector(1000);
 
         EXPECT_EQ(test_vector.size(), 1000u);
     }
 
     {
-        libjst::bit_vector test_vector{64};
+        libjst::bit_vector test_vector(64);
 
         EXPECT_EQ(test_vector.size(), 64u);
     }
 
     {
-        libjst::bit_vector test_vector{512};
+        libjst::bit_vector test_vector(512);
 
         EXPECT_EQ(test_vector.size(), 512u);
     }
 
     {
-        libjst::bit_vector test_vector{1};
+        libjst::bit_vector test_vector(1);
 
         EXPECT_EQ(test_vector.size(), 1u);
     }
@@ -71,7 +71,7 @@ TEST(bit_vector_test, construct_with_count)
 
 TEST(bit_vector_test, construct_with_count_and_allocator)
 {
-    libjst::bit_vector test_vector{1000, true};
+    libjst::bit_vector test_vector(1000, true);
 
     EXPECT_EQ(test_vector.size(), 1000u);
 
@@ -81,6 +81,35 @@ TEST(bit_vector_test, construct_with_count_and_allocator)
     });
 }
 
+TEST(bit_vector_test, construct_from_initialiser_list)
+{
+    { // From the concrete values.
+        libjst::bit_vector test_vector{true, false, true, false, false, true, true};
+        auto it = test_vector.begin();
+        EXPECT_EQ(test_vector.size(), 7u);
+        EXPECT_EQ(*it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, true);
+    }
+
+    { // From integers convertible to bool.
+        libjst::bit_vector test_vector{1, 0, 1, 0, 0, 1, 1};
+        auto it = test_vector.begin();
+        EXPECT_EQ(test_vector.size(), 7u);
+        EXPECT_EQ(*it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, true);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // iterators
 // ----------------------------------------------------------------------------
@@ -88,14 +117,14 @@ TEST(bit_vector_test, construct_with_count_and_allocator)
 TEST(bit_vector_test, begin)
 {
     {
-        libjst::bit_vector test_vector{1000, true};
+        libjst::bit_vector test_vector(1000, true);
 
         auto it = test_vector.begin();
         EXPECT_TRUE(*it);
     }
 
     {
-        libjst::bit_vector test_vector{64, true};
+        libjst::bit_vector test_vector(64, true);
 
         auto it = test_vector.begin();
         EXPECT_TRUE(*it);
@@ -105,13 +134,13 @@ TEST(bit_vector_test, begin)
 TEST(bit_vector_test, cbegin)
 {
     {
-        libjst::bit_vector test_vector{1000, true};
+        libjst::bit_vector test_vector(1000, true);
         auto cit = std::as_const(test_vector).begin();
         EXPECT_TRUE(*cit);
     }
 
     {
-        libjst::bit_vector test_vector{64, true};
+        libjst::bit_vector test_vector(64, true);
         auto cit = std::ranges::cbegin(std::as_const(test_vector));
         EXPECT_TRUE(*cit);
     }
@@ -120,13 +149,13 @@ TEST(bit_vector_test, cbegin)
 TEST(bit_vector_test, end)
 {
     {
-        libjst::bit_vector test_vector{1000, true};
+        libjst::bit_vector test_vector(1000, true);
 
         EXPECT_TRUE(test_vector.begin() != test_vector.end());
     }
 
     {
-        libjst::bit_vector test_vector{64, true};
+        libjst::bit_vector test_vector(64, true);
         EXPECT_TRUE(test_vector.begin() != test_vector.end());
     }
 
@@ -139,13 +168,13 @@ TEST(bit_vector_test, end)
 TEST(bit_vector_test, cend)
 {
     {
-        libjst::bit_vector test_vector{1000, true};
+        libjst::bit_vector test_vector(1000, true);
 
         EXPECT_TRUE(std::as_const(test_vector).begin() != std::as_const(test_vector).end());
     }
 
     {
-        libjst::bit_vector test_vector{64, true};
+        libjst::bit_vector test_vector(64, true);
         EXPECT_TRUE(std::as_const(test_vector).begin() != std::ranges::cend(std::as_const(test_vector)));
     }
 
@@ -157,7 +186,7 @@ TEST(bit_vector_test, cend)
 
 TEST(bit_vector_test, iterate)
 {
-    libjst::bit_vector test_vector{70, true};
+    libjst::bit_vector test_vector(70, true);
     auto it = test_vector.begin();
     for (size_t i = 0; i < test_vector.size(); ++i)
     {
@@ -174,17 +203,17 @@ TEST(bit_vector_test, iterate)
 TEST(bit_vector_test, size)
 {
     {
-        libjst::bit_vector test_vector{1000};
+        libjst::bit_vector test_vector(1000);
         EXPECT_EQ(test_vector.size(), 1000u);
     }
 
     {
-        libjst::bit_vector test_vector{64};
+        libjst::bit_vector test_vector(64);
         EXPECT_EQ(test_vector.size(), 64u);
     }
 
     {
-        libjst::bit_vector test_vector{1};
+        libjst::bit_vector test_vector(1);
         EXPECT_EQ(test_vector.size(), 1u);
     }
 
@@ -220,7 +249,7 @@ TEST(bit_vector_test, output_iterator)
     EXPECT_TRUE((std::output_iterator<typename libjst::bit_vector<>::iterator, bool>));
     EXPECT_FALSE((std::output_iterator<typename libjst::bit_vector<>::const_iterator, bool>));
 
-    libjst::bit_vector test_vector{100, true};
+    libjst::bit_vector test_vector(100, true);
     for (auto it = test_vector.begin(); it != test_vector.end(); it += 2)
         *it = false;
 

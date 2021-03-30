@@ -14,6 +14,7 @@
 
 #include <compare>
 #include <concepts>
+#include <initializer_list>
 #include <vector>
 
 #include <seqan3/std/bit>
@@ -106,6 +107,19 @@ public:
         base_t{chunks_needed(count), fill_chunk(bit), alloc},
         _size{count}
     {}
+
+    /*!\brief Constructs the container initialised with the elements in `list`.
+     *
+     * \param[in] list An initialiser list with the bits set.
+     * \param[in] alloc The allocator to use [optional].
+     */
+    constexpr bit_vector(std::initializer_list<bool> list, allocator_t const & alloc = allocator_t{})
+        : base_t{alloc}
+    {
+        _size = std::ranges::size(list);
+        base_t::reserve(chunks_needed(size()));
+        std::ranges::copy(list, this->begin());
+    }
 
     /*!\brief Constructs the container with `count` default-inserted instances of `bool`. No copies are made.
      *
