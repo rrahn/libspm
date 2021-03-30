@@ -385,6 +385,31 @@ private:
     }
 };
 
+/*!\name Non-member functions
+ * \{
+ */
+//!\brief Performs binary AND on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator&(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs &= rhs;
+}
+
+//!\brief Performs binary OR on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator|(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs |= rhs;
+}
+
+//!\brief Performs binary XOR on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator^(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs ^= rhs;
+}
+//!\}
+
 /*!\brief The bit proxy returned as reference.
  *
  * \tparam is_const A bool that indicates a const proxy if the value is `true`, or a non-const proxy otherwise.
