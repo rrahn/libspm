@@ -191,6 +191,23 @@ public:
     }
     //!\}
 
+    /*!\name Modifiers
+     * \{
+     */
+    //!\brief Changes the number of elements stored, where additional copies of `bit` are appended.
+    constexpr void resize(size_type const count, bool const bit)
+    {
+        base_t::resize(chunks_needed(count), fill_chunk(bit));
+        _size = count;
+    }
+
+    //!\brief Changes the number of elements stored, where additional default-initialised elements are appended.
+    constexpr void resize(size_type const count)
+    {
+        resize(count, bool{});
+    }
+    //!\}
+
     /*!\name Iterators
      * \{
      */

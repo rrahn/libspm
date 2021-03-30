@@ -279,6 +279,34 @@ TEST(bit_vector_test, none)
 }
 
 // ----------------------------------------------------------------------------
+// Modifiers
+// ----------------------------------------------------------------------------
+
+TEST(bit_vector_test, resize)
+{
+    libjst::bit_vector test_vector{};
+
+    EXPECT_EQ(test_vector.size(), 0u);
+    test_vector.resize(64);
+    EXPECT_EQ(test_vector.size(), 64u);
+    EXPECT_TRUE(test_vector.none());
+
+    test_vector.resize(128, true);
+    EXPECT_EQ(test_vector.size(), 128u);
+    EXPECT_TRUE(test_vector.any());
+
+    test_vector.resize(1, true);
+    EXPECT_EQ(test_vector.size(), 1u);
+    EXPECT_TRUE(test_vector.none());
+
+    test_vector.resize(0, true);
+    EXPECT_EQ(test_vector.size(), 0u);
+    EXPECT_TRUE(test_vector.none());
+}
+
+}
+
+// ----------------------------------------------------------------------------
 // capacity
 // ----------------------------------------------------------------------------
 
