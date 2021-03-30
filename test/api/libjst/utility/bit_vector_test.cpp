@@ -218,6 +218,66 @@ TEST(bit_vector_test, subscript_operator)
     EXPECT_EQ(std::as_const(test_vector)[6], true);
 }
 
+TEST(bit_vector_test, all)
+{
+    { // empty vector
+        libjst::bit_vector test_vector{};
+        EXPECT_FALSE(test_vector.all());
+    }
+
+    {
+        libjst::bit_vector test_vector(250, true);
+        EXPECT_TRUE(test_vector.all());
+
+        test_vector[249] = false;
+        EXPECT_FALSE(test_vector.all());
+
+        test_vector[249] = true;
+        test_vector[0] = false;
+        EXPECT_FALSE(test_vector.all());
+    }
+}
+
+TEST(bit_vector_test, any)
+{
+    { // empty vector
+        libjst::bit_vector test_vector{};
+        EXPECT_FALSE(test_vector.any());
+    }
+
+    {
+        libjst::bit_vector test_vector(250, false);
+        EXPECT_FALSE(test_vector.any());
+
+        test_vector[249] = true;
+        EXPECT_TRUE(test_vector.any());
+
+        test_vector[249] = false;
+        test_vector[0] = true;
+        EXPECT_TRUE(test_vector.any());
+    }
+}
+
+TEST(bit_vector_test, none)
+{
+    { // empty vector
+        libjst::bit_vector test_vector{};
+        EXPECT_TRUE(test_vector.none());
+    }
+
+    {
+        libjst::bit_vector test_vector(250, false);
+        EXPECT_TRUE(test_vector.none());
+
+        test_vector[249] = true;
+        EXPECT_FALSE(test_vector.none());
+
+        test_vector[249] = false;
+        test_vector[0] = true;
+        EXPECT_FALSE(test_vector.none());
+    }
+}
+
 // ----------------------------------------------------------------------------
 // capacity
 // ----------------------------------------------------------------------------

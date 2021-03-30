@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <compare>
 #include <concepts>
 #include <initializer_list>
@@ -153,6 +154,31 @@ public:
 
         return *std::ranges::next(begin(), position);
     }
+
+    //!\brief Checks if all bits are set to `true`.
+    constexpr bool all() const noexcept
+    {
+        chunk_type result_mask = ~static_cast<chunk_type>(0);
+        std::ranges::for_each(*as_base(), [&] (chunk_type const & chunk) { result_mask &= chunk; });
+
+        // TODO: maybe popcount == 64?
+        return !(result_mask ^ ~static_cast<chunk_type>(0)) && size() > 0;
+    }
+
+    //!\brief Checks if any bit is set to `true`.
+    constexpr bool any() const noexcept
+    {
+        bool result = false;
+        std::ranges::for_each(*as_base(), [&] (chunk_type const & chunk) { result |= chunk; });
+
+        return result;
+    }
+
+    //!\brief Checks if none of the bits is set to `true`.
+    constexpr bool none() const noexcept
+    {
+        return !any();
+    }
     //!\}
 
     /*!\name Capacity
@@ -206,6 +232,11 @@ public:
     //!\}
 
 private:
+    base_t const * as_base() const noexcept
+    {
+        return static_cast<base_t const *>(this);
+    }
+
     //!\brief Returns how many chunks are needed to store `count` many elements.
     constexpr size_type chunks_needed(size_type const count) const noexcept
     {
