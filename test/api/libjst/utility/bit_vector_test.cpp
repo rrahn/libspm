@@ -202,6 +202,23 @@ TEST(bit_vector_test, iterate)
 }
 
 // ----------------------------------------------------------------------------
+// Element access
+// ----------------------------------------------------------------------------
+
+TEST(bit_vector_test, subscript_operator)
+{
+    libjst::bit_vector test_vector{true, false, true, false, false, true, true};
+    EXPECT_EQ(test_vector.size(), 7u);
+    EXPECT_EQ(test_vector[0], true);
+    EXPECT_EQ(test_vector[1], false);
+    EXPECT_EQ(test_vector[2], true);
+    EXPECT_EQ(std::as_const(test_vector)[3], false);
+    EXPECT_EQ(std::as_const(test_vector)[4], false);
+    EXPECT_EQ(std::as_const(test_vector)[5], true);
+    EXPECT_EQ(std::as_const(test_vector)[6], true);
+}
+
+// ----------------------------------------------------------------------------
 // capacity
 // ----------------------------------------------------------------------------
 

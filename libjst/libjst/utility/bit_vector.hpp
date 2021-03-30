@@ -133,6 +133,28 @@ public:
     {}
     //!\}
 
+    /*!\name Element access
+     * \{
+     */
+    //!\brief Access specified element.
+    constexpr reference operator[](difference_type const position) noexcept
+    {
+        assert(position >= 0);
+        assert(static_cast<size_type>(position) < size());
+
+        return *std::ranges::next(begin(), position);
+    }
+
+    //!\brief Access specified element.
+    constexpr const_reference operator[](difference_type const position) const noexcept
+    {
+        assert(position >= 0);
+        assert(static_cast<size_type>(position) < size());
+
+        return *std::ranges::next(begin(), position);
+    }
+    //!\}
+
     /*!\name Capacity
      * \{
      */
