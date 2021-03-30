@@ -189,6 +189,12 @@ public:
     {
         return _size;
     }
+
+    //!\brief Checks wether the container is empty.
+    constexpr bool empty() const noexcept
+    {
+        return _size == 0;
+    }
     //!\}
 
     /*!\name Modifiers

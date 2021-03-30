@@ -630,6 +630,24 @@ TEST(bit_vector_test, size)
     }
 }
 
+TEST(bit_vector_test, empty)
+{
+    {
+        libjst::bit_vector test_vector{};
+        EXPECT_TRUE(test_vector.empty());
+    }
+
+    {
+        libjst::bit_vector test_vector(1);
+        EXPECT_FALSE(test_vector.empty());
+    }
+
+    {
+        libjst::bit_vector test_vector(1000);
+        EXPECT_FALSE(test_vector.empty());
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Iterator test
 // ----------------------------------------------------------------------------
