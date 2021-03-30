@@ -207,6 +207,46 @@ public:
         resize(count, bool{});
     }
 
+    //!\brief Performs binary AND between `this` and `rhs`.
+    constexpr bit_vector & operator&=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk & right_chunk;
+        });
+    }
+
+    //!\brief Performs binary OR between `this` and `rhs`.
+    constexpr bit_vector & operator|=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk | right_chunk;
+        });
+    }
+
+    //!\brief Performs binary XOR between `this` and `rhs`.
+    constexpr bit_vector & operator^=(bit_vector const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return chunk_wise_transform(rhs, [] (chunk_type const & left_chunk, chunk_type const & right_chunk)
+        {
+            return left_chunk ^ right_chunk;
+        });
+    }
+
+    //!\brief Performs binary NOT.
+    constexpr bit_vector operator~() const noexcept
+    {
+        bit_vector tmp{*this};
+        return tmp.flip();
+    }
+
     //!\brief Flips all bits in-place.
     constexpr bit_vector & flip() noexcept
     {
@@ -276,6 +316,39 @@ public:
     //!\}
 
 private:
+    /*!\brief Performs chunk wise transformation on this with the given binary operator.
+     *
+     * \tparam binary_operator_t The type of the binary operator to invoke on the two chunks; must model
+     *                           std::invocable.
+     *
+     * \param[in] rhs The right hand side of the transform operation.
+     * \param[in] op The binary operator.
+     *
+     * \details
+     *
+     * Efficiently applies the binary operator on the chunks rather than single bits.
+     */
+    template <typename binary_operator_t>
+    //!\cond
+        requires std::invocable<binary_operator_t, chunk_type const &, chunk_type const &> &&
+                 std::same_as<std::invoke_result_t<binary_operator_t, chunk_type const &, chunk_type const &>,
+                              chunk_type>
+    //!\endcond
+    constexpr bit_vector & chunk_wise_transform(bit_vector const & rhs, binary_operator_t && op) noexcept
+    {
+        bit_vector tmp;
+        tmp.resize(size()); // Is this more efficient to make an extra copy?
+        std::ranges::transform(*as_base(), *rhs.as_base(), tmp.data(),
+                               [&] (chunk_type const & left_chunk, chunk_type const & right_chunk) -> chunk_type
+        {
+            return op(left_chunk, right_chunk);
+        });
+
+        swap(tmp);
+        return *this;
+    }
+
+    //!\brief Casts `this` to its base class.
     base_t const * as_base() const noexcept
     {
         return static_cast<base_t const *>(this);

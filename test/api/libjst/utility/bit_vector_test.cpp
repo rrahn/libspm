@@ -323,6 +323,199 @@ TEST(bit_vector_test, swap)
     EXPECT_TRUE(test_vector_right.all());
 }
 
+TEST(bit_vector_test, operator_binary_and)
+{
+    libjst::bit_vector test_vector(250, false);
+    libjst::bit_vector test_vector_all(250, true);
+
+    test_vector &= test_vector_all;
+
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_EQ(test_vector_all.size(), 250u);
+
+    EXPECT_TRUE(test_vector.none());
+    EXPECT_TRUE(test_vector_all.all());
+
+    test_vector[0] = true;
+    test_vector[10] = true;
+    test_vector[63] = true;
+    test_vector[64] = true;
+    test_vector[127] = true;
+    test_vector[128] = true;
+    test_vector[200] = true;
+    test_vector[249] = true;
+
+    test_vector &= test_vector_all;
+    EXPECT_FALSE(test_vector.none());
+    EXPECT_TRUE(test_vector_all.all());
+
+    EXPECT_TRUE(test_vector[0]);
+    EXPECT_FALSE(test_vector[1]);
+    EXPECT_FALSE(test_vector[9]);
+    EXPECT_TRUE(test_vector[10]);
+    EXPECT_FALSE(test_vector[11]);
+    EXPECT_FALSE(test_vector[62]);
+    EXPECT_TRUE(test_vector[63]);
+    EXPECT_TRUE(test_vector[64]);
+    EXPECT_FALSE(test_vector[65]);
+    EXPECT_FALSE(test_vector[126]);
+    EXPECT_TRUE(test_vector[127]);
+    EXPECT_TRUE(test_vector[128]);
+    EXPECT_FALSE(test_vector[129]);
+    EXPECT_FALSE(test_vector[199]);
+    EXPECT_TRUE(test_vector[200]);
+    EXPECT_FALSE(test_vector[201]);
+    EXPECT_FALSE(test_vector[248]);
+    EXPECT_TRUE(test_vector[249]);
+}
+
+TEST(bit_vector_test, operator_binary_or)
+{
+    libjst::bit_vector test_vector(250, false);
+    libjst::bit_vector test_vector_all(250, true);
+
+    test_vector |= test_vector_all;
+
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_EQ(test_vector_all.size(), 250u);
+
+    EXPECT_TRUE(test_vector.all());
+    EXPECT_TRUE(test_vector_all.all());
+
+    test_vector[0] = false;
+    test_vector[10] = false;
+    test_vector[63] = false;
+    test_vector[64] = false;
+    test_vector[127] = false;
+    test_vector[128] = false;
+    test_vector[200] = false;
+    test_vector[249] = false;
+
+    test_vector_all[0] = false;
+    test_vector_all[10] = false;
+    test_vector_all[127] = false;
+    test_vector_all[128] = false;
+    test_vector_all[249] = false;
+
+    test_vector |= test_vector_all;
+    EXPECT_FALSE(test_vector.all());
+    EXPECT_FALSE(test_vector_all.all());
+
+    EXPECT_FALSE(test_vector[0]);
+    EXPECT_TRUE(test_vector[1]);
+    EXPECT_TRUE(test_vector[9]);
+    EXPECT_FALSE(test_vector[10]);
+    EXPECT_TRUE(test_vector[11]);
+    EXPECT_TRUE(test_vector[62]);
+    EXPECT_TRUE(test_vector[63]);
+    EXPECT_TRUE(test_vector[64]);
+    EXPECT_TRUE(test_vector[65]);
+    EXPECT_TRUE(test_vector[126]);
+    EXPECT_FALSE(test_vector[127]);
+    EXPECT_FALSE(test_vector[128]);
+    EXPECT_TRUE(test_vector[129]);
+    EXPECT_TRUE(test_vector[199]);
+    EXPECT_TRUE(test_vector[200]);
+    EXPECT_TRUE(test_vector[201]);
+    EXPECT_TRUE(test_vector[248]);
+    EXPECT_FALSE(test_vector[249]);
+}
+
+TEST(bit_vector_test, operator_binary_xor)
+{
+    libjst::bit_vector test_vector(250, false);
+    libjst::bit_vector test_vector_all(250, true);
+
+    test_vector ^= test_vector_all;
+
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_EQ(test_vector_all.size(), 250u);
+
+    EXPECT_TRUE(test_vector.all());
+    EXPECT_TRUE(test_vector_all.all());
+
+    test_vector[0] = false;
+    test_vector[10] = false;
+    test_vector[63] = false;
+    test_vector[64] = false;
+    test_vector[127] = false;
+    test_vector[128] = false;
+    test_vector[200] = false;
+    test_vector[249] = false;
+
+    test_vector_all[0] = false;
+    test_vector_all[10] = false;
+    test_vector_all[127] = false;
+    test_vector_all[128] = false;
+    test_vector_all[249] = false;
+
+    test_vector ^= test_vector_all;
+    EXPECT_FALSE(test_vector.all());
+    EXPECT_FALSE(test_vector_all.all());
+
+    EXPECT_FALSE(test_vector[0]);
+    EXPECT_FALSE(test_vector[1]);
+    EXPECT_FALSE(test_vector[9]);
+    EXPECT_FALSE(test_vector[10]);
+    EXPECT_FALSE(test_vector[11]);
+    EXPECT_FALSE(test_vector[62]);
+    EXPECT_TRUE(test_vector[63]);
+    EXPECT_TRUE(test_vector[64]);
+    EXPECT_FALSE(test_vector[65]);
+    EXPECT_FALSE(test_vector[126]);
+    EXPECT_FALSE(test_vector[127]);
+    EXPECT_FALSE(test_vector[128]);
+    EXPECT_FALSE(test_vector[129]);
+    EXPECT_FALSE(test_vector[199]);
+    EXPECT_TRUE(test_vector[200]);
+    EXPECT_FALSE(test_vector[201]);
+    EXPECT_FALSE(test_vector[248]);
+    EXPECT_FALSE(test_vector[249]);
+}
+
+TEST(bit_vector_test, operator_binary_not)
+{
+    libjst::bit_vector test_vector(250, false);
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_TRUE(test_vector.none());
+
+    libjst::bit_vector expected_vector = ~test_vector;
+    EXPECT_EQ(expected_vector.size(), 250u);
+    EXPECT_TRUE(test_vector.none());
+    EXPECT_TRUE(expected_vector.all());
+
+    test_vector[0] = true;
+    test_vector[10] = true;
+    test_vector[63] = true;
+    test_vector[64] = true;
+    test_vector[127] = true;
+    test_vector[128] = true;
+    test_vector[200] = true;
+    test_vector[249] = true;
+
+    expected_vector = ~test_vector;
+    EXPECT_FALSE(expected_vector.all());
+
+    EXPECT_FALSE(expected_vector[0]);
+    EXPECT_TRUE(expected_vector[1]);
+    EXPECT_TRUE(expected_vector[9]);
+    EXPECT_FALSE(expected_vector[10]);
+    EXPECT_TRUE(expected_vector[11]);
+    EXPECT_TRUE(expected_vector[62]);
+    EXPECT_FALSE(expected_vector[63]);
+    EXPECT_FALSE(expected_vector[64]);
+    EXPECT_TRUE(expected_vector[65]);
+    EXPECT_TRUE(expected_vector[126]);
+    EXPECT_FALSE(expected_vector[127]);
+    EXPECT_FALSE(expected_vector[128]);
+    EXPECT_TRUE(expected_vector[129]);
+    EXPECT_TRUE(expected_vector[199]);
+    EXPECT_FALSE(expected_vector[200]);
+    EXPECT_TRUE(expected_vector[201]);
+    EXPECT_TRUE(expected_vector[248]);
+    EXPECT_FALSE(expected_vector[249]);
+}
+
 TEST(bit_vector_test, flip)
 {
     libjst::bit_vector test_vector(250, false);
