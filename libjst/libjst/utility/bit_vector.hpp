@@ -207,6 +207,26 @@ public:
         resize(count, bool{});
     }
 
+    //!\brief Flips all bits in-place.
+    constexpr bit_vector & flip() noexcept
+    {
+        std::ranges::for_each(*as_base(), [] (chunk_type & chunk) { chunk = ~chunk; });
+        return *this;
+    }
+
+    //!\brief Flips the bit at the given position.
+    constexpr bit_vector & flip(size_type position)
+    {
+        using namespace std::literals;
+
+        if (position >= size())
+            throw std::out_of_range{"The given posisiton "s +  std::to_string(position) +
+                                    " is out of the range [0, "s + std::to_string(size()) + ")!"s};
+
+        (*this)[position].flip();
+        return *this;
+    }
+
     //!\brief Exchanges the contents of the container with those of others.
     constexpr void swap(bit_vector & other) noexcept
     {
@@ -365,6 +385,13 @@ public:
     constexpr operator bool() const noexcept
     {
         return *_chunk & _chunk_mask;
+    }
+
+    //!\brief Flips the referenced bit.
+    constexpr bit_reference & flip() noexcept
+    {
+        (*this) ? clear() : set();
+        return *this;
     }
 
 private:

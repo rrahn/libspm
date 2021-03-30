@@ -323,6 +323,93 @@ TEST(bit_vector_test, swap)
     EXPECT_TRUE(test_vector_right.all());
 }
 
+TEST(bit_vector_test, flip)
+{
+    libjst::bit_vector test_vector(250, false);
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_TRUE(test_vector.none());
+
+    test_vector.flip();
+    EXPECT_TRUE(test_vector.all());
+
+    test_vector[0] = false;
+    test_vector[10] = false;
+    test_vector[63] = false;
+    test_vector[64] = false;
+    test_vector[127] = false;
+    test_vector[128] = false;
+    test_vector[200] = false;
+    test_vector[249] = false;
+
+    test_vector.flip();
+
+    EXPECT_TRUE(test_vector[0]);
+    EXPECT_FALSE(test_vector[1]);
+    EXPECT_FALSE(test_vector[9]);
+    EXPECT_TRUE(test_vector[10]);
+    EXPECT_FALSE(test_vector[11]);
+    EXPECT_FALSE(test_vector[62]);
+    EXPECT_TRUE(test_vector[63]);
+    EXPECT_TRUE(test_vector[64]);
+    EXPECT_FALSE(test_vector[65]);
+    EXPECT_FALSE(test_vector[126]);
+    EXPECT_TRUE(test_vector[127]);
+    EXPECT_TRUE(test_vector[128]);
+    EXPECT_FALSE(test_vector[129]);
+    EXPECT_FALSE(test_vector[199]);
+    EXPECT_TRUE(test_vector[200]);
+    EXPECT_FALSE(test_vector[201]);
+    EXPECT_FALSE(test_vector[248]);
+    EXPECT_TRUE(test_vector[249]);
+}
+
+TEST(bit_vector_test, flip_single_bit)
+{
+    libjst::bit_vector test_vector(250, false);
+    EXPECT_EQ(test_vector.size(), 250u);
+    EXPECT_TRUE(test_vector.none());
+
+    test_vector.flip(0);
+    test_vector.flip(10);
+    test_vector.flip(63);
+    test_vector.flip(64);
+    test_vector.flip(127);
+    test_vector.flip(128);
+    test_vector.flip(200);
+    test_vector.flip(249);
+
+    EXPECT_TRUE(test_vector[0]);
+    EXPECT_FALSE(test_vector[1]);
+    EXPECT_FALSE(test_vector[9]);
+    EXPECT_TRUE(test_vector[10]);
+    EXPECT_FALSE(test_vector[11]);
+    EXPECT_FALSE(test_vector[62]);
+    EXPECT_TRUE(test_vector[63]);
+    EXPECT_TRUE(test_vector[64]);
+    EXPECT_FALSE(test_vector[65]);
+    EXPECT_FALSE(test_vector[126]);
+    EXPECT_TRUE(test_vector[127]);
+    EXPECT_TRUE(test_vector[128]);
+    EXPECT_FALSE(test_vector[129]);
+    EXPECT_FALSE(test_vector[199]);
+    EXPECT_TRUE(test_vector[200]);
+    EXPECT_FALSE(test_vector[201]);
+    EXPECT_FALSE(test_vector[248]);
+    EXPECT_TRUE(test_vector[249]);
+
+    test_vector.flip(0);
+    test_vector.flip(10);
+    test_vector.flip(63);
+    test_vector.flip(64);
+
+    EXPECT_FALSE(test_vector[0]);
+    EXPECT_FALSE(test_vector[10]);
+    EXPECT_FALSE(test_vector[63]);
+    EXPECT_FALSE(test_vector[64]);
+
+    EXPECT_THROW(test_vector.flip(250), std::out_of_range);
+}
+
 // ----------------------------------------------------------------------------
 // capacity
 // ----------------------------------------------------------------------------
