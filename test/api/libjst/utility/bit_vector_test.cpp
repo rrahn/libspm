@@ -304,6 +304,23 @@ TEST(bit_vector_test, resize)
     EXPECT_TRUE(test_vector.none());
 }
 
+TEST(bit_vector_test, swap)
+{
+    libjst::bit_vector test_vector_left{};
+    libjst::bit_vector test_vector_right(250, true);
+
+    test_vector_left.swap(test_vector_right);
+
+    EXPECT_EQ(test_vector_left.size(), 250u);
+    EXPECT_EQ(test_vector_right.size(), 0u);
+    EXPECT_TRUE(test_vector_left.all());
+
+    test_vector_right.resize(78);
+    test_vector_left.swap(test_vector_right);
+    EXPECT_EQ(test_vector_left.size(), 78u);
+    EXPECT_EQ(test_vector_right.size(), 250u);
+    EXPECT_TRUE(test_vector_left.none());
+    EXPECT_TRUE(test_vector_right.all());
 }
 
 // ----------------------------------------------------------------------------

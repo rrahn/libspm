@@ -206,6 +206,13 @@ public:
     {
         resize(count, bool{});
     }
+
+    //!\brief Exchanges the contents of the container with those of others.
+    constexpr void swap(bit_vector & other) noexcept
+    {
+        base_t::swap(*other.as_base());
+        std::swap(_size, other._size);
+    }
     //!\}
 
     /*!\name Iterators
@@ -252,6 +259,12 @@ private:
     base_t const * as_base() const noexcept
     {
         return static_cast<base_t const *>(this);
+    }
+
+    //!\overload
+    base_t * as_base() noexcept
+    {
+        return static_cast<base_t *>(this);
     }
 
     //!\brief Returns how many chunks are needed to store `count` many elements.
