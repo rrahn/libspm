@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.14)
 
 macro (add_jstmap_index_test test_filename)
     add_api_test(${test_filename} "jstmap::index")

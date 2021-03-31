@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.14)
 
 ## CUSTOMISE
 
@@ -46,7 +46,9 @@ add_subdirectory (doc EXCLUDE_FROM_ALL)
 
 ## TEST
 
-enable_testing()
+include (test/jstmap_test.cmake)
 
 add_subdirectory (test/api EXCLUDE_FROM_ALL)
 add_subdirectory (test/cli EXCLUDE_FROM_ALL)
+
+add_subdirectory (test/benchmark EXCLUDE_FROM_ALL)
