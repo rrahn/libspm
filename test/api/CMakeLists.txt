@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.14)
 
 # A macro that adds an api or cli test.
 macro (add_app_test test_filename test_alternative target_dependencies)

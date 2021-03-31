@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.14)
 
 ### Adds an interface library for the jst lib.
 add_library (libjst_libjst INTERFACE)
