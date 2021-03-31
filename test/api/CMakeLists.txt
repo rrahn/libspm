@@ -5,7 +5,8 @@ macro (add_app_test test_filename test_alternative target_dependencies)
     enable_testing ()
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
-    get_filename_component (target "${source_file}" NAME_WE)
+    seqan3_test_component (target "${source_file}" TARGET_NAME)
+    seqan3_test_component (test_name "${source_file}" TEST_NAME)
 
     include_directories (${SEQAN_INCLUDE_DIRS})
     # Create the test target.
@@ -21,13 +22,7 @@ macro (add_app_test test_filename test_alternative target_dependencies)
         add_dependencies (api_test ${target})
     endif ()
 
-    # Generate and set the test name.
-    get_filename_component (target_relative_path "${source_file}" DIRECTORY)
-    if (target_relative_path)
-        set (test_name "${target_relative_path}/${target}")
-    else ()
-        set (test_name "${target}")
-    endif ()
+    # Set the target
     add_test (NAME "${test_name}" COMMAND ${target})
 
     unset (source_file)
