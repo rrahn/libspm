@@ -163,6 +163,7 @@ jobs:
             make -k -j2
             make -k -j2 api_test
             make -k -j2 cli_test
+            make -k -j2 benchmark_test
           fi
 
       - name: Run tests
