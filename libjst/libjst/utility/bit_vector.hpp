@@ -189,6 +189,12 @@ public:
     {
         return _size;
     }
+
+    //!\brief Checks wether the container is empty.
+    constexpr bool empty() const noexcept
+    {
+        return _size == 0;
+    }
     //!\}
 
     /*!\name Modifiers
@@ -384,6 +390,31 @@ private:
         return position >> division_mask; // e.g. position / 64
     }
 };
+
+/*!\name Non-member functions
+ * \{
+ */
+//!\brief Performs binary AND on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator&(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs &= rhs;
+}
+
+//!\brief Performs binary OR on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator|(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs |= rhs;
+}
+
+//!\brief Performs binary XOR on libjst::bit_vectors.
+template <typename allocator_t>
+inline bit_vector<allocator_t> operator^(bit_vector<allocator_t> lhs, bit_vector<allocator_t> const & rhs) noexcept
+{
+    return lhs ^= rhs;
+}
+//!\}
 
 /*!\brief The bit proxy returned as reference.
  *

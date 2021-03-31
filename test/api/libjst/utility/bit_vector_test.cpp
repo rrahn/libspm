@@ -345,7 +345,7 @@ TEST(bit_vector_test, operator_binary_and)
     test_vector[200] = true;
     test_vector[249] = true;
 
-    test_vector &= test_vector_all;
+    test_vector = test_vector & test_vector_all;
     EXPECT_FALSE(test_vector.none());
     EXPECT_TRUE(test_vector_all.all());
 
@@ -397,7 +397,7 @@ TEST(bit_vector_test, operator_binary_or)
     test_vector_all[128] = false;
     test_vector_all[249] = false;
 
-    test_vector |= test_vector_all;
+    test_vector = test_vector | test_vector_all;
     EXPECT_FALSE(test_vector.all());
     EXPECT_FALSE(test_vector_all.all());
 
@@ -449,7 +449,7 @@ TEST(bit_vector_test, operator_binary_xor)
     test_vector_all[128] = false;
     test_vector_all[249] = false;
 
-    test_vector ^= test_vector_all;
+    test_vector = test_vector ^ test_vector_all;
     EXPECT_FALSE(test_vector.all());
     EXPECT_FALSE(test_vector_all.all());
 
@@ -627,6 +627,24 @@ TEST(bit_vector_test, size)
     {
         libjst::bit_vector test_vector{};
         EXPECT_EQ(test_vector.size(), 0u);
+    }
+}
+
+TEST(bit_vector_test, empty)
+{
+    {
+        libjst::bit_vector test_vector{};
+        EXPECT_TRUE(test_vector.empty());
+    }
+
+    {
+        libjst::bit_vector test_vector(1);
+        EXPECT_FALSE(test_vector.empty());
+    }
+
+    {
+        libjst::bit_vector test_vector(1000);
+        EXPECT_FALSE(test_vector.empty());
     }
 }
 
