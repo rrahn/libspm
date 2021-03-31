@@ -14,10 +14,15 @@ list (APPEND APP_TEMPLATE_EXTERNAL_PROJECT_CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAK
 list (APPEND APP_TEMPLATE_EXTERNAL_PROJECT_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}")
 list (APPEND APP_TEMPLATE_EXTERNAL_PROJECT_CMAKE_ARGS "-DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}")
 
-# Download and build Googletest module. The interface target 'gtest_all' contains all libs and header paths.
+# Add more cmake tooling from this project and seqan3.
 find_path (JSTMAP_TEST_CMAKE_MODULE_DIR NAMES app_datasources.cmake HINTS "${CMAKE_CURRENT_LIST_DIR}/cmake/")
 list(APPEND CMAKE_MODULE_PATH "${JSTMAP_TEST_CMAKE_MODULE_DIR}")
 
+find_path (SEQAN3_TEST_CMAKE_MODULE_DIR NAMES seqan3_test_component.cmake
+                                        HINTS "${CMAKE_SOURCE_DIR}/lib/seqan3/test/cmake/")
+list(APPEND CMAKE_MODULE_PATH "${SEQAN3_TEST_CMAKE_MODULE_DIR}")
+
+# Download and build Googletest module. The interface target 'gtest_all' contains all libs and header paths.
 message (STATUS "Configuring tests. Googletest will be downloaded on demand only.")
 include (build_googletest)
 
@@ -92,8 +97,13 @@ macro (add_cli_test test_filename target_dependencies)
     add_app_test (${test_filename} CLI_TEST ${target_dependencies})
 endmacro ()
 
-# Fetch data and add the tests.
+# ----------------------------------------------------------------------------
+# Commonly used macros for the different test modules.
+# ----------------------------------------------------------------------------
+
 include (app_datasources)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
+
+include (add_subdirectories)
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")

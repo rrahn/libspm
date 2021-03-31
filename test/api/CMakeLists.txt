@@ -12,8 +12,7 @@ include (../jstmap_test.cmake)
 
 ### add subdirectories:
 
-add_subdirectory (jstmap)
-add_subdirectory (libjst)
+add_subdirectories ()
 
 # add_api_test (convert_fastq_test.cpp)
 # target_use_datasources (convert_fastq_test FILES in.fastq)
