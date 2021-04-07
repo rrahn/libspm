@@ -5,50 +5,200 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
+#include <benchmark/benchmark.h>
+
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include <memory_resource>
 
-#include <benchmark/benchmark.h>
-
+#include <seqan3/range/container/aligned_allocator.hpp>
+#include <seqan3/range/container/dynamic_bitset.hpp>
+#include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
-static void vector_copy_benchmark(benchmark::State & state) {
-    std::vector<int> x = {15, 13, 12, 10};
-    for (auto _ : state)
-        std::vector<int> copy{x};
+#include <sdsl/bit_vectors.hpp>
+
+#include <libjst/utility/bit_vector_adaptor.hpp>
+#include <libjst/utility/bit_vector.hpp>
+
+template <typename result_vector_t>
+auto generate_bit_vector_pair(size_t const size)
+{
+    auto random_bit_sequence_first = seqan3::test::generate_numeric_sequence(size, 0u, 1u);
+    auto random_bit_sequence_second = seqan3::test::generate_numeric_sequence(size, 0u, 1u, size);
+
+    result_vector_t test_vector_first(size);
+    result_vector_t test_vector_second(size);
+
+    if constexpr (std::ranges::output_range<result_vector_t, bool>)
+    {
+        std::ranges::copy(random_bit_sequence_first, test_vector_first.begin());
+        std::ranges::copy(random_bit_sequence_second, test_vector_second.begin());
+    }
+    else
+    {
+        std::ranges::copy(random_bit_sequence_first, std::back_inserter(test_vector_first));
+        std::ranges::copy(random_bit_sequence_second, std::back_inserter(test_vector_second));
+    }
+
+    return std::pair{std::move(test_vector_first), std::move(test_vector_second)};
 }
 
-static void memcpy_benchmark(benchmark::State & state) {
-    size_t size = state.range(0);
-    std::vector<char> src(size, '-');
-    std::vector<char> dst(size);
+template <typename bit_vector_t, typename operation_t>
+void benchmark_bit_vector(benchmark::State & state, bit_vector_t, operation_t && operation)
+{
+    auto [test_vector_lhs, test_vector_rhs] = generate_bit_vector_pair<bit_vector_t>(state.range(0));
 
     for (auto _ : state)
-        std::copy(src.begin(), src.end(), dst.begin());
-
-    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(size);
+        benchmark::DoNotOptimize(operation(test_vector_lhs, test_vector_rhs));
 }
 
-static void copy_benchmark(benchmark::State & state) {
-    unsigned size = state.range(0);
-    char* src = new char[size];
-    char* dst = new char[size];
+// ----------------------------------------------------------------------------
+// Benchmark operations
+// ----------------------------------------------------------------------------
 
-    memset(src, '-', size);
-    for (auto _ : state)
-        std::copy_n(src, size, dst);
+inline auto binary_and = [] <typename bv_t> (bv_t & lhs, bv_t & rhs) constexpr -> bv_t const &
+{
+    return lhs &= rhs;
+};
 
-    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(size);
-    delete[] src;
-    delete[] dst;
-}
+inline auto binary_or = [] <typename bv_t> (bv_t & lhs, bv_t & rhs) constexpr -> bv_t const &
+{
+    return lhs |= rhs;
+};
 
-// Register the function as a benchmark
-BENCHMARK(vector_copy_benchmark);
+inline auto binary_xor = [] <typename bv_t> (bv_t & lhs, bv_t & rhs) constexpr -> bv_t const &
+{
+    return lhs ^= rhs;
+};
 
-BENCHMARK(memcpy_benchmark)->Arg(8)->Arg(64)->Arg(512);
-BENCHMARK(memcpy_benchmark)->Range(4, 4<<5);
-BENCHMARK(copy_benchmark)->RangeMultiplier(2)->Range(4, 4<<5);
+inline auto binary_not = [] <typename bv_t> (bv_t & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bv_t
+{
+    return ~lhs;
+};
+
+inline auto none = [] (auto & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bool
+{
+    return lhs.none();
+};
+
+inline auto all = [] (auto & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bool
+{
+    return lhs.all();
+};
+
+inline auto any = [] (auto & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bool
+{
+    return lhs.any();
+};
+
+// ----------------------------------------------------------------------------
+// Benchmark libjst::bit_vector
+// ----------------------------------------------------------------------------
+
+static constexpr int32_t min_range = 32;
+static constexpr int32_t max_range = 2'097'152;
+static constexpr int32_t range_multiplier = 8;
+
+using aligned_allocator_t = seqan3::aligned_allocator<bool, 32>;
+using libjst_bit_vector_t = libjst::bit_vector<aligned_allocator_t>;
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_and,
+                  libjst_bit_vector_t{},
+                  binary_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_or,
+                  libjst_bit_vector_t{},
+                  binary_or)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_xor,
+                  libjst_bit_vector_t{},
+                  binary_xor)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_not,
+                  libjst_bit_vector_t{},
+                  binary_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_none,
+                  libjst_bit_vector_t{},
+                  none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_all,
+                  libjst_bit_vector_t{},
+                  all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_any,
+                  libjst_bit_vector_t{},
+                  any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+// ----------------------------------------------------------------------------
+// Benchmark std::vector<bool> adaptor
+// ----------------------------------------------------------------------------
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_and,
+                  libjst::utility::bit_vector_adaptor{},
+                  binary_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_or,
+                  libjst::utility::bit_vector_adaptor{},
+                  binary_or)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_xor,
+                  libjst::utility::bit_vector_adaptor{},
+                  binary_xor)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_not,
+                  libjst::utility::bit_vector_adaptor{},
+                  binary_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_none,
+                  libjst::utility::bit_vector_adaptor{},
+                  none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_all,
+                  libjst::utility::bit_vector_adaptor{},
+                  all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  vector_bool_any,
+                  libjst::utility::bit_vector_adaptor{},
+                  any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+// ----------------------------------------------------------------------------
+// Benchmark sdsl::bit_vector
+// ----------------------------------------------------------------------------
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  sdsl_bv_and,
+                  sdsl::bit_vector{},
+                  binary_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  sdsl_bv_or,
+                  sdsl::bit_vector{},
+                  binary_or)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  sdsl_bv_xor,
+                  sdsl::bit_vector{},
+                  binary_xor)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+// ----------------------------------------------------------------------------
+// Run benchmark
+// ----------------------------------------------------------------------------
 
 BENCHMARK_MAIN();

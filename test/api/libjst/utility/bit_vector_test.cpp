@@ -115,6 +115,77 @@ TEST(bit_vector_test, construct_from_initialiser_list)
     }
 }
 
+TEST(bit_vector_test, assign_with_count)
+{
+    {
+        libjst::bit_vector test_vector{};
+        test_vector.assign(1000, false);
+
+        EXPECT_EQ(test_vector.size(), 1000u);
+    }
+
+    {
+        libjst::bit_vector test_vector{};
+        test_vector.assign(64, true);
+
+        EXPECT_EQ(test_vector.size(), 64u);
+    }
+
+    {
+        libjst::bit_vector test_vector{};
+        test_vector.assign(0, false);
+
+        EXPECT_EQ(test_vector.size(), 0u);
+    }
+
+    {
+        libjst::bit_vector test_vector{};
+        test_vector.assign(1, true);
+
+        EXPECT_EQ(test_vector.size(), 1u);
+    }
+}
+
+TEST(bit_vector_test, assign_from_initialiser_list)
+{
+    { // From the concrete values.
+        libjst::bit_vector test_vector{};
+        test_vector.assign({true, false, true, false, false, true, true});
+
+        auto it = test_vector.begin();
+        EXPECT_EQ(test_vector.size(), 7u);
+        EXPECT_EQ(*it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, true);
+    }
+
+    { // From integers convertible to bool.
+        libjst::bit_vector test_vector{};
+        test_vector.assign({1, 0, 1, 0, 0, 1, 1});
+
+        auto it = test_vector.begin();
+        EXPECT_EQ(test_vector.size(), 7u);
+        EXPECT_EQ(*it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, false);
+        EXPECT_EQ(*++it, true);
+        EXPECT_EQ(*++it, true);
+    }
+
+    {
+        libjst::bit_vector test_vector{};
+        test_vector.assign(std::initializer_list<bool>{});
+
+        EXPECT_EQ(test_vector.size(), 0u);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // iterators
 // ----------------------------------------------------------------------------
@@ -218,11 +289,19 @@ TEST(bit_vector_test, subscript_operator)
     EXPECT_EQ(std::as_const(test_vector)[6], true);
 }
 
+TEST(bit_vector_test, back)
+{
+    libjst::bit_vector test_vector{true, false, true, false, false, true, true};
+    EXPECT_EQ(test_vector.size(), 7u);
+    EXPECT_EQ(test_vector.back(), true);
+    EXPECT_EQ(std::as_const(test_vector).back(), true);
+}
+
 TEST(bit_vector_test, all)
 {
     { // empty vector
         libjst::bit_vector test_vector{};
-        EXPECT_FALSE(test_vector.all());
+        EXPECT_TRUE(test_vector.all());
     }
 
     {
@@ -302,6 +381,21 @@ TEST(bit_vector_test, resize)
     test_vector.resize(0, true);
     EXPECT_EQ(test_vector.size(), 0u);
     EXPECT_TRUE(test_vector.none());
+}
+
+TEST(bit_vector_test, push_back)
+{
+    libjst::bit_vector test_vector{};
+
+    EXPECT_EQ(test_vector.size(), 0u);
+    test_vector.push_back(true);
+    EXPECT_EQ(test_vector.size(), 1u);
+    EXPECT_TRUE(test_vector.back());
+
+    test_vector.resize(128, true);
+    test_vector.push_back(false);
+    EXPECT_EQ(test_vector.size(), 129u);
+    EXPECT_FALSE(test_vector.back());
 }
 
 TEST(bit_vector_test, swap)
