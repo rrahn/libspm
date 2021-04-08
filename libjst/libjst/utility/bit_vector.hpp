@@ -123,5 +123,11 @@ private:
 
         return *this;
     }
+
+    //!\brief Ensures that the base bit vector has enough memory.
+    constexpr void reserve_impl(size_type const count) noexcept
+    {
+        base_t::as_base()->reserve(base_t::chunks_needed(count));
+    }
 };
 }  // namespace libjst::utility

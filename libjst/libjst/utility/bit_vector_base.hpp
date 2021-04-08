@@ -197,8 +197,8 @@ public:
      */
     constexpr void assign(size_type const count, bool const bit)
     {
-        *as_base() = base_t(chunks_needed(count), fill_chunk(bit));
-        set_new_size(count);
+        resize(count, bit);
+        std::ranges::for_each(*as_base(), [value = fill_chunk(bit)] (chunk_type & chunk) { chunk = value;});
     }
     //!\}
 
@@ -290,6 +290,12 @@ public:
         return _size == 0;
     }
 
+    //!\brief Returns the capacity.
+    constexpr size_type capacity() const noexcept
+    {
+        return base_t::capacity() * chunk_size;
+    }
+
     /*!\brief Reserves storage.
      *
      * \param[in] new_capacity The new capacity of the bit vector.
@@ -309,7 +315,7 @@ public:
      */
     constexpr void reserve(size_type const new_capacity)
     {
-        as_base()->reserve(chunks_needed(new_capacity));
+        as_derived()->reserve_impl(new_capacity);
     }
     //!\}
 
@@ -339,20 +345,19 @@ public:
      */
     constexpr void push_back(bool bit)
     {
-        size_t const bit_position = size();
-        if (to_local_chunk_position(bit_position) == 0) // size is exactly divisable by bits per chunk
-            base_t::push_back(0); // ensure the underlying vector has enough storage.
-
+        size_t const new_size = size() + 1;
+        resize(new_size);
         // ---- no exception after this point.
-        set_new_size(bit_position + 1);
+        set_new_size(new_size);
         back() = bit; // set the bit.
     }
 
     //!\brief Changes the number of elements stored, where additional copies of `bit` are appended.
     constexpr void resize(size_type const count, bool const bit)
     {
+        reserve(count);
         base_t::resize(chunks_needed(count), fill_chunk(bit));
-        _size = count;
+        set_new_size(count);
     }
 
     //!\brief Changes the number of elements stored, where additional default-initialised elements are appended.

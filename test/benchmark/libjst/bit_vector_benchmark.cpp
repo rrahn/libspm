@@ -21,6 +21,7 @@
 
 #include <libjst/utility/bit_vector_adaptor.hpp>
 #include <libjst/utility/bit_vector.hpp>
+#include <libjst/utility/bit_vector_simd.hpp>
 
 template <typename result_vector_t>
 auto generate_bit_vector_pair(size_t const size)
@@ -31,6 +32,7 @@ auto generate_bit_vector_pair(size_t const size)
     result_vector_t test_vector_first(size);
     result_vector_t test_vector_second(size);
 
+    // std::cout << "After generation: " << test_vector_first.capacity() << "\n";
     if constexpr (std::ranges::output_range<result_vector_t, bool>)
     {
         std::ranges::copy(random_bit_sequence_first, test_vector_first.begin());
@@ -49,6 +51,8 @@ template <typename bit_vector_t, typename operation_t>
 void benchmark_bit_vector(benchmark::State & state, bit_vector_t, operation_t && operation)
 {
     auto [test_vector_lhs, test_vector_rhs] = generate_bit_vector_pair<bit_vector_t>(state.range(0));
+
+    // std::cout << "After copying: " << test_vector_lhs.capacity() << "\n";
 
     for (auto _ : state)
         benchmark::DoNotOptimize(operation(test_vector_lhs, test_vector_rhs));
@@ -78,6 +82,11 @@ inline auto binary_not = [] <typename bv_t> (bv_t & lhs, [[maybe_unused]] auto c
     return ~lhs;
 };
 
+inline auto binary_flip = [] <typename bv_t> (bv_t & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bv_t const &
+{
+    return lhs.flip();
+};
+
 inline auto none = [] (auto & lhs, [[maybe_unused]] auto const & ...args) constexpr -> bool
 {
     return lhs.none();
@@ -93,50 +102,96 @@ inline auto any = [] (auto & lhs, [[maybe_unused]] auto const & ...args) constex
     return lhs.any();
 };
 
+static constexpr int32_t min_range = 32;
+static constexpr int32_t max_range = 1'048'576;
+static constexpr int32_t range_multiplier = 2;
+
 // ----------------------------------------------------------------------------
 // Benchmark libjst::bit_vector
 // ----------------------------------------------------------------------------
 
-static constexpr int32_t min_range = 32;
-static constexpr int32_t max_range = 2'097'152;
-static constexpr int32_t range_multiplier = 8;
-
-using aligned_allocator_t = seqan3::aligned_allocator<bool, 32>;
-using libjst_bit_vector_t = libjst::bit_vector<aligned_allocator_t>;
-
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_and,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   binary_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_or,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   binary_or)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_xor,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   binary_xor)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_not,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   binary_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_flip,
+                  libjst::bit_vector<>{},
+                  binary_flip)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_none,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_all,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
                   all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 BENCHMARK_CAPTURE(benchmark_bit_vector,
                   libjst_bv_any,
-                  libjst_bit_vector_t{},
+                  libjst::bit_vector<>{},
+                  any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+// ----------------------------------------------------------------------------
+// Benchmark libjst::bit_vector_simd
+// ----------------------------------------------------------------------------
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_and,
+                  libjst::bit_vector_simd<>{},
+                  binary_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_or,
+                  libjst::bit_vector_simd<>{},
+                  binary_or)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_xor,
+                  libjst::bit_vector_simd<>{},
+                  binary_xor)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_not,
+                  libjst::bit_vector_simd<>{},
+                  binary_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_flip,
+                  libjst::bit_vector_simd<>{},
+                  binary_flip)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_none,
+                  libjst::bit_vector_simd<>{},
+                  none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_all,
+                  libjst::bit_vector_simd<>{},
+                  all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
+
+BENCHMARK_CAPTURE(benchmark_bit_vector,
+                  libjst_bv_simd_any,
+                  libjst::bit_vector_simd<>{},
                   any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 // ----------------------------------------------------------------------------
