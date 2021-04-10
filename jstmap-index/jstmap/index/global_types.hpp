@@ -16,10 +16,14 @@
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 
+#include <libjst/journaled_sequence_tree.hpp>
+
 namespace jstmap
 {
 
 //!\brief The sequence type loaded from the disk.
 using raw_sequence_t = std::vector<seqan3::dna5>;
+//!\brief The globally available journal sequence tree type.
+using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 
 }  // namespace jstmap
