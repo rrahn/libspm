@@ -8,3 +8,8 @@ add_jstmap_index_test (build_journaled_sequence_tree_test.cpp)
 
 add_jstmap_index_test (load_sequence_test.cpp)
 target_use_datasources (load_sequence_test FILES in.fasta)
+
+add_jstmap_index_test (vcf_parser_test.cpp)
+target_use_datasources (vcf_parser_test FILES sim_ref_10Kb.fasta.gz
+                                              sim_ref_10Kb_SNPs.vcf
+                                              sim_ref_10Kb_SNPs_haplotypes.fasta.gz)

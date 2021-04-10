@@ -32,11 +32,25 @@ add_library(jstmap_serialise_jst OBJECT jstmap/index/serialise_jst.hpp
 target_include_directories (jstmap_serialise_jst PUBLIC jstmap::index::base libjst::libjst)
 target_link_libraries (jstmap_serialise_jst PUBLIC jstmap::index::base libjst::libjst)
 
+### Parsing the vcf file
+add_library(jstmap_index_vcf_parser OBJECT jstmap/index/vcf_parser.cpp
+                                           jstmap/index/vcf_parser.hpp
+                                           jstmap/index/global_types.hpp)
+target_include_directories (jstmap_index_vcf_parser PUBLIC jstmap::index::base)
+target_link_libraries (jstmap_index_vcf_parser PUBLIC jstmap::index::base)
+
 ### Create static library for index subcommand
 add_library (jstmap_index STATIC jstmap/index/index_main.cpp
                                  jstmap/index/index_main.hpp)
-target_include_directories (jstmap_index PUBLIC jstmap_index_input jstmap_index_build)
-target_link_libraries (jstmap_index PUBLIC jstmap_index_input jstmap_index_build)
+target_include_directories (jstmap_index PUBLIC jstmap_index_input
+                                                jstmap_index_build
+                                                jstmap_serialise_jst
+                                                jstmap_index_vcf_parser)
+target_link_libraries (jstmap_index PUBLIC
+                                    jstmap_index_input
+                                    jstmap_index_build
+                                    jstmap_serialise_jst
+                                    jstmap_index_vcf_parser)
 add_library (jstmap::index ALIAS jstmap_index)
 
 unset (HEADER_LIST)

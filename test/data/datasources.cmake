@@ -62,3 +62,17 @@ declare_datasource (FILE sim_reads_ref4x10.fa
 declare_datasource (FILE sim_reads_ref5x10.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_reads_ref5x10.fa
                     URL_HASH SHA256=91d775282c7a04d7fd11b66e22c1b42fe947ac7948a35596e538982c95ea4820)
+
+# Simulated vcf files
+
+declare_datasource (FILE sim_ref_10Kb.fasta.gz
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb.fasta.gz
+                    URL_HASH SHA256=d4c76490c23668387228f5b9ada7d86212b38a1656f068f820b7d161ce8dce0a)
+
+declare_datasource (FILE sim_ref_10Kb_SNPs.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs.vcf
+                    URL_HASH SHA256=652694c7fc52fe77baeb6fcab8c4a36a41c8bdb40b98e48d27d2b73d913f2067)
+
+declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs_haplotypes.fasta.gz
+                    URL_HASH SHA256=d9d37d7474884a7bc4bae99c5cdd6457cee6438bbf63ef48c0959dbff8fb1bca)
