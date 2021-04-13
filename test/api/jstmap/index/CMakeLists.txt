@@ -12,4 +12,6 @@ target_use_datasources (load_sequence_test FILES in.fasta)
 add_jstmap_index_test (vcf_parser_test.cpp)
 target_use_datasources (vcf_parser_test FILES sim_ref_10Kb.fasta.gz
                                               sim_ref_10Kb_SNPs.vcf
-                                              sim_ref_10Kb_SNPs_haplotypes.fasta.gz)
+                                              sim_ref_10Kb_SNPs_haplotypes.fasta.gz
+                                              sim_ref_10Kb_SNP_INDELs.vcf
+                                              sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz)
