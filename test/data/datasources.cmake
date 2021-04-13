@@ -84,3 +84,7 @@ declare_datasource (FILE sim_ref_10Kb_SNP_INDELs.vcf
 declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL_HASH SHA256=993400d2fd437cc49ddffb296d14cba505e85e5f5e13d3ab5609aa0c46d26d99)
+
+declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_no_variants.vcf
+                    URL_HASH SHA256=fa0b191b7cba9e3da323bf7674767a4efce0830ee66750ad6c3b8d8952bbaef1)

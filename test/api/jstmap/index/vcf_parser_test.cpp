@@ -18,6 +18,7 @@
 class vcf_parser_test : public ::testing::Test
 {
 public:
+    std::filesystem::path reference_file{DATADIR"sim_ref_10Kb.fasta.gz"};
 
     auto load_sequences(std::filesystem::path reference_file, std::filesystem::path sample_sequence_file)
     {
@@ -36,7 +37,6 @@ public:
 
 TEST_F(vcf_parser_test, snps_only)
 {
-    std::filesystem::path reference_file{DATADIR"sim_ref_10Kb.fasta.gz"};
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNPs.vcf"};
     std::filesystem::path haplotype_file{DATADIR"sim_ref_10Kb_SNPs_haplotypes.fasta.gz"};
 
@@ -49,7 +49,6 @@ TEST_F(vcf_parser_test, snps_only)
 
 TEST_F(vcf_parser_test, snps_and_indels)
 {
-    std::filesystem::path reference_file{DATADIR"sim_ref_10Kb.fasta.gz"};
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
     std::filesystem::path haplotype_file{DATADIR"sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz"};
 
@@ -59,3 +58,16 @@ TEST_F(vcf_parser_test, snps_and_indels)
     EXPECT_RANGE_EQ(jst.reference(), reference);
     test_jst_is_valid(jst, haplotypes);
 }
+
+TEST_F(vcf_parser_test, sample_given_but_no_vcf_record)
+{
+
+    std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_no_variants.vcf"};
+
+    jstmap::jst_t jst = jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+
+    std::vector reference = jstmap::load_sequences(reference_file).front();
+    EXPECT_RANGE_EQ(jst.reference(), reference);
+    EXPECT_EQ(jst.size(), 0u);
+}
+
