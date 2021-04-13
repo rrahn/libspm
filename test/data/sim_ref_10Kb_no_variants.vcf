@@ -1,0 +1,11 @@
+##fileformat=VCFv4.1
+##source=mason_variator
+##reference=sim_ref_10Kb.fasta
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=TARGETPOS,Number=1,Type=String,Description="Target position for duplications.">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=DUP,Description="Duplication">
+##contig=<ID=1,length=10000>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	simulated_0	simulated_1	simulated_2	simulated_3	simulated_4	simulated_5	simulated_6	simulated_7	simulated_8	simulated_9	simulated_10	simulated_11	simulated_12	simulated_13	simulated_14	simulated_15	simulated_16	simulated_17	simulated_18	simulated_19	simulated_20	simulated_21	simulated_22	simulated_23	simulated_24	simulated_25	simulated_26	simulated_27	simulated_28	simulated_29	simulated_30	simulated_31	simulated_32	simulated_33	simulated_34	simulated_35	simulated_36	simulated_37	simulated_38	simulated_39	simulated_40	simulated_41	simulated_42	simulated_43	simulated_44	simulated_45	simulated_46	simulated_47	simulated_48	simulated_49

@@ -21,6 +21,7 @@
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/io/sequence_file/input.hpp>
 #include <seqan3/range/views/char_to.hpp>
+#include <seqan3/range/views/drop.hpp>
 #include <seqan3/range/views/to.hpp>
 
 #include <jstmap/index/vcf_parser.hpp>
@@ -39,6 +40,10 @@ class augmented_vcf_record
     using event_type = typename shared_event_type::delta_event_type;
     //!\brief The substitution type.
     using substitution_type = typename shared_event_type::substitution_type;
+    //!\brief The deletion type.
+    using deletion_type = typename shared_event_type::deletion_type;
+    //!\brief The insertion type.
+    using insertion_type = typename shared_event_type::insertion_type;
     //!\brief The coverage type.
     using coverage_type = typename shared_event_type::coverage_type;
 
@@ -255,25 +260,34 @@ private:
 
             // Find the padded leading and trailing region.
             auto [ref_it, alt_it] = std::ranges::mismatch(reference_segment, alternative);
-            auto [ref_it_rev, alt_it_rev] = std::ranges::mismatch(reference_segment | std::views::reverse,
-                                                                    alternative | std::views::reverse);
-            // base returns the iterator to the actual end.
-            assert(ref_it < ref_it_rev.base());
-            assert(alt_it < alt_it_rev.base());
+            size_t const ref_prefix_offset = std::ranges::distance(reference_segment.begin(), ref_it);
+            size_t const alt_prefix_offset = std::ranges::distance(alternative.begin(), alt_it);
 
-            size_t const alt_offset = std::ranges::distance(alternative.begin(), alt_it);
-            size_t const alt_count = std::ranges::distance(alt_it, alt_it_rev.base());
-            auto variant = alternative.subspan(alt_offset, alt_count) | seqan3::views::char_to<seqan3::dna5>
-                                                                      | seqan3::views::to<std::vector>;
-            // Case substitution:
-            if (alternative.size() == reference_segment.size())
+            auto [ref_it_rev, alt_it_rev] =
+                std::ranges::mismatch(reference_segment | seqan3::views::drop(ref_prefix_offset) | std::views::reverse,
+                                      alternative | seqan3::views::drop(alt_prefix_offset) | std::views::reverse);
+            // base returns the iterator to the actual end.
+            assert(ref_it <= ref_it_rev.base());
+            assert(alt_it <= alt_it_rev.base());
+
+            size_t delta_position = reference_position() + ref_prefix_offset;
+
+            if (alternative.size() < reference_segment.size()) // Deletion.
             {
-                delta_events.emplace_back(reference_position(), substitution_type{std::move(variant)});
+                size_t const deletion_size = std::ranges::distance(ref_it, ref_it_rev.base());
+                delta_events.emplace_back(delta_position, deletion_type{deletion_size});
             }
-            else
+            else // Substitution or Insertion.
             {
-                throw std::runtime_error{"Not expected here: "s +
-                                         std::string{alternative.data(), alternative.size()} + "!"s};
+                size_t const variant_size = std::ranges::distance(alt_it, alt_it_rev.base());
+                auto variant = alternative.subspan(alt_prefix_offset, variant_size)
+                             | seqan3::views::char_to<seqan3::dna5>
+                             | seqan3::views::to<std::vector>;
+
+                if (alternative.size() == reference_segment.size()) // Substitution.
+                    delta_events.emplace_back(delta_position, substitution_type{std::move(variant)});
+                else // Insertion.
+                    delta_events.emplace_back(delta_position, insertion_type{std::move(variant)});
             }
         }
 
