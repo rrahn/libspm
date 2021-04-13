@@ -12,16 +12,12 @@
 
 #pragma once
 
-#include <libjst/journaled_sequence_tree.hpp>
-
 #include <jstmap/index/global_types.hpp>
 
 namespace jstmap
 {
 
 //!\cond
-using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
-
 jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> &&);
 //!\endcond
 

@@ -19,6 +19,8 @@
 #include <seqan3/alphabet/concept.hpp>
 #include <seqan3/core/detail/debug_stream_type.hpp>
 #include <seqan3/core/detail/template_inspection.hpp>
+#include <seqan3/range/views/to.hpp>
+#include <seqan3/range/views/to_char.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/detail/delta_kind_deletion.hpp>
@@ -258,15 +260,20 @@ inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream
     stream << "(" << event.position() << ", "
            << std::visit([&] (auto event) -> std::string
            {
+                auto to_string = [] <std::ranges::input_range range_t> (range_t && range) -> std::string
+                {
+                    return range | seqan3::views::to_char | seqan3::views::to<std::string>;
+                };
+
                 return seqan3::detail::multi_invocable
                 {
                     [&] (delta_kind_substitution<alphabet_t> e) -> std::string
                     {
-                        return  "sub: " + std::string{e.value().begin(), e.value().end()};
+                        return  "sub: " + to_string(e.value());
                     },
                     [&] (delta_kind_insertion<alphabet_t> e) -> std::string
                     {
-                        return "ins: " + std::string{e.value().begin(), e.value().end()};
+                        return "ins: " + to_string(e.value());
                     },
                     [&] (delta_kind_deletion e) { return "del: " + std::to_string(e.value()); },
                     [&] (...) { return "N/A"; }

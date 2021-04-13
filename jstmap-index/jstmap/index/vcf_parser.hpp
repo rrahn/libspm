@@ -6,24 +6,19 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides globally defined types for the index subprogram.
+ * \brief Provides the function to parse a vcf file and construct a JST from it.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
 #pragma once
 
-#include <vector>
+#include <filesystem>
 
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-
-#include <libjst/journaled_sequence_tree.hpp>
+#include <jstmap/index/global_types.hpp>
 
 namespace jstmap
 {
 
-//!\brief The sequence type loaded from the disk.
-using raw_sequence_t = std::vector<seqan3::dna5>;
-//!\brief The globally available journal sequence tree type.
-using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
+jst_t construct_jst_from_vcf(std::filesystem::path const &, std::filesystem::path const &);
 
 }  // namespace jstmap
