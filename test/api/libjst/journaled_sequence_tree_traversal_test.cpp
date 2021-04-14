@@ -170,7 +170,7 @@ TEST_P(traversal_test, enumerate_contexts)
     for (auto context_it = context_enumerator.begin(); context_it != context_enumerator.end(); ++context_it)
     {
         auto context = *context_it;
-        std::string tmp{context.begin(), context.end()};
+        std::string tmp = libjst::test::sequence_to_string(context);
 
         auto positions = context_it.positions();
 
@@ -179,23 +179,10 @@ TEST_P(traversal_test, enumerate_contexts)
 
     // Verify that all unique contexts have been enumerated and that there is no unknown location.
     EXPECT_TRUE(this->all_contexts_enumerated());
-
-    for (auto && [context, positions] : this->context_position_map)
-    {
-        if (positions.empty())
-            continue;
-
-        std::cout << "Context: " << context;
-        for (auto && [id, pos] : positions)
-            std::cout << "\t [" << id << ", " << pos << "]";
-
-        std::cout << "\n";
-    }
+    print_unvisited_contexts();
 
     EXPECT_TRUE(this->unknown_locations.empty());
-
-    for (libjst::context_position & unkown_location : this->unknown_locations)
-        std::cout << unkown_location << "\n";
+    print_unknown_context_locations();
 }
 
 // ----------------------------------------------------------------------------

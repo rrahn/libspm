@@ -12,6 +12,9 @@
 #include <vector>
 
 #include <seqan3/alphabet/gap/gapped.hpp>
+#include <seqan3/range/concept.hpp>
+#include <seqan3/range/views/to_char.hpp>
+#include <seqan3/range/views/to.hpp>
 
 #include <libjst/context_position.hpp>
 
@@ -32,6 +35,11 @@ inline constexpr auto make_gapped = [] (std::string_view const seq) -> std::vect
     });
 
     return tmp;
+};
+
+inline constexpr auto sequence_to_string = [] <seqan3::sequence range_t>(range_t && sequence) -> std::string
+{
+    return sequence | seqan3::views::to_char | seqan3::views::to<std::string>;
 };
 
 class jst_context_map_fixture
@@ -77,6 +85,27 @@ public:
             return found_all;
         }
         return  false;
+    }
+
+    void print_unvisited_contexts() const
+    {
+        for (auto && [context, positions] : context_position_map)
+        {
+            if (positions.empty())
+                continue;
+
+            std::cout << "Context: " << context;
+            for (auto && [id, pos] : positions)
+                std::cout << "\t [" << id << ", " << pos << "]";
+
+            std::cout << "\n";
+        }
+    }
+
+    void print_unknown_context_locations() const
+    {
+        for (libjst::context_position const & unkown_location : unknown_locations)
+            std::cout << unkown_location << "\n";
     }
 
 protected:
