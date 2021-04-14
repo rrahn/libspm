@@ -52,58 +52,19 @@ struct traversal_fixture
     }
 };
 
-struct traversal_test : public ::testing::TestWithParam<traversal_fixture>
+struct traversal_test : public ::testing::TestWithParam<traversal_fixture>,
+                        public libjst::test::jst_context_map_fixture
 {
     using aligned_sequence_t = std::vector<seqan3::gapped<alphabet_t>>;
     using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
-    using context_position_map_t = std::map<std::string_view, std::vector<libjst::context_position>>;
 
     std::vector<std::string> sequences{}; // The generated sequences from the delta events
     std::vector<alignment_t> alignments{}; // The alignments against the reference sequence generated from the delta events.
-    context_position_map_t context_position_map{};
-
-    // Variable to validate a correct traversal.
-    int64_t total_context_count{};
-    std::vector<libjst::context_position> unknown_locations{};
 
     void SetUp() override
     {
         generate_alignments();
-        generate_context_map();
-    }
-
-    bool all_contexts_enumerated() const
-    {
-        return total_context_count == 0;
-    }
-
-    template <typename position_range_t>
-        requires std::same_as<std::ranges::range_value_t<position_range_t>, libjst::context_position>
-    bool context_positions_exist(std::string_view context, position_range_t && locations)
-    {
-        if (std::ranges::empty(locations))
-            return true;
-
-        if (auto it = context_position_map.find(context); it != context_position_map.end())
-        {
-            bool found_all{true};
-            for (libjst::context_position const & actual_location : locations)
-            {
-                size_t erased_elements = std::erase(it->second, actual_location);
-
-                EXPECT_LE(erased_elements, 1u);
-
-                if (erased_elements == 0u)
-                {
-                    unknown_locations.push_back(actual_location);
-                    found_all = false;
-                }
-
-                --total_context_count;
-            }
-            return found_all;
-        }
-        return  false;
+        generate_context_map(GetParam().context_size, sequences);
     }
 
     auto construct_jst() const
@@ -189,31 +150,6 @@ private:
             std::erase(second_sequence, '-');
             sequences[i] = second_sequence;
         }
-    }
-
-    void generate_context_map()
-    {
-        size_t const ctxt_size = GetParam().context_size;
-
-        size_t sequence_index = 0;
-        std::ranges::for_each(sequences, [&] (std::string const & sequence)
-        {
-            std::string_view sv{sequence};
-            size_t context_end_position = std::max<int32_t>(sv.size() - ctxt_size + 1, 0);
-            assert(context_end_position <= sv.size());
-            for (size_t context_position = 0; context_position < context_end_position; ++context_position)
-            {
-                libjst::context_position context_location{.sequence_id = sequence_index,
-                                                          .sequence_position = context_position};
-                using value_t = context_position_map_t::value_type;
-                value_t insert_value{sv.substr(context_position, ctxt_size), std::vector{context_location}};
-                if (auto [it, inserted] = context_position_map.insert(std::move(insert_value)); !inserted)
-                    it->second.emplace_back(context_location);
-
-                ++total_context_count;
-            }
-            ++sequence_index;
-        });
     }
 };
 
