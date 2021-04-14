@@ -77,6 +77,7 @@ include (app_datasources)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (seqan3_require_benchmark)
+include (seqan3_require_ccache)
 include (seqan3_require_test)
 include (add_subdirectories)
 include (seqan3_test_component)

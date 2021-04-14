@@ -19,6 +19,7 @@ macro (jstmap_benchmark benchmark_cpp link_libraries)
 endmacro ()
 
 # Download and build Googlebenchmark module.
+seqan3_require_ccache ()
 seqan3_require_benchmark ()
 
 add_subdirectories ()
