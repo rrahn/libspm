@@ -28,7 +28,7 @@ void process_hits(std::vector<libjst::context_position> & results,
     });
 }
 
-std::vector<libjst::context_position> search_queries(jst_t && jst, std::vector<raw_sequence_t> && queries)
+std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vector<raw_sequence_t> const & queries)
 {
     assert(!queries.empty());
 

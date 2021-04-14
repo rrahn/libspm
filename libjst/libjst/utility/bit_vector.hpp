@@ -131,3 +131,12 @@ private:
     }
 };
 }  // namespace libjst::utility
+
+//!\cond
+namespace cereal
+{
+template <typename archive_t, typename allocator_t>
+struct specialize<archive_t, libjst::bit_vector<allocator_t>, cereal::specialization::member_load_save>
+{};
+} // namespace cereal
+//!\endcond

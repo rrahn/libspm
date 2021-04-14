@@ -21,6 +21,6 @@ namespace jstmap
 
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 
-std::vector<libjst::context_position> search_queries(jst_t &&, std::vector<raw_sequence_t> &&);
+std::vector<libjst::context_position> search_queries(jst_t const &, std::vector<raw_sequence_t> const &);
 
 }  // namespace jstmap

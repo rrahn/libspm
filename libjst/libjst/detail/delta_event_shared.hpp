@@ -20,7 +20,7 @@
 #include <seqan3/alphabet/concept.hpp>
 
 #include <libjst/detail/delta_event.hpp>
-#include <libjst/utility/bit_vector_adaptor.hpp>
+#include <libjst/utility/bit_vector.hpp>
 
 namespace libjst::detail
 {
@@ -46,7 +46,7 @@ public:
     /*!\name Associated Types
      * \{
      */
-    using coverage_type = libjst::utility::bit_vector_adaptor; //!< The coverage type
+    using coverage_type = libjst::bit_vector<>; //!< The coverage type
     using delta_event_type = base_event_t; //!< The original event type.
     using typename base_event_t::substitution_type;
     using typename base_event_t::insertion_type;

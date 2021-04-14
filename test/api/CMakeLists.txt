@@ -40,6 +40,7 @@ macro (add_cli_test test_filename target_dependencies)
     add_app_test (${test_filename} CLI_TEST ${target_dependencies})
 endmacro ()
 
+seqan3_require_ccache ()
 seqan3_require_test ()
 
 # Load the tests from the subdirectories

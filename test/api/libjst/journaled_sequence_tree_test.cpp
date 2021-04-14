@@ -429,11 +429,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                true,
-                true,
-                false
-            ]
+            "value1": {
+                "value0": [
+                    3
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -454,11 +455,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                true,
-                false,
-                false
-            ]
+            "value1": {
+                "value0": [
+                    1
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -479,11 +481,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                true,
-                false
-            ]
+            "value1": {
+                "value0": [
+                    2
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -497,11 +500,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -518,11 +522,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -536,11 +541,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -557,11 +563,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -575,11 +582,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         },
         {
             "value0": {
@@ -596,11 +604,12 @@ R"json({
                     }
                 }
             },
-            "value1": [
-                false,
-                false,
-                true
-            ]
+            "value1": {
+                "value0": [
+                    4
+                ],
+                "value1": 3
+            }
         }
     ],
     "value2": 3
