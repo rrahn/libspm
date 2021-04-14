@@ -15,7 +15,7 @@
 namespace libjst::test
 {
 
-static std::vector<seqan3::gapped<char>> make_gapped(std::string_view const seq)
+inline constexpr auto make_gapped = [] (std::string_view const seq) -> std::vector<seqan3::gapped<char>>
 {
     std::vector<seqan3::gapped<char>> tmp{};
     tmp.reserve(seq.size());
@@ -29,5 +29,6 @@ static std::vector<seqan3::gapped<char>> make_gapped(std::string_view const seq)
     });
 
     return tmp;
-}
-} // namespace libjst
+};
+
+} // namespace libjst::test
