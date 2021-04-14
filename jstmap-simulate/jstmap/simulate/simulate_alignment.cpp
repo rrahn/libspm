@@ -56,6 +56,7 @@ seqan3::gapped<seqan3::dna5> random_char(seqan3::gapped<seqan3::dna5> old_char, 
     } while (new_char == old_char);
     return new_char;
 }
+
 alignment_t simulate_alignment(sequence_t & unaligned, double error_rate)
 {
     assert(error_rate >= 0.0);
@@ -63,8 +64,8 @@ alignment_t simulate_alignment(sequence_t & unaligned, double error_rate)
 
     aligned_sequence_t aligned{};
     seqan3::assign_unaligned(aligned, unaligned);
-    alignment_t alignment(aligned, aligned);
-    
+    alignment_t alignment{aligned, aligned};
+
     std::random_device engine;
     std::mt19937 noise{engine()};
     std::map positions = generate_random_positions(aligned.size(), ceil(aligned.size() * error_rate), noise);

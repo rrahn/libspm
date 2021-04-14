@@ -22,7 +22,7 @@ namespace jstmap
 {
 
 using sequence_t = std::vector<seqan3::dna5>;
-using aligned_sequence_t = std::vector<seqan3::gapped<seqan3::dna5>>;
+using aligned_sequence_t = std::vector<seqan3::gapped<std::ranges::range_value_t<sequence_t>>>;
 using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
 
 }  // namespace jstmap
