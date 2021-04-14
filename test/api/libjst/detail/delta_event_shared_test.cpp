@@ -41,12 +41,12 @@ R"json({
             }
         }
     },
-    "value1": [
-        true,
-        false,
-        true,
-        false
-    ]
+    "value1": {
+        "value0": [
+            5
+        ],
+        "value1": 4
+    }
 })json";
 
     static constexpr std::string_view expected_insertion_archive =
@@ -68,12 +68,12 @@ R"json({
             }
         }
     },
-    "value1": [
-        true,
-        false,
-        true,
-        false
-    ]
+    "value1": {
+        "value0": [
+            5
+        ],
+        "value1": 4
+    }
 })json";
 
     static constexpr std::string_view expected_deletion_archive =
@@ -89,12 +89,12 @@ R"json({
             }
         }
     },
-    "value1": [
-        true,
-        false,
-        true,
-        false
-    ]
+    "value1": {
+        "value0": [
+            5
+        ],
+        "value1": 4
+    }
 })json";
 };
 

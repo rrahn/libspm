@@ -18,6 +18,9 @@
 #include <initializer_list>
 #include <vector>
 
+#include <cereal/types/base_class.hpp>
+
+#include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/std/bit>
 #include <seqan3/utility/detail/bits_of.hpp>
 
@@ -34,7 +37,7 @@ namespace libjst
  */
 template <typename derived_t, typename allocator_t>
 class bit_vector_base :
-    protected std::vector<uint64_t, typename std::allocator_traits<allocator_t>::rebind_alloc<uint64_t>>
+    public std::vector<uint64_t, typename std::allocator_traits<allocator_t>::rebind_alloc<uint64_t>>
 {
 private:
     //!\brief The type of the underlying chunk of bits.
@@ -489,6 +492,34 @@ public:
     constexpr const_iterator cend() const noexcept
     {
         return end();
+    }
+    //!\}
+
+    /*!\name Serialisation
+     * \{
+     */
+    /*!\brief Saves this bit vector to the given output archive.
+     *
+     * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object to.
+     */
+    template <seqan3::cereal_output_archive output_archive_t>
+    void save(output_archive_t & archive) const
+    {
+        archive(cereal::base_class<base_t>(this), _size);
+    }
+
+    /*!\brief Loads this this bit vector from the given input archive.
+     *
+     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object from.
+     */
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        archive(cereal::base_class<base_t>(this), _size);
     }
     //!\}
 
