@@ -143,6 +143,9 @@ public:
             // Iterate over the haplotypes per sample.
             for (size_t const alt_idx : extract_alternative_indices(sample_genotype.front()))
             {
+                if (haplotype_idx > _haplotype_count)
+                    return {false, {}};
+
                 assert(alt_idx <= record_alternative_count); // Must be a valid id into the delta events vector.
                 assert(haplotype_idx < _haplotype_count); // Must not exceed the global haplotype count.
 
@@ -153,7 +156,8 @@ public:
             }
         }
 
-        assert(haplotype_idx == _haplotype_count); // Must be identical to global haplotype count.
+        if (haplotype_idx < _haplotype_count)
+            return {false, {}};
 
         std::vector<shared_event_type> shared_events(record_alternative_count);
         for (size_t idx = 0; idx < shared_events.size(); ++idx)
