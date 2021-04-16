@@ -76,6 +76,12 @@ public:
         return _record;
     }
 
+    //!\brief overload
+    seqan::VcfRecord const & seqan_record() const noexcept
+    {
+        return _record;
+    }
+
     //!\brief Initialises the sample and haplotype counts from the first record.
     void initialise_counts()
     {
@@ -338,6 +344,27 @@ private:
         return std::span{std::addressof(range[0]), seqan::length(range)};
     }
 };
+
+//!\brief Formatted output operator for the augmented vcf record.
+template <typename char_t, typename char_traits_t>
+std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream,
+                                                       augmented_vcf_record const & record)
+{
+    auto const & r = record.seqan_record();
+    stream << r.rID << "\t"
+           << r.beginPos << "\t"
+           << r.id << "\t"
+           << r.ref << "\t"
+           << r.alt << "\t"
+           << r.qual << "\t"
+           << r.filter << "\t"
+           << r.info << "\t"
+           << r.format << "\t";
+    for (auto genotype : r.genotypeInfos)
+        stream << genotype << "\t";
+
+    return stream;
+}
 
 jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
 {
