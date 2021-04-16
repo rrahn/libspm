@@ -24,6 +24,7 @@
 #include <seqan3/range/views/drop.hpp>
 #include <seqan3/range/views/to.hpp>
 
+#include <jstmap/index/application_logger.hpp>
 #include <jstmap/index/vcf_parser.hpp>
 
 #include <libjst/detail/delta_event_shared.hpp>
@@ -121,12 +122,11 @@ public:
     }
 
     //!\brief Generates and returns the delta events for this record.
-    [[nodiscard]] auto generates_delta_events() const
-        -> std::vector<shared_event_type>
+    [[nodiscard]] auto generate_delta_events() const
+        -> std::pair<bool, std::vector<shared_event_type>>
     {
-        // TODO: What if either one of them is empty?
         if (!genotype_info_given())
-            return {}; // break here if there is no genotype info.
+            return {false, {}}; // break here if there is no genotype info.
 
         auto delta_events = extract_delta_events();
         size_t const record_alternative_count = delta_events.size();
@@ -162,7 +162,7 @@ public:
                                                    std::move(coverage_per_alternative[idx])};
         }
 
-        return shared_events;
+        return {true, shared_events};
     }
 
 private:
@@ -368,6 +368,9 @@ std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t
 
 jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
 {
+    // Get the application logger.
+    auto & log = get_application_logger();
+
     // ----------------------------------------------------------------------------
     // Parse the reference file.
     // ----------------------------------------------------------------------------
@@ -401,12 +404,22 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
     // Initial jst with known haplotype count.
     jst_t jst{std::move(reference), record.haplotype_count()};
 
+    log(verbosity_level::verbose, logging_level::info, "Processing records:\n", "-----------------------------");
     // Insert the events generated from the record into the jst.
     auto insert_events_from_record = [&] (auto && record)
     {
-        for (auto shared_event : record.generates_delta_events())
-            if (!jst.insert(std::move(shared_event)))
-                throw std::invalid_argument{"The generated event could not be inserted!"};
+        log(verbosity_level::verbose, logging_level::info, record);
+
+        if (auto [is_valid_record, delta_events] = record.generate_delta_events(); is_valid_record)
+        {
+            for (auto shared_event : delta_events)
+                if (!jst.insert(std::move(shared_event)))
+                    log(verbosity_level::standard, logging_level::error, "Event was not inserted: ", shared_event);
+        }
+        else
+        {
+            log(verbosity_level::standard, logging_level::error, "Skipping invalid record: ", record);
+        }
     };
 
     insert_events_from_record(record);
@@ -416,6 +429,7 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
         seqan::readRecord(record.seqan_record(), vcf_file);
         insert_events_from_record(record);
     }
+    log(verbosity_level::verbose, logging_level::info, "Done\n", "-----------------------------");
 
     return jst;
 }
