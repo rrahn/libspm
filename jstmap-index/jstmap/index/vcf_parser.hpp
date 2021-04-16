@@ -19,6 +19,6 @@
 namespace jstmap
 {
 
-jst_t construct_jst_from_vcf(std::filesystem::path const &, std::filesystem::path const &);
+std::vector<jst_t> construct_jst_from_vcf(std::filesystem::path const &, std::filesystem::path const &);
 
 }  // namespace jstmap

@@ -90,13 +90,10 @@ public:
     //!\brief Initialises the sample and haplotype counts from the first record.
     void initialise_counts()
     {
-        if (!_is_initialised)
-        {
-            _sample_count = sample_count();
-            _haplotype_per_sample_count = haplotypes_per_sample_count();
-            _haplotype_count = _sample_count * _haplotype_per_sample_count;
-            _is_initialised = true;
-        }
+        _sample_count = sample_count();
+        _haplotype_per_sample_count = haplotypes_per_sample_count();
+        _haplotype_count = _sample_count * _haplotype_per_sample_count;
+        _is_initialised = true;
     }
 
     //!\brief Returns the total number of haplotypes.
@@ -456,7 +453,8 @@ public:
     }
 };
 
-jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
+auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
+    -> std::vector<jst_t>
 {
     // Get the application logger.
     auto & log = get_application_logger();
@@ -471,6 +469,8 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
     // ----------------------------------------------------------------------------
     // Parse the vcf file.
     // ----------------------------------------------------------------------------
+
+    log(verbosity_level::verbose, logging_level::info, "Initialise parsing vcf file <", vcf_file_path, ">.");
 
     seqan::VcfFileIn vcf_file{vcf_file_path.c_str()};
 
@@ -487,34 +487,19 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
         log(verbosity_level::standard,
             logging_level::warning,
             "The vcf file <", vcf_file_path, "> does not contain any records!");
-        return jst_t{raw_sequence_t{}};
+        return {};
     }
 
     // Read first record:
     augmented_vcf_record record{std::move(vcf_header), seqan::context(vcf_file)};
-    seqan::readRecord(record.seqan_record(), vcf_file);
-    record.initialise_counts(); // initialise counts with first record.
 
-    // Load the reference sequence for this record.
-    raw_sequence_t ref_contig = sequence_handle.load_contig_with_name(record.contig_name());
-    if (std::ranges::empty(ref_contig))
-    {
-        log(verbosity_level::standard,
-            logging_level::error,
-            "The vcf contig id <", record.contig_name(), "> is not present in the set of reference sequences!");
-    }
+    // ----------------------------------------------------------------------------
+    // Generate one JST for every contig
+    // ----------------------------------------------------------------------------
 
-    // TODO: Continue parsing vcf if not at end.
-
-    // Initial jst with known haplotype count.
-    jst_t jst{std::move(ref_contig), record.haplotype_count()};
-
-    log(verbosity_level::verbose, logging_level::info, "Processing records:\n", "-----------------------------");
     // Insert the events generated from the record into the jst.
-    auto insert_events_from_record = [&] (auto && record)
+    auto insert_events_from_record = [&] (jst_t & jst, auto && record)
     {
-        log(verbosity_level::verbose, logging_level::info, record);
-
         if (auto [is_valid_record, delta_events] = record.generate_delta_events(); is_valid_record)
         {
             for (auto shared_event : delta_events)
@@ -527,16 +512,49 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
         }
     };
 
-    insert_events_from_record(record);
+    log(verbosity_level::verbose, logging_level::info, "Processing records:\n", "-----------------------------");
+    assert(!seqan::atEnd(vcf_file));
 
-    while (!seqan::atEnd(vcf_file))
+    std::vector<jst_t> jst_per_contig{}; // Store all generated JSTs.
+    seqan::readRecord(record.seqan_record(), vcf_file); // Read first record.
+    bool vcf_eof = false; // Check if the vcf is at end which guaranteed to be not the case here.
+
+    while (!vcf_eof)
     {
-        seqan::readRecord(record.seqan_record(), vcf_file);
-        insert_events_from_record(record);
+        record.initialise_counts(); // initialise counts with first record of new contig.
+        log(verbosity_level::verbose, logging_level::info, "Process contig ", record.contig_name());
+        log(verbosity_level::verbose, logging_level::info, "Detected haploptypes ", record.haplotype_count());
+
+        // Load the reference sequence for this record.
+        std::string_view current_contig_name = record.contig_name();
+        raw_sequence_t ref_contig = sequence_handle.load_contig_with_name(current_contig_name);
+        if (std::ranges::empty(ref_contig))
+        {
+            log(verbosity_level::standard, logging_level::error,
+                "The vcf contig id <", record.contig_name(), "> is not present in the set of reference sequences!");
+            continue;
+        }
+
+        // Create a new jst with the current contig and haplotype count.
+        jst_t jst{std::move(ref_contig), record.haplotype_count()};
+
+        while (!seqan::atEnd(vcf_file) && record.contig_name() == current_contig_name)
+        {
+            log(verbosity_level::verbose, logging_level::info, "Record: ", record);
+            insert_events_from_record(jst, record);
+            seqan::readRecord(record.seqan_record(), vcf_file);
+        }
+        jst_per_contig.emplace_back(std::move(jst));
+        vcf_eof = seqan::atEnd(vcf_file);
     }
+
+    assert(!jst_per_contig.empty());
+    log(verbosity_level::verbose, logging_level::info, "Record: ", record);
+    insert_events_from_record(jst_per_contig.back(), record);
+
     log(verbosity_level::verbose, logging_level::info, "Done\n", "-----------------------------");
 
-    return jst;
+    return jst_per_contig;
 }
 
 }  // namespace jstmap

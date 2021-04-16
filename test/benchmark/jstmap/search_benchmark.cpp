@@ -14,13 +14,16 @@
 
 #include <seqan3/test/performance/units.hpp>
 
+#include <jstmap/index/application_logger.hpp>
 #include <jstmap/index/vcf_parser.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
 auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
 {
-    return jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+    jstmap::application_logger logger{false, jstmap::verbosity_level::quite};
+    jstmap::set_application_logger(&logger);
+    return std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
 }
 
 template <typename queries_t>
