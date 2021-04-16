@@ -128,8 +128,10 @@ public:
         if (!genotype_info_given())
             return {false, {}}; // break here if there is no genotype info.
 
-        auto delta_events = extract_delta_events();
+        auto [has_valid_alternatives, delta_events] = extract_delta_events();
         size_t const record_alternative_count = delta_events.size();
+
+        bool is_invalid_record = !has_valid_alternatives;
 
         // Create vector with coverages to fill.
         std::vector<coverage_type> coverage_per_alternative(record_alternative_count, coverage_type(_haplotype_count));
@@ -166,7 +168,7 @@ public:
                                                    std::move(coverage_per_alternative[idx])};
         }
 
-        return {true, shared_events};
+        return {!is_invalid_record, shared_events};
     }
 
 private:
@@ -217,7 +219,7 @@ private:
 
     //!\brief Extracts the delta events of the stored genotype infos.
     auto extract_delta_events() const
-        -> std::vector<event_type>
+        -> std::pair<bool, std::vector<event_type>>
     {
         using namespace std::literals;
 
@@ -238,10 +240,13 @@ private:
                     // coordinate of the base preceding the polymorphsim
             // case must not be preserved
 
-        if (seqan::empty(_record.alt) || seqan::empty(_record.ref))
-            return delta_events; // TODO: Warning for not having either an alternative or a reference.
+        // Do not process SVs or invalid alternative data.
+        if (seqan::empty(_record.alt) || seqan::empty(_record.ref) || _record.alt[0] == '*' || _record.alt[0] == '<')
+            return {false, delta_events};
 
         auto alternatives = split_by_delimiter(to_span(_record.alt), ',');
+        assert(!alternatives.empty());
+
         std::span reference_segment = to_span(_record.ref);
 
         for (auto const & alternative : alternatives) // we can now process all alternatives.
@@ -301,7 +306,7 @@ private:
             }
         }
 
-        return delta_events;
+        return {true, delta_events};
     }
 
     //!\brief Determines the sample count.
