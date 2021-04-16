@@ -143,9 +143,11 @@ public:
             // Extract the sample genotype info.
             auto sample_genotype = split_by_delimiter(to_span(sample_genotype_info), ':');
             // Iterate over the haplotypes per sample.
-            for (size_t const alt_idx : extract_alternative_indices(sample_genotype.front()))
+            auto [has_unphased_haplotypes, alternative_indices] = extract_alternative_indices(sample_genotype.front());
+            is_invalid_record |= has_unphased_haplotypes;
+            for (size_t const alt_idx : alternative_indices)
             {
-                if (haplotype_idx > _haplotype_count)
+                if (haplotype_idx > _haplotype_count || alt_idx > record_alternative_count)
                     return {false, {}};
 
                 assert(alt_idx <= record_alternative_count); // Must be a valid id into the delta events vector.
@@ -194,19 +196,21 @@ private:
 
     //!\brief Extracts the indices of the alternatives stored inside of one genotype information.
     auto extract_alternative_indices(std::span<const char> genotype) const
-        -> std::vector<size_t>
+        -> std::pair<bool, std::vector<size_t>>
     {
         std::vector<size_t> alt_ids{};
         const char * first = genotype.data();
         const char * last = genotype.data() + genotype.size();
 
+        bool has_unphased_haplotype = false;
         while (first != last)
         {
             size_t alt_id;
             if (auto [next, ec] = std::from_chars(first, last, alt_id); ec == std::errc())
             {
                 alt_ids.push_back(alt_id);
-                assert(next == last || *next == '|');
+                assert(next == last || *next == '|' || *next == '/');
+                has_unphased_haplotype |= (next != last && *next == '/');
                 first = std::ranges::next(next, 1, last);
             }
             else
@@ -214,7 +218,7 @@ private:
                 break;
             }
         }
-        return alt_ids;
+        return {has_unphased_haplotype, alt_ids};
     }
 
     //!\brief Extracts the delta events of the stored genotype infos.
