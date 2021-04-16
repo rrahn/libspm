@@ -166,13 +166,12 @@ public:
         if (haplotype_idx < _haplotype_count)
             return {false, {}};
 
-        std::vector<shared_event_type> shared_events(record_alternative_count);
-        for (size_t idx = 0; idx < shared_events.size(); ++idx)
-        {
-            shared_events[idx] = shared_event_type{std::move(delta_events[idx]),
-                                                   std::move(coverage_per_alternative[idx])};
-        }
+        std::vector<shared_event_type> shared_events{};
+        for (size_t idx = 0; idx < record_alternative_count; ++idx)
+            if (coverage_per_alternative[idx].any())
+                shared_events.emplace_back(std::move(delta_events[idx]), std::move(coverage_per_alternative[idx]));
 
+        is_invalid_record |= shared_events.empty();
         return {!is_invalid_record, shared_events};
     }
 
@@ -367,8 +366,8 @@ std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t
                                                        augmented_vcf_record const & record)
 {
     auto const & r = record.seqan_record();
-    stream << r.rID << "\t"
-           << r.beginPos << "\t"
+    stream << record.contig_name() << "\t"
+           << (r.beginPos + 1) << "\t"
            << r.id << "\t"
            << r.ref << "\t"
            << r.alt << "\t"
@@ -463,14 +462,14 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
     // Prepare the sequence id index.
     // ----------------------------------------------------------------------------
 
-    log(verbosity_level::verbose, logging_level::info, "Building contig index for <", reference_file ,">.");
+    log(verbosity_level::verbose, logging_level::info, "Building contig index for ", reference_file );
     sequence_index sequence_handle{reference_file};
 
     // ----------------------------------------------------------------------------
     // Parse the vcf file.
     // ----------------------------------------------------------------------------
 
-    log(verbosity_level::verbose, logging_level::info, "Initialise parsing vcf file <", vcf_file_path, ">.");
+    log(verbosity_level::verbose, logging_level::info, "Initialise parsing vcf file ", vcf_file_path);
 
     seqan::VcfFileIn vcf_file{vcf_file_path.c_str()};
 
@@ -486,7 +485,7 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
     {
         log(verbosity_level::standard,
             logging_level::warning,
-            "The vcf file <", vcf_file_path, "> does not contain any records!");
+            "The vcf file ", vcf_file_path, " does not contain any records!");
         return {};
     }
 
@@ -497,22 +496,35 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
     // Generate one JST for every contig
     // ----------------------------------------------------------------------------
 
+    size_t total_record_count{};
+    size_t skipped_record_count{};
+    size_t total_event_count{};
+    size_t skipped_event_count{};
+
     // Insert the events generated from the record into the jst.
     auto insert_events_from_record = [&] (jst_t & jst, auto && record)
     {
+        ++total_record_count;
         if (auto [is_valid_record, delta_events] = record.generate_delta_events(); is_valid_record)
         {
+            total_event_count += delta_events.size();
             for (auto shared_event : delta_events)
+            {
                 if (!jst.insert(std::move(shared_event)))
-                    log(verbosity_level::standard, logging_level::error, "Event was not inserted: ", shared_event);
+                {
+                    ++skipped_event_count;
+                    log(verbosity_level::standard, logging_level::error, "Event could not be inserted into the jst!");
+                }
+            }
         }
         else
         {
-            log(verbosity_level::standard, logging_level::error, "Skipping invalid record: ", record);
+            ++skipped_record_count;
+            log(verbosity_level::verbose, logging_level::warning, "Skipping invalid: Invalid delta event generation!");
         }
     };
 
-    log(verbosity_level::verbose, logging_level::info, "Processing records:\n", "-----------------------------");
+    log(verbosity_level::standard, logging_level::info, "Start processing records");
     assert(!seqan::atEnd(vcf_file));
 
     std::vector<jst_t> jst_per_contig{}; // Store all generated JSTs.
@@ -522,8 +534,8 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
     while (!vcf_eof)
     {
         record.initialise_counts(); // initialise counts with first record of new contig.
-        log(verbosity_level::verbose, logging_level::info, "Process contig ", record.contig_name());
-        log(verbosity_level::verbose, logging_level::info, "Detected haploptypes ", record.haplotype_count());
+        log(verbosity_level::standard, logging_level::info, "Contig ", record.contig_name());
+        log(verbosity_level::standard, logging_level::info, "Detected haploptypes ", record.haplotype_count());
 
         // Load the reference sequence for this record.
         std::string_view current_contig_name = record.contig_name();
@@ -552,7 +564,11 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
     log(verbosity_level::verbose, logging_level::info, "Record: ", record);
     insert_events_from_record(jst_per_contig.back(), record);
 
-    log(verbosity_level::verbose, logging_level::info, "Done\n", "-----------------------------");
+    log(verbosity_level::standard, logging_level::info, "Total Records: ", total_record_count);
+    log(verbosity_level::standard, logging_level::info, "Skipped Records: ", skipped_record_count);
+    log(verbosity_level::standard, logging_level::info, "Total Events: ", total_event_count);
+    log(verbosity_level::standard, logging_level::info, "Skipped Events: ", skipped_event_count);
+    log(verbosity_level::standard, logging_level::info, "Stop processing records");
 
     return jst_per_contig;
 }

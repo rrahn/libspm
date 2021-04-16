@@ -19,8 +19,11 @@ namespace jstmap
 
 struct index_options
 {
-    std::filesystem::path input_file{}; //!< The file path contianing the sequences to index.
+    std::filesystem::path sequence_file{}; //!< The file path contianing the sequences to index.
+    std::filesystem::path vcf_file{}; //!< The file path contianing the vcf file to build the jst for.
     std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
+    bool is_quite{false}; //!< Wether the index app should run in quite mode.
+    bool is_verbose{false}; //!< Wether the index app should run in verbose mode.
 };
 
 }  // namespace jstmap
