@@ -94,9 +94,9 @@ public:
      * \{
      */
     constexpr type() = default; //!< Default.
-    constexpr type(type const &) = default; //!< Default.
+    constexpr type(type const &) = delete; //!< Delete.
     constexpr type(type &&) = default; //!< Default.
-    constexpr type & operator=(type const &) = default; //!< Default.
+    constexpr type & operator=(type const &) = delete; //!< Delete.
     constexpr type & operator=(type &&) = default; //!< Default.
     ~type() = default; //!< Default.
 
