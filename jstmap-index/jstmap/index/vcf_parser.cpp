@@ -24,6 +24,7 @@
 #include <seqan3/range/views/drop.hpp>
 #include <seqan3/range/views/to.hpp>
 
+#include <jstmap/index/application_logger.hpp>
 #include <jstmap/index/vcf_parser.hpp>
 
 #include <libjst/detail/delta_event_shared.hpp>
@@ -49,6 +50,8 @@ class augmented_vcf_record
 
     //!\brief The header stored with the record.
     seqan::VcfHeader _header{};
+    //!\brief The default vcf io context.
+    seqan::VcfIOContext<> _io_context{};
     //!\brief The actual record which is augmented.
     seqan::VcfRecord _record{};
 
@@ -66,7 +69,9 @@ public:
      * \{
      */
     augmented_vcf_record() = default;
-    augmented_vcf_record(seqan::VcfHeader && header) : _header{std::move(header)}
+    augmented_vcf_record(seqan::VcfHeader && header, seqan::VcfIOContext<> const & io_context) :
+        _header{std::move(header)},
+        _io_context{io_context}
     {}
     //!\}
 
@@ -76,16 +81,19 @@ public:
         return _record;
     }
 
+    //!\brief overload
+    seqan::VcfRecord const & seqan_record() const noexcept
+    {
+        return _record;
+    }
+
     //!\brief Initialises the sample and haplotype counts from the first record.
     void initialise_counts()
     {
-        if (!_is_initialised)
-        {
-            _sample_count = sample_count();
-            _haplotype_per_sample_count = haplotypes_per_sample_count();
-            _haplotype_count = _sample_count * _haplotype_per_sample_count;
-            _is_initialised = true;
-        }
+        _sample_count = sample_count();
+        _haplotype_per_sample_count = haplotypes_per_sample_count();
+        _haplotype_count = _sample_count * _haplotype_per_sample_count;
+        _is_initialised = true;
     }
 
     //!\brief Returns the total number of haplotypes.
@@ -109,21 +117,24 @@ public:
     }
 
     //!\brief Returns the chromosome id stored for the record.
-    size_t chromosome_id() const noexcept
+    std::string_view contig_name() const noexcept
     {
-        return _record.rID;
+        assert(_record.rID < seqan::length(seqan::contigNames(_io_context)));
+
+        return {seqan::toCString(seqan::contigNames(_io_context)[_record.rID])};
     }
 
     //!\brief Generates and returns the delta events for this record.
-    [[nodiscard]] auto generates_delta_events() const
-        -> std::vector<shared_event_type>
+    [[nodiscard]] auto generate_delta_events() const
+        -> std::pair<bool, std::vector<shared_event_type>>
     {
-        // TODO: What if either one of them is empty?
         if (!genotype_info_given())
-            return {}; // break here if there is no genotype info.
+            return {false, {}}; // break here if there is no genotype info.
 
-        auto delta_events = extract_delta_events();
+        auto [has_valid_alternatives, delta_events] = extract_delta_events();
         size_t const record_alternative_count = delta_events.size();
+
+        bool is_invalid_record = !has_valid_alternatives;
 
         // Create vector with coverages to fill.
         std::vector<coverage_type> coverage_per_alternative(record_alternative_count, coverage_type(_haplotype_count));
@@ -135,8 +146,13 @@ public:
             // Extract the sample genotype info.
             auto sample_genotype = split_by_delimiter(to_span(sample_genotype_info), ':');
             // Iterate over the haplotypes per sample.
-            for (size_t const alt_idx : extract_alternative_indices(sample_genotype.front()))
+            auto [has_unphased_haplotypes, alternative_indices] = extract_alternative_indices(sample_genotype.front());
+            is_invalid_record |= has_unphased_haplotypes;
+            for (size_t const alt_idx : alternative_indices)
             {
+                if (haplotype_idx > _haplotype_count || alt_idx > record_alternative_count)
+                    return {false, {}};
+
                 assert(alt_idx <= record_alternative_count); // Must be a valid id into the delta events vector.
                 assert(haplotype_idx < _haplotype_count); // Must not exceed the global haplotype count.
 
@@ -147,16 +163,16 @@ public:
             }
         }
 
-        assert(haplotype_idx == _haplotype_count); // Must be identical to global haplotype count.
+        if (haplotype_idx < _haplotype_count)
+            return {false, {}};
 
-        std::vector<shared_event_type> shared_events(record_alternative_count);
-        for (size_t idx = 0; idx < shared_events.size(); ++idx)
-        {
-            shared_events[idx] = shared_event_type{std::move(delta_events[idx]),
-                                                   std::move(coverage_per_alternative[idx])};
-        }
+        std::vector<shared_event_type> shared_events{};
+        for (size_t idx = 0; idx < record_alternative_count; ++idx)
+            if (coverage_per_alternative[idx].any())
+                shared_events.emplace_back(std::move(delta_events[idx]), std::move(coverage_per_alternative[idx]));
 
-        return shared_events;
+        is_invalid_record |= shared_events.empty();
+        return {!is_invalid_record, shared_events};
     }
 
 private:
@@ -182,19 +198,21 @@ private:
 
     //!\brief Extracts the indices of the alternatives stored inside of one genotype information.
     auto extract_alternative_indices(std::span<const char> genotype) const
-        -> std::vector<size_t>
+        -> std::pair<bool, std::vector<size_t>>
     {
         std::vector<size_t> alt_ids{};
         const char * first = genotype.data();
         const char * last = genotype.data() + genotype.size();
 
+        bool has_unphased_haplotype = false;
         while (first != last)
         {
             size_t alt_id;
             if (auto [next, ec] = std::from_chars(first, last, alt_id); ec == std::errc())
             {
                 alt_ids.push_back(alt_id);
-                assert(next == last || *next == '|');
+                assert(next == last || *next == '|' || *next == '/');
+                has_unphased_haplotype |= (next != last && *next == '/');
                 first = std::ranges::next(next, 1, last);
             }
             else
@@ -202,12 +220,12 @@ private:
                 break;
             }
         }
-        return alt_ids;
+        return {has_unphased_haplotype, alt_ids};
     }
 
     //!\brief Extracts the delta events of the stored genotype infos.
     auto extract_delta_events() const
-        -> std::vector<event_type>
+        -> std::pair<bool, std::vector<event_type>>
     {
         using namespace std::literals;
 
@@ -228,10 +246,13 @@ private:
                     // coordinate of the base preceding the polymorphsim
             // case must not be preserved
 
-        if (seqan::empty(_record.alt) || seqan::empty(_record.ref))
-            return delta_events; // TODO: Warning for not having either an alternative or a reference.
+        // Do not process SVs or invalid alternative data.
+        if (seqan::empty(_record.alt) || seqan::empty(_record.ref) || _record.alt[0] == '*' || _record.alt[0] == '<')
+            return {false, delta_events};
 
         auto alternatives = split_by_delimiter(to_span(_record.alt), ',');
+        assert(!alternatives.empty());
+
         std::span reference_segment = to_span(_record.ref);
 
         for (auto const & alternative : alternatives) // we can now process all alternatives.
@@ -291,7 +312,7 @@ private:
             }
         }
 
-        return delta_events;
+        return {true, delta_events};
     }
 
     //!\brief Determines the sample count.
@@ -339,20 +360,116 @@ private:
     }
 };
 
-jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
+//!\brief Formatted output operator for the augmented vcf record.
+template <typename char_t, typename char_traits_t>
+std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream,
+                                                       augmented_vcf_record const & record)
 {
+    auto const & r = record.seqan_record();
+    stream << record.contig_name() << "\t"
+           << (r.beginPos + 1) << "\t"
+           << r.id << "\t"
+           << r.ref << "\t"
+           << r.alt << "\t"
+           << r.qual << "\t"
+           << r.filter << "\t"
+           << r.info << "\t"
+           << r.format << "\t";
+    for (auto genotype : r.genotypeInfos)
+        stream << genotype << "\t";
+
+    return stream;
+}
+
+//!\brief A sequence index that loads only the sequence with the given contig name.
+class sequence_index
+{
+private:
+    //!\brief List of all contig names.
+    std::vector<std::string> _contig_names;
+    //!\brief The file to load the contigs from.
+    std::filesystem::path _contig_file;
+
+public:
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    //!\brief Default.
+    sequence_index() = delete;
+
+    /*!\brief Constructs and initialise the context from the given file.
+     *
+     * \param[in] contig_file The file to load the contigs from.
+     *
+     * \details
+     *
+     * Opens the file and extracts all stored reference ids.
+     */
+    sequence_index(std::filesystem::path const & contig_file) : _contig_file{contig_file}
+    {
+        seqan3::sequence_file_input record_contig_names{_contig_file,  seqan3::fields<seqan3::field::id>{}};
+
+        std::ranges::for_each(record_contig_names, [&] (auto const & record)
+        {
+            _contig_names.push_back(seqan3::get<seqan3::field::id>(record));
+        });
+    }
+    //!\}
+
+    /*!\brief Loads the contig with the corresponding name.
+     *
+     * \param[in] contig_name The name of the contig to load.
+     *
+     * \returns The loaded contig, or an empty sequence if the contig could not be found.
+     *
+     * \details
+     *
+     * Scans all records stored in the contig file and returns the one that matches the given contig name.
+     */
+    raw_sequence_t load_contig_with_name(std::string_view const contig_name)
+    {
+        raw_sequence_t contig{};
+
+        auto find_predicate = [=] (std::string_view const current_contig)
+        {
+            return current_contig.starts_with(contig_name);
+        };
+
+        if (auto contig_it = std::ranges::find_if(_contig_names, find_predicate); contig_it != _contig_names.end())
+        {
+            size_t const contig_index = std::ranges::distance(_contig_names.begin(), contig_it);
+            assert(contig_index < _contig_names.size());
+
+            seqan3::sequence_file_input contig_sequences{_contig_file};
+            auto record_view = contig_sequences | std::views::drop(contig_index);
+            auto record_it = std::ranges::begin(record_view);
+
+            assert(record_it != std::ranges::end(record_view));
+            contig = seqan3::get<seqan3::field::seq>(*record_it);
+        }
+
+        return contig;
+    }
+};
+
+auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
+    -> std::vector<jst_t>
+{
+    // Get the application logger.
+    auto & log = get_application_logger();
+
     // ----------------------------------------------------------------------------
-    // Parse the reference file.
+    // Prepare the sequence id index.
     // ----------------------------------------------------------------------------
 
-    seqan3::sequence_file_input ref_file{reference_file};
-    auto ref_sequence_it = ref_file.begin();
-
-    seqan3::dna5_vector reference = seqan3::get<seqan3::field::seq>(*ref_sequence_it);
+    log(verbosity_level::verbose, logging_level::info, "Building contig index for ", reference_file );
+    sequence_index sequence_handle{reference_file};
 
     // ----------------------------------------------------------------------------
     // Parse the vcf file.
     // ----------------------------------------------------------------------------
+
+    log(verbosity_level::verbose, logging_level::info, "Initialise parsing vcf file ", vcf_file_path);
 
     seqan::VcfFileIn vcf_file{vcf_file_path.c_str()};
 
@@ -365,32 +482,95 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
 
     // If the file is empty (no record stored), return an empty JST.
     if (seqan::atEnd(vcf_file))
-        return jst_t{std::move(reference)};
-
-    // Read first record:
-    augmented_vcf_record record{std::move(vcf_header)};
-    seqan::readRecord(record.seqan_record(), vcf_file);
-    record.initialise_counts(); // initialise counts with first record.
-    // Initial jst with known haplotype count.
-    jst_t jst{std::move(reference), record.haplotype_count()};
-
-    // Insert the events generated from the record into the jst.
-    auto insert_events_from_record = [&] (auto && record)
     {
-        for (auto shared_event : record.generates_delta_events())
-            if (!jst.insert(std::move(shared_event)))
-                throw std::invalid_argument{"The generated event could not be inserted!"};
-    };
-
-    insert_events_from_record(record);
-
-    while (!seqan::atEnd(vcf_file))
-    {
-        seqan::readRecord(record.seqan_record(), vcf_file);
-        insert_events_from_record(record);
+        log(verbosity_level::standard,
+            logging_level::warning,
+            "The vcf file ", vcf_file_path, " does not contain any records!");
+        return {};
     }
 
-    return jst;
+    // Read first record:
+    augmented_vcf_record record{std::move(vcf_header), seqan::context(vcf_file)};
+
+    // ----------------------------------------------------------------------------
+    // Generate one JST for every contig
+    // ----------------------------------------------------------------------------
+
+    size_t total_record_count{};
+    size_t skipped_record_count{};
+    size_t total_event_count{};
+    size_t skipped_event_count{};
+
+    // Insert the events generated from the record into the jst.
+    auto insert_events_from_record = [&] (jst_t & jst, auto && record)
+    {
+        ++total_record_count;
+        if (auto [is_valid_record, delta_events] = record.generate_delta_events(); is_valid_record)
+        {
+            total_event_count += delta_events.size();
+            for (auto shared_event : delta_events)
+            {
+                if (!jst.insert(std::move(shared_event)))
+                {
+                    ++skipped_event_count;
+                    log(verbosity_level::standard, logging_level::error, "Event could not be inserted into the jst!");
+                }
+            }
+        }
+        else
+        {
+            ++skipped_record_count;
+            log(verbosity_level::verbose, logging_level::warning, "Skipping invalid: Invalid delta event generation!");
+        }
+    };
+
+    log(verbosity_level::standard, logging_level::info, "Start processing records");
+    assert(!seqan::atEnd(vcf_file));
+
+    std::vector<jst_t> jst_per_contig{}; // Store all generated JSTs.
+    seqan::readRecord(record.seqan_record(), vcf_file); // Read first record.
+    bool vcf_eof = false; // Check if the vcf is at end which guaranteed to be not the case here.
+
+    while (!vcf_eof)
+    {
+        record.initialise_counts(); // initialise counts with first record of new contig.
+        log(verbosity_level::standard, logging_level::info, "Contig ", record.contig_name());
+        log(verbosity_level::standard, logging_level::info, "Detected haploptypes ", record.haplotype_count());
+
+        // Load the reference sequence for this record.
+        std::string_view current_contig_name = record.contig_name();
+        raw_sequence_t ref_contig = sequence_handle.load_contig_with_name(current_contig_name);
+        if (std::ranges::empty(ref_contig))
+        {
+            log(verbosity_level::standard, logging_level::error,
+                "The vcf contig id <", record.contig_name(), "> is not present in the set of reference sequences!");
+            continue;
+        }
+
+        // Create a new jst with the current contig and haplotype count.
+        jst_t jst{std::move(ref_contig), record.haplotype_count()};
+
+        while (!seqan::atEnd(vcf_file) && record.contig_name() == current_contig_name)
+        {
+            log(verbosity_level::verbose, logging_level::info, "Record: ", record);
+            insert_events_from_record(jst, record);
+            seqan::readRecord(record.seqan_record(), vcf_file);
+        }
+        jst_per_contig.emplace_back(std::move(jst));
+        vcf_eof = seqan::atEnd(vcf_file);
+    }
+
+    assert(!jst_per_contig.empty());
+    log(verbosity_level::verbose, logging_level::info, "Record: ", record);
+    insert_events_from_record(jst_per_contig.back(), record);
+
+    log(verbosity_level::standard, logging_level::info, "Total Records: ", total_record_count);
+    log(verbosity_level::standard, logging_level::info, "Skipped Records: ", skipped_record_count);
+    log(verbosity_level::standard, logging_level::info, "Total Events: ", total_event_count);
+    log(verbosity_level::standard, logging_level::info, "Skipped Events: ", skipped_event_count);
+    log(verbosity_level::standard, logging_level::info, "Stop processing records");
+
+    return jst_per_contig;
 }
 
 }  // namespace jstmap

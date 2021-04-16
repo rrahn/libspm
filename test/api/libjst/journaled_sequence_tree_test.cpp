@@ -45,9 +45,9 @@ struct journaled_sequence_tree_fixture : public ::testing::Test
 TEST_F(journaled_sequence_tree_fixture, construction)
 {
     EXPECT_TRUE(std::is_default_constructible_v<jst_t>);
-    EXPECT_TRUE(std::is_copy_constructible_v<jst_t>);
+    EXPECT_FALSE(std::is_copy_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_move_constructible_v<jst_t>);
-    EXPECT_TRUE(std::is_copy_assignable_v<jst_t>);
+    EXPECT_FALSE(std::is_copy_assignable_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_move_assignable_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_destructible_v<jst_t>);
     EXPECT_TRUE((std::is_constructible_v<jst_t, sequence_t>)); // Set explicit reference sequence.

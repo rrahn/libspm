@@ -40,7 +40,7 @@ TEST_F(vcf_parser_test, snps_only)
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNPs.vcf"};
     std::filesystem::path haplotype_file{DATADIR"sim_ref_10Kb_SNPs_haplotypes.fasta.gz"};
 
-    jstmap::jst_t jst = jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+    jstmap::jst_t jst = std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
 
     auto [reference, haplotypes] = load_sequences(reference_file, haplotype_file);
     EXPECT_RANGE_EQ(jst.reference(), reference);
@@ -52,7 +52,7 @@ TEST_F(vcf_parser_test, snps_and_indels)
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
     std::filesystem::path haplotype_file{DATADIR"sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz"};
 
-    jstmap::jst_t jst = jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+    jstmap::jst_t jst = std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
 
     auto [reference, haplotypes] = load_sequences(reference_file, haplotype_file);
     EXPECT_RANGE_EQ(jst.reference(), reference);
@@ -61,13 +61,27 @@ TEST_F(vcf_parser_test, snps_and_indels)
 
 TEST_F(vcf_parser_test, sample_given_but_no_vcf_record)
 {
-
+    testing::internal::CaptureStderr();
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_no_variants.vcf"};
 
-    jstmap::jst_t jst = jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+    EXPECT_TRUE(jstmap::construct_jst_from_vcf(reference_file, vcf_file).empty());
 
-    std::vector reference = jstmap::load_sequences(reference_file).front();
-    EXPECT_RANGE_EQ(jst.reference(), reference);
-    EXPECT_EQ(jst.size(), 0u);
+    auto expected_err_output = testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(expected_err_output.starts_with("[WARNING]"));
 }
 
+TEST_F(vcf_parser_test, unkown_reference_id)
+{
+    std::filesystem::path reference_file{DATADIR"in.fasta"};
+    std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
+
+    EXPECT_THROW(jstmap::construct_jst_from_vcf(reference_file, vcf_file), std::runtime_error);
+}
+
+TEST_F(vcf_parser_test, empty_reference_file)
+{
+    std::filesystem::path reference_file{DATADIR"empty.fasta"};
+    std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
+
+    EXPECT_THROW(jstmap::construct_jst_from_vcf(reference_file, vcf_file), std::runtime_error);
+}
