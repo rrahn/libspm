@@ -61,13 +61,31 @@ TEST_F(vcf_parser_test, snps_and_indels)
 
 TEST_F(vcf_parser_test, sample_given_but_no_vcf_record)
 {
-
+    testing::internal::CaptureStderr();
     std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_no_variants.vcf"};
 
     jstmap::jst_t jst = jstmap::construct_jst_from_vcf(reference_file, vcf_file);
+    using reference_t = typename decltype(jst)::sequence_type;
 
-    std::vector reference = jstmap::load_sequences(reference_file).front();
-    EXPECT_RANGE_EQ(jst.reference(), reference);
+    auto expected_err_output = testing::internal::GetCapturedStderr();
+
+    EXPECT_RANGE_EQ(jst.reference(), reference_t{});
     EXPECT_EQ(jst.size(), 0u);
+    EXPECT_TRUE(expected_err_output.starts_with("[WARNING]"));
 }
 
+TEST_F(vcf_parser_test, unkown_reference_id)
+{
+    std::filesystem::path reference_file{DATADIR"in.fasta"};
+    std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
+
+    EXPECT_THROW(jstmap::construct_jst_from_vcf(reference_file, vcf_file), std::runtime_error);
+}
+
+TEST_F(vcf_parser_test, empty_reference_file)
+{
+    std::filesystem::path reference_file{DATADIR"empty.fasta"};
+    std::filesystem::path vcf_file{DATADIR"sim_ref_10Kb_SNP_INDELs.vcf"};
+
+    EXPECT_THROW(jstmap::construct_jst_from_vcf(reference_file, vcf_file), std::runtime_error);
+}

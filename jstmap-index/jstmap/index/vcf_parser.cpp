@@ -50,6 +50,8 @@ class augmented_vcf_record
 
     //!\brief The header stored with the record.
     seqan::VcfHeader _header{};
+    //!\brief The default vcf io context.
+    seqan::VcfIOContext<> _io_context{};
     //!\brief The actual record which is augmented.
     seqan::VcfRecord _record{};
 
@@ -67,7 +69,9 @@ public:
      * \{
      */
     augmented_vcf_record() = default;
-    augmented_vcf_record(seqan::VcfHeader && header) : _header{std::move(header)}
+    augmented_vcf_record(seqan::VcfHeader && header, seqan::VcfIOContext<> const & io_context) :
+        _header{std::move(header)},
+        _io_context{io_context}
     {}
     //!\}
 
@@ -116,9 +120,11 @@ public:
     }
 
     //!\brief Returns the chromosome id stored for the record.
-    size_t chromosome_id() const noexcept
+    std::string_view contig_name() const noexcept
     {
-        return _record.rID;
+        assert(_record.rID < seqan::length(seqan::contigNames(_io_context)));
+
+        return {seqan::toCString(seqan::contigNames(_io_context)[_record.rID])};
     }
 
     //!\brief Generates and returns the delta events for this record.
@@ -379,19 +385,88 @@ std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t
     return stream;
 }
 
+//!\brief A sequence index that loads only the sequence with the given contig name.
+class sequence_index
+{
+private:
+    //!\brief List of all contig names.
+    std::vector<std::string> _contig_names;
+    //!\brief The file to load the contigs from.
+    std::filesystem::path _contig_file;
+
+public:
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    //!\brief Default.
+    sequence_index() = delete;
+
+    /*!\brief Constructs and initialise the context from the given file.
+     *
+     * \param[in] contig_file The file to load the contigs from.
+     *
+     * \details
+     *
+     * Opens the file and extracts all stored reference ids.
+     */
+    sequence_index(std::filesystem::path const & contig_file) : _contig_file{contig_file}
+    {
+        seqan3::sequence_file_input record_contig_names{_contig_file,  seqan3::fields<seqan3::field::id>{}};
+
+        std::ranges::for_each(record_contig_names, [&] (auto const & record)
+        {
+            _contig_names.push_back(seqan3::get<seqan3::field::id>(record));
+        });
+    }
+    //!\}
+
+    /*!\brief Loads the contig with the corresponding name.
+     *
+     * \param[in] contig_name The name of the contig to load.
+     *
+     * \returns The loaded contig, or an empty sequence if the contig could not be found.
+     *
+     * \details
+     *
+     * Scans all records stored in the contig file and returns the one that matches the given contig name.
+     */
+    raw_sequence_t load_contig_with_name(std::string_view const contig_name)
+    {
+        raw_sequence_t contig{};
+
+        auto find_predicate = [=] (std::string_view const current_contig)
+        {
+            return current_contig.starts_with(contig_name);
+        };
+
+        if (auto contig_it = std::ranges::find_if(_contig_names, find_predicate); contig_it != _contig_names.end())
+        {
+            size_t const contig_index = std::ranges::distance(_contig_names.begin(), contig_it);
+            assert(contig_index < _contig_names.size());
+
+            seqan3::sequence_file_input contig_sequences{_contig_file};
+            auto record_view = contig_sequences | std::views::drop(contig_index);
+            auto record_it = std::ranges::begin(record_view);
+
+            assert(record_it != std::ranges::end(record_view));
+            contig = seqan3::get<seqan3::field::seq>(*record_it);
+        }
+
+        return contig;
+    }
+};
+
 jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
 {
     // Get the application logger.
     auto & log = get_application_logger();
 
     // ----------------------------------------------------------------------------
-    // Parse the reference file.
+    // Prepare the sequence id index.
     // ----------------------------------------------------------------------------
 
-    seqan3::sequence_file_input ref_file{reference_file};
-    auto ref_sequence_it = ref_file.begin();
-
-    seqan3::dna5_vector reference = seqan3::get<seqan3::field::seq>(*ref_sequence_it);
+    log(verbosity_level::verbose, logging_level::info, "Building contig index for <", reference_file ,">.");
+    sequence_index sequence_handle{reference_file};
 
     // ----------------------------------------------------------------------------
     // Parse the vcf file.
@@ -408,14 +483,31 @@ jst_t construct_jst_from_vcf(std::filesystem::path const & reference_file, std::
 
     // If the file is empty (no record stored), return an empty JST.
     if (seqan::atEnd(vcf_file))
-        return jst_t{std::move(reference)};
+    {
+        log(verbosity_level::standard,
+            logging_level::warning,
+            "The vcf file <", vcf_file_path, "> does not contain any records!");
+        return jst_t{raw_sequence_t{}};
+    }
 
     // Read first record:
-    augmented_vcf_record record{std::move(vcf_header)};
+    augmented_vcf_record record{std::move(vcf_header), seqan::context(vcf_file)};
     seqan::readRecord(record.seqan_record(), vcf_file);
     record.initialise_counts(); // initialise counts with first record.
+
+    // Load the reference sequence for this record.
+    raw_sequence_t ref_contig = sequence_handle.load_contig_with_name(record.contig_name());
+    if (std::ranges::empty(ref_contig))
+    {
+        log(verbosity_level::standard,
+            logging_level::error,
+            "The vcf contig id <", record.contig_name(), "> is not present in the set of reference sequences!");
+    }
+
+    // TODO: Continue parsing vcf if not at end.
+
     // Initial jst with known haplotype count.
-    jst_t jst{std::move(reference), record.haplotype_count()};
+    jst_t jst{std::move(ref_contig), record.haplotype_count()};
 
     log(verbosity_level::verbose, logging_level::info, "Processing records:\n", "-----------------------------");
     // Insert the events generated from the record into the jst.
