@@ -41,9 +41,8 @@ static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
 template <typename ...args_t>
 static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
 {
-    auto [reference_file, vcf_file] = std::tuple{args...};
-
-    auto jst = create_jst_from_vcf(reference_file, vcf_file);
+    auto [jst_file] = std::tuple{args...};
+    auto jst = jstmap::load_jst(jst_file);
     std::vector<sequence_t> query{generate_query(state.range(0))};
     size_t const total_bytes = std::ranges::size(query[0]);
 
@@ -63,7 +62,6 @@ BENCHMARK_CAPTURE(naive_search_benchmark,
 
 BENCHMARK_CAPTURE(jst_search_benchmark,
                   vcf_indel_test,
-                  DATADIR"sim_ref_10Kb.fasta.gz",
-                  DATADIR"sim_ref_10Kb_SNP_INDELs.vcf")->Arg(64)->Arg(100)->Arg(150);
+                  DATADIR"sim_ref_10Kb_SNP_INDELs.jst")->Arg(64)->Arg(100)->Arg(150);
 
 BENCHMARK_MAIN();

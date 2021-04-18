@@ -14,6 +14,7 @@
 
 #include <jstmap/index/application_logger.hpp>
 #include <jstmap/index/vcf_parser.hpp>
+#include <jstmap/search/load_jst.hpp>
 
 using sequence_t = seqan3::dna5_vector;
 

@@ -77,6 +77,10 @@ declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs_haplotypes.fasta.gz
                     URL_HASH SHA256=d9d37d7474884a7bc4bae99c5cdd6457cee6438bbf63ef48c0959dbff8fb1bca)
 
+declare_datasource (FILE sim_ref_10Kb_SNPs.jst
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs.jst
+                    URL_HASH SHA256=dff8dd04387b78ccac11aaa4e95d78c2ae0a7cf3a34bb48b55bc1097a40294ec)
+
 declare_datasource (FILE sim_ref_10Kb_SNP_INDELs.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs.vcf
                     URL_HASH SHA256=3f9f65b60d160094f400a3695e6b3685d0275a0e46b5e11d3eed7846d28f088f)
@@ -85,6 +89,12 @@ declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL_HASH SHA256=993400d2fd437cc49ddffb296d14cba505e85e5f5e13d3ab5609aa0c46d26d99)
 
+declare_datasource (FILE sim_ref_10Kb_SNP_INDELs.jst
+                    URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs.jst
+                    URL_HASH SHA256=5d3aa56d46d7af17bdff274bed7bf205effd14481433b6ef9144d91d27c91b56)
+
 declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_no_variants.vcf
                     URL_HASH SHA256=fa0b191b7cba9e3da323bf7674767a4efce0830ee66750ad6c3b8d8952bbaef1)
+
+

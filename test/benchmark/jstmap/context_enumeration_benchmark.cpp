@@ -40,8 +40,8 @@ static void naive_context_enumerator_benchmark(benchmark::State & state, args_t 
 template <typename ...args_t>
 static void jst_context_enumerator_benchmark(benchmark::State & state, args_t && ...args)
 {
-    auto [reference_file, vcf_file] = std::tuple{args...};
-    auto jst = create_jst_from_vcf(reference_file, vcf_file);
+    auto [jst_file] = std::tuple{args...};
+    auto jst = jstmap::load_jst(jst_file);
 
     size_t context_size = state.range(0);
     size_t context_count{};
@@ -61,7 +61,6 @@ BENCHMARK_CAPTURE(naive_context_enumerator_benchmark,
 
 BENCHMARK_CAPTURE(jst_context_enumerator_benchmark,
                   vcf_indel_test,
-                  DATADIR"sim_ref_10Kb.fasta.gz",
-                  DATADIR"sim_ref_10Kb_SNP_INDELs.vcf")->Arg(64)->Arg(100)->Arg(150)->Arg(200);
+                  DATADIR"sim_ref_10Kb_SNP_INDELs.jst")->Arg(64)->Arg(100)->Arg(150)->Arg(200);
 
 BENCHMARK_MAIN();
