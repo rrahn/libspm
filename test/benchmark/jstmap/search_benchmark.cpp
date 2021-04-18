@@ -5,97 +5,65 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-#include <algorithm>
-#include <filesystem>
-#include <iostream>
-#include <vector>
-
 #include <benchmark/benchmark.h>
 
-#include <seqan3/test/performance/units.hpp>
-
-#include <jstmap/index/application_logger.hpp>
-#include <jstmap/index/vcf_parser.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
-auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
-{
-    jstmap::application_logger logger{false, jstmap::verbosity_level::quite};
-    jstmap::set_application_logger(&logger);
-    return std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
-}
-
-template <typename queries_t>
-size_t total_query_bytes(queries_t const & queries)
-{
-    size_t total_bytes{};
-    for (auto const & query : queries)
-        total_bytes += std::ranges::size(query);
-
-    return total_bytes;
-}
+#include "benchmark_utility.hpp"
 
 template <typename ...args_t>
 static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
 {
-    auto [haplotypes_file, query_file] = std::tuple{args...};
+    auto [haplotypes_file] = std::tuple{args...};
 
     auto haplotypes = jstmap::load_queries(haplotypes_file);
-    auto queries = jstmap::load_queries(query_file);
-    size_t const total_bytes = total_query_bytes(queries);
+    sequence_t needle = generate_query(state.range(0));
+    size_t const total_bytes = std::ranges::size(needle);
 
     size_t hit_count{};
     for (auto _ : state)
     {
-        std::ranges::for_each(queries, [&] (auto const & needle)
+        naive_traversal(haplotypes, [&] <std::ranges::random_access_range sequence_t>(sequence_t && sequence)
         {
-            std::ranges::for_each(haplotypes, [&] (auto const & haystack)
-            {
-                auto haystack_range = std::ranges::subrange{std::ranges::begin(haystack), std::ranges::end(haystack)};
-                while (!std::ranges::empty(haystack_range))
-                {
-                    auto found_range = std::ranges::search(haystack_range, needle);
-                    hit_count += !std::ranges::empty(found_range);
-                    haystack_range =
-                        std::ranges::subrange{std::ranges::next(found_range.begin(), 1, std::ranges::end(haystack)),
-                                              std::ranges::end(haystack)};
-                }
-            });
+            auto found_range = std::ranges::search(sequence, needle);
+            hit_count += !std::ranges::empty(found_range);
+            return std::ranges::subrange{std::ranges::next(found_range.begin(), 1, std::ranges::end(sequence)),
+                                         std::ranges::end(sequence)};
         });
     }
 
     benchmark::DoNotOptimize(hit_count);
-    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(total_bytes);
+    state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(total_bytes);
+    state.counters["#hits"] = hit_count;
 }
 
 template <typename ...args_t>
 static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
 {
-    auto [reference_file, vcf_file, query_file] = std::tuple{args...};
+    auto [reference_file, vcf_file] = std::tuple{args...};
 
     auto jst = create_jst_from_vcf(reference_file, vcf_file);
-    auto queries = jstmap::load_queries(query_file);
-    size_t const total_bytes = total_query_bytes(queries);
+    std::vector<sequence_t> query{generate_query(state.range(0))};
+    size_t const total_bytes = std::ranges::size(query[0]);
 
     size_t hit_count{};
     for (auto _ : state)
-        hit_count += jstmap::search_queries(jst, queries).size();
+        hit_count += jstmap::search_queries(jst, query).size();
 
     benchmark::DoNotOptimize(hit_count);
     state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(total_bytes);
+    state.counters["#hits"] = hit_count;
 }
 
 // Register the function as a benchmark
 BENCHMARK_CAPTURE(naive_search_benchmark,
                   vcf_indel_test,
-                  DATADIR"sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz",
-                  DATADIR"sim_reads_ref1x10.fa");
+                  DATADIR"sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz")->Arg(64)->Arg(100)->Arg(150);
 
 BENCHMARK_CAPTURE(jst_search_benchmark,
                   vcf_indel_test,
                   DATADIR"sim_ref_10Kb.fasta.gz",
-                  DATADIR"sim_ref_10Kb_SNP_INDELs.vcf",
-                  DATADIR"sim_reads_ref1x10.fa");
+                  DATADIR"sim_ref_10Kb_SNP_INDELs.vcf")->Arg(64)->Arg(100)->Arg(150);
 
 BENCHMARK_MAIN();
