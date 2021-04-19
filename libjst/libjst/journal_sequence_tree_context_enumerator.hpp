@@ -38,10 +38,12 @@ namespace libjst::detail
  * Note, that the interfaces of a single enumerator are not thread-safe unless they are marked const.
  */
 template <typename jst_t>
-class journal_sequence_tree_context_enumerator : protected journal_sequence_tree_traverser<jst_t>
+class journal_sequence_tree_context_enumerator :
+    protected journal_sequence_tree_traverser<journal_sequence_tree_context_enumerator<jst_t>, jst_t>
 {
 private:
-    using base_t = journal_sequence_tree_traverser<jst_t>; //!\< The base traverser type.
+    //!\brief The base traversal type.
+    using base_t = journal_sequence_tree_traverser<journal_sequence_tree_context_enumerator<jst_t>, jst_t>;
 
     // Imported types.
     using typename base_t::coverage_type;

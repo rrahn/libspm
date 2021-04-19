@@ -69,7 +69,7 @@ private:
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
 
     //!\cond
-    template <typename>
+    template <typename, typename>
     friend class detail::journal_sequence_tree_traverser;
     //!\endcond
 

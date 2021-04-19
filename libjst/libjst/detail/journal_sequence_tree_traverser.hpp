@@ -29,18 +29,23 @@ namespace libjst::detail
 
 /*!\brief The basic class to traverse a libjst::journaled_sequence_tree.
  *
+ * \tparam derived_t The derived type of this traverser.
  * \tparam jst_t The type of the libjst::journaled_sequence_tree.
  *
  * \details
  *
- * This base class implements the actual traversal over the libjst::journaled_sequence_tree. It expands each
+ * This crtp-base class implements the actual traversal over the libjst::journaled_sequence_tree. It expands each
  * subtree depending on the given context size and the variants contained in the tree. Unsupported branches are not
  * traversed.
  */
-template <typename jst_t>
+template <typename derived_t, typename jst_t>
 class journal_sequence_tree_traverser
 {
-protected:
+private:
+
+    //!\brief Grant access to the derived class.
+    friend derived_t;
+
     /*!\name Event types
      * \{
      */
@@ -92,7 +97,6 @@ protected:
 
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
 
-public:
     using context_position_type = context_position; //!< The type representing a single context position.
 
     /*!\name Constructors, destructor and assignment
@@ -160,8 +164,6 @@ public:
     }
     //!\}
 
-protected:
-
     /*!\name Host member access
      * \{
      */
@@ -220,6 +222,12 @@ protected:
         return _branch_stack.empty();
     }
 
+    //!\brief Pushes a new branch on the branch stack.
+    void push_branch(branch && new_branch) noexcept
+    {
+        _branch_stack.push(std::move(new_branch));
+    }
+
     //!\brief Removes the current branch from the branch stack.
     void drop_branch() noexcept
     {
@@ -274,7 +282,7 @@ protected:
         }
         else
         { // Push the new branch onto the stack, which automatically switches the active branch to the new one.
-            _branch_stack.push(std::move(new_branch));
+            push_branch(std::move(new_branch));
             return is_deletion ? branch_creation_status::success_with_deletion : branch_creation_status::success;
         }
     }
@@ -661,8 +669,8 @@ protected:
 };
 
 //!\brief The type of a traversal branch.
-template <typename jst_t>
-struct journal_sequence_tree_traverser<jst_t>::branch
+template <typename derived_t, typename jst_t>
+struct journal_sequence_tree_traverser<derived_t, jst_t>::branch
 {
     size_type context_position{}; //<! The current tail position of the moving window.
     size_type branch_end_position{}; //!<! The end position of the branch.
