@@ -70,7 +70,7 @@ private:
 
     //!\cond
     template <typename>
-    friend class detail::journal_sequence_tree_context_enumerator;
+    friend class detail::journal_sequence_tree_traverser;
     //!\endcond
 
     sequence_t _reference; //!< The internal reference used for referential compression.
