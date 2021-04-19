@@ -226,6 +226,7 @@ private:
     void push_branch(branch && new_branch) noexcept
     {
         _branch_stack.push(std::move(new_branch));
+        as_derived()->notify_push();
     }
 
     //!\brief Removes the current branch from the branch stack.
@@ -234,6 +235,7 @@ private:
         assert(!_branch_stack.empty());
 
         _branch_stack.pop();
+        as_derived()->notify_pop();
     }
 
     //!\brief Makes a new branch at the current position and switches to this branch.
@@ -666,6 +668,18 @@ private:
         return active_branch().coverage & ~unsupported;
     }
     //!\}
+
+    //!\brief Cast this to its derived type.
+    derived_t * as_derived() noexcept
+    {
+        return static_cast<derived_t *>(this);
+    }
+
+    //!\overload
+    derived_t const * as_derived() const noexcept
+    {
+        return static_cast<derived_t const *>(this);
+    }
 };
 
 //!\brief The type of a traversal branch.

@@ -45,6 +45,9 @@ private:
     //!\brief The base traversal type.
     using base_t = journal_sequence_tree_traverser<journal_sequence_tree_context_enumerator<jst_t>, jst_t>;
 
+    //!\brief Grant access to the underlying notification methods.
+    friend base_t;
+
     // Imported types.
     using typename base_t::coverage_type;
     using typename base_t::size_type;
@@ -104,6 +107,15 @@ public:
     //!\brief Const qualified iteration is not allowed.
     std::default_sentinel_t end() const = delete;
     //!\}
+
+private:
+    //!\brief NOOP function which does nothing.
+    void notify_push() const noexcept
+    {}
+
+    //!\brief NOOP function which does nothing.
+    void notify_pop() const noexcept
+    {}
 };
 
 /*!\brief The iterator of the context enumerator.
