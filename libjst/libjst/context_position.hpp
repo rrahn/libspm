@@ -41,8 +41,11 @@ struct context_position
  * \param[in] stream The stream to write to.
  * \param[in] context_pos The object to serialise.
  */
-template <typename stream_t, std::same_as<context_position> context_position_t>
-stream_t & operator<<(stream_t & stream, context_position_t context_pos)
+template <typename stream_t, typename context_position_t>
+//!\cond
+    requires std::same_as<std::remove_cvref_t<context_position_t>, context_position>
+//!\endcond
+stream_t & operator<<(stream_t & stream, context_position_t && context_pos)
 {
     stream << "["
                 << "id: " << context_pos.sequence_id << ", "
