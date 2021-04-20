@@ -11,6 +11,8 @@
 #include <tuple>
 #include <ranges>
 
+#include <libjst/search/naive_search.hpp>
+#include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
 
 #include <jstmap/search/write_results.hpp>
@@ -36,13 +38,12 @@ std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vec
 
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
-        auto context_enumerator = jst.context_enumerator(query.size());
+        using state_t = typename decltype(libjst::naive_pattern_searcher{query})::state_type;
+        using state_manager_t = libjst::search_state_manager_stack<state_t>;
+        libjst::naive_pattern_searcher searcher{query, state_manager_t{}};
 
-        for (auto it = context_enumerator.begin(); it != context_enumerator.end(); ++it)
-        {
-            if (std::ranges::equal(*it, query))
-                process_hits(results, it.positions());
-        }
+        auto range_agent = jst.range_agent(query.size(), searcher.state_manager());
+        searcher(range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
     });
 
     return results;

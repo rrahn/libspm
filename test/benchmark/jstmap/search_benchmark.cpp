@@ -7,6 +7,7 @@
 
 #include <benchmark/benchmark.h>
 
+#include <libjst/search/naive_search.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
@@ -22,15 +23,25 @@ static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
     size_t const total_bytes = std::ranges::size(needle);
 
     size_t hit_count{};
+    std::vector<std::pair<size_t, int32_t>> hits{};
+
     for (auto _ : state)
     {
-        naive_traversal(haplotypes, [&] <std::ranges::random_access_range sequence_t>(sequence_t && sequence)
+        hits.clear();
+        libjst::naive_pattern_searcher searcher{needle};
+
+        for (size_t i = 0; i < 100; ++i)
         {
-            auto found_range = std::ranges::search(sequence, needle);
-            hit_count += !std::ranges::empty(found_range);
-            return std::ranges::subrange{std::ranges::next(found_range.begin(), 1, std::ranges::end(sequence)),
-                                         std::ranges::end(sequence)};
-        });
+            for (size_t j = 0; j < haplotypes.size(); ++j)
+            {
+                auto const & haystack = haplotypes[j];
+                searcher(haystack, [&] (auto const & haystack_it)
+                {
+                    hits.emplace_back(i * j, std::ranges::distance(haystack.begin(), haystack_it));
+                });
+            }
+        }
+        hit_count += hits.size();
     }
 
     benchmark::DoNotOptimize(hit_count);
