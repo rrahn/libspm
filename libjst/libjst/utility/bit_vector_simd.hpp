@@ -135,6 +135,43 @@ public:
         return tmp;
     }
 
+    using base_t::any;
+    using base_t::none;
+
+    //!\copydoc libjst::bit_vector_base::any
+    constexpr bool any() const noexcept
+    //!\cond
+        requires (seqan3::simd_traits<simd_type>::max_length == 64)
+    //!\endcond
+    {
+        constexpr simd_type one_vector = seqan3::fill<simd_type>(~static_cast<chunk_type>(0));
+        constexpr __mmask8 zero_mask{};
+
+        auto test_non_zero = [&] (simd_type const & data) -> bool
+        {
+            return _mm512_test_epi64_mask(reinterpret_cast<__m512i const &>(one_vector),
+                                          reinterpret_cast<__m512i const &>(data)) != zero_mask;
+        };
+
+        chunk_type const * lhs_data = base_t::as_base()->data();
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
+
+        for (; lhs_data != end; lhs_data += chunks_per_vector)
+            if (test_non_zero(seqan3::load<simd_type>(lhs_data)))
+                return true;
+
+        return false;
+    }
+
+    //!\copydoc libjst::bit_vector_base::none
+    constexpr bool none() const noexcept
+    //!\cond
+        requires (seqan3::simd_traits<simd_type>::max_length == 64)
+    //!\endcond
+    {
+        return !any();
+    }
+
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
