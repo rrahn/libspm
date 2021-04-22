@@ -81,20 +81,9 @@ public:
      * \{
      */
     bit_vector_simd() = default; //!< Default.
-    //!\brief Copy constructor.
-    bit_vector_simd(bit_vector_simd const & other) : base_t{}
-    {
-        *this = other;
-    }
-
+    bit_vector_simd(bit_vector_simd const & other) = default; //!< Default.
     bit_vector_simd(bit_vector_simd &&) = default; //!< Default.
-    //!\brief Copy assignment.
-    bit_vector_simd & operator=(bit_vector_simd const & other)
-    {
-        base_t::assign(other.begin(), other.end());
-        return *this;
-    }
-
+    bit_vector_simd & operator=(bit_vector_simd const & other) = default; //!< Default.
     bit_vector_simd & operator=(bit_vector_simd &&) = default; //!< Default.
     ~bit_vector_simd() = default; //!< Default.
 
