@@ -137,8 +137,8 @@ public:
         {
             return seqan3::detail::multi_invocable
             {
-                /*case:*/   [] (substitution_type e) { return e.value().size(); },
-                /*case:*/   [] (deletion_type e) { return e.value(); },
+                /*case:*/   [] (substitution_type const & e) { return e.value().size(); },
+                /*case:*/   [] (deletion_type const & e) { return e.value(); },
                 /*default:*/[] (...) { return 0; }
             }(event_kind);
         }, delta_variant());
@@ -159,8 +159,8 @@ public:
         {
             return seqan3::detail::multi_invocable
             {
-                /*case:*/   [] (substitution_type e) { return e.value().size(); },
-                /*case:*/   [] (insertion_type e) { return e.value().size(); },
+                /*case:*/   [] (substitution_type const & e) { return e.value().size(); },
+                /*case:*/   [] (insertion_type const & e) { return e.value().size(); },
                 /*default:*/[] (...) { return 0; }
             }(event_kind);
         }, delta_variant());
