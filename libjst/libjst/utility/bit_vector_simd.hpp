@@ -137,7 +137,7 @@ public:
         bit_vector_simd tmp(base_t::size());
 
         chunk_type const * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + min_capacity(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
         chunk_type * rhs_data = tmp.as_base()->data();
 
         for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
@@ -152,7 +152,7 @@ private:
     constexpr bit_vector_simd & binary_transform_impl(bit_vector_simd const & rhs, binary_operator_t && op) noexcept
     {
         chunk_type * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + min_capacity(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
         chunk_type const * rhs_data = rhs.as_base()->data();
 
         for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
@@ -161,23 +161,17 @@ private:
         return *this;
     }
 
-    //!\brief Ensures that the base bit vector has enough memory.
-    constexpr void reserve_impl(size_type const count) noexcept
-    {
-        base_t::as_base()->reserve(min_capacity(count));
-    }
-
-    /*!\brief Computes the minimal capacity needed to be allocated for the underlying vector.
+    /*!\brief Computes the minimal size needed for the host vector.
      *
-     * \param[in] count The number of bits to reserve memory for.
+     * \param[in] count The number of bits to allocate memory for.
      *
      * \details
      *
      * In the simd approach we guarantee that the underlying vector allocates enough memory to always read an entire
      * simd vector without reading from unallocated memory.
-     * It is not important that the memory is properly initialised as the overlapping data is ignored in any case.
+     * It is not important that the memory is properly initialised as the overlapping data is ignored by the operations.
      */
-    constexpr size_t min_capacity(size_type const count) const noexcept
+    constexpr size_type host_size_impl(size_type const count) const noexcept
     {
         return (base_t::chunks_needed(count) + chunks_per_vector - 1) & -chunks_per_vector;
     }

@@ -318,7 +318,7 @@ public:
      */
     constexpr void reserve(size_type const new_capacity)
     {
-        as_derived()->reserve_impl(new_capacity);
+        base_t::reserve(as_derived()->host_size_impl(new_capacity));
     }
     //!\}
 
@@ -356,17 +356,24 @@ public:
     }
 
     //!\brief Changes the number of elements stored, where additional copies of `bit` are appended.
-    constexpr void resize(size_type const count, bool const bit)
+    constexpr void resize(size_type const count, bool const bit = {})
     {
-        reserve(count);
-        base_t::resize(chunks_needed(count), fill_chunk(bit));
-        set_new_size(count);
-    }
+        base_t::resize(as_derived()->host_size_impl(count));
 
-    //!\brief Changes the number of elements stored, where additional default-initialised elements are appended.
-    constexpr void resize(size_type const count)
-    {
-        resize(count, bool{});
+        size_t const old_size = size();
+        set_new_size(count);
+        if (size() > old_size) // If bit is true and we increase the size.
+        {
+            if (bit) std::ranges::fill(begin() + old_size, end(), bit);
+        }
+        else if (size() < old_size)
+        {
+            size_t const chunk_position = to_chunk_position(size());
+            (*as_base())[chunk_position] &= (1 << to_local_chunk_position(size())) - 1;
+            std::ranges::fill(std::ranges::next(as_base()->begin(), chunk_position + 1, as_base()->end()),
+                              as_base()->end(),
+                              0);
+        }
     }
 
     //!\brief Performs binary AND between `this` and `rhs`.

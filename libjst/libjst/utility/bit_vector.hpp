@@ -124,10 +124,11 @@ private:
         return *this;
     }
 
-    //!\brief Ensures that the base bit vector has enough memory.
-    constexpr void reserve_impl(size_type const count) noexcept
+    //!\brief Computes the minimal size needed for the host vector.
+    //!\param[in] count The number of bits to allocate memory for.
+    constexpr size_type host_size_impl(size_type const count) const noexcept
     {
-        base_t::as_base()->reserve(base_t::chunks_needed(count));
+        return base_t::chunks_needed(count);
     }
 };
 }  // namespace libjst::utility
