@@ -560,7 +560,7 @@ private:
             // Now determine the supported coverage within this context.
             std::ranges::for_each(first_it, active_branch().branch_event_it, [&] (auto const & branch_event)
             {
-                active_branch().coverage &= ~branch_event.coverage();
+                active_branch().coverage.and_not(branch_event.coverage());
             });
         }
     }
