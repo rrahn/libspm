@@ -479,9 +479,11 @@ private:
      */
     void update_coverage(branch & new_branch) noexcept
     {
-        coverage_type const & event_coverage = new_branch.delta_event->coverage();
-        new_branch.coverage = (is_base_branch()) ? event_coverage : event_coverage & active_branch().coverage;
-        active_branch().coverage &= ~(event_coverage);
+        new_branch.coverage = new_branch.delta_event->coverage();
+        if (!is_base_branch())
+            new_branch.coverage &= active_branch().coverage;
+
+        active_branch().coverage.and_not(new_branch.delta_event->coverage());
     }
 
     /*!\brief Updates the relative context position offset for each sequence.
