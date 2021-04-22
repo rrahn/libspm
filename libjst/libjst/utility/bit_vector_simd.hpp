@@ -172,6 +172,16 @@ public:
         return !any();
     }
 
+    using base_t::save;
+
+    //!\copydoc libjst::bit_vector_base::load
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        base_t::load(archive);
+        base_t::resize(base_t::size());
+    }
+
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
