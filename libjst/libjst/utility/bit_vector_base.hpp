@@ -434,6 +434,17 @@ public:
         return lhs ^= rhs;
     }
 
+    //!\brief Computes the bitwise `a &= ~b` operator without an additional copy.
+    constexpr derived_t & and_not(derived_t const & rhs) noexcept
+    {
+        assert(rhs.size() == size());
+
+        return as_derived()->binary_transform_impl(rhs, [] (auto const & left_chunk, auto const & right_chunk)
+        {
+            return left_chunk & ~right_chunk;
+        });
+    }
+
     //!\brief Flips all bits in-place.
     constexpr derived_t & flip() noexcept
     {
