@@ -508,6 +508,9 @@ private:
 
         for (; has_full_context_in_branch() && is_join_event_before_context_head(); ++_join_event_it)
         {
+            if (_join_event_it->event_handle()->is_substitution()) // Not updating if this is a substitution.
+                continue;
+
             coverage_type const & join_coverage = _join_event_it->coverage();
             for (unsigned id = 0; id < _sequence_offsets.size(); ++id)
                 _sequence_offsets[id] += (join_coverage[id]) ? event_offset(_join_event_it->event_handle()) : 0;
