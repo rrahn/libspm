@@ -223,9 +223,9 @@ private:
     }
 
     //!\brief Pushes a new branch on the branch stack.
-    void push_branch(branch && new_branch) noexcept
+    void push_branch() noexcept
     {
-        _branch_stack.push(std::move(new_branch));
+        _branch_stack.realise_prefetched();
         as_derived()->notify_push();
     }
 
@@ -246,7 +246,8 @@ private:
         assert(on_branch_event());
 
         // Create a branch from the current one.
-        branch new_branch{active_branch()};
+        branch & new_branch = _branch_stack.prefetch();
+        new_branch = active_branch();
 
         // Update the delta event and the coverage.
         new_branch.delta_event = active_branch().branch_event_it->event_handle();
@@ -284,7 +285,7 @@ private:
         }
         else
         { // Push the new branch onto the stack, which automatically switches the active branch to the new one.
-            push_branch(std::move(new_branch));
+            push_branch();
             return is_deletion ? branch_creation_status::success_with_deletion : branch_creation_status::success;
         }
     }
