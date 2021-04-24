@@ -160,10 +160,7 @@ public:
 
     //!\brief Constructs an instance of this iterator from the given host.
     explicit constexpr iterator(journal_sequence_tree_range_agent * host) : _host{host}
-    {
-        if (!_host->at_end())
-            ++(*this);
-    }
+    {}
     //!\}
 
     /*!\name Element access
