@@ -18,6 +18,7 @@
 #include <span>
 
 #include <libjst/journal_entry.hpp>
+#include <libjst/utility/sorted_vector.hpp>
 
 namespace libjst
 {
@@ -28,7 +29,7 @@ class journal_decorator
 private:
 
     using journal_entry_type = detail::journal_entry<segment_t>;
-    using dictionary_type = std::set<journal_entry_type, std::less<void>>;
+    using dictionary_type = sorted_vector<journal_entry_type, std::less<void>>;
     using dictionary_iterator = typename dictionary_type::iterator;
 
     dictionary_type _dictionary{};
@@ -67,10 +68,9 @@ public:
 
         dictionary_iterator entry_it = _dictionary.lower_bound(position);
 
-        bool inserted = true;
         if (entry_it == _dictionary.end()) // The dictionary is empty and we can just insert the segment.
         {
-            inserted = _dictionary.emplace(position, std::move(segment)).second;
+            _dictionary.emplace(position, std::move(segment));
         }
         else
         {
@@ -79,10 +79,10 @@ public:
             _dictionary.emplace_hint(entry_it, position, std::move(segment));
         }
 
-        update_size(inserted * std::ranges::size(segment));
+        update_size(std::ranges::size(segment));
 
         assert(check_consistent_segments());
-        return inserted;
+        return true;
     }
 
     bool record_deletion(size_type const first_position, size_type const last_position)
@@ -122,9 +122,9 @@ public:
         return _dictionary.empty();
     }
 
-    iterator<false> begin() noexcept
+    iterator<true> begin() noexcept
     {
-        return iterator<false>{this, false};
+        return iterator<true>{this, false};
     }
 
     iterator<true> begin() const noexcept
@@ -132,9 +132,9 @@ public:
         return iterator<true>{this, false};
     }
 
-    iterator<false> end() noexcept
+    iterator<true> end() noexcept
     {
-        return iterator<false>{this, true};
+        return iterator<true>{this, true};
     }
 
     iterator<true> end() const noexcept
@@ -221,11 +221,13 @@ private:
         else // delete multiple entries
         {  // remove the suffix of the first entry and the prefix of the last entry.
             dictionary_iterator last_entry_it = _dictionary.lower_bound(last_position);
-            dictionary_iterator last_entry_right_split_it = split_at(last_entry_it, last_position);
+            auto element_pos = std::ranges::distance(_dictionary.begin(), first_entry_right_split_it);
+            dictionary_iterator last = split_at(last_entry_it, last_position);
 
-            assert(*first_entry_right_split_it < *last_entry_right_split_it);
+            dictionary_iterator first{_dictionary.begin().base() + element_pos};
+            assert(last == _dictionary.end() || *first < *last);
 
-            return _dictionary.erase(first_entry_right_split_it, last_entry_right_split_it);
+            return _dictionary.erase(first, last);
         }
     }
 };
@@ -242,7 +244,7 @@ private:
     using maybe_const_segment_t = std::conditional_t<is_const_range, segment_t const, segment_t>;
 
     using segment_iterator = std::ranges::iterator_t<maybe_const_segment_t>;
-    using dictionary_iterator = std::ranges::iterator_t<dictionary_type>;
+    using dictionary_iterator = std::ranges::iterator_t<dictionary_type const>;
 
     journal_decorator const * _host{};
     segment_iterator _segment_it{};
