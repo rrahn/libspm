@@ -452,7 +452,6 @@ private:
     //!\brief Records the represented delta event in the journal decorator of the new branch.
     void record_delta_event(branch & new_branch)
     {
-        using substitution_t = delta_event_shared_type::substitution_type;
         using insertion_t = delta_event_shared_type::insertion_type;
         using deletion_t = delta_event_shared_type::deletion_type;
 
@@ -462,9 +461,9 @@ private:
         {
             seqan3::detail::multi_invocable
             {
-                [&] (substitution_t const & e) { jd.record_substitution(position, std::span{e.value()}); },
                 [&] (insertion_t const & e) { jd.record_insertion(position, std::span{e.value()}); },
-                [&] (deletion_t const & e) { jd.record_deletion(position, position + e.value()); }
+                [&] (deletion_t const & e) { jd.record_deletion(position, position + e.value()); },
+                [&] (auto const & e) { jd.record_substitution(position, std::span{e.value()}); }
             } (delta_kind);
         }, new_branch.delta_event->delta_variant());
     }

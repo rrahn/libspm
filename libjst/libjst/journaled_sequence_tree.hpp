@@ -171,7 +171,6 @@ public:
             // Record the event in the journal decorator.
             std::visit([&] (auto const & event_kind)
             {
-                using substitution_t = typename delta_event_shared_type::substitution_type;
                 using insertion_t = typename delta_event_shared_type::insertion_type;
                 using deletion_t = typename delta_event_shared_type::deletion_type;
 
@@ -179,10 +178,6 @@ public:
 
                 seqan3::detail::multi_invocable
                 {
-                    [&] (substitution_t const & e)
-                    {
-                        target_sequence.record_substitution(target_position, segment_type{e.value()});
-                    },
                     [&] (insertion_t const & e)
                     {
                         target_sequence.record_insertion(target_position, segment_type{e.value()});
@@ -190,6 +185,10 @@ public:
                     [&] (deletion_t const & e)
                     {
                         target_sequence.record_deletion(target_position, target_position + e.value());
+                    },
+                    [&] (auto const & e)
+                    {
+                        target_sequence.record_substitution(target_position, segment_type{e.value()});
                     }
                 }(event_kind);
             }, delta_event->delta_variant());

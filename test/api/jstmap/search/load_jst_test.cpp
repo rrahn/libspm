@@ -9,14 +9,32 @@
 
 #include <filesystem>
 
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/core/detail/debug_stream_alphabet.hpp>
+#include <seqan3/core/detail/debug_stream_range.hpp>
+#include <seqan3/range/views/to_char.hpp>
+#include <seqan3/test/expect_range_eq.hpp>
+
 #include <jstmap/search/load_jst.hpp>
 
 TEST(jstmap_index, load_jst)
 {
+    using seqan3::operator""_dna5;
+
     std::filesystem::path jst_file{DATADIR"sim_refx5.jst"};
     jstmap::jst_t jst = jstmap::load_jst(jst_file);
 
     EXPECT_EQ(jst.size(), 5u);
+    EXPECT_RANGE_EQ(jst.sequence_at(0),
+                    "TATGCACCAGAGTATGGAAGCATAAGCTCTGCATGCAAAGGTACATCAGATCCTGCGGTTGGGTGCCAACCCAAGTGTGTTCACGGGCGC"_dna5);
+    EXPECT_RANGE_EQ(jst.sequence_at(1),
+                    "TTGACAGACATCGGAGGATGGTGCACACTCACTCGACCAGCGCAAAGCACAGGATCTCACGGGCGGACATCTCTTAGGTCAGTCATCGTGGAGGAATGCT"_dna5);
+    EXPECT_RANGE_EQ(jst.sequence_at(2),
+                    "TGTACGTTCTTTTGGCTTCCCCTAACACGGCGGGCGTCTCCGGTACGTATCCTGTCGGTACACCCCTTAAGCCCCTAGGCCCGAAGAACATAGCGCATTTCACGCTCTCT"_dna5);
+    EXPECT_RANGE_EQ(jst.sequence_at(3),
+                    "ACGAATGACCGCAACGATCAAATGGGCGAGAACAACTAATTCCGATTCATGGGGTTTGTGGATTGTGACACAGCGCGCCCGCTAC"_dna5);
+    EXPECT_RANGE_EQ(jst.sequence_at(4),
+                    "TGCGGGACGTGAGGACGCCCAATTCTGCCAAGGATTATTTAGGGTGTTTCACTAGAGTTATGCGCCGACCCCGGTTGGACCAGCTTGCATTCGAAACTGCGTTA"_dna5);
 }
 
 TEST(jstmap_index, load_jst_empty_path)

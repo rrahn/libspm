@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <variant>
+
 #include <libjst/detail/journal_sequence_tree_event_base.hpp>
 
 namespace libjst::detail
@@ -65,7 +67,8 @@ private:
     //!\copydoc libjst::detail::journal_sequence_tree_event_base::delta_index
     constexpr size_t delta_index_impl() const noexcept
     {
-        return 2u - base_t::event_handle()->delta_variant().index();
+        using variant_t = typename delta_event_t::delta_variant_type;
+        return std::variant_size_v<variant_t> - base_t::event_handle()->delta_variant().index();
     }
 
     //!\copydoc libjst::detail::journal_sequence_tree_event_base::poisition

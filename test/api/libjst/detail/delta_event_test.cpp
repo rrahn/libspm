@@ -22,7 +22,7 @@ struct delta_operation_fixture : public ::testing::Test
 R"json({
     "value0": 23,
     "value1": {
-        "index": 1,
+        "index": 2,
         "data": {
             "value0": {
                 "value0": [
@@ -31,6 +31,19 @@ R"json({
                     99,
                     100
                 ]
+            }
+        }
+    }
+})json";
+
+    static constexpr std::string_view expected_snp_archive =
+R"json({
+    "value0": 23,
+    "value1": {
+        "index": 1,
+        "data": {
+            "value0": {
+                "value0": 97
             }
         }
     }
@@ -59,7 +72,7 @@ R"json({
 R"json({
     "value0": 100,
     "value1": {
-        "index": 2,
+        "index": 3,
         "data": {
             "value0": {
                 "value0": 10
@@ -107,6 +120,16 @@ TEST_F(delta_operation_fixture, construct_from_deletion)
     EXPECT_TRUE(op.is_deletion());
 }
 
+TEST_F(delta_operation_fixture, construct_from_snp)
+{
+    using namespace std::literals;
+
+    delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+
+    EXPECT_EQ(op.position(), 10u);
+    EXPECT_TRUE(op.is_snp());
+}
+
 TEST_F(delta_operation_fixture, deletion_size)
 {
     using namespace std::literals;
@@ -115,6 +138,12 @@ TEST_F(delta_operation_fixture, deletion_size)
         delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
 
         EXPECT_EQ(op.deletion_size(), 3u);
+    }
+
+    { // snp
+        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+
+        EXPECT_EQ(op.deletion_size(), 1u);
     }
 
     { // insertion
@@ -140,6 +169,12 @@ TEST_F(delta_operation_fixture, insertion_size)
         EXPECT_EQ(op.insertion_size(), 3u);
     }
 
+    { // snp
+        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+
+        EXPECT_EQ(op.insertion_size(), 1u);
+    }
+
     { // insertion
         delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
 
@@ -161,6 +196,12 @@ TEST_F(delta_operation_fixture, sequence)
         delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
 
         EXPECT_RANGE_EQ(op.sequence(), "abc"s);
+    }
+
+    { // snp
+        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+
+        EXPECT_RANGE_EQ(op.sequence(), "a"s);
     }
 
     { // insertion
@@ -229,6 +270,13 @@ TEST_F(delta_operation_fixture, stream)
     }
 
     {
+        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+        std::stringstream sstream;
+        sstream << op;
+        EXPECT_EQ(sstream.str(), "(10, snp: a)"s);
+    }
+
+    {
         delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
         std::stringstream sstream;
         sstream << op;
@@ -256,6 +304,21 @@ TEST_F(delta_operation_fixture, save_substitution)
     }
 
     EXPECT_EQ(archive_stream.str(), expected_substitution_archive);
+}
+
+TEST_F(delta_operation_fixture, save_snp)
+{
+    using namespace std::literals;
+    std::stringstream archive_stream{};
+
+    delta_event_t snp_event{23u, libjst::detail::delta_kind_snp{"a"s}};
+
+    {
+        cereal::JSONOutputArchive output_archive(archive_stream);
+        snp_event.save(output_archive);
+    }
+
+    EXPECT_EQ(archive_stream.str(), expected_snp_archive);
 }
 
 TEST_F(delta_operation_fixture, save_insertion)
@@ -300,6 +363,21 @@ TEST_F(delta_operation_fixture, load_substitution)
     }
 
     EXPECT_EQ(substitution_event, (delta_event_t{23u, libjst::detail::delta_kind_substitution{"abcd"s}}));
+}
+
+TEST_F(delta_operation_fixture, load_snp)
+{
+    using namespace std::literals;
+
+    std::stringstream archive_stream{expected_snp_archive.data()};
+
+    delta_event_t snp_event{};
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        snp_event.load(input_archive);
+    }
+
+    EXPECT_EQ(snp_event, (delta_event_t{23u, libjst::detail::delta_kind_snp{"a"s}}));
 }
 
 TEST_F(delta_operation_fixture, load_insertion)

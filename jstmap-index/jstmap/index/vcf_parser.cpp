@@ -41,6 +41,8 @@ class augmented_vcf_record
     using event_type = typename shared_event_type::delta_event_type;
     //!\brief The substitution type.
     using substitution_type = typename shared_event_type::substitution_type;
+    //!\brief The SNP type.
+    using snp_type = typename shared_event_type::snp_type;
     //!\brief The deletion type.
     using deletion_type = typename shared_event_type::deletion_type;
     //!\brief The insertion type.
@@ -306,9 +308,16 @@ private:
                              | seqan3::views::to<std::vector>;
 
                 if (alternative.size() == reference_segment.size()) // Substitution.
-                    delta_events.emplace_back(delta_position, substitution_type{std::move(variant)});
+                {
+                    if (variant_size == 1) // SNP
+                        delta_events.emplace_back(delta_position, snp_type{std::move(variant)});
+                    else // Longer substitution
+                        delta_events.emplace_back(delta_position, substitution_type{std::move(variant)});
+                }
                 else // Insertion.
+                {
                     delta_events.emplace_back(delta_position, insertion_type{std::move(variant)});
+                }
             }
         }
 
