@@ -307,6 +307,10 @@ private:
     {
         assert(!at_end());
 
+        // Skip if branch not at end.
+        if (!active_branch().at_end())
+            return;
+
         // Only terminate a branch if it reached the end and either the branch end position is also the branch max
         // end position or there are no more branch events left.
         auto reached_branch_end = [&] () -> bool
@@ -502,6 +506,11 @@ private:
      */
     void update_relative_sequence_offsets() noexcept
     {
+        // Do not continue if the offset do not need to be updated.
+        if (_join_event_it == std::ranges::end(join_event_queue()) ||
+            context_begin_position() < _join_event_it->position())
+            return;
+
         // Little helper lambda to check if there is really a join event before the current head of the context
         auto is_join_event_before_context_head = [&] ()
         {
