@@ -142,6 +142,7 @@ private:
             journal_decorator_type{std::span{_jst_host->reference()}}, // the journal decorator of the current branch
             coverage_type(_jst_host->size(), true) // the current branch coverage.
         );
+        active_branch().jd_iter = active_branch().journal_decorator.begin();
 
         // Initialise the first branch if any exists at the first position.
         while (on_branch_event())
@@ -260,6 +261,9 @@ private:
 
         // Apply the delta event to update the current journal decorator.
         record_delta_event(new_branch);
+        new_branch.jd_iter = new_branch.journal_decorator.begin();
+        if (!new_branch.journal_decorator.empty())
+            new_branch.jd_iter += new_branch.context_position;
 
         new_branch.offset += event_offset(new_branch.delta_event);
 
@@ -584,6 +588,7 @@ private:
         assert(!at_end());
 
         ++active_branch().context_position;
+        ++active_branch().jd_iter;
         terminate_consumed_branches(); // terminate all branches
         update_relative_sequence_offsets();
         update_base_branch_coverage();
@@ -632,8 +637,7 @@ private:
     //!\returns The current pointed-to value.
     std::ranges::range_value_t<journal_decorator_type> current_value() const noexcept
     {
-        assert(active_branch().context_position < active_branch().journal_decorator.size());
-        return *(active_branch().journal_decorator.begin() + active_branch().context_position);
+        return *active_branch().jd_iter;
     }
 
    /*!\brief Compute the branch coverage that is valid for the current branch.
@@ -714,6 +718,7 @@ struct journal_sequence_tree_traverser<derived_t, jst_t>::branch
     join_event_queue_iterator join_event_it{}; //!< The iterator pointing to the next join event.
     journal_decorator_type journal_decorator{}; //!< The journal decorator representing the current sequence context.
     coverage_type coverage{}; //!< The coverage for this branch.
+    std::ranges::iterator_t<journal_decorator_type> jd_iter{}; //!< Iterator points to the current journal decorator.
 
     //!\brief Checks wether this branch reached its end.
     constexpr bool at_end() const noexcept
