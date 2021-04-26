@@ -642,6 +642,12 @@ private:
              | seqan3::views::slice(context_begin_position(), context_end_position());
     }
 
+    //!\brief Returns the current context iterator.
+    std::ranges::iterator_t<journal_decorator_type> current_iterator() const noexcept
+    {
+        return active_branch().jd_iter;
+    }
+
     //!\brief Returns the current value pointed to by the traverser.
     //!\returns The current pointed-to value.
     std::ranges::range_value_t<journal_decorator_type> current_value() const noexcept

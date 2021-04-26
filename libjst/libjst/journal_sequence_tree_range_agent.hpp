@@ -166,10 +166,22 @@ public:
     /*!\name Element access
      * \{
      */
+    //\!\brief Returns the underlying iterator of the journal decorator.
+    auto base() const
+    {
+        return _host->current_iterator();
+    }
+
     //!\brief Returns the current context.
     reference operator*() const noexcept(noexcept(_host->current_value()))
     {
         return _host->current_value();
+    }
+
+    //\!\brief Returns the current context.
+    auto context()
+    {
+        return _host->current_context();
     }
 
     //!\brief Returns a vector with the positions valid for the current context. Can be empty.
