@@ -11,8 +11,7 @@
 #include <tuple>
 #include <ranges>
 
-#include <libjst/search/horspool_search.hpp>
-#include <libjst/search/naive_search.hpp>
+#include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
 
@@ -39,9 +38,9 @@ std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vec
 
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
-        using state_t = typename decltype(libjst::horspool_pattern_searcher{query})::state_type;
+        using state_t = typename decltype(libjst::shift_or_pattern_searcher{query})::state_type;
         using state_manager_t = libjst::search_state_manager_stack<state_t>;
-        libjst::horspool_pattern_searcher searcher{query, state_manager_t{}};
+        libjst::shift_or_pattern_searcher searcher{query, state_manager_t{}};
 
         auto range_agent = jst.range_agent(query.size(), searcher.state_manager());
         searcher(range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
