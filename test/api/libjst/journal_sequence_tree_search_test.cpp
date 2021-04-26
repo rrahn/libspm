@@ -18,6 +18,7 @@
 
 #include <libjst/search/horspool_search.hpp>
 #include <libjst/search/naive_search.hpp>
+#include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
 
@@ -87,11 +88,17 @@ TEST_P(search_test, naive_search)
     auto jst_range_agent = jst.range_agent(context_size(), searcher.state_manager()); // already pushing a branch.
 
     // TODO: The position should be generate from a const iterator as well.
+    size_t hit_count{};
     searcher(jst_range_agent, [&] (auto & it)
     {
         for (libjst::context_position hit : it.positions())
+        {
+            ++hit_count;
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
+        }
     });
+
+    EXPECT_EQ(hit_count, expected_hits.size());
 }
 
 TEST_P(search_test, horspool_search)
@@ -100,11 +107,35 @@ TEST_P(search_test, horspool_search)
     libjst::horspool_pattern_searcher searcher{GetParam().pattern, libjst::search_state_manager_stack<state_t>{}};
     auto jst_range_agent = jst.range_agent(context_size(), searcher.state_manager()); // already pushing a branch.
 
+    size_t hit_count{};
     searcher(jst_range_agent, [&] (auto & it)
     {
         for (libjst::context_position hit : it.positions())
+        {
+            ++hit_count;
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
+        }
     });
+
+    EXPECT_EQ(hit_count, expected_hits.size());
+}
+
+TEST_P(search_test, shift_or_search)
+{
+    using state_t = typename decltype(libjst::shift_or_pattern_searcher{GetParam().pattern})::state_type;
+    libjst::shift_or_pattern_searcher searcher{GetParam().pattern, libjst::search_state_manager_stack<state_t>{}};
+    auto jst_range_agent = jst.range_agent(context_size(), searcher.state_manager()); // already pushing a branch.
+
+    size_t hit_count{};
+    searcher(jst_range_agent, [&] (auto & it)
+    {
+        for (libjst::context_position hit : it.positions())
+        {
+            ++hit_count;
+            EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
+        }
+    });
+    EXPECT_EQ(hit_count, expected_hits.size());
 }
 
 // ----------------------------------------------------------------------------
