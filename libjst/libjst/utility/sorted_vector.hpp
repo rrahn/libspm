@@ -35,6 +35,13 @@ public:
     using const_iterator = bi_iterator<true>;
     using size_type = size_t;
 
+    sorted_vector() noexcept = default;
+    sorted_vector(sorted_vector const &) noexcept = default;
+    sorted_vector(sorted_vector &&) noexcept = default;
+    sorted_vector & operator=(sorted_vector const &) noexcept = default;
+    sorted_vector & operator=(sorted_vector &&) noexcept = default;
+    ~sorted_vector() = default;
+
     /*!\name Iterators
      * \{
      */

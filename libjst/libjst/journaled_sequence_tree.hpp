@@ -37,6 +37,7 @@
 #include <libjst/journal_decorator.hpp>
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
 #include <libjst/journal_sequence_tree_range_agent.hpp>
+#include <libjst/utility/sorted_vector.hpp>
 
 namespace libjst::no_adl
 {
@@ -76,8 +77,8 @@ private:
 
     sequence_t _reference; //!< The internal reference used for referential compression.
     event_list_type _delta_events{}; //!< The list of stored delta events.
-    std::multiset<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
-    std::multiset<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
+    sorted_vector<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
+    sorted_vector<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
     size_t _size{}; //!< The sequence count.
 
 public:
