@@ -14,8 +14,8 @@
 
 #include <algorithm>
 #include <set>
-#include <type_traits>
 #include <span>
+#include <type_traits>
 
 #include <libjst/journal_entry.hpp>
 #include <libjst/utility/sorted_vector.hpp>

@@ -94,8 +94,10 @@ private:
     size_t _context_size{}; //!< The size of the underlying context.
     std::vector<int32_t> _sequence_offsets{}; //!< The context position offsets.
     join_event_queue_iterator _join_event_it{}; //!< The global join event iterator to update the context positions.
-
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
+    
+    size_t _begin_pos;
+    size_t _end_pos;
 
     using context_position_type = context_position; //!< The type representing a single context position.
 
@@ -120,27 +122,45 @@ private:
      *
      * The cursor is initialised with the given context size and already represents the first context.
      */
-    journal_sequence_tree_traverser(jst_t const * jst, size_t const context_size) noexcept :
+    journal_sequence_tree_traverser(jst_t const * jst, size_t const context_size,  std::ptrdiff_t begin_pos, std::ptrdiff_t end_pos) noexcept :
         _jst_host{jst},
-        _context_size{context_size}
+        _context_size{context_size},
+        _begin_pos{static_cast<size_t>(begin_pos)},
+        _end_pos{static_cast<size_t>(end_pos)}
     {
         assert(_jst_host != nullptr);
         assert(_context_size > 0);
+        assert(begin_pos < end_pos);
 
         // Initialise the context position offsets and the first join event for updating the context positions.
         _sequence_offsets.resize(_jst_host->size(), 0);
-        _join_event_it = std::ranges::begin(join_event_queue());
+        // _join_event_it = std::ranges::begin(join_event_queue());
+        _join_event_it = join_event_queue().lower_bound(_begin_pos);
+
+        // Scan over all branch events before the begin position and
+        // compute the offset from all events ending before the begin and
+        // the coverage from all events ending after the begin.
+        coverage_type coverage(_jst_host->size(), true);
+        auto first_candidate_it = branch_event_queue().lower_bound(_begin_pos);
+        std::ranges::for_each(std::ranges::begin(branch_event_queue()), first_candidate_it, [&] (auto const & branch_event)
+        {
+            if(branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
+                update_offset_for_event(branch_event);
+            else
+                coverage &= branch_event.coverage();
+        });
 
         // Initialise the base branch covering the reference sequence.
         _branch_stack.emplace(
-            size_type{0},  // current context position.
-            std::ranges::size(_jst_host->reference()), // current branch end position.
+            _begin_pos,  // current context position.
+            std::min(_end_pos, std::ranges::size(_jst_host->reference())), // current branch end position.
             0, // branch offset.
             nullptr, // pointer to the delta event causing the branch.
-            std::ranges::begin(branch_event_queue()), // next branch event to consider for this branch.
+            first_candidate_it, // next branch event to consider for this branch.
+            // std::ranges::begin(branch_event_queue()), // next branch event to consider for this branch.
             _join_event_it, // next join event to consider for this branch.
-            journal_decorator_type{std::span{_jst_host->reference()}}, // the journal decorator of the current branch
-            coverage_type(_jst_host->size(), true) // the current branch coverage.
+            journal_decorator_type{std::span{reference()}}, // the journal decorator of the current branch
+            coverage // the current branch coverage.
         );
         active_branch().jd_iter = active_branch().journal_decorator.begin();
 
@@ -161,7 +181,7 @@ private:
                 assert(!is_base_branch()); // Cannot be in the base branch.
                 drop_branch(); // remove branch and continue to see if there is another branch.
             }
-        }
+        }     
     }
     //!\}
 
@@ -185,11 +205,11 @@ private:
     }
 
     //!\brief Returns the event queue from the underlying host.
-    auto const & reference() const noexcept
+    auto reference() const noexcept
     {
         assert(_jst_host != nullptr);
 
-        return _jst_host->reference();
+        return _jst_host->reference() | seqan3::views::slice(_begin_pos, _end_pos);
     }
     //!\}
 
@@ -503,6 +523,29 @@ private:
         active_branch().coverage.and_not(new_branch.delta_event->coverage());
     }
 
+    /*!\brief Updates the sequence offsets for the given event.
+     * 
+     * \tparam event_t The type of the event (branch event or join event).
+     * 
+     * \param[in] event The event to update the relative sequence positions for.
+     * 
+     * \detail
+     * 
+     * Updates the relative sequence positions for every sequence that covers this event. If the event is a 
+     * substitution it will not invoke the update as the relative offset is not affected.
+     */
+    template <typename event_t>
+    void update_offset_for_event(event_t const & event) noexcept
+    {
+        if (event.event_handle()->is_substitution())
+            return;
+
+        //TODO: Vectorise, mask_add?
+        auto const offset = event_offset(event.event_handle());
+        for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
+            _sequence_offsets[idx] += (event.coverage()[idx] ? offset : 0);
+    }
+
     /*!\brief Updates the relative context position offset for each sequence.
      *
      * \details
@@ -536,16 +579,7 @@ private:
         // Update the sequence offsets.
         std::ranges::for_each(_join_event_it, upper_bound_join_it, [&] (auto const & join_event)
         {
-            if (!join_event.event_handle()->is_substitution())
-            {
-                // TODO: Make more efficient.
-                for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
-                {
-                    _sequence_offsets[idx] += (join_event.coverage()[idx] ?
-                                                event_offset(join_event.event_handle()) :
-                                                0);
-                }
-            }
+            update_offset_for_event(join_event);
         });
 
         _join_event_it = upper_bound_join_it;

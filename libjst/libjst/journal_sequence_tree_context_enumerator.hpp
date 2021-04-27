@@ -17,6 +17,7 @@
 #include <ranges>
 
 #include <seqan3/range/views/zip.hpp>
+#include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/context_position.hpp>
 #include <libjst/detail/journal_sequence_tree_traverser.hpp>
@@ -81,8 +82,12 @@ public:
      *
      * The cursor is initialised with the given context size and already represents the first context.
      */
+    journal_sequence_tree_context_enumerator(jst_t const * jst, size_t const context_size, std::ptrdiff_t begin_pos, std::ptrdiff_t end_pos) noexcept :
+        base_t{jst, context_size, begin_pos, end_pos}
+    {}
+
     journal_sequence_tree_context_enumerator(jst_t const * jst, size_t const context_size) noexcept :
-        base_t{jst, context_size}
+        journal_sequence_tree_context_enumerator{jst, context_size, 0, std::numeric_limits<std::ptrdiff_t>::max()}
     {}
     //!\}
 

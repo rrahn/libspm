@@ -89,7 +89,7 @@ public:
     template <search_stack_observer ...observer_t>
     journal_sequence_tree_range_agent(jst_t const * jst, size_t const context_size, observer_t & ...observer) noexcept :
         search_stack_notification_registry{observer...},
-        base_t{jst, context_size}
+        base_t{jst, context_size, 0, std::numeric_limits<std::ptrdiff_t>::max()}
     {}
     //!\}
 
