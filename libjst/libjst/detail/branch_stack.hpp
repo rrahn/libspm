@@ -34,8 +34,12 @@ template <std::semiregular branch_t, std::ranges::random_access_range container_
 class branch_stack
 {
 private:
+    //!\brief The type of the internal container iterator.
+    using stack_iterator_type = std::ranges::iterator_t<container_t>;
     //!\brief The inner memory pool to store the branches.
     container_t _stack{};
+    //!\brief Iterator to the current statck position.
+    stack_iterator_type _stack_iter{_stack.end()};
 
 public:
     /*!\name Associated types
@@ -52,10 +56,25 @@ public:
      * \{
      */
     constexpr branch_stack() = default; //!< Default.
-    constexpr branch_stack(branch_stack const &) = default; //!< Default.
-    constexpr branch_stack(branch_stack &&) = default; //!< Default.
-    constexpr branch_stack & operator=(branch_stack const &) = default; //!< Default.
-    constexpr branch_stack & operator=(branch_stack &&) = default; //!< Default.
+    //!\brief Copy construct from other.
+    constexpr branch_stack(branch_stack const & other) : _stack{other._stack}
+    {
+        _stack_iter = std::ranges::next(_stack.begin(), std::ranges::distance(other._stack.begin(), other._stack_iter));
+    }
+
+    //!\brief Moves construt from other.
+    constexpr branch_stack(branch_stack && other) noexcept : branch_stack{}
+    {
+        swap(other);
+    }
+
+    //!\brief Copy/move assigns from other.
+    constexpr branch_stack & operator=(branch_stack other) noexcept
+    {
+        swap(other);
+        return *this;
+    }
+
     ~branch_stack() = default; //!< Default.
     //!\}
 
@@ -93,13 +112,15 @@ public:
     //!\brief Returns a reference to the last pushed branch.
     reference top() noexcept
     {
-        return _stack.back();
+        assert(!empty());
+        return *_stack_iter;
     }
 
     //!\overload
     const_reference top() const noexcept
     {
-        return _stack.back();
+        assert(!empty());
+        return *_stack_iter;
     }
     //!\}
 
@@ -108,36 +129,67 @@ public:
      */
     bool empty() const noexcept
     {
-        return _stack.empty();
+        return _stack_iter == _stack.end();
     }
 
     size_type size() const noexcept
     {
-        return _stack.size();
+        return empty() ? 0 : (std::ranges::distance(_stack.begin(), _stack_iter) + 1);
     }
     //!\}
 
     /*!\name Modification
      * \{
      */
+    //!\brief Prefetches the next item on the stack by reusing already allocated memory.
+    reference prefetch() noexcept(noexcept(_stack.resize(1)))
+    {
+        size_t const old_size = size();
+        if (old_size >= _stack.size())
+        {
+            bool const is_empty = empty();
+            _stack.resize(old_size + 1);
+            _stack_iter = (is_empty) ? _stack.end() : std::ranges::next(_stack.begin(), old_size - 1);
+        }
+
+        return _stack[old_size];
+    }
+
+    //!\brief Realises the prefetched element, such that the prefetched element is the next top element of the satck.
+    void realise_prefetched() noexcept
+    {
+        empty() ? _stack_iter = _stack.begin() : ++_stack_iter;
+    }
+
     //!\brief Removes the branch on top of the stack.
     void pop() noexcept
     {
-        return _stack.pop_back();
+        assert(!empty());
+        (_stack_iter == _stack.begin()) ? _stack_iter = _stack.end() : --_stack_iter;
     }
 
     //!\brief Pushes a new branch on top of the stack.
-    void push(branch_t branch) noexcept(noexcept(_stack.push_back(std::move(branch))))
+    void push(branch_t branch) noexcept(noexcept(prefetch()))
     {
-        _stack.push_back(std::move(branch));
+        prefetch() = std::move(branch);
+        realise_prefetched();
     }
 
     //!\brief Pushes a new branch on top of the stack using placement construction.
     template <typename ...args_t>
         requires std::constructible_from<branch_t, args_t...>
-    void emplace(args_t && ...args) noexcept(noexcept(_stack.emplace_back(std::forward<args_t>(args)...)))
+    void emplace(args_t && ...args) noexcept(noexcept(prefetch()))
     {
-        _stack.emplace_back(std::forward<args_t>(args)...);
+        prefetch() = branch_t{std::forward<args_t>(args)...};
+        realise_prefetched();
+    }
+
+    //!\brief Swaps this with the content of other.
+    void swap(branch_stack & other) noexcept
+    {
+        auto const old_position = std::ranges::distance(other._stack.begin(), other._stack_iter);
+        _stack.swap(other._stack);
+        _stack_iter = std::ranges::next(_stack.begin(), old_position);
     }
     //!\}
 };

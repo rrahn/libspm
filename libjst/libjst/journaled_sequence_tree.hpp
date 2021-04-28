@@ -36,6 +36,8 @@
 #include <libjst/detail/transform_to_delta_events.hpp>
 #include <libjst/journal_decorator.hpp>
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
+#include <libjst/journal_sequence_tree_range_agent.hpp>
+#include <libjst/utility/sorted_vector.hpp>
 
 namespace libjst::no_adl
 {
@@ -69,14 +71,14 @@ private:
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
 
     //!\cond
-    template <typename>
-    friend class detail::journal_sequence_tree_context_enumerator;
+    template <typename, typename>
+    friend class detail::journal_sequence_tree_traverser;
     //!\endcond
 
     sequence_t _reference; //!< The internal reference used for referential compression.
     event_list_type _delta_events{}; //!< The list of stored delta events.
-    std::multiset<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
-    std::multiset<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
+    sorted_vector<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
+    sorted_vector<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
     size_t _size{}; //!< The sequence count.
 
 public:
@@ -87,6 +89,8 @@ public:
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\brief The type of the context enumerator.
     using context_enumerator_type = detail::journal_sequence_tree_context_enumerator<type>;
+    //!\brief The type of the range agent.
+    using range_agent_type = detail::journal_sequence_tree_range_agent<type>;
     using event_type = delta_event_shared_type; //!< The internally stored event type.
     //!\}
 
@@ -168,7 +172,6 @@ public:
             // Record the event in the journal decorator.
             std::visit([&] (auto const & event_kind)
             {
-                using substitution_t = typename delta_event_shared_type::substitution_type;
                 using insertion_t = typename delta_event_shared_type::insertion_type;
                 using deletion_t = typename delta_event_shared_type::deletion_type;
 
@@ -176,10 +179,6 @@ public:
 
                 seqan3::detail::multi_invocable
                 {
-                    [&] (substitution_t const & e)
-                    {
-                        target_sequence.record_substitution(target_position, segment_type{e.value()});
-                    },
                     [&] (insertion_t const & e)
                     {
                         target_sequence.record_insertion(target_position, segment_type{e.value()});
@@ -187,6 +186,10 @@ public:
                     [&] (deletion_t const & e)
                     {
                         target_sequence.record_deletion(target_position, target_position + e.value());
+                    },
+                    [&] (auto const & e)
+                    {
+                        target_sequence.record_substitution(target_position, segment_type{e.value()});
                     }
                 }(event_kind);
             }, delta_event->delta_variant());
@@ -371,7 +374,14 @@ public:
     context_enumerator_type context_enumerator(size_t const context_size) const noexcept
     {
         // TODO: Throw if not valid context.
-        return detail::journal_sequence_tree_context_enumerator<type>{this, context_size};
+        return context_enumerator_type{this, context_size};
+    }
+
+    //!\brief Returns a new range agent over the current journaled sequence tree.
+    template <search_stack_observer ...observer_t>
+    range_agent_type range_agent(size_t const context_size, observer_t & ...observer) const noexcept
+    {
+        return range_agent_type{this, context_size, observer...};
     }
 
     /*!\brief Saves this journaled sequence tree to the given output archive.

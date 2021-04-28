@@ -81,20 +81,9 @@ public:
      * \{
      */
     bit_vector_simd() = default; //!< Default.
-    //!\brief Copy constructor.
-    bit_vector_simd(bit_vector_simd const & other) : base_t{}
-    {
-        *this = other;
-    }
-
+    bit_vector_simd(bit_vector_simd const & other) = default; //!< Default.
     bit_vector_simd(bit_vector_simd &&) = default; //!< Default.
-    //!\brief Copy assignment.
-    bit_vector_simd & operator=(bit_vector_simd const & other)
-    {
-        base_t::assign(other.begin(), other.end());
-        return *this;
-    }
-
+    bit_vector_simd & operator=(bit_vector_simd const & other) = default; //!< Default.
     bit_vector_simd & operator=(bit_vector_simd &&) = default; //!< Default.
     ~bit_vector_simd() = default; //!< Default.
 
@@ -137,7 +126,7 @@ public:
         bit_vector_simd tmp(base_t::size());
 
         chunk_type const * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + min_capacity(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
         chunk_type * rhs_data = tmp.as_base()->data();
 
         for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
@@ -146,13 +135,60 @@ public:
         return tmp;
     }
 
+    using base_t::any;
+    using base_t::none;
+
+    //!\copydoc libjst::bit_vector_base::any
+    constexpr bool any() const noexcept
+    //!\cond
+        requires (seqan3::simd_traits<simd_type>::max_length == 64)
+    //!\endcond
+    {
+        constexpr simd_type one_vector = seqan3::fill<simd_type>(~static_cast<chunk_type>(0));
+        constexpr __mmask8 zero_mask{};
+
+        auto test_non_zero = [&] (simd_type const & data) -> bool
+        {
+            return _mm512_test_epi64_mask(reinterpret_cast<__m512i const &>(one_vector),
+                                          reinterpret_cast<__m512i const &>(data)) != zero_mask;
+        };
+
+        chunk_type const * lhs_data = base_t::as_base()->data();
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
+
+        for (; lhs_data != end; lhs_data += chunks_per_vector)
+            if (test_non_zero(seqan3::load<simd_type>(lhs_data)))
+                return true;
+
+        return false;
+    }
+
+    //!\copydoc libjst::bit_vector_base::none
+    constexpr bool none() const noexcept
+    //!\cond
+        requires (seqan3::simd_traits<simd_type>::max_length == 64)
+    //!\endcond
+    {
+        return !any();
+    }
+
+    using base_t::save;
+
+    //!\copydoc libjst::bit_vector_base::load
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        base_t::load(archive);
+        base_t::resize(base_t::size());
+    }
+
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
     constexpr bit_vector_simd & binary_transform_impl(bit_vector_simd const & rhs, binary_operator_t && op) noexcept
     {
         chunk_type * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + min_capacity(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
         chunk_type const * rhs_data = rhs.as_base()->data();
 
         for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
@@ -161,23 +197,17 @@ private:
         return *this;
     }
 
-    //!\brief Ensures that the base bit vector has enough memory.
-    constexpr void reserve_impl(size_type const count) noexcept
-    {
-        base_t::as_base()->reserve(min_capacity(count));
-    }
-
-    /*!\brief Computes the minimal capacity needed to be allocated for the underlying vector.
+    /*!\brief Computes the minimal size needed for the host vector.
      *
-     * \param[in] count The number of bits to reserve memory for.
+     * \param[in] count The number of bits to allocate memory for.
      *
      * \details
      *
      * In the simd approach we guarantee that the underlying vector allocates enough memory to always read an entire
      * simd vector without reading from unallocated memory.
-     * It is not important that the memory is properly initialised as the overlapping data is ignored in any case.
+     * It is not important that the memory is properly initialised as the overlapping data is ignored by the operations.
      */
-    constexpr size_t min_capacity(size_type const count) const noexcept
+    constexpr size_type host_size_impl(size_type const count) const noexcept
     {
         return (base_t::chunks_needed(count) + chunks_per_vector - 1) & -chunks_per_vector;
     }

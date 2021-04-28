@@ -25,6 +25,7 @@
 
 #include <libjst/detail/delta_kind_deletion.hpp>
 #include <libjst/detail/delta_kind_insertion.hpp>
+#include <libjst/detail/delta_kind_snp.hpp>
 #include <libjst/detail/delta_kind_substitution.hpp>
 
 namespace libjst::detail
@@ -49,6 +50,7 @@ public:
      * \{
      */
     using substitution_type = delta_kind_substitution<alphabet_t>; //!< The type of the substitution.
+    using snp_type = delta_kind_snp<alphabet_t>; //!< The type of the substitution.
     using insertion_type = delta_kind_insertion<alphabet_t>; //!< The type of the insertion.
     using deletion_type = delta_kind_deletion; //!< The type of the deletion.
 
@@ -56,7 +58,7 @@ public:
     using segment_type = std::span<alphabet_type const>; //!< The segment type.
     using size_type = size_t; //!< The size type.
     //!\brief The variant type over the three different delta kinds.
-    using delta_variant_type = std::variant<insertion_type, substitution_type, deletion_type>;
+    using delta_variant_type = std::variant<insertion_type, snp_type, substitution_type, deletion_type>;
     //!\}
 
 private:
@@ -119,7 +121,12 @@ public:
     //!\brief Returns `true` if this event is an libjst::detail::delta_kind_substitution, `false` otherwise.
     bool is_substitution() const noexcept
     {
-        return holds_delta_kind<substitution_type>();
+        return is_snp() || holds_delta_kind<substitution_type>();
+    }
+
+    bool is_snp() const noexcept
+    {
+        return holds_delta_kind<snp_type>();
     }
 
     /*!\brief Returns the deletion size of this event.
@@ -137,8 +144,9 @@ public:
         {
             return seqan3::detail::multi_invocable
             {
-                /*case:*/   [] (substitution_type e) { return e.value().size(); },
-                /*case:*/   [] (deletion_type e) { return e.value(); },
+                /*case:*/   [] (substitution_type const & e) { return e.value().size(); },
+                /*case:*/   [] (deletion_type const & e) { return e.value(); },
+                /*case:*/   [] (snp_type const &) { return 1; },
                 /*default:*/[] (...) { return 0; }
             }(event_kind);
         }, delta_variant());
@@ -159,8 +167,9 @@ public:
         {
             return seqan3::detail::multi_invocable
             {
-                /*case:*/   [] (substitution_type e) { return e.value().size(); },
-                /*case:*/   [] (insertion_type e) { return e.value().size(); },
+                /*case:*/   [] (substitution_type const & e) { return e.value().size(); },
+                /*case:*/   [] (insertion_type const & e) { return e.value().size(); },
+                /*case:*/   [] (snp_type const &) { return 1; },
                 /*default:*/[] (...) { return 0; }
             }(event_kind);
         }, delta_variant());
@@ -180,9 +189,8 @@ public:
         {
             return seqan3::detail::multi_invocable
             {
-                /*case:*/   [] (substitution_type const & e) { return segment_type{e.value()}; },
-                /*case:*/   [] (insertion_type const & e) { return segment_type{e.value()}; },
-                /*default:*/[] (...) { return segment_type{}; }
+                /*case:*/   [] (deletion_type const &) { return segment_type{}; },
+                /*default:*/[] (auto const & e) { return segment_type{e.value()}; }
             }(event_kind);
         }, delta_variant());
     }
@@ -270,6 +278,10 @@ inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream
                     [&] (delta_kind_substitution<alphabet_t> e) -> std::string
                     {
                         return  "sub: " + to_string(e.value());
+                    },
+                    [&] (delta_kind_snp<alphabet_t> e) -> std::string
+                    {
+                        return  "snp: " + to_string(e.value());
                     },
                     [&] (delta_kind_insertion<alphabet_t> e) -> std::string
                     {
