@@ -399,11 +399,20 @@ private:
         return branch_position() + _context_size + branch_origin.delta_event->insertion_size() - 1;
     }
 
+    //!\brief Return the original branch position of the current branch.
     size_type branch_position() const noexcept
     {
         assert(_branch_stack.size() > 1);
 
         return _branch_stack.branch_at(1).delta_event->position();
+    }
+
+    //!\brief Return the original branch event of the current branch.
+    delta_event_shared_type const * original_branch_event() noexcept
+    {
+        assert(_branch_stack.size() > 1);
+
+        return _branch_stack.branch_at(1).delta_event;
     }
 
     /*!\brief Tests wether the full context is available in the active branch.
@@ -506,30 +515,40 @@ private:
      */
     void update_relative_sequence_offsets() noexcept
     {
-        // Do not continue if the offset do not need to be updated.
-        if (_join_event_it == std::ranges::end(join_event_queue()) ||
-            context_begin_position() < _join_event_it->position())
+        if (_join_event_it == join_event_queue().end() || _join_event_it->position() > context_begin_position())
             return;
 
-        // Little helper lambda to check if there is really a join event before the current head of the context
-        auto is_join_event_before_context_head = [&] ()
+        join_event_queue_iterator upper_bound_join_it{};
+        if (is_base_branch())
         {
-            return _join_event_it != std::ranges::end(join_event_queue()) &&
-                    context_begin_position() >= _join_event_it->position() &&
-                    (is_base_branch() || // Always in base branch.
-                     (context_begin_position() <= branch_position() && // In branch only if context position is less &
-                      _join_event_it->event_handle() != _branch_stack.branch_at(1).delta_event)); // not the same event.
-        };
-
-        for (; has_full_context_in_branch() && is_join_event_before_context_head(); ++_join_event_it)
-        {
-            if (_join_event_it->event_handle()->is_substitution()) // Not updating if this is a substitution.
-                continue;
-
-            coverage_type const & join_coverage = _join_event_it->coverage();
-            for (unsigned id = 0; id < _sequence_offsets.size(); ++id)
-                _sequence_offsets[id] += (join_coverage[id]) ? event_offset(_join_event_it->event_handle()) : 0;
+            upper_bound_join_it = join_event_queue().upper_bound(context_begin_position());
         }
+        else // inside of branch
+        {
+            using insertion_t = typename delta_event_shared_type::insertion_type;
+            delta_event_shared_type event{branch_position(), insertion_t{}, coverage_type{}};
+            join_event_type join_key{&event};
+            if (original_branch_event()->is_insertion()) // Stop at the insertion
+                upper_bound_join_it = join_event_queue().lower_bound(join_key);
+            else // Stop at the event itself or the insertion that ends at the same position if there is one.
+                upper_bound_join_it = join_event_queue().upper_bound(join_key);
+        }
+        // Update the sequence offsets.
+        std::ranges::for_each(_join_event_it, upper_bound_join_it, [&] (auto const & join_event)
+        {
+            if (!join_event.event_handle()->is_substitution())
+            {
+                // TODO: Make more efficient.
+                for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
+                {
+                    _sequence_offsets[idx] += (join_event.coverage()[idx] ?
+                                                event_offset(join_event.event_handle()) :
+                                                0);
+                }
+            }
+        });
+
+        _join_event_it = upper_bound_join_it;
     }
 
     /*!\brief Keep the base branch coverage up-to-date with the joined branches.
@@ -599,7 +618,6 @@ private:
         ++active_branch().context_position;
         ++active_branch().jd_iter;
         terminate_consumed_branches(); // terminate all branches
-        update_relative_sequence_offsets();
         update_base_branch_coverage();
 
         // If on a branch event, try to create a new branch.
@@ -667,6 +685,8 @@ private:
      */
     coverage_type determine_supported_context_coverage() noexcept
     {
+        update_relative_sequence_offsets();
+
         // Just use coverage in these cases.
         if (branch_event_queue().empty() || is_base_branch() || context_begin_position() >= branch_position())
             return active_branch().coverage;
@@ -687,7 +707,7 @@ private:
                                              std::ranges::end(join_event_queue()),
                                              [&] (auto const & join_event)
         {
-            return (join_event.event_handle() == _branch_stack.branch_at(1).delta_event) ||
+            return (join_event.event_handle() == original_branch_event()) ||
                     join_event.position() > branch_position();
         });
 
