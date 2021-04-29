@@ -12,8 +12,9 @@
 
 #pragma once
 
-#include <math.h> // ceil
-#include <vector> // vector
+#include <vector>
+
+#include <seqan3/core/detail/strong_type.hpp>
 
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
@@ -21,76 +22,90 @@
 namespace libjst
 {
 
+//!\brief A strong type to pass a context size object.
+struct context_size : public seqan3::detail::strong_type<uint32_t, context_size>
+{
+    //!\brief The base type.
+    using base_t = seqan3::detail::strong_type<uint32_t, context_size>;
+    using base_t::base_t;
+};
+
+//!\brief A strong type to pass a bin index object.
+struct bin_index : public seqan3::detail::strong_type<uint32_t, bin_index>
+{
+    //!\brief The base type.
+    using base_t = seqan3::detail::strong_type<uint32_t, bin_index>;
+    using base_t::base_t;
+};
+
+/*!\brief A partitioned journal sequence tree.
+ *
+ * \tparam jst_t The type of the journal sequence tree to wrap.
+ *
+ * \details
+ *
+ * This wrapper handles a collection of libjst::detail::journal_sequence_tree_traverser_model with non-overlapping
+ * intervals over the given jst. Later the jst can be traversed in bins by constructing the respective agent for a
+ * particular bin. The partitioned jst is a wrapper class and cannot be default initialised.
+ */
 template <typename jst_t>
 class journal_sequence_tree_partitioned
 {
-private:
-    /* data */
-    using enumerator_type = typename jst_t::context_enumerator_type;
-
-    std::vector<enumerator_type> _bins;
-    const jst_t * _jst;
 public:
+    //!\brief The type of the traverser model to manage.
+    using traverser_model_t = detail::journal_sequence_tree_traverser_model<jst_t>;
+    //!\brief The type of the context enumerator to use.
+    using context_enumerator_type = typename jst_t::context_enumerator_type;
 
-    constexpr journal_sequence_tree_partitioned() = default; //!< Default.
-    constexpr journal_sequence_tree_partitioned(journal_sequence_tree_partitioned const &) = default;
-        //!< Default.
-    constexpr journal_sequence_tree_partitioned(journal_sequence_tree_partitioned &&) = default;
-        //!< Default.
+private:
+    std::vector<traverser_model_t> _bins{}; //!\< The container stroing the model for each bin.
+    jst_t const * _jst{}; //!\< A shared pointer to the underlying jst.
+
+public:
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    constexpr journal_sequence_tree_partitioned() = delete; //!< Delete.
+    constexpr journal_sequence_tree_partitioned(journal_sequence_tree_partitioned const &) = default; //!< Default.
+    constexpr journal_sequence_tree_partitioned(journal_sequence_tree_partitioned &&) = default; //!< Default.
     constexpr journal_sequence_tree_partitioned & operator=(journal_sequence_tree_partitioned const &)
         = default; //!< Default.
     constexpr journal_sequence_tree_partitioned & operator=(journal_sequence_tree_partitioned &&)
         = default; //!< Default.
     ~journal_sequence_tree_partitioned() = default; //!< Default.
 
-    journal_sequence_tree_partitioned (const jst_t * jst, size_t bin_count):
-    _bins(),
-    _jst(jst)
+    /*!\brief Constructs the partitioned jst from a jst pointer and a bin count.
+     *
+     * \param[in] jst A pointer to the jst to wrap.
+     * \param[in] bin_count The number of bins. Defaults to 1 and must be `> 0`.
+     */
+    journal_sequence_tree_partitioned (jst_t const * jst, size_t bin_count = 1) : _jst{jst}
     {
-        assert(_jst != nullptr);
+       assert(_jst != nullptr);
+       assert(bin_count > 0);
 
-        size_t bin_size = ceil(_jst->reference().size() / bin_count);
-        for (size_t i = 0; i < bin_count; i++)
-        {
-            _bins.push_back(enumerator_type(_jst, 1, i * bin_size, (i + 1) * bin_size));
-        }
+        std::ptrdiff_t bin_size = (_jst->reference().size() + bin_count - 1) / bin_count;
 
+        for (std::ptrdiff_t i = 0; i < static_cast<std::ptrdiff_t>(bin_count); i++)
+            _bins.push_back(traverser_model_t{_jst, i * bin_size, (i + 1) * bin_size});
     }
+    //!\}
 
-    enumerator_type operator[](size_t i)
-    {
-        assert(i < _bins.size());
-        return _bins[i];
-    }
-
-    size_t size()
+    //!\brief Returns the bin count.
+    size_t bin_count() const noexcept
     {
         return _bins.size();
+    }
+
+    //!\brief Returns a new context enumerator from the given bin and the context size.
+    context_enumerator_type context_enumerator(libjst::context_size const context_size,
+                                               libjst::bin_index const bin_index) const
+    {
+        if (bin_index.get() >= bin_count())
+            throw std::out_of_range{"The bin index: " + std::to_string(bin_index.get()) + " is out of range!"};
+
+        return context_enumerator_type{_bins[bin_index.get()], context_size.get()};
     }
 };
 
 } // namespace libjst
-
-// // member
-// jst
-// bin_count (?)
-// bin_size  (?)
-// jst_enumerator
-//
-// // member functions
-// [i].begin() -> jst_enumerator[i]
-// [i].end() -> jst_enumerator[i+1] bzw. jst.end();
-// serialise() -> archive()
-// }
-
-// /*!\brief Saves this journaled sequence tree to the given output archive.
-//  *
-//  * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
-//  *
-//  * \param[in, out] archive The archive to serialise this object to.
-//  */
-// template <seqan3::cereal_output_archive output_archive_t>
-// void save(output_archive_t & archive) const
-// {
-//     archive(_reference, _delta_events, _size);
-// }
