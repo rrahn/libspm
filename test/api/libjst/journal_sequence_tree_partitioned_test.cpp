@@ -5,53 +5,69 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-#include <gtest/gtest.h>
-
-#include <filesystem>
-
-#include <seqan3/test/expect_range_eq.hpp>
-
-#include <jstmap/search/load_jst.hpp>
-
 #include <libjst/journal_sequence_tree_partitioned.hpp>
 
-TEST(journal_sequence_tree_partitioned_test, jst_partitioned)
+#include "journal_sequence_tree_traversal_test_template.hpp"
+
+struct partitioned_traversal_test : libjst::test::traversal_fixture_base
+{};
+
+TEST_P(partitioned_traversal_test, construct)
 {
-    std::filesystem::path jst_file{DATADIR"sim_refx5.jst"};
-    jstmap::jst_t jst = jstmap::load_jst(jst_file);
-    size_t bin_count = 3;
-    libjst::journal_sequence_tree_partitioned jst_part(&jst, bin_count);
+    auto jst = this->construct_jst();
 
-    EXPECT_EQ(jst_part.size(), bin_count);
+    EXPECT_EQ(jst.size(), this->sequences.size());
 
+    for (size_t i = 0; i < jst.size(); ++i)
+        EXPECT_RANGE_EQ(jst.sequence_at(i), this->sequences[i]);
+}
 
-    libjst::detail::journal_sequence_tree_context_enumerator bin_0_1 = jst_part[0];
-    libjst::detail::journal_sequence_tree_context_enumerator bin_0_2 = jst_part[0];
-    auto it1 = bin_0_1.begin();
-    auto it2 = bin_0_2.begin();
-    // EXPECT_EQ(bin_0_1, bin_0_2);
-    for (size_t i = 0; i < 1; ++i)
+TEST_P(partitioned_traversal_test, enumerate_contexts)
+{
+    auto jst = this->construct_jst();
+    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), GetParam().bin_count};
+
+    auto context_enumerator = p_jst.context_enumerator(libjst::context_size{GetParam().context_size},
+                                                       libjst::bin_index{0u});
+    for (auto context_it = context_enumerator.begin(); context_it != context_enumerator.end(); ++context_it)
     {
-        ++it1;
-        ++it2;
-        // EXPECT_EQ(bin_0_1, bin_0_2);
-        EXPECT_RANGE_EQ(*it1, *it2);
+        auto context = *context_it;
+        std::string tmp = libjst::test::sequence_to_string(context);
+
+        auto positions = context_it.positions();
+
+        EXPECT_TRUE((this->context_positions_exist(tmp, positions))) << "context " << tmp;
     }
 
+    // Verify that all unique contexts have been enumerated and that there is no unknown location.
+    EXPECT_TRUE(this->all_contexts_enumerated());
+    print_unvisited_contexts();
 
-    // size_t bin_size = 0;
-    // for (auto it = jst_part[0].begin(); it != jst_part[0].end(); ++it)
-    //     ++bin_size;
-    //
-    // EXPECT_EQ(bin_size, ceil(reference_size / bin_count))
+    EXPECT_TRUE(this->unknown_locations.empty());
+    print_unknown_context_locations();
 }
 
-TEST(journal_sequence_tree_partitioned_test, empty_jst_partitioned)
+// ----------------------------------------------------------------------------
+// Test cases
+// ----------------------------------------------------------------------------
+
+INSTANTIATE_TEST_SUITE_P(substitution_1, partitioned_traversal_test, testing::Values(
+libjst::test::traversal_fixture
 {
-
-}
-
-TEST(journal_sequence_tree_partitioned_test, jst_partitioned_negative_bin_count)
-{
-
-}
+    //          0123456
+    //               b
+    // 0:       aaaa     [0, 0, 0, 0]
+    // 1:        aaaa    [1, 1, 1, 1]
+    // 2:         aaab   [-, 2, 2, -]
+    // 3:          aaba  [-, 3, 3, -]
+    // 4:         aaaa   [2, -, -, 2]
+    // 5:          aaaa  [3, -, -, 3]
+    .reference{"aaaaaaa"s},
+    .sequence_count{4u},
+    .events
+    {
+        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+    },
+    .context_size{4u},
+    .bin_count{1u}
+}));

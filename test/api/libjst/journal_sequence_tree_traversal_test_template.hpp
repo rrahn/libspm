@@ -41,7 +41,8 @@ struct traversal_fixture
     std::string reference{};
     size_t sequence_count{};
     jst_events_t events{};
-    size_t context_size{};
+    uint32_t context_size{};
+    uint32_t bin_count{};
 
     template <typename char_t>
     friend seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,
@@ -51,7 +52,8 @@ struct traversal_fixture
                       << "reference: " << fixture.reference << ", "
                       << "sequence_count: " << fixture.sequence_count << ", "
                       << "events: " << fixture.events << ", "
-                      << "context_size: " << fixture.context_size << "]";
+                      << "context_size: " << fixture.context_size << ", "
+                      << "bin_count: " << fixture.bin_count << "]";
     }
 };
 
