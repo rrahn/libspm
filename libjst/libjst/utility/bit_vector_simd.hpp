@@ -172,7 +172,9 @@ public:
         return !any();
     }
 
+    //!\cond
     using base_t::save;
+    //!\endcond
 
     //!\copydoc libjst::bit_vector_base::load
     template <seqan3::cereal_input_archive input_archive_t>

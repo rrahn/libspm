@@ -74,7 +74,7 @@ public:
 
 /*!\brief Sets the new application wide logger.
  *
- * \param[in] handler The new logger handle to set.
+ * \param[in] handle The new logger handle to set.
  *
  * \returns The logger that was used before (never nullptr).
  *
