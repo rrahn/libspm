@@ -12,16 +12,14 @@
 
 #pragma once
 
-#include <iterator>
-#include <numeric>
 #include <ranges>
 
-#include <seqan3/range/views/slice.hpp>
 #include <seqan3/range/views/zip.hpp>
 
 #include <libjst/context_position.hpp>
 #include <libjst/journal_decorator.hpp>
 #include <libjst/detail/branch_stack.hpp>
+#include <libjst/detail/journal_sequence_tree_traverser_model.hpp>
 #include <libjst/utility/logger.hpp>
 
 namespace libjst::detail
@@ -39,9 +37,11 @@ namespace libjst::detail
  * traversed.
  */
 template <typename derived_t, typename jst_t>
-class journal_sequence_tree_traverser
+class journal_sequence_tree_traverser : protected journal_sequence_tree_traverser_model<jst_t>
 {
 private:
+    //!\brief The type of the traverser model.
+    using model_t = journal_sequence_tree_traverser_model<jst_t>;
 
     //!\brief Grant access to the derived class.
     friend derived_t;
@@ -49,28 +49,22 @@ private:
     /*!\name Event types
      * \{
      */
-    //!\brief The type of the branch event queue.
-    using branch_event_queue_type = decltype(std::declval<jst_t>()._branch_event_queue);
-    //!\brief The type of the branch event queue iterator.
-    using branch_event_queue_iterator = std::ranges::iterator_t<branch_event_queue_type const>;
-    //!\brief The type of the branch event.
-    using branch_event_type = std::iter_value_t<branch_event_queue_iterator>;
+    using typename model_t::branch_event_queue_type;
+    using typename model_t::branch_event_queue_iterator;
+    using typename model_t::branch_event_type;
 
-    //!\brief The type of the join event queue.
-    using join_event_queue_type = decltype(std::declval<jst_t>()._join_event_queue);
-    //!\brief The type of the join event queue iterator.
-    using join_event_queue_iterator = std::ranges::iterator_t<join_event_queue_type const>;
-    //!\brief The type of the join event.
-    using join_event_type = std::iter_value_t<join_event_queue_iterator>;
+    using typename model_t::join_event_queue_type;
+    using typename model_t::join_event_queue_iterator;
+    using typename model_t::join_event_type;
     //!\}
 
     /*!\name Delta event types
      * \{
      */
-    using delta_event_shared_type = typename jst_t::delta_event_shared_type; //!< The shared delta event type.
+    using typename model_t::delta_event_shared_type;
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
-    using coverage_type = typename delta_event_shared_type::coverage_type; //!< The coverage type.
-    using size_type = typename delta_event_shared_type::size_type; //!< The size type.
+    using typename model_t::coverage_type;
+    using typename model_t::size_type;
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
     //!\}
 
@@ -90,14 +84,9 @@ private:
         success_with_deletion //!< A new branch could be created covering a deletion.
     };
 
-    jst_t const * _jst_host; //!< The referenced jst
-    size_t _context_size{}; //!< The size of the underlying context.
-    std::vector<int32_t> _sequence_offsets{}; //!< The context position offsets.
-    join_event_queue_iterator _join_event_it{}; //!< The global join event iterator to update the context positions.
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
-    
-    size_t _begin_pos;
-    size_t _end_pos;
+    model_t::join_event_queue_iterator _join_event_it{}; //!< The global join event iterator to update the context positions.
+    size_t _context_size{}; //!< The size of the underlying context.
 
     using context_position_type = context_position; //!< The type representing a single context position.
 
@@ -112,55 +101,35 @@ private:
     constexpr journal_sequence_tree_traverser & operator=(journal_sequence_tree_traverser &&) = default; //!< Default.
     ~journal_sequence_tree_traverser() = default; //!< Default.
 
-    /*!\brief Constructs the journaled sequence tree cursor for a given libjst::journaled_sequence_tree and a context
-     *        size.
+    /*!\brief Constructs the journaled sequence tree traverser from a given traverser model and a context size.
      *
-     * \param[in] jst A pointer to a const journaled sequence tree.
+     * \param[in] model The model to construct the traverser for.
      * \param[in] context_size The context size to use for the cursor.
      *
      * \details
      *
-     * The cursor is initialised with the given context size and already represents the first context.
+     * Initialises the branch stack by pushing the first branch representing the reference sequence. Then
+     * creates the first branches if the current context position is already on a branch event.
      */
-    journal_sequence_tree_traverser(jst_t const * jst, size_t const context_size,  std::ptrdiff_t begin_pos, std::ptrdiff_t end_pos) noexcept :
-        _jst_host{jst},
-        _context_size{context_size},
-        _begin_pos{static_cast<size_t>(begin_pos)},
-        _end_pos{static_cast<size_t>(end_pos)}
+    journal_sequence_tree_traverser(model_t model, size_t const context_size) :
+        model_t{std::move(model)},
+        _context_size{context_size}
     {
-        assert(_jst_host != nullptr);
         assert(_context_size > 0);
-        assert(begin_pos < end_pos);
 
-        // Initialise the context position offsets and the first join event for updating the context positions.
-        _sequence_offsets.resize(_jst_host->size(), 0);
-        // _join_event_it = std::ranges::begin(join_event_queue());
-        _join_event_it = join_event_queue().lower_bound(_begin_pos);
-
-        // Scan over all branch events before the begin position and
-        // compute the offset from all events ending before the begin and
-        // the coverage from all events ending after the begin.
-        coverage_type coverage(_jst_host->size(), true);
-        auto first_candidate_it = branch_event_queue().lower_bound(_begin_pos);
-        std::ranges::for_each(std::ranges::begin(branch_event_queue()), first_candidate_it, [&] (auto const & branch_event)
-        {
-            if(branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
-                update_offset_for_event(branch_event);
-            else
-                coverage &= branch_event.coverage();
-        });
+        _join_event_it = model_t::join_event_queue().lower_bound(model_t::_begin_pos);
+        auto first_candidate_it = model_t::branch_event_queue().lower_bound(model_t::_begin_pos);
 
         // Initialise the base branch covering the reference sequence.
         _branch_stack.emplace(
-            _begin_pos,  // current context position.
-            std::min(_end_pos, std::ranges::size(_jst_host->reference())), // current branch end position.
+            model_t::_begin_pos,  // current context position.
+            model_t::_end_pos, // current branch end position.
             0, // branch offset.
             nullptr, // pointer to the delta event causing the branch.
             first_candidate_it, // next branch event to consider for this branch.
-            // std::ranges::begin(branch_event_queue()), // next branch event to consider for this branch.
             _join_event_it, // next join event to consider for this branch.
-            journal_decorator_type{std::span{reference()}}, // the journal decorator of the current branch
-            coverage // the current branch coverage.
+            journal_decorator_type{std::span{model_t::reference()}}, // the journal decorator of the current branch
+            model_t::_base_coverage // the current branch coverage.
         );
         active_branch().jd_iter = active_branch().journal_decorator.begin();
 
@@ -181,36 +150,28 @@ private:
                 assert(!is_base_branch()); // Cannot be in the base branch.
                 drop_branch(); // remove branch and continue to see if there is another branch.
             }
-        }     
+        }
     }
-    //!\}
 
-    /*!\name Host member access
-     * \{
+    /*!\brief Constructs the journaled sequence tree traverser for a given libjst::journaled_sequence_tree and a context
+     *        size.
+     *
+     * \param[in] jst A pointer to a const journaled sequence tree.
+     * \param[in] context_size The context size to use for the cursor.
+     * \param[in] begin_pos The begin position of the reference to consider.
+     * \param[in] end_pos The end position of the reference to consider.
+     *
+     * \details
+     *
+     * Creates first a traverser model from the jst and the reference interval and then constructs the traverser
+     * with the given context.
      */
-    //!\brief Returns the event queue containing the branch events from the underlying host.
-    branch_event_queue_type const & branch_event_queue() const noexcept
-    {
-        assert(_jst_host != nullptr);
-
-        return _jst_host->_branch_event_queue;
-    }
-
-    //!\brief Returns the event queue containing the join events from the underlying host.
-    join_event_queue_type const & join_event_queue() const noexcept
-    {
-        assert(_jst_host != nullptr);
-
-        return _jst_host->_join_event_queue;
-    }
-
-    //!\brief Returns the event queue from the underlying host.
-    auto reference() const noexcept
-    {
-        assert(_jst_host != nullptr);
-
-        return _jst_host->reference() | seqan3::views::slice(_begin_pos, _end_pos);
-    }
+    journal_sequence_tree_traverser(jst_t const * jst,
+                                    size_t const context_size,
+                                    std::ptrdiff_t begin_pos,
+                                    std::ptrdiff_t end_pos) :
+        journal_sequence_tree_traverser{model_t{jst, begin_pos, end_pos}, context_size}
+    {}
     //!\}
 
     /*!\name Branch stack operations
@@ -263,7 +224,7 @@ private:
     branch_creation_status create_branch()
     {
         assert(!at_end());
-        assert(active_branch().branch_event_it != std::ranges::end(branch_event_queue()));
+        assert(active_branch().branch_event_it != std::ranges::end(model_t::branch_event_queue()));
         assert(on_branch_event());
 
         // Create a branch from the current one.
@@ -285,7 +246,7 @@ private:
         if (!new_branch.journal_decorator.empty())
             new_branch.jd_iter += new_branch.context_position;
 
-        new_branch.offset += event_offset(new_branch.delta_event);
+        new_branch.offset += this->event_offset(new_branch.delta_event);
 
         // The max end position will be determined and possibly cropped if the natural end of the
         // journal sequence tree is reached before (e.g. the end of the reference sequence).
@@ -352,9 +313,9 @@ private:
      */
 
     //!\brief Returns the iterator to the next branch event not the end of the branch queue.
-    branch_event_queue_iterator next_branch_event(branch_event_queue_iterator event_it) const noexcept
+    model_t::branch_event_queue_iterator next_branch_event(model_t::branch_event_queue_iterator event_it) const noexcept
     {
-        return std::ranges::next(event_it, 1, std::ranges::end(branch_event_queue()));
+        return std::ranges::next(event_it, 1, std::ranges::end(model_t::branch_event_queue()));
     }
 
     /*!\brief Finds the next relative valid branch event.
@@ -373,7 +334,7 @@ private:
      * context (depending on which insertion is traversed first). Thus, all insertions at the current position are
      * skipped and then the regular search is conducted.
      */
-    branch_event_queue_iterator find_next_relative_branch_event(branch const & new_branch) const noexcept
+    model_t::branch_event_queue_iterator find_next_relative_branch_event(branch const & new_branch) const noexcept
     {
         auto is_local_insertion = [&] (auto const & event) constexpr
         {
@@ -381,7 +342,7 @@ private:
         };
 
         auto it = std::ranges::find_if_not(next_branch_event(new_branch.branch_event_it),
-                                           std::ranges::end(branch_event_queue()),
+                                           std::ranges::end(model_t::branch_event_queue()),
                                            is_local_insertion);
 
         auto event_lies_behind_deletion = [&] (auto const & event) constexpr
@@ -389,7 +350,7 @@ private:
             return event.position() >= new_branch.delta_event->position() + new_branch.delta_event->deletion_size();
         };
 
-        return std::ranges::find_if(it, std::ranges::end(branch_event_queue()), event_lies_behind_deletion);
+        return std::ranges::find_if(it, std::ranges::end(model_t::branch_event_queue()), event_lies_behind_deletion);
     }
 
     //!\brief Tests whether the context position of the active branch lies on a branch event.
@@ -452,7 +413,7 @@ private:
      */
     bool has_more_branch_events(branch const & branch) const noexcept
     {
-        return branch.branch_event_it != std::ranges::end(branch_event_queue());
+        return branch.branch_event_it != std::ranges::end(model_t::branch_event_queue());
     }
 
     //!\brief Returns the begin position of the context in the active branch.
@@ -465,25 +426,6 @@ private:
     size_type context_end_position() const noexcept
     {
         return active_branch().context_position + 1;
-    }
-
-    /*!\brief Returns the relative delta event offset.
-     *
-     * returns An integer value representing the relative offset generated by this delta event.
-     *
-     * \details
-     *
-     * Depending on the kind of the delta event the returned value can be negative, 0, or positive.
-     * A negative value represents the number of deleted characters with respect to the reference sequence, a zero means
-     * that with respect to the reference sequence no character was deleted or added and a positive value accounts for
-     * the number of characters inserted relative to the reference sequence.
-     */
-    auto event_offset(delta_event_shared_type const * delta_event) const noexcept
-    {
-        using signed_size_t = std::make_signed_t<size_type>;
-
-        return static_cast<signed_size_t>(delta_event->insertion_size()) -
-               static_cast<signed_size_t>(delta_event->deletion_size());
     }
 
     //!\brief Records the represented delta event in the journal decorator of the new branch.
@@ -523,29 +465,6 @@ private:
         active_branch().coverage.and_not(new_branch.delta_event->coverage());
     }
 
-    /*!\brief Updates the sequence offsets for the given event.
-     * 
-     * \tparam event_t The type of the event (branch event or join event).
-     * 
-     * \param[in] event The event to update the relative sequence positions for.
-     * 
-     * \detail
-     * 
-     * Updates the relative sequence positions for every sequence that covers this event. If the event is a 
-     * substitution it will not invoke the update as the relative offset is not affected.
-     */
-    template <typename event_t>
-    void update_offset_for_event(event_t const & event) noexcept
-    {
-        if (event.event_handle()->is_substitution())
-            return;
-
-        //TODO: Vectorise, mask_add?
-        auto const offset = event_offset(event.event_handle());
-        for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
-            _sequence_offsets[idx] += (event.coverage()[idx] ? offset : 0);
-    }
-
     /*!\brief Updates the relative context position offset for each sequence.
      *
      * \details
@@ -558,13 +477,13 @@ private:
      */
     void update_relative_sequence_offsets() noexcept
     {
-        if (_join_event_it == join_event_queue().end() || _join_event_it->position() > context_begin_position())
+        if (_join_event_it == model_t::join_event_queue().end() || _join_event_it->position() > context_begin_position())
             return;
 
         join_event_queue_iterator upper_bound_join_it{};
         if (is_base_branch())
         {
-            upper_bound_join_it = join_event_queue().upper_bound(context_begin_position());
+            upper_bound_join_it = model_t::join_event_queue().upper_bound(context_begin_position());
         }
         else // inside of branch
         {
@@ -572,14 +491,14 @@ private:
             delta_event_shared_type event{branch_position(), insertion_t{}, coverage_type{}};
             join_event_type join_key{&event};
             if (original_branch_event()->is_insertion()) // Stop at the insertion
-                upper_bound_join_it = join_event_queue().lower_bound(join_key);
+                upper_bound_join_it = model_t::join_event_queue().lower_bound(join_key);
             else // Stop at the event itself or the insertion that ends at the same position if there is one.
-                upper_bound_join_it = join_event_queue().upper_bound(join_key);
+                upper_bound_join_it = model_t::join_event_queue().upper_bound(join_key);
         }
         // Update the sequence offsets.
         std::ranges::for_each(_join_event_it, upper_bound_join_it, [&] (auto const & join_event)
         {
-            update_offset_for_event(join_event);
+            this->update_offset_for_event(join_event);
         });
 
         _join_event_it = upper_bound_join_it;
@@ -596,7 +515,7 @@ private:
     {
         auto head_on_join_event = [&] ()
         {
-            return active_branch().join_event_it != std::ranges::end(join_event_queue()) &&
+            return active_branch().join_event_it != std::ranges::end(model_t::join_event_queue()) &&
                    context_begin_position() == active_branch().join_event_it->position();
         };
 
@@ -613,14 +532,14 @@ private:
             // The branch_event_it points to the first branch event that lies behind the tail of the current context.
             // Go back to find first branch event that does not affect the coverage of the current context.
             auto first_it = std::ranges::find_if(std::reverse_iterator{active_branch().branch_event_it},
-                                                 std::reverse_iterator{std::ranges::begin(branch_event_queue())},
+                                                 std::reverse_iterator{std::ranges::begin(model_t::branch_event_queue())},
                                                  [&] (auto const & event)
             {
                 return (event.event_handle()->is_insertion() && event.position() == context_begin_position()) ||
                        (event.position() < context_begin_position());
             }).base();
 
-            assert(first_it == std::ranges::end(branch_event_queue()) ||
+            assert(first_it == std::ranges::end(model_t::branch_event_queue()) ||
                    first_it->position() >= context_begin_position());
 
             // Now determine the supported coverage within this context.
@@ -722,7 +641,7 @@ private:
         update_relative_sequence_offsets();
 
         // Just use coverage in these cases.
-        if (branch_event_queue().empty() || is_base_branch() || context_begin_position() >= branch_position())
+        if (model_t::branch_event_queue().empty() || is_base_branch() || context_begin_position() >= branch_position())
             return active_branch().coverage;
 
         // On non-base branches the coverage will not be updated when joining delta events.
@@ -730,7 +649,7 @@ private:
         // To do this, the interval of join events which lie between the head of the context and the original
         // branch event is found, and then the supported coverage is determined.
         auto join_begin = std::ranges::find_if(active_branch().join_event_it,
-                                               std::ranges::end(join_event_queue()),
+                                               std::ranges::end(model_t::join_event_queue()),
                                                [&] (auto const & join_event)
         {
             return join_event.position() > context_begin_position();
@@ -738,7 +657,7 @@ private:
 
         // Find the end of the interval.
         auto join_end = std::ranges::find_if(join_begin,
-                                             std::ranges::end(join_event_queue()),
+                                             std::ranges::end(model_t::join_event_queue()),
                                              [&] (auto const & join_event)
         {
             return (join_event.event_handle() == original_branch_event()) ||
@@ -752,7 +671,7 @@ private:
         // Determine the supported coverage.
         coverage_type unsupported = std::accumulate(join_begin,
                                                     join_end,
-                                                    coverage_type(_sequence_offsets.size(), false),
+                                                    coverage_type(model_t::_sequence_offsets.size(), false),
                                                     [] (coverage_type coverage, auto const & event)
         {
             return coverage | event.coverage();
