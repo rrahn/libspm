@@ -79,7 +79,7 @@ public:
      * \param[in] jst A pointer to the jst to wrap.
      * \param[in] bin_count The number of bins. Defaults to 1 and must be `> 0`.
      */
-    journal_sequence_tree_partitioned (jst_t const * jst, size_t bin_count = 1) : _jst{jst}
+    explicit journal_sequence_tree_partitioned(jst_t const * jst, size_t bin_count = 1) : _jst{jst}
     {
        assert(_jst != nullptr);
        assert(bin_count > 0);

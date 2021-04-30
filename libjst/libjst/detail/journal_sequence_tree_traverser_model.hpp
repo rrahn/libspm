@@ -36,7 +36,6 @@ template <typename jst_t>
 class journal_sequence_tree_traverser_model
 {
 protected:
-
     /*!\name Event types
      * \{
      */
@@ -63,12 +62,11 @@ protected:
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\}
 
-    jst_t const * _jst_host; //!< The referenced jst
     std::vector<int32_t> _sequence_offsets{}; //!< The context position offsets.
     coverage_type _base_coverage{}; //!< The initial base coverage for this model.
-
-    size_t _begin_pos;
-    size_t _end_pos;
+    jst_t const * _jst_host{}; //!< The referenced jst
+    size_t _begin_pos{}; //!< The begin position of this traverser model.
+    size_t _end_pos{}; //!< The end position of this traverser model.
 
 public:
     /*!\name Constructors, destructor and assignment
