@@ -105,15 +105,26 @@ public:
         assert(begin_pos < end_pos);
 
         _begin_pos = std::max<size_t>(0, begin_pos);
-        _end_pos = std::min<size_t>(end_pos, _jst_host->reference().size());
+        _end_pos = std::min<size_t>(end_pos, max_end_position());
         // Initialise the context position offsets and the first join event for updating the context positions.
         _sequence_offsets.resize(_jst_host->size(), 0);
 
         // Scan over all branch events before the begin position and
         // compute the offset from all events ending before the begin and
         // the coverage from all events ending after the begin.
+        // Note, if an insertion falls directly on the begin position it will be traversed by the
+        // predecessor bin and is finished before traversing this bin. Hence, the first candidate is the
+        // first branch event greater than the begin position or a higher event rank than insertion (rank = 0) if
+        // the branch position is the same.
+        branch_event_queue_iterator first_candidate_it = std::ranges::begin(branch_event_queue());
+        if (!is_first_bin()) // Special case only if are not in the first branch.
+        {
+            using insertion_t = typename delta_event_shared_type::insertion_type;
+            delta_event_shared_type key{_begin_pos, insertion_t{}, coverage_type{}};
+            first_candidate_it = branch_event_queue().upper_bound(branch_event_type{std::addressof(key)});
+        }
+
         _base_coverage.resize(_sequence_offsets.size(), true);
-        auto first_candidate_it = branch_event_queue().lower_bound(_begin_pos);
         std::ranges::for_each(std::ranges::begin(branch_event_queue()), first_candidate_it,
         [&] (auto const & branch_event)
         {

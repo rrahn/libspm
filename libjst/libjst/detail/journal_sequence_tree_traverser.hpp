@@ -124,7 +124,7 @@ private:
         // ----------------------------------------------------------------------------
 
         // The following steps initialises the parameters for the context specific traverser.
-        size_t const bin_end_position = std::min(this->reference().size(), this->_end_pos + (_context_size - 1));
+        size_t const bin_end_position = std::min(this->_end_pos + (_context_size - 1), this->max_end_position());
         _join_event_it = std::ranges::begin(this->join_event_queue());
         branch_event_queue_iterator branch_sentinel = this->branch_event_queue().end();
         if (!this->is_final_bin())
@@ -161,8 +161,7 @@ private:
         {
             // Find the first join event if this is not the first bin.
             delta_event_shared_type join_key{this->_begin_pos, insertion_t{}, coverage_type{}};
-            _join_event_it = this->join_event_queue().lower_bound(join_event_type{std::addressof(join_key)});
-            size_t last_context_position = std::min(this->_begin_pos + (_context_size - 1), bin_end_position);
+            _join_event_it = this->join_event_queue().upper_bound(join_event_type{std::addressof(join_key)});
 
             // First event with a branch position >= _begin_pos and a jon position > _begin_pos
             delta_event_shared_type key_first{this->_begin_pos, insertion_t{}, coverage_type{}};
@@ -170,6 +169,7 @@ private:
                 this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_first)});
 
             // First event with a branch position >= last_context_position and a join position > last_context_position
+            size_t last_context_position = std::min(this->_begin_pos + (_context_size - 1), bin_end_position);
             delta_event_shared_type key_next{last_context_position, insertion_t{}, coverage_type{}};
             next_branch_event_it = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_next)});
 
@@ -195,6 +195,9 @@ private:
             std::move(initial_coverage) // the current branch coverage.
         );
         active_branch().jd_iter = active_branch().journal_decorator.begin();
+
+        if (!active_branch().journal_decorator.empty())
+            active_branch().jd_iter += this->_begin_pos;
 
         // ----------------------------------------------------------------------------
         // Initialise the first branch if any exists at the first position.

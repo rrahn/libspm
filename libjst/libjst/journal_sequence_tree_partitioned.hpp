@@ -17,6 +17,7 @@
 #include <seqan3/core/detail/strong_type.hpp>
 
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
+#include <libjst/journal_sequence_tree_range_agent.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
 
 namespace libjst
@@ -56,6 +57,8 @@ public:
     using traverser_model_t = detail::journal_sequence_tree_traverser_model<jst_t>;
     //!\brief The type of the context enumerator to use.
     using context_enumerator_type = typename jst_t::context_enumerator_type;
+    //!\brief The type of the range agent to use.
+    using range_agent_type = typename jst_t::range_agent_type;
 
 private:
     std::vector<traverser_model_t> _bins{}; //!\< The container stroing the model for each bin.
@@ -101,10 +104,18 @@ public:
     context_enumerator_type context_enumerator(libjst::context_size const context_size,
                                                libjst::bin_index const bin_index) const
     {
-        if (bin_index.get() >= bin_count())
-            throw std::out_of_range{"The bin index: " + std::to_string(bin_index.get()) + " is out of range!"};
-
+        check_valid_bin_index(bin_index);
         return context_enumerator_type{_bins[bin_index.get()], context_size.get()};
+    }
+
+    //!\brief Returns a new context enumerator from the given bin and the context size.
+    template <search_stack_observer ...observer_t>
+    range_agent_type range_agent(libjst::context_size const context_size,
+                                 libjst::bin_index const bin_index,
+                                  observer_t & ...observer) const
+    {
+        check_valid_bin_index(bin_index);
+        return range_agent_type{_bins[bin_index.get()], context_size.get(), observer...};
     }
 
     /*!\name Serialisation
@@ -157,6 +168,14 @@ public:
         });
     }
     //!\}
+
+private:
+    //!\brief Checks if the given bin index is valid.
+    void check_valid_bin_index(libjst::bin_index const bin_index) const
+    {
+        if (bin_index.get() >= bin_count())
+            throw std::out_of_range{"The bin index: " + std::to_string(bin_index.get()) + " is out of range!"};
+    }
 };
 
 } // namespace libjst
