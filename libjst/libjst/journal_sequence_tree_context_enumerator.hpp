@@ -95,8 +95,8 @@ public:
      * \param[in] model The model to construct the traverser for.
      * \param[in] context_size The context size to use for the cursor.
      */
-    journal_sequence_tree_context_enumerator(model_t const & model, size_t const context_size) noexcept :
-        base_t{model, context_size}
+    journal_sequence_tree_context_enumerator(model_t model, size_t const context_size) noexcept :
+        base_t{std::move(model), context_size}
     {}
     //!\}
 
