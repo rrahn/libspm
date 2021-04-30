@@ -117,15 +117,33 @@ public:
         std::ranges::for_each(std::ranges::begin(branch_event_queue()), first_candidate_it,
         [&] (auto const & branch_event)
         {
-            if(branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
+            if (branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
                 update_offset_for_event(branch_event);
             else
-                _base_coverage &= branch_event.coverage();
+                _base_coverage.and_not(branch_event.coverage());
         });
     }
     //!\}
 
 protected:
+    //!\brief Returns `true` if the end position is equal to the reference size, otherwise `false`.
+    bool is_final_bin() const noexcept
+    {
+        return _end_pos == max_end_position();
+    }
+
+    //!\brief Returns `true` if the begin position is `0`, otherwise `false`.
+    bool is_first_bin() const noexcept
+    {
+        return _begin_pos == 0u;
+    }
+
+    //!\brief Returns the maximal end position of the underlying journal sequence tree.
+    size_t max_end_position() const noexcept
+    {
+        return _jst_host->reference().size();
+    }
+
     //!\brief Returns the event queue containing the branch events from the underlying host.
     branch_event_queue_type const & branch_event_queue() const noexcept
     {
@@ -143,11 +161,11 @@ protected:
     }
 
     //!\brief Returns the event queue from the underlying host.
-    auto reference() const noexcept
+    auto const & reference() const noexcept
     {
         assert(_jst_host != nullptr);
 
-        return _jst_host->reference() | seqan3::views::slice(_begin_pos, _end_pos);
+        return _jst_host->reference();
     }
 
     /*!\brief Returns the relative delta event offset.
