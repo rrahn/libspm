@@ -201,7 +201,7 @@ public:
         coverage_type branch_coverage = _host->determine_supported_context_coverage();
         size_type context_position = _host->context_begin_position();
         size_type sequence_id{};
-        for(auto && [offset, is_covered] : seqan3::views::zip(_host->_sequence_offsets, branch_coverage))
+        for (auto && [offset, is_covered] : seqan3::views::zip(_host->_sequence_offsets, branch_coverage))
         {
             if (is_covered)
                 _context_positions.emplace_back(sequence_id, offset + context_position);
