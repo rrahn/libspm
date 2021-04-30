@@ -7,6 +7,8 @@
 
 #include <libjst/journal_sequence_tree_partitioned.hpp>
 
+#include <cereal/archives/binary.hpp>
+
 #include "journal_sequence_tree_traversal_test_template.hpp"
 
 struct partitioned_traversal_test : libjst::test::traversal_fixture_base
@@ -50,6 +52,46 @@ TEST_P(partitioned_traversal_test, enumerate_contexts)
 
     EXPECT_TRUE(this->unknown_locations.empty());
     print_unknown_context_locations();
+}
+
+TEST_P(partitioned_traversal_test, serialisation_test)
+{
+    auto jst = this->construct_jst();
+
+    EXPECT_GT(GetParam().bin_count, 0u);
+
+    libjst::journal_sequence_tree_partitioned p_jst_original{std::addressof(jst), GetParam().bin_count};
+    // sereialise
+    std::stringstream archive_stream{};
+    {
+        cereal::BinaryOutputArchive archive{archive_stream};
+        p_jst_original.save(archive);
+    }
+
+    libjst::journal_sequence_tree_partitioned p_jst_copy{std::addressof(jst)};
+    // deserialise
+    {
+        cereal::BinaryInputArchive archive{archive_stream};
+        p_jst_copy.load(archive);
+    }
+
+    EXPECT_EQ(p_jst_original.bin_count(), p_jst_copy.bin_count());
+
+    for (uint32_t index = 0; index < p_jst_original.bin_count(); ++index)
+    {
+        auto context_enumerator1 = p_jst_original.context_enumerator(libjst::context_size{GetParam().context_size},
+                                                                     libjst::bin_index{index});
+        auto context_enumerator2 = p_jst_copy.context_enumerator(libjst::context_size{GetParam().context_size},
+                                                                 libjst::bin_index{index});
+
+        auto context_it1 = context_enumerator1.begin();
+        auto context_it2 = context_enumerator2.begin();
+        for (; context_it1 != context_enumerator1.end(); ++context_it1, ++context_it2)
+        {
+            EXPECT_RANGE_EQ(*context_it1, *context_it2);
+            EXPECT_RANGE_EQ(context_it1.positions(), context_it2.positions());
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

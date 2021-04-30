@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include <cereal/types/vector.hpp>
+
 #include <seqan3/range/views/slice.hpp>
 
 #include <libjst/journal_decorator.hpp>
@@ -207,6 +209,38 @@ protected:
         for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
             _sequence_offsets[idx] += (event.coverage()[idx] ? offset : 0);
     }
+
+public:
+    /*!\name Serialisation
+     * \{
+     */
+    /*!\brief Saves this traverser model to the given output archive.
+     *
+     * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object to.
+     */
+    template <seqan3::cereal_output_archive output_archive_t>
+    void save(output_archive_t & archive) const
+    {
+        archive(_sequence_offsets, _base_coverage, _begin_pos, _end_pos);
+    }
+
+    /*!\brief Loads this traverser model from the given input archive.
+     *
+     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object from.
+     * \param[in] jst A pointer to the associated jst.
+     */
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive, jst_t const * jst)
+    {
+        assert(jst != nullptr);
+        _jst_host = jst;
+        archive(_sequence_offsets, _base_coverage, _begin_pos, _end_pos);
+    }
+    //!\}
 };
 
 }  // namespace libjst::detail

@@ -106,6 +106,57 @@ public:
 
         return context_enumerator_type{_bins[bin_index.get()], context_size.get()};
     }
+
+    /*!\name Serialisation
+     * \{
+     */
+    /*!\brief Saves this partitioned jst to the given output archive.
+     *
+     * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object to.
+     *
+     * \details
+     *
+     * Manually saves the serialised traverser models to the archive. First the number of contained models is
+     * stored. Subsequently, all models are stored consecutively.
+     */
+    template <seqan3::cereal_output_archive output_archive_t>
+    void save(output_archive_t & archive) const
+    {
+        assert(_jst != nullptr);
+        archive(_bins.size());
+        std::ranges::for_each(_bins, [&] (traverser_model_t const & model)
+        {
+            model.save(archive);
+        });
+    }
+
+    /*!\brief Loads this partitioned jst from the given input archive.
+     *
+     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object from.
+     *
+     *
+     * details
+     *
+     * Manually loads the serialised traverser models from the archive. First the number of contained models is
+     * loaded. Subsequently, all models are loaded in order from the archive initialised with the associated jst.
+     */
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        assert(_jst != nullptr);
+        size_t bin_size{};
+        archive(bin_size);
+        _bins.resize(bin_size);
+        std::ranges::for_each(_bins, [&] (traverser_model_t & model)
+        {
+            model.load(archive, _jst);
+        });
+    }
+    //!\}
 };
 
 } // namespace libjst
