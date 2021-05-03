@@ -39,6 +39,7 @@ add_subdirectory (libjst)
 add_subdirectory (jstmap-index)
 add_subdirectory (jstmap-search)
 add_subdirectory (jstmap-simulate)
+add_subdirectory (jstmap-view)
 add_subdirectory (jstmap)
 
 ## DOCUMENTATION
