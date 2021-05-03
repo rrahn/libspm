@@ -20,6 +20,7 @@
 #include <libjst/search/naive_search.hpp>
 #include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
+#include <libjst/journal_sequence_tree_partitioned.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
 
 #include "test_utility.hpp" // make_gaped
@@ -135,6 +136,37 @@ TEST_P(search_test, shift_or_search)
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
         }
     });
+    EXPECT_EQ(hit_count, expected_hits.size());
+}
+
+TEST_P(search_test, search_on_partitioned_jst)
+{
+    // prepare searcher
+    using state_t = typename decltype(libjst::naive_pattern_searcher{GetParam().pattern})::state_type;
+
+    // Initialise partitioned jst.
+    constexpr uint32_t bin_count = 5u;
+    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_count};
+
+    size_t hit_count{};
+    for (uint32_t index = 0; index < bin_count; ++index)
+    {
+        libjst::naive_pattern_searcher searcher{GetParam().pattern, libjst::search_state_manager_stack<state_t>{}};
+        auto jst_range_agent = p_jst.range_agent(libjst::context_size{static_cast<uint32_t>(context_size())},
+                                                 libjst::bin_index{index},
+                                                 searcher.state_manager()); // already pushing a branch.
+
+        // TODO: The position should be generate from a const iterator as well.
+        searcher(jst_range_agent, [&] (auto & it)
+        {
+            for (libjst::context_position hit : it.positions())
+            {
+                ++hit_count;
+                EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
+            }
+        });
+    }
+
     EXPECT_EQ(hit_count, expected_hits.size());
 }
 

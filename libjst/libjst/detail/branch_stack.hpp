@@ -129,7 +129,7 @@ public:
      */
     bool empty() const noexcept
     {
-        return _stack_iter == _stack.end();
+        return _stack.empty() || _stack_iter == _stack.end();
     }
 
     size_type size() const noexcept

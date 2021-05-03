@@ -46,6 +46,8 @@ class journal_sequence_tree_range_agent :
 private:
     //!\brief The base traversal type.
     using base_t = journal_sequence_tree_traverser<journal_sequence_tree_range_agent<jst_t>, jst_t>;
+    //!\brief The model type.
+    using model_t = typename base_t::model_t;
 
     //!\brief Grant access to the protected and private data members.
     friend base_t;
@@ -89,7 +91,27 @@ public:
     template <search_stack_observer ...observer_t>
     journal_sequence_tree_range_agent(jst_t const * jst, size_t const context_size, observer_t & ...observer) noexcept :
         search_stack_notification_registry{observer...},
-        base_t{jst, context_size}
+        base_t{jst, context_size, 0, std::numeric_limits<std::ptrdiff_t>::max()}
+    {}
+
+    /*!\brief Constructs the range agent from a given traverser model and a context size.
+     *
+     * \tparam observer_t A template parameter pack over all observers to attach; must model
+     *                    libjst::search_stack_observer.
+     *
+     * \param[in] model The model to construct the traverser for.
+     * \param[in] context_size The context size to use for the cursor.
+     * \param[in] observer The observers to attach to the stack notification registry.
+     *
+     * \details
+     *
+     * The range agent is initialised with the given traverser model and context size and attaches the observer
+     * to the stack registry.
+     */
+    template <search_stack_observer ...observer_t>
+    journal_sequence_tree_range_agent(model_t model, size_t const context_size, observer_t & ...observer) noexcept :
+        search_stack_notification_registry{observer...},
+        base_t{std::move(model), context_size}
     {}
     //!\}
 

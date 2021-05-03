@@ -17,6 +17,7 @@
 #include <ranges>
 
 #include <seqan3/range/views/zip.hpp>
+#include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/context_position.hpp>
 #include <libjst/detail/journal_sequence_tree_traverser.hpp>
@@ -44,6 +45,8 @@ class journal_sequence_tree_context_enumerator :
 private:
     //!\brief The base traversal type.
     using base_t = journal_sequence_tree_traverser<journal_sequence_tree_context_enumerator<jst_t>, jst_t>;
+    //!\brief The model type.
+    using model_t = typename base_t::model_t;
 
     //!\brief Grant access to the underlying notification methods.
     friend base_t;
@@ -71,18 +74,29 @@ public:
         = default; //!< Default.
     ~journal_sequence_tree_context_enumerator() = default; //!< Default.
 
-    /*!\brief Constructs the journaled sequence tree cursor for a given libjst::journaled_sequence_tree and a context
+    /*!\brief Constructs the context enumerator for a given libjst::journaled_sequence_tree and a context
      *        size.
      *
      * \param[in] jst A pointer to a const journaled sequence tree.
      * \param[in] context_size The context size to use for the cursor.
-     *
-     * \details
-     *
-     * The cursor is initialised with the given context size and already represents the first context.
+     * \param[in] begin_pos The begin position of the reference to consider.
+     * \param[in] end_pos The end position of the reference to consider.
      */
-    journal_sequence_tree_context_enumerator(jst_t const * jst, size_t const context_size) noexcept :
-        base_t{jst, context_size}
+    journal_sequence_tree_context_enumerator(jst_t const * jst,
+                                             size_t const context_size,
+                                             std::ptrdiff_t begin_pos = 0,
+                                             std::ptrdiff_t end_pos = std::numeric_limits<std::ptrdiff_t>::max())
+        noexcept :
+            base_t{jst, context_size, begin_pos, end_pos}
+    {}
+
+    /*!\brief Constructs the context enumerator from a given traverser model and a context size.
+     *
+     * \param[in] model The model to construct the traverser for.
+     * \param[in] context_size The context size to use for the cursor.
+     */
+    journal_sequence_tree_context_enumerator(model_t model, size_t const context_size) noexcept :
+        base_t{std::move(model), context_size}
     {}
     //!\}
 
@@ -187,7 +201,7 @@ public:
         coverage_type branch_coverage = _host->determine_supported_context_coverage();
         size_type context_position = _host->context_begin_position();
         size_type sequence_id{};
-        for(auto && [offset, is_covered] : seqan3::views::zip(_host->_sequence_offsets, branch_coverage))
+        for (auto && [offset, is_covered] : seqan3::views::zip(_host->_sequence_offsets, branch_coverage))
         {
             if (is_covered)
                 _context_positions.emplace_back(sequence_id, offset + context_position);

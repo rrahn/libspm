@@ -71,8 +71,8 @@ private:
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
 
     //!\cond
-    template <typename, typename>
-    friend class detail::journal_sequence_tree_traverser;
+    template <typename>
+    friend class detail::journal_sequence_tree_traverser_model;
     //!\endcond
 
     sequence_t _reference; //!< The internal reference used for referential compression.

@@ -32,12 +32,12 @@ endmacro ()
 
 # A macro that adds an api test.
 macro (add_api_test test_filename target_dependencies)
-    add_app_test (${test_filename} API_TEST ${target_dependencies})
+    add_app_test (${test_filename} API_TEST "${target_dependencies}")
 endmacro ()
 
 # A macro that adds a cli test.
 macro (add_cli_test test_filename target_dependencies)
-    add_app_test (${test_filename} CLI_TEST ${target_dependencies})
+    add_app_test (${test_filename} CLI_TEST "${target_dependencies}")
 endmacro ()
 
 seqan3_require_ccache ()
