@@ -14,6 +14,7 @@
 #include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/journal_sequence_tree_partitioned.hpp>
 
 #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/search_queries.hpp>
@@ -30,20 +31,28 @@ void process_hits(std::vector<libjst::context_position> & results,
     });
 }
 
-std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vector<raw_sequence_t> const & queries)
+std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vector<raw_sequence_t> const & queries, const uint32_t bin_count /* = 1 */)
 {
     assert(!queries.empty());
 
     std::vector<libjst::context_position> results{};
 
+    // Initialise partitioned jst.
+    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_count};
+
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
+        // prepare searcher
         using state_t = typename decltype(libjst::shift_or_pattern_searcher{query})::state_type;
-        using state_manager_t = libjst::search_state_manager_stack<state_t>;
-        libjst::shift_or_pattern_searcher searcher{query, state_manager_t{}};
+        libjst::shift_or_pattern_searcher searcher{query, libjst::search_state_manager_stack<state_t>{}};
 
-        auto range_agent = jst.range_agent(query.size(), searcher.state_manager());
-        searcher(range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
+        for (uint32_t index = 0; index < bin_count; ++index)
+        {
+            auto jst_range_agent = p_jst.range_agent(libjst::context_size{query.size()},
+                                                    libjst::bin_index{index},
+                                                    searcher.state_manager()); // already pushing a branch.
+            searcher(jst_range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
+        }
     });
 
     return results;
