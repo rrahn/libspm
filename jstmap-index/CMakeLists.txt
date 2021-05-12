@@ -1,6 +1,4 @@
-
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "jstmap/index/*.hpp")
-
 ### Base interface target for the index subcommand.
 add_library (jstmap_index_base INTERFACE)
 target_include_directories (jstmap_index_base INTERFACE ../jstmap-index
@@ -10,14 +8,12 @@ target_include_directories (jstmap_index_base INTERFACE ../jstmap-index
 target_compile_features (jstmap_index_base INTERFACE cxx_std_17)
 target_link_libraries (jstmap_index_base INTERFACE libjst::libjst seqan3::seqan3 ${SEQAN_LIBRARIES})
 add_library (jstmap::index::base ALIAS jstmap_index_base)
-
 ### Create object library for the logging mechanism.
 add_library(jstmap_index_logging OBJECT jstmap/index/application_logger.cpp
                                         jstmap/index/application_logger.hpp
                                         jstmap/index/global_types.hpp)
 target_include_directories (jstmap_index_logging PUBLIC jstmap::index::base)
 target_link_libraries (jstmap_index_logging PUBLIC jstmap::index::base)
-
 ### Create object library for better build times
 add_library(jstmap_index_input OBJECT jstmap/index/load_sequence.cpp
                                       jstmap/index/load_sequence.hpp
@@ -45,7 +41,6 @@ add_library(jstmap_index_vcf_parser OBJECT jstmap/index/vcf_parser.cpp
                                            jstmap/index/global_types.hpp)
 target_include_directories (jstmap_index_vcf_parser PUBLIC jstmap::index::base)
 target_link_libraries (jstmap_index_vcf_parser PUBLIC jstmap::index::base)
-
 ### Create static library for index subcommand
 add_library (jstmap_index STATIC jstmap/index/index_main.cpp
                                  jstmap/index/index_main.hpp)

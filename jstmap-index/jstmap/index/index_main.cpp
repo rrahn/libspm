@@ -51,6 +51,11 @@ int index_main(seqan3::argument_parser & index_parser)
                             "must contain the associated contigs for this vcf file.",
                             seqan3::option_spec::standard,
                             seqan3::input_file_validator{{"vcf"}});
+    index_parser.add_option(options.bin_count,
+                            'b',
+                            "bin-count",
+                            "The number of bins used in the partitioned jst.",
+                            seqan3::option_spec::standard);
 
     try
     {
@@ -103,8 +108,10 @@ int index_main(seqan3::argument_parser & index_parser)
                 new_filename += filename_with_id.extension();
                 filename_with_id.replace_filename(new_filename);
 
+                partitioned_jst_t partitioned_jst{std::addressof(jst), options.bin_count};
+
                 log(verbosity_level::standard, logging_level::info, "Serialise jst ", filename_with_id);
-                serialise_jst(jst, filename_with_id);
+                serialise(jst, partitioned_jst, options.output_file);
             });
         }
         else // Construct from the sequence alignment.
@@ -112,11 +119,10 @@ int index_main(seqan3::argument_parser & index_parser)
             log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
             auto sequences = load_sequences(options.sequence_file);
             log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
-
-            auto tree = build_journaled_sequence_tree(std::move(sequences));
+            auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
 
             log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
-            serialise_jst(tree, options.output_file);
+            serialise(jst, partitioned_jst, options.output_file);
         }
     }
     catch (std::exception const & ex)

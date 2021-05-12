@@ -22,7 +22,8 @@ auto compress(reference_t const & reference, sequence_t const & sequence)
     return std::pair{seqan3::gap_decorator{reference}, seqan3::gap_decorator{sequence}};
 }
 
-jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences)
+std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences, 
+                                                                            const uint32_t bin_count /* = 1 */)
 {
     assert(!sequences.empty());
 
@@ -37,7 +38,10 @@ jst_t build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences)
         jst.add(compress(jst.reference(), sequence));
     });
 
-    return jst;
+    // Build partitioned journaled sequence tree over the jst
+    partitioned_jst_t partitioned_jst{std::addressof(jst), bin_count};
+
+    return std::pair{std::move(jst), std::move(partitioned_jst)};
 }
 
 }  // namespace jstmap

@@ -24,6 +24,7 @@ struct index_options
     std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
     bool is_quite{false}; //!< Wether the index app should run in quite mode.
     bool is_verbose{false}; //!< Wether the index app should run in verbose mode.
+    uint32_t bin_count = 1; //!< The number of bins to partition the JST into.
 };
 
 }  // namespace jstmap
