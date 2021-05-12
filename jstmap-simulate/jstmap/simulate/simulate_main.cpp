@@ -21,8 +21,6 @@
 #include <jstmap/simulate/simulate_alignment.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
-
 namespace jstmap
 {
 
@@ -60,10 +58,11 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         std::cout << "Loading sequences\n";
         sequence_t reference = load_reference(options.input_file);
         auto simulated = simulate_alignment(reference, options.error_rate);
-        libjst::journaled_sequence_tree<sequence_t> tree{std::move(reference)};
-        tree.add(simulated);
+        jst_t jst{std::move(reference)};
+        jst.add(simulated);
+        partitioned_jst_t partitioned_jst(std::addressof(jst), options.bin_count);
         std::cout << "Serialising JST\n";
-        serialise_jst(tree, options.output_file);
+        serialise(jst, partitioned_jst, options.output_file);
     }
     catch (std::exception const & ex)
     {

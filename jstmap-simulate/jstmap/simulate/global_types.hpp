@@ -18,11 +18,18 @@
 #include <seqan3/alphabet/gap/gapped.hpp>
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 
+#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/journal_sequence_tree_partitioned.hpp>
+
 namespace jstmap
 {
 
 using sequence_t = std::vector<seqan3::dna5>;
 using aligned_sequence_t = std::vector<seqan3::gapped<std::ranges::range_value_t<sequence_t>>>;
 using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
+//!\brief The globally available journal sequence tree type.
+using jst_t = libjst::journaled_sequence_tree<sequence_t>;
+//!\brief The globally available partitioned journal sequence tree type.
+using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 
 }  // namespace jstmap
