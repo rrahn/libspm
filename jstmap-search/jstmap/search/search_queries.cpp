@@ -13,8 +13,6 @@
 
 #include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
-#include <libjst/journaled_sequence_tree.hpp>
-#include <libjst/journal_sequence_tree_partitioned.hpp>
 
 #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/search_queries.hpp>
@@ -31,14 +29,11 @@ void process_hits(std::vector<libjst::context_position> & results,
     });
 }
 
-std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vector<raw_sequence_t> const & queries, const uint32_t bin_count /* = 1 */)
+std::vector<libjst::context_position> search_queries(partitioned_jst_t const & partitioned_jst, std::vector<raw_sequence_t> const & queries)
 {
     assert(!queries.empty());
 
     std::vector<libjst::context_position> results{};
-
-    // Initialise partitioned jst.
-    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_count};
 
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
@@ -46,11 +41,11 @@ std::vector<libjst::context_position> search_queries(jst_t const & jst, std::vec
         using state_t = typename decltype(libjst::shift_or_pattern_searcher{query})::state_type;
         libjst::shift_or_pattern_searcher searcher{query, libjst::search_state_manager_stack<state_t>{}};
 
-        for (uint32_t index = 0; index < bin_count; ++index)
+        for (uint32_t index = 0; index < partitioned_jst.bin_count(); ++index)
         {
-            auto jst_range_agent = p_jst.range_agent(libjst::context_size{query.size()},
-                                                    libjst::bin_index{index},
-                                                    searcher.state_manager()); // already pushing a branch.
+            auto jst_range_agent = partitioned_jst.range_agent(libjst::context_size{static_cast<uint32_t>(query.size())},
+                                                               libjst::bin_index{index},
+                                                               searcher.state_manager()); // already pushing a branch.
             searcher(jst_range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
         }
     });

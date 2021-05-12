@@ -23,7 +23,7 @@ auto compress(reference_t const & reference, sequence_t const & sequence)
 }
 
 std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<raw_sequence_t> && sequences, 
-                                                                            const uint32_t bin_count /* = 1 */)
+                                                                  const uint32_t bin_count /* = 1 */)
 {
     assert(!sequences.empty());
 

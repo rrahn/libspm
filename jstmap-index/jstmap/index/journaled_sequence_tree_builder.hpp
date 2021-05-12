@@ -21,7 +21,7 @@ namespace jstmap
 
 //!\cond
 std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<raw_sequence_t> &&, 
-                                                                            const uint32_t = 1);
+                                                                  const uint32_t = 1);
 //!\endcond
 
 }  // namespace jstmap
