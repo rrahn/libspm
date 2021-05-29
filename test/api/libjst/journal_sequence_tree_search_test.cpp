@@ -92,7 +92,7 @@ TEST_P(search_test, naive_search)
     size_t hit_count{};
     searcher(jst_range_agent, [&] (auto & it)
     {
-        for (libjst::context_position hit : it.positions())
+        for (libjst::context_position hit : jst.sequence_positions_at(it.coordinate()))
         {
             ++hit_count;
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
@@ -111,7 +111,7 @@ TEST_P(search_test, horspool_search)
     size_t hit_count{};
     searcher(jst_range_agent, [&] (auto & it)
     {
-        for (libjst::context_position hit : it.positions())
+        for (libjst::context_position hit : jst.sequence_positions_at(it.coordinate()))
         {
             ++hit_count;
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
@@ -130,7 +130,7 @@ TEST_P(search_test, shift_or_search)
     size_t hit_count{};
     searcher(jst_range_agent, [&] (auto & it)
     {
-        for (libjst::context_position hit : it.positions())
+        for (libjst::context_position hit : jst.sequence_positions_at(it.coordinate()))
         {
             ++hit_count;
             EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
@@ -159,7 +159,7 @@ TEST_P(search_test, search_on_partitioned_jst)
         // TODO: The position should be generate from a const iterator as well.
         searcher(jst_range_agent, [&] (auto & it)
         {
-            for (libjst::context_position hit : it.positions())
+            for (libjst::context_position hit : jst.sequence_positions_at(it.coordinate()))
             {
                 ++hit_count;
                 EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;

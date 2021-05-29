@@ -22,13 +22,13 @@ TEST_P(traversal_test, construct)
 TEST_P(traversal_test, enumerate_contexts)
 {
     auto jst = this->construct_jst();
+    jst.print_event_queue();
     auto context_enumerator = jst.context_enumerator(GetParam().context_size);
     for (auto context_it = context_enumerator.begin(); context_it != context_enumerator.end(); ++context_it)
     {
         auto context = *context_it;
         std::string tmp = libjst::test::sequence_to_string(context);
-
-        auto positions = context_it.positions();
+        auto positions = jst.sequence_positions_at(context_it.coordinate());
 
         EXPECT_TRUE((this->context_positions_exist(tmp, positions))) << "context " << tmp;
     }
