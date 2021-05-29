@@ -118,6 +118,13 @@ public:
         return range_agent_type{_bins[bin_index.get()], context_size.get(), observer...};
     }
 
+    //!\brief Returns the sequence positions at the given coordinate.
+    auto sequence_positions_at(journal_sequence_tree_coordinate const & coordinate) const
+        -> decltype(_jst->sequence_positions_at(coordinate))
+    {
+        return _jst->seuence_positions_at(coordinate);
+    }
+
     /*!\name Serialisation
      * \{
      */

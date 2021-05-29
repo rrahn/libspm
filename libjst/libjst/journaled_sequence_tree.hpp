@@ -35,7 +35,9 @@
 #include <libjst/detail/journal_sequence_tree_event_join.hpp>
 #include <libjst/detail/transform_to_delta_events.hpp>
 #include <libjst/journal_decorator.hpp>
+#include <libjst/journal_sequence_tree_coordinate.hpp>
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
+#include <libjst/journal_sequence_tree_position_agent.hpp>
 #include <libjst/journal_sequence_tree_range_agent.hpp>
 #include <libjst/utility/sorted_vector.hpp>
 
@@ -69,6 +71,7 @@ private:
 
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
+    using position_agent_type = detail::journal_sequence_tree_position_agent<type>; //!< The position agent type.
 
     //!\cond
     template <typename>
@@ -384,6 +387,13 @@ public:
         return range_agent_type{this, context_size, observer...};
     }
 
+    //!\brief Returns the sequence positions at the given coordinate.
+    auto sequence_positions_at(journal_sequence_tree_coordinate const & coordinate) const
+    {
+        position_agent_type agent{this, 1};
+        return agent.retrieve_positions(coordinate);
+    }
+
     /*!\brief Saves this journaled sequence tree to the given output archive.
      *
      * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
@@ -424,9 +434,10 @@ public:
             return std::same_as<event_t, detail::journal_sequence_tree_event_branch<delta_event_shared_type>>;
         };
 
+        size_t id = 0;
         auto print_event = [&] (auto const & event)
         {
-            std::cout << "["
+            std::cout << id++ << " ["
                       << (is_branch_event(event) ? "b" : "j")
                       << ": "
                       << (*event.event_handle())
@@ -434,6 +445,7 @@ public:
         };
 
         std::ranges::for_each(_branch_event_queue, print_event);
+        id = 0;
         std::ranges::for_each(_join_event_queue, print_event);
     }
     //!\endcond
