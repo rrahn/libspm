@@ -129,7 +129,7 @@ public:
         [&] (auto const & branch_event)
         {
             if (branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
-                update_offset_for_event(branch_event);
+                update_offset_for_event(_sequence_offsets, branch_event);
             else
                 _base_coverage.and_not(branch_event.coverage());
         });
@@ -210,6 +210,7 @@ protected:
      *
      * \tparam event_t The type of the event (branch event or join event).
      *
+     * \param[in,out] offsets The vector with the offsets to update.
      * \param[in] event The event to update the relative sequence positions for.
      *
      * \details
@@ -218,15 +219,15 @@ protected:
      * substitution it will not invoke the update as the relative offset is not affected.
      */
     template <typename event_t>
-    void update_offset_for_event(event_t const & event) noexcept
+    void update_offset_for_event(std::vector<int32_t> & offsets, event_t const & event) const
     {
         if (event.event_handle()->is_substitution())
             return;
 
         //TODO: Vectorise, mask_add?
         auto const offset = event_offset(event.event_handle());
-        for (unsigned idx = 0; idx < _sequence_offsets.size(); ++idx)
-            _sequence_offsets[idx] += (event.coverage()[idx] ? offset : 0);
+        for (unsigned idx = 0; idx < offsets.size(); ++idx)
+            offsets[idx] += (event.coverage()[idx] ? offset : 0);
     }
 
 public:

@@ -561,7 +561,7 @@ private:
         // Update the sequence offsets.
         std::ranges::for_each(_join_event_it, upper_bound_join_it, [&] (auto const & join_event)
         {
-            this->update_offset_for_event(join_event);
+            this->update_offset_for_event(this->_sequence_offsets, join_event);
         });
 
         _join_event_it = upper_bound_join_it;
