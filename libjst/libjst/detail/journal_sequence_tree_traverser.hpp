@@ -18,9 +18,10 @@
 #include <seqan3/range/views/zip.hpp>
 
 #include <libjst/context_position.hpp>
-#include <libjst/journal_decorator.hpp>
 #include <libjst/detail/branch_stack.hpp>
 #include <libjst/detail/journal_sequence_tree_traverser_model.hpp>
+#include <libjst/journal_decorator.hpp>
+#include <libjst/journal_sequence_tree_coordinate.hpp>
 #include <libjst/utility/logger.hpp>
 
 namespace libjst::detail
@@ -88,6 +89,7 @@ private:
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
     join_event_queue_iterator _join_event_it{}; //!< The global join event iterator to update the context positions.
     size_t _context_size{}; //!< The size of the underlying context.
+    uint32_t _subtree_steps{}; //!< The number of steps into the subtree to recover any traverser position.
 
     using context_position_type = context_position; //!< The type representing a single context position.
 
@@ -299,6 +301,10 @@ private:
         // Create a branch from the current one.
         branch & new_branch = _branch_stack.prefetch();
         new_branch = active_branch();
+
+        // Only if we come directly from the base branch we count the subtree steps.
+        if (is_base_branch())
+            _subtree_steps = 0;
 
         // Update the delta event and the coverage.
         new_branch.delta_event = active_branch().branch_event_it->event_handle();
@@ -633,6 +639,8 @@ private:
 
         ++active_branch().context_position;
         ++active_branch().jd_iter;
+        ++_subtree_steps;
+
         terminate_consumed_branches(); // terminate all branches
         update_base_branch_coverage();
 
@@ -660,6 +668,102 @@ private:
     bool next_context()
     {
         return advance() || has_full_context_in_branch();
+    }
+
+    //!\biref Seeks into the journal sequence tree to the given coordinate.
+    void seek(journal_sequence_tree_coordinate const & coordinate)
+    {
+        assert(!_branch_stack.empty());
+
+        // Clear everything until the base branch
+        while (_branch_stack.size() > 1)
+            drop_branch();
+
+        // Set the context size.
+        _context_size = coordinate.context_size;
+
+        // Set the traverser to the begin of the branch
+        auto & base_branch = active_branch();
+        base_branch.context_position = coordinate.position;
+        base_branch.branch_event_it = this->branch_event_queue().begin() + coordinate.event_id;
+
+        if (!base_branch.journal_decorator.empty())
+            base_branch.jd_iter = base_branch.journal_decorator.begin() + coordinate.position;
+
+        while (on_branch_event())
+        {
+            branch_creation_status state = create_branch();
+            assert(state != branch_creation_status::no_support);
+            if (state == branch_creation_status::success)
+                break;
+        }
+
+        // Step into subtree until recovering the correct position.
+        for (uint32_t step = 0; step < coordinate.subtree_steps; ++step)
+            advance();
+    }
+
+    //!\brief Returns a coordinate representing the current traverser position.
+    journal_sequence_tree_coordinate coordinate() const noexcept
+    {
+        // TODO: Can we access subtree root position more efficiently?
+        //       Can we avoid checks for the subtree steps by always increasing and then simply calculate the
+        //       difference between branch subtree steps and steps until the root position?
+
+        uint32_t event_id = (_branch_stack.base_branch().branch_event_it - this->branch_event_queue().begin());
+        uint32_t steps = 0;
+        uint32_t position = active_branch().context_position;
+
+        if (!is_base_branch())
+        {
+            --event_id;
+            steps = _subtree_steps;
+            position = _branch_stack.branch_at(1).delta_event->position();
+        }
+
+        return journal_sequence_tree_coordinate{.position = position,
+                                                .event_id = event_id,
+                                                .subtree_steps = steps,
+                                                .context_size = static_cast<uint32_t>(_context_size)};
+    }
+
+    //!\brief Retrieves the positions of the current traverser position for all valid sequences.
+    std::vector<libjst::context_position> retrieve_positions() const
+    {
+        // Determine the last branch event not affecting the current context anymore.
+        branch_event_queue_iterator branch_event_end = active_branch().branch_event_it;
+        coverage_type branch_coverage;
+        branch_coverage.resize(this->sequence_count(), true);
+
+        if (!is_base_branch())
+        {
+            assert(_branch_stack.size() >= 2);
+            branch_event_end = std::ranges::prev(_branch_stack.base_branch().branch_event_it);
+            branch_coverage = active_branch().coverage;
+        }
+        std::vector<int32_t> sequence_offsets{};
+        sequence_offsets.resize(this->sequence_count(), 0);
+        size_type const begin_position = context_begin_position();
+
+        std::ranges::for_each(std::ranges::begin(this->branch_event_queue()), branch_event_end, [&] (auto const & event)
+        {
+            if (event.position() + event.event_handle()->deletion_size() <= begin_position)
+                this->update_offset_for_event(sequence_offsets, event);
+            else
+                branch_coverage.and_not(event.coverage());
+        });
+
+        std::vector<libjst::context_position> context_positions{};
+        size_type sequence_id{};
+        for(auto && [offset, is_covered] : seqan3::views::zip(sequence_offsets, branch_coverage))
+        {
+            if (is_covered)
+                context_positions.emplace_back(sequence_id, offset + begin_position);
+
+            ++sequence_id;
+        };
+
+        return context_positions;
     }
 
     /*!\brief Returns the current context.
