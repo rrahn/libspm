@@ -381,11 +381,13 @@ TEST_F(journaled_sequence_tree_fixture, context_enumerator)
     jst.add(alignment2);
     jst.add(alignment3);
 
+    jst.print_event_queue();
+
     auto context_enumerator = jst.context_enumerator(4u);
 
     auto advance_supported_context = [&] (auto & it)
     {
-        while (it != context_enumerator.end() && it.positions().empty())
+        while (it != context_enumerator.end() && jst.sequence_positions_at(it.coordinate()).empty())
             ++it;
     };
 

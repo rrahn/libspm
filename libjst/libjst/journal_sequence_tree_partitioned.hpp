@@ -122,7 +122,7 @@ public:
     auto sequence_positions_at(journal_sequence_tree_coordinate const & coordinate) const
         -> decltype(_jst->sequence_positions_at(coordinate))
     {
-        return _jst->seuence_positions_at(coordinate);
+        return _jst->sequence_positions_at(coordinate);
     }
 
     /*!\name Serialisation

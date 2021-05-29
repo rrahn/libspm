@@ -46,7 +46,10 @@ std::vector<libjst::context_position> search_queries(partitioned_jst_t const & p
             auto jst_range_agent = partitioned_jst.range_agent(libjst::context_size{static_cast<uint32_t>(query.size())},
                                                                libjst::bin_index{index},
                                                                searcher.state_manager()); // already pushing a branch.
-            searcher(jst_range_agent, [&] (auto & it) { process_hits(results, it.positions()); });
+            searcher(jst_range_agent, [&] (auto & it)
+            {
+                process_hits(results, jst.sequence_positions_at(it.coordinate()));
+            });
         }
     });
 

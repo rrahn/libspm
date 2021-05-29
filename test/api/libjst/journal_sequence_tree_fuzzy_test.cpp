@@ -151,7 +151,7 @@ TEST_F(jst_fuzzy_test, jst_context_enumeration)
         auto context = *context_it;
         std::string tmp = libjst::test::sequence_to_string(context);
 
-        auto positions = context_it.positions();
+        auto positions = jst.sequence_positions_at(context_it.coordinate());
 
         EXPECT_TRUE((this->context_positions_exist(tmp, positions))) << "context " << tmp;
     }

@@ -191,27 +191,6 @@ public:
         return _host->current_context();
     }
 
-    //!\brief Returns a vector with the positions valid for the current context. Can be empty.
-    context_positions_type const & positions() noexcept
-    {
-        assert(_host != nullptr);
-
-        _context_positions.clear();
-
-        coverage_type branch_coverage = _host->determine_supported_context_coverage();
-        size_type context_position = _host->context_begin_position();
-        size_type sequence_id{};
-        for (auto && [offset, is_covered] : seqan3::views::zip(_host->_sequence_offsets, branch_coverage))
-        {
-            if (is_covered)
-                _context_positions.emplace_back(sequence_id, offset + context_position);
-
-            ++sequence_id;
-        };
-
-        return _context_positions;
-    }
-
     //!\brief Returns the tree coordinate of the current iterator position.
     journal_sequence_tree_coordinate coordinate() const noexcept
     {

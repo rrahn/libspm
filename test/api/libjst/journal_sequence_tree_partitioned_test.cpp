@@ -40,7 +40,7 @@ TEST_P(partitioned_traversal_test, enumerate_contexts)
             auto context = *context_it;
             std::string tmp = libjst::test::sequence_to_string(context);
 
-            auto positions = context_it.positions();
+            auto positions = p_jst.sequence_positions_at(context_it.coordinate());
 
             EXPECT_TRUE((this->context_positions_exist(tmp, positions))) << "context " << tmp;
         }
@@ -89,7 +89,8 @@ TEST_P(partitioned_traversal_test, serialisation_test)
         for (; context_it1 != context_enumerator1.end(); ++context_it1, ++context_it2)
         {
             EXPECT_RANGE_EQ(*context_it1, *context_it2);
-            EXPECT_RANGE_EQ(context_it1.positions(), context_it2.positions());
+            EXPECT_RANGE_EQ(p_jst_original.sequence_positions_at(context_it1.coordinate()),
+                            p_jst_original.sequence_positions_at(context_it2.coordinate()));
         }
     }
 }

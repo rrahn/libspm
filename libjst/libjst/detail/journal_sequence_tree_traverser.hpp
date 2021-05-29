@@ -692,9 +692,7 @@ private:
 
         while (on_branch_event())
         {
-            branch_creation_status state = create_branch();
-            assert(state != branch_creation_status::no_support);
-            if (state == branch_creation_status::success)
+            if (create_branch() == branch_creation_status::success)
                 break;
         }
 
