@@ -211,6 +211,14 @@ public:
 
         return _context_positions;
     }
+
+    //!\brief Returns the tree coordinate of the current iterator position.
+    journal_sequence_tree_coordinate coordinate() const noexcept
+    {
+        assert(_host != nullptr);
+
+        return _host->coordinate();
+    }
     //!\}
 
     /*!\name Arithmetic operators
