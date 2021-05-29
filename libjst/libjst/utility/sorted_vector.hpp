@@ -420,6 +420,23 @@ public:
         return tmp;
     }
 
+    constexpr bi_iterator & operator+=(difference_type const offset) noexcept
+    {
+        _iter += offset;
+        return *this;
+    }
+
+    constexpr bi_iterator operator+(difference_type const offset) const noexcept
+    {
+        bi_iterator tmp{*this};
+        return tmp += offset;
+    }
+
+    friend constexpr bi_iterator operator+(difference_type const offset, bi_iterator const & rhs) noexcept
+    {
+        return rhs + offset;
+    }
+
     constexpr bi_iterator & operator--() noexcept
     {
         --_iter;
@@ -431,6 +448,18 @@ public:
         iterator tmp{*this};
         --(*this);
         return tmp;
+    }
+
+    constexpr bi_iterator & operator-=(difference_type const offset) noexcept
+    {
+        _iter -= offset;
+        return *this;
+    }
+
+    constexpr bi_iterator operator-(difference_type const offset) const noexcept
+    {
+        bi_iterator tmp{*this};
+        return tmp -= offset;
     }
 
     template <bool other_const>
