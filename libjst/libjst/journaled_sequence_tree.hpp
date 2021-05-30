@@ -211,6 +211,17 @@ public:
         return _size;
     }
 
+    //!\brief The total number of symbols stored inside the jst.
+    size_type total_symbol_count() const
+    {
+        size_t insertion_count{};
+        std::ranges::for_each(_delta_events, [&] (auto const & event)
+        {
+            insertion_count += event.insertion_size();
+        });
+        return reference().size() + insertion_count;
+    }
+
     /*!\brief Inserts a new event to the existing journal sequence tree.
      *
      * \param[in] event The event to insert.
