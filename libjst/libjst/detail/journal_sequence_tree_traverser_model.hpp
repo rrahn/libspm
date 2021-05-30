@@ -64,8 +64,6 @@ protected:
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\}
 
-    std::vector<int32_t> _sequence_offsets{}; //!< The context position offsets.
-    coverage_type _base_coverage{}; //!< The initial base coverage for this model.
     jst_t const * _jst_host{}; //!< The referenced jst
     size_t _begin_pos{}; //!< The begin position of this traverser model.
     size_t _end_pos{}; //!< The end position of this traverser model.
@@ -106,33 +104,6 @@ public:
 
         _begin_pos = std::max<size_t>(0, begin_pos);
         _end_pos = std::min<size_t>(end_pos, max_end_position());
-        // Initialise the context position offsets and the first join event for updating the context positions.
-        _sequence_offsets.resize(_jst_host->size(), 0);
-
-        // Scan over all branch events before the begin position and
-        // compute the offset from all events ending before the begin and
-        // the coverage from all events ending after the begin.
-        // Note, if an insertion falls directly on the begin position it will be traversed by the
-        // predecessor bin and is finished before traversing this bin. Hence, the first candidate is the
-        // first branch event greater than the begin position or a higher event rank than insertion (rank = 0) if
-        // the branch position is the same.
-        branch_event_queue_iterator first_candidate_it = std::ranges::begin(branch_event_queue());
-        if (!is_first_bin()) // Special case only if are not in the first branch.
-        {
-            using insertion_t = typename delta_event_shared_type::insertion_type;
-            delta_event_shared_type key{_begin_pos, insertion_t{}, coverage_type{}};
-            first_candidate_it = branch_event_queue().upper_bound(branch_event_type{std::addressof(key)});
-        }
-
-        _base_coverage.resize(_sequence_offsets.size(), true);
-        std::ranges::for_each(std::ranges::begin(branch_event_queue()), first_candidate_it,
-        [&] (auto const & branch_event)
-        {
-            if (branch_event.position() + branch_event.event_handle()->deletion_size() <= _begin_pos)
-                update_offset_for_event(_sequence_offsets, branch_event);
-            else
-                _base_coverage.and_not(branch_event.coverage());
-        });
     }
     //!\}
 
@@ -243,7 +214,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(_sequence_offsets, _base_coverage, _begin_pos, _end_pos);
+        archive(_begin_pos, _end_pos);
     }
 
     /*!\brief Loads this traverser model from the given input archive.
@@ -258,7 +229,7 @@ public:
     {
         assert(jst != nullptr);
         _jst_host = jst;
-        archive(_sequence_offsets, _base_coverage, _begin_pos, _end_pos);
+        archive(_begin_pos, _end_pos);
     }
     //!\}
 };
