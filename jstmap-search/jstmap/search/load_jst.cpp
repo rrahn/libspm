@@ -15,7 +15,7 @@
 namespace jstmap
 {
 
-jst_t load_jst(std::filesystem::path const & jst_input_file_path)
+std::pair<jst_t,partitioned_jst_t> load_jst(std::filesystem::path const & jst_input_file_path)
 {
     using namespace std::literals;
 
@@ -28,12 +28,13 @@ jst_t load_jst(std::filesystem::path const & jst_input_file_path)
 
     jst_t jst{};
 
-    {
-        cereal::BinaryInputArchive input_archive{jst_input_stream};
-        jst.load(input_archive);
-    }
+    cereal::BinaryInputArchive input_archive{jst_input_stream};
+    jst.load(input_archive);
 
-    return jst;
+    partitioned_jst_t partitioned_jst{std::addressof(jst)};
+    partitioned_jst.load(input_archive);
+
+    return std::pair{std::move(jst), std::move(partitioned_jst)};
 }
 
 } // namespace jstmap

@@ -20,11 +20,25 @@ namespace jstmap
 {
 
 template <typename jst_t>
-void serialise_jst(jst_t const & tree, std::filesystem::path const & output_path)
+void serialise_jst(jst_t const & jst, cereal::BinaryOutputArchive & binary_archive)
+{
+    jst.save(binary_archive);
+}
+
+template <typename partitioned_jst_t>
+void serialise_partitioned_jst(partitioned_jst_t const & partitioned_jst, cereal::BinaryOutputArchive & binary_archive)
+{
+    partitioned_jst.save(binary_archive);
+}
+
+template <typename jst_t, typename partitioned_jst_t>
+void serialise(jst_t const & jst, partitioned_jst_t const & partitioned_jst,
+               std::filesystem::path const & output_path)
 {
     std::ofstream output_stream{output_path.c_str()};
     cereal::BinaryOutputArchive binary_archive{output_stream};
-    tree.save(binary_archive);
+    serialise_jst(jst, binary_archive);
+    serialise_partitioned_jst(partitioned_jst, binary_archive);
 }
 
 } // namespace jstmap

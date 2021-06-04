@@ -58,9 +58,9 @@ int search_main(seqan3::argument_parser & search_parser)
         auto queries = load_queries(options.query_input_file_path);
 
         std::cout << "load the jst\n";
-        auto jst = load_jst(options.jst_input_file_path);
+        auto [jst, partitioned_jst] = load_jst(options.jst_input_file_path);
 
-        std::vector results = search_queries(std::move(jst), std::move(queries));
+        std::vector results = search_queries(std::move(partitioned_jst), std::move(queries));
 
         write_results(std::move(results), options.map_output_file_path);
     }

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/journal_sequence_tree_partitioned.hpp>
 
 #include <jstmap/search/global_types.hpp>
 
@@ -20,7 +21,8 @@ namespace jstmap
 {
 
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
+using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 
-std::vector<libjst::context_position> search_queries(jst_t const &, std::vector<raw_sequence_t> const &);
+std::vector<libjst::context_position> search_queries(partitioned_jst_t const &, std::vector<raw_sequence_t> const &);
 
 }  // namespace jstmap

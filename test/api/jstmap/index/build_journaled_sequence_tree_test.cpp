@@ -11,10 +11,8 @@
 
 #include "test_data.hpp"
 
-TEST(jstmap_index, build_jst)
+TEST(jstmap_index, build_partitioned_jst)
 {
-    using jst_t = libjst::journaled_sequence_tree<jstmap::raw_sequence_t>;
-
     std::vector<jstmap::raw_sequence_t> data{jstmap::test::sequences.size() + 1};
     data[0] = jstmap::raw_sequence_t{jstmap::test::reference};
     size_t index = 0;
@@ -23,6 +21,8 @@ TEST(jstmap_index, build_jst)
         sequence = jstmap::test::sequences[index++];
     });
 
-    jst_t jst = jstmap::build_journaled_sequence_tree(std::move(data));
+    auto [jst, partitioned_jst] = jstmap::build_journaled_sequence_tree(std::move(data), 2u);
     EXPECT_EQ(jst.size(), jstmap::test::sequences.size() + 1);
+
+    EXPECT_EQ(partitioned_jst.bin_count(), 2u);
 }
