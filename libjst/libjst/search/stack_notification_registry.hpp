@@ -83,7 +83,7 @@ private:
         observer_t * _handle{nullptr}; //!\< The handle to the attached observer.
     };
 
-    std::vector<std::unique_ptr<observable>> _observer_list; //!< The list of attached observers.
+    std::vector<std::unique_ptr<observable>> _observer_list{}; //!< The list of attached observers.
 
 public:
 
