@@ -55,6 +55,7 @@ private:
     using typename base_t::coverage_type;
     using typename base_t::size_type;
     using typename base_t::sequence_context_type;
+    using typename base_t::traversal_direction;
 
     // The iterator type.
     class iterator;
@@ -126,11 +127,11 @@ public:
 
 private:
     //!\brief NOOP function which does nothing.
-    void notify_push() const noexcept
+    void notify_push(traversal_direction const &) const noexcept
     {}
 
     //!\brief NOOP function which does nothing.
-    void notify_pop() const noexcept
+    void notify_pop(traversal_direction const &) const noexcept
     {}
 };
 

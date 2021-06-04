@@ -86,6 +86,13 @@ private:
         success_with_deletion //!< A new branch could be created covering a deletion.
     };
 
+    //!\brief Designates the traversal direction during push and pop operations.
+    enum traversal_direction : uint8_t
+    {
+        forward, //!< Forward traversal.
+        reverse //!< Reverse traversal.
+    };
+
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
     size_t _context_size{}; //!< The size of the underlying context.
     uint32_t _subtree_steps{}; //!< The number of steps into the subtree to recover any traverser position.
@@ -173,7 +180,7 @@ private:
     void push_branch() noexcept
     {
         _branch_stack.realise_prefetched();
-        as_derived()->notify_push();
+        as_derived()->notify_push(traversal_direction::forward);
     }
 
     //!\brief Removes the current branch from the branch stack.
@@ -182,7 +189,7 @@ private:
         assert(!_branch_stack.empty());
 
         _branch_stack.pop();
-        as_derived()->notify_pop();
+        as_derived()->notify_pop(traversal_direction::forward);
     }
 
     //!\brief Makes a new branch at the current position and switches to this branch.

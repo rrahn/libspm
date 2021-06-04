@@ -48,6 +48,8 @@ private:
     using base_t = journal_sequence_tree_traverser<journal_sequence_tree_range_agent<jst_t>, jst_t>;
     //!\brief The model type.
     using model_t = typename base_t::model_t;
+    //!\brief The observer registry type.
+    using observer_registry_t = search_stack_notification_registry;
 
     //!\brief Grant access to the protected and private data members.
     friend base_t;
@@ -56,6 +58,7 @@ private:
     using typename base_t::coverage_type;
     using typename base_t::size_type;
     using typename base_t::segment_type;
+    using typename base_t::traversal_direction;
 
     // The iterator type.
     class iterator;
@@ -139,6 +142,19 @@ public:
     //!\brief Const qualified iteration is not allowed.
     std::default_sentinel_t end() const = delete;
     //!\}
+
+private:
+    //!\brief Wrapper function to delegate push notification to observer registry.
+    void notify_push(traversal_direction const &) noexcept
+    {
+        observer_registry_t::notify_push();
+    }
+
+    //!\brief Wrapper function to delegate pop notification to observer registry.
+    void notify_pop(traversal_direction const &) noexcept
+    {
+        observer_registry_t::notify_pop();
+    }
 };
 
 /*!\brief The iterator of the range agent.
