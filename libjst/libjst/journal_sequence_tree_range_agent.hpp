@@ -90,8 +90,9 @@ public:
      */
     template <search_stack_observer ...observer_t>
     journal_sequence_tree_range_agent(jst_t const * jst, size_t const context_size, observer_t & ...observer) noexcept :
-        search_stack_notification_registry{observer...},
-        base_t{jst, context_size, 0, std::numeric_limits<std::ptrdiff_t>::max()}
+        journal_sequence_tree_range_agent{model_t{jst, 0, std::numeric_limits<std::ptrdiff_t>::max()},
+                                          context_size,
+                                          observer...}
     {}
 
     /*!\brief Constructs the range agent from a given traverser model and a context size.
@@ -112,7 +113,9 @@ public:
     journal_sequence_tree_range_agent(model_t model, size_t const context_size, observer_t & ...observer) noexcept :
         search_stack_notification_registry{observer...},
         base_t{std::move(model), context_size}
-    {}
+    {
+        this->initialise();
+    }
     //!\}
 
     /*!\name Iterator

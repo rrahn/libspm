@@ -116,100 +116,7 @@ private:
     journal_sequence_tree_traverser(model_t model, size_t const context_size) :
         model_t{std::move(model)},
         _context_size{context_size}
-    {
-        assert(_context_size > 0);
-        using insertion_t = typename delta_event_shared_type::insertion_type;
-
-        // ----------------------------------------------------------------------------
-        // Prepare the branch and join events for this traverser.
-        // ----------------------------------------------------------------------------
-
-        // The following steps initialises the parameters for the context specific traverser.
-        size_t const bin_end_position = std::min(this->_end_pos + (_context_size - 1), this->max_end_position());
-        branch_event_queue_iterator branch_sentinel = this->branch_event_queue().end();
-        if (!this->is_final_bin())
-        { // The base branch of this bin will stop at the first non insertion branch at the end position.
-            delta_event_shared_type key{bin_end_position, insertion_t{}, coverage_type{}};
-            branch_sentinel = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key)});
-        }
-
-        // The next branch event is the first branch if this is the first bin. For all other bins, the context starts
-        // fully expanded and the first branch event is the first branch greater or equal than the first context
-        // position, i.e. the last position of the context, which is not an insertion if the positions are equal.
-        //
-        // bin[i - 1]   |         bin[i]                    |           bin[i + 1]
-        // _____________[.......:.]_________________________[.......:.]_________________________
-        //               --------- <- |context| = 9
-        //               ^      ^^
-        //      _begin_pos      |last_context_position
-        //                      end_pos of bin[i - 1]
-        //
-        // first_branch_event_it: the first branch event inside of the context which is greater than `_begin_pos`
-        //                        and not an insertion, i.e. an insertion at `_begin_pos` is excluded.
-        // next_branch_event_it: the first branch event with a branch position greater or equal to
-        //                       `last_context_position` and a join position greater than `last_context_position`,
-        //                       i.e. insertions at `last_context_position` are excluded.
-        //
-        // The dotted interval has been fully examined when traversing bin[i - 1] including insertions at
-        // `last_context_position`. In bin[i] the traversal starts at _begin_pos but is inside of the base
-        // branch as if it had examined all branches in between. Accordingly, all branch events between
-        // `first_branch_event_it` and `next_branch_event_it` need to be removed from the base branch coverage.
-        branch_event_queue_iterator next_branch_event_it = this->branch_event_queue().begin();
-
-        if (!this->is_first_bin())
-        {
-            // First event with a branch position >= last_context_position and a join position > last_context_position
-            size_t last_context_position = std::min(this->_begin_pos + (_context_size - 1), bin_end_position);
-            delta_event_shared_type key_next{last_context_position, insertion_t{}, coverage_type{}};
-            next_branch_event_it = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_next)});
-        }
-
-        // ----------------------------------------------------------------------------
-        // Initialise the base branch covering the reference segment.
-        // ----------------------------------------------------------------------------
-
-        coverage_type initial_coverage{};
-        initial_coverage.resize(this->sequence_count(), true);
-
-        _branch_stack.emplace(
-            this->_begin_pos,  // current context position.
-            bin_end_position, // current branch end position.
-            static_cast<size_t>(0),
-            0, // branch offset.
-            nullptr, // pointer to the delta event causing the branch.
-            next_branch_event_it, // next branch event to consider for this branch.
-            branch_sentinel, // The sentinel branch event.
-            journal_decorator_type{std::span{this->reference()}}, // the journal decorator of the current branch
-            std::move(initial_coverage) // the current branch coverage.
-        );
-        active_branch().jd_iter = active_branch().journal_decorator.begin();
-        active_branch().next_branch_position = next_branch_position(active_branch());
-
-        if (!active_branch().journal_decorator.empty())
-            active_branch().jd_iter += this->_begin_pos;
-
-        // ----------------------------------------------------------------------------
-        // Initialise the first branch if any exists at the first position.
-        // ----------------------------------------------------------------------------
-
-        while (on_branch_event())
-        {
-            if (branch_creation_status state = create_branch(); state == branch_creation_status::success)
-            { // The branch could be created, i.e. there is a valid branch at position 0 with at least one sequence
-              // covering this branch event.
-                assert(!is_base_branch());
-                assert(active_branch().coverage.any());
-                break; // terminate loop since we found a candidate.
-            }
-            else if (state == branch_creation_status::success_with_deletion)
-            { // The branch could be created but is immediately dropped because the deletion is at the beginning.
-              // There is no context spanning over the deletion here. The alternative branch has been updated
-              // and points to the next branch event.
-                assert(!is_base_branch()); // Cannot be in the base branch.
-                drop_branch(); // remove branch and continue to see if there is another branch.
-            }
-        }
-    }
+    {}
 
     /*!\brief Constructs the journaled sequence tree traverser for a given libjst::journaled_sequence_tree and a context
      *        size.
@@ -672,6 +579,103 @@ private:
         };
 
         return context_positions;
+    }
+
+    //!\brief Initialises the traverser.
+    void initialise()
+    {
+        assert(_context_size > 0);
+        using insertion_t = typename delta_event_shared_type::insertion_type;
+
+        // ----------------------------------------------------------------------------
+        // Prepare the branch and join events for this traverser.
+        // ----------------------------------------------------------------------------
+
+        // The following steps initialises the parameters for the context specific traverser.
+        size_t const bin_end_position = std::min(this->_end_pos + (_context_size - 1), this->max_end_position());
+        branch_event_queue_iterator branch_sentinel = this->branch_event_queue().end();
+        if (!this->is_final_bin())
+        { // The base branch of this bin will stop at the first non insertion branch at the end position.
+            delta_event_shared_type key{bin_end_position, insertion_t{}, coverage_type{}};
+            branch_sentinel = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key)});
+        }
+
+        // The next branch event is the first branch if this is the first bin. For all other bins, the context starts
+        // fully expanded and the first branch event is the first branch greater or equal than the first context
+        // position, i.e. the last position of the context, which is not an insertion if the positions are equal.
+        //
+        // bin[i - 1]   |         bin[i]                    |           bin[i + 1]
+        // _____________[.......:.]_________________________[.......:.]_________________________
+        //               --------- <- |context| = 9
+        //               ^      ^^
+        //      _begin_pos      |last_context_position
+        //                      end_pos of bin[i - 1]
+        //
+        // first_branch_event_it: the first branch event inside of the context which is greater than `_begin_pos`
+        //                        and not an insertion, i.e. an insertion at `_begin_pos` is excluded.
+        // next_branch_event_it: the first branch event with a branch position greater or equal to
+        //                       `last_context_position` and a join position greater than `last_context_position`,
+        //                       i.e. insertions at `last_context_position` are excluded.
+        //
+        // The dotted interval has been fully examined when traversing bin[i - 1] including insertions at
+        // `last_context_position`. In bin[i] the traversal starts at _begin_pos but is inside of the base
+        // branch as if it had examined all branches in between. Accordingly, all branch events between
+        // `first_branch_event_it` and `next_branch_event_it` need to be removed from the base branch coverage.
+        branch_event_queue_iterator next_branch_event_it = this->branch_event_queue().begin();
+
+        if (!this->is_first_bin())
+        {
+            // First event with a branch position >= last_context_position and a join position > last_context_position
+            size_t last_context_position = std::min(this->_begin_pos + (_context_size - 1), bin_end_position);
+            delta_event_shared_type key_next{last_context_position, insertion_t{}, coverage_type{}};
+            next_branch_event_it = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_next)});
+        }
+
+        // ----------------------------------------------------------------------------
+        // Initialise the base branch covering the reference segment.
+        // ----------------------------------------------------------------------------
+
+        coverage_type initial_coverage{};
+        initial_coverage.resize(this->sequence_count(), true);
+
+        _branch_stack.emplace(
+            this->_begin_pos,  // current context position.
+            bin_end_position, // current branch end position.
+            static_cast<size_t>(0),
+            0, // branch offset.
+            nullptr, // pointer to the delta event causing the branch.
+            next_branch_event_it, // next branch event to consider for this branch.
+            branch_sentinel, // The sentinel branch event.
+            journal_decorator_type{std::span{this->reference()}}, // the journal decorator of the current branch
+            std::move(initial_coverage) // the current branch coverage.
+        );
+        active_branch().jd_iter = active_branch().journal_decorator.begin();
+        active_branch().next_branch_position = next_branch_position(active_branch());
+
+        if (!active_branch().journal_decorator.empty())
+            active_branch().jd_iter += this->_begin_pos;
+
+        // ----------------------------------------------------------------------------
+        // Initialise the first branch if any exists at the first position.
+        // ----------------------------------------------------------------------------
+
+        while (on_branch_event())
+        {
+            if (branch_creation_status state = create_branch(); state == branch_creation_status::success)
+            { // The branch could be created, i.e. there is a valid branch at position 0 with at least one sequence
+              // covering this branch event.
+                assert(!is_base_branch());
+                assert(active_branch().coverage.any());
+                break; // terminate loop since we found a candidate.
+            }
+            else if (state == branch_creation_status::success_with_deletion)
+            { // The branch could be created but is immediately dropped because the deletion is at the beginning.
+              // There is no context spanning over the deletion here. The alternative branch has been updated
+              // and points to the next branch event.
+                assert(!is_base_branch()); // Cannot be in the base branch.
+                drop_branch(); // remove branch and continue to see if there is another branch.
+            }
+        }
     }
 
     /*!\brief Returns the current context.

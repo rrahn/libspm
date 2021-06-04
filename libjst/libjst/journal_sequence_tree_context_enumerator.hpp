@@ -87,7 +87,7 @@ public:
                                              std::ptrdiff_t begin_pos = 0,
                                              std::ptrdiff_t end_pos = std::numeric_limits<std::ptrdiff_t>::max())
         noexcept :
-            base_t{jst, context_size, begin_pos, end_pos}
+            journal_sequence_tree_context_enumerator{model_t{jst, begin_pos, end_pos}, context_size}
     {}
 
     /*!\brief Constructs the context enumerator from a given traverser model and a context size.
@@ -97,7 +97,9 @@ public:
      */
     journal_sequence_tree_context_enumerator(model_t model, size_t const context_size) noexcept :
         base_t{std::move(model), context_size}
-    {}
+    {
+        this->initialise();
+    }
     //!\}
 
     /*!\name Iterator

@@ -86,7 +86,7 @@ public:
      * The range agent is initialised with the given context size and attaches the observer to the stack registry.
      */
     journal_sequence_tree_position_agent(jst_t const * jst, size_t const context_size) noexcept :
-        base_t{jst, context_size, 0, std::numeric_limits<std::ptrdiff_t>::max()}
+        journal_sequence_tree_position_agent{model_t{jst, 0, std::numeric_limits<std::ptrdiff_t>::max()}, context_size}
     {}
 
     /*!\brief Constructs the range agent from a given traverser model and a context size.
@@ -101,7 +101,9 @@ public:
      */
     journal_sequence_tree_position_agent(model_t model, size_t const context_size) noexcept :
         base_t{std::move(model), context_size}
-    {}
+    {
+        this->initialise();
+    }
     //!\}
 
     //!\brief Retrieves the sequence positions from the given coordinate.
