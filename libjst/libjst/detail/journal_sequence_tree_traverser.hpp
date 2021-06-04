@@ -171,9 +171,9 @@ private:
      *
      * \returns `true`, if no more contexts are available, `false` otherwise.
      */
-    bool at_end() const noexcept
+    bool at_end(size_t const branch_end = 0) const noexcept
     {
-        return _branch_stack.empty();
+        return _branch_stack.size() == branch_end;
     }
 
     //!\brief Pushes a new branch on the branch stack.
@@ -195,7 +195,6 @@ private:
     //!\brief Makes a new branch at the current position and switches to this branch.
     branch_creation_status create_branch()
     {
-        assert(!at_end());
         assert(active_branch().branch_event_it != std::ranges::end(this->branch_event_queue()));
         assert(on_branch_event());
 
@@ -265,8 +264,6 @@ private:
      */
     void terminate_consumed_branches() noexcept
     {
-        assert(!at_end());
-
         // Skip if branch not at end.
         if (!active_branch().at_end())
             return;
@@ -457,9 +454,9 @@ private:
      * * create a new branch
      * * terminate base branch if fully consumed
      */
-    bool advance()
+    bool advance([[maybe_unused]] size_t branch_end = 0)
     {
-        assert(!at_end());
+        assert(!at_end(branch_end));
 
         ++active_branch().context_position;
         ++active_branch().jd_iter;
@@ -483,7 +480,7 @@ private:
         if (is_base_branch() && active_branch().at_end() && !active_branch().has_more_branch_events())
             drop_branch();
 
-        return at_end();
+        return at_end(branch_end);
     }
 
     //!\brief Advances the context by one position.
