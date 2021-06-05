@@ -40,6 +40,12 @@ int search_main(seqan3::argument_parser & search_parser)
                                        "The alignment map output file.",
                                        seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
                                                                      {"sam", "bam"}});
+    search_parser.add_option(options.error_rate,
+                             'e',
+                             "error-rate",
+                             "The error rate allowed for mapping the reads.",
+                             seqan3::option_spec::standard,
+                             seqan3::arithmetic_range_validator{0.0, 1.0});
 
     try
     {
@@ -58,13 +64,54 @@ int search_main(seqan3::argument_parser & search_parser)
         auto queries = load_queries(options.query_input_file_path);
 
         std::cout << "load the jst\n";
+
         auto [jst, partitioned_jst_handle] = load_jst(options.jst_input_file_path);
+        partitioned_jst_t pjst{std::addressof(jst), 1};
 
-        partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
+        // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}
+        // list of {bin_id:queries}
+        // partioned_jst[bin_id] -> traverser_model:
+            // range_agent{traverser_model, } we can construct this from the model directly.
+        for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
+        { // parallel region
+            auto jst_bin = pjst.bin_at(bin_idx);
+            // * search queries in bin_id -> matches[]
+            // * push results into global queue
+            seqan::StringSet<raw_sequence_t> _queries{};
+            seqan::appendValue(_queries, queries.front());
+            // seqan::reserve(_queries, queries.size());
 
-        std::vector results = search_queries(partitioned_jst, std::move(queries));
+            // for (unsigned i = 0; i < queries.size(); ++i)
+            //     seqan::appendValue(_queries, queries[i]);
 
-        write_results(std::move(results), options.map_output_file_path);
+            std::vector matches = search_queries_(jst_bin, _queries, options.error_rate);
+
+            // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
+            // for (auto const & match : matches)
+            //     seqan3::debug_stream << "\t- match with: " << match.error_count << " errors and sequence: "
+            //                          << match.sequence() << "\n";
+
+        // }
+
+        // * filter out duplicates? parallel?
+        // * A) same read/read_pair is found in multiple locations (report only one hit per bin?)
+        //  * depends on mapping mode: if best or all best then only the mapping locations with the lowest error count
+        //  * if all then all alternative mapping locations sorted by their error count
+        //      * needs: error_count and query_id for filtering
+        // * B) If same hit identified in two bins because of bin-overlap.
+        //  * depends on the HIBF setting: if with overlap then yes if not then search unidentified reads in overlap region with tight window.
+        //  * how many reads are left and how many regions must be searched?
+        //      * assume same base coordinate to filter
+
+        // { // parallel region
+            // * run simd alignment to obtain CIGAR string on all filtered matches and report
+            //  -> multi-threaded conversion to record and synchronised buffer
+                // -> one buffer per thread to fill -> full buffer is pushed into queue -> empty buffer is reserved when available
+                // -> single buffer writes out record stream into bgzf_ostream (possibly unsynchronised?)
+            // * report in BAM file
+            write_results(matches, _queries, options.map_output_file_path); // needs synchronised output_buffer
+        }
+
     }
     catch (std::exception const & ex)
     {

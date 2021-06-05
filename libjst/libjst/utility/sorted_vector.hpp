@@ -19,6 +19,10 @@
 
 namespace libjst
 {
+
+// TODO: Call this the journal
+    // can be customised with the dictionary type.
+    // if not specified uses its own dictionary type.
 template <std::semiregular key_t, typename compare_t = std::less<key_t>>
 class sorted_vector
 {
@@ -29,6 +33,8 @@ public:
 
     template <bool is_const>
     class bi_iterator;
+
+public:
 
     using value_type = std::ranges::range_value_t<container_t>;
     using iterator = bi_iterator<false>;

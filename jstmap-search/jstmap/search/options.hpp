@@ -22,6 +22,7 @@ struct search_options
     std::filesystem::path jst_input_file_path{}; //!< The file path to the journaled sequence tree.
     std::filesystem::path query_input_file_path{}; //!< The file path containing the queries.
     std::filesystem::path map_output_file_path{}; //!< The file path to write the alignment map file to.
+    float error_rate{}; //!< The error rate to use for mapping the reads.
 };
 
 }  // namespace jstmap
