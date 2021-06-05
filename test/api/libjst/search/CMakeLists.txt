@@ -1,1 +1,2 @@
 add_libjst_test (pigeonhole_filter_test.cpp)
+add_libjst_test (verification_test.cpp)

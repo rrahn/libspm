@@ -76,6 +76,8 @@ private:
     //!\brief The type to store the positions of a particular sequence context.
     using context_positions_type = std::vector<context_position>;
 
+    using tree_position_type = int64_t;
+
     struct branch;
 
     //!\brief Represents the status of the branch creation.
@@ -95,6 +97,7 @@ private:
 
     branch_stack<branch> _branch_stack{}; //!< The internal stack of branches.
     size_t _context_size{}; //!< The size of the underlying context.
+    tree_position_type _reverse_context_size{}; //!< The size of the underlying context.
     uint32_t _subtree_steps{}; //!< The number of steps into the subtree to recover any traverser position.
 
     using context_position_type = context_position; //!< The type representing a single context position.
@@ -177,19 +180,19 @@ private:
     }
 
     //!\brief Pushes a new branch on the branch stack.
-    void push_branch() noexcept
+    void push_branch(traversal_direction const direction) noexcept
     {
         _branch_stack.realise_prefetched();
-        as_derived()->notify_push(traversal_direction::forward);
+        as_derived()->notify_push(direction);
     }
 
     //!\brief Removes the current branch from the branch stack.
-    void drop_branch() noexcept
+    void drop_branch(traversal_direction const direction) noexcept
     {
         assert(!_branch_stack.empty());
 
+        as_derived()->notify_pop(direction);
         _branch_stack.pop();
-        as_derived()->notify_pop(traversal_direction::forward);
     }
 
     //!\brief Makes a new branch at the current position and switches to this branch.
@@ -230,11 +233,12 @@ private:
 
         // The max end position will be determined and possibly cropped if the natural end of the
         // journal sequence tree is reached before (e.g. the end of the reference sequence).
-        size_type const max_end_position = (is_base_branch())
-                                         ? branch_event->position() + _context_size + branch_event->insertion_size() - 1
-                                         : branch_max_end_position();
+        tree_position_type const max_end_position = (is_base_branch())
+                                                  ? branch_event->position() + _context_size + branch_event->insertion_size() - 1
+                                                  : branch_max_end_position();
 
-        new_branch.branch_end_position = std::min(this->max_end_position() + new_branch.offset, max_end_position);
+        new_branch.branch_end_position = std::min<tree_position_type>(this->max_end_position() + new_branch.offset,
+                                                                      max_end_position);
         new_branch.branch_event_it = find_next_relative_branch_event(new_branch, branch_event);
         new_branch.next_branch_position = next_branch_position(new_branch);
 
@@ -248,11 +252,102 @@ private:
         }
         else
         { // Push the new branch onto the stack, which automatically switches the active branch to the new one.
-            push_branch();
+            push_branch(traversal_direction::forward);
             return is_deletion ? branch_creation_status::success_with_deletion : branch_creation_status::success;
         }
     }
 
+    //!\brief Makes a new branch at the current position and switches to this branch.
+    branch_creation_status create_branch_()
+    {
+        // We are not at the sentinel of the branch.
+        assert(active_branch().join_event_it != std::ranges::begin(this->join_event_queue())); // That would be the reverse case, which we don't have.
+        assert(on_branch_event());
+
+        // Create a branch from the current one.
+        branch & new_branch = _branch_stack.prefetch();
+        new_branch = active_branch();
+
+        // We ask for the join event here:
+        // It would be optimal if we could store both types on the stack.
+        // We could do this because we have the same binary layout.
+        // Now we are looking at the actual join event iterator.
+        // But we have to store the next one.
+        delta_event_shared_type const * branch_event = (--active_branch().join_event_it)->event_handle();
+
+        // Ensure that this branch event points to the current context position.
+        assert(branch_event->position() + branch_event->deletion_size() == static_cast<size_t>(active_branch().context_position));
+        // Only if we come directly from the base branch we count the subtree steps.
+        if (is_base_branch())
+        {
+            _subtree_steps = 0;
+            new_branch.subtree_root = branch_event; // Save the root of the new subtree.
+        }
+
+        // Update the delta event and the coverage.
+        // In this scenario we don't need the next branch event, because we already set to it.
+        // active_branch().join_event_it = next_branch_event_(active_branch());
+        // This is interesting, because the next branch position is at the one before the current:
+        // so we have a reverse iterator step
+        active_branch().next_branch_position = next_branch_position_(active_branch());
+        update_coverage(new_branch, branch_event);
+
+        // Terminate early if this branch is not supported by any sequence.
+        if (new_branch.coverage.none())
+            return branch_creation_status::no_support;
+
+        // Apply the delta event to update the current journal decorator.
+        // TODO: Remove the need to store the branch event sentinel.
+            // Either we are in the base branch or in the branch
+            // Where do we need the sentinel information?
+        // We would need to copy the iterator, but it should be cheap to copy and therfor it would be great if we can store it like this.
+        new_branch.join_event_sentinel = std::ranges::begin(this->join_event_queue());
+        record_delta_event_(new_branch, branch_event);
+        new_branch.context_position += this->event_offset(branch_event); // Update relative context position of new branch including the recorded event.
+        new_branch.jd_iter = new_branch.journal_decorator.begin();
+        if (!new_branch.journal_decorator.empty())
+            new_branch.jd_iter += (new_branch.context_position - 1); // Point the journal decorator to the first base of the event.
+            // What ever was recorded before, we need to have the offset of it added to the position. -deletion_size + insertion_size
+            // We also remove one at the end because we want the jd iterator to point to the active position (inside the variant).
+
+        // Where is this needed and how do we define it?
+        new_branch.offset += event_offset_(branch_event); // We need the reverse offset: ins_size < 0 , del_size > 0
+
+        // The max end position will be determined and possibly cropped if the natural end of the
+        // journal sequence tree is reached before (e.g. the end of the reference sequence).
+        // TODO: And if we update the context position inside of the branch?
+            // In this case we shift the positions back to the right inside of the branch.
+            // Then there is no negative number required?
+            // The question is, what reduces the number of operations, and where can I save code duplication, by
+            // simply inverting the operations?
+        tree_position_type const max_end_position = (is_base_branch())
+                                                  ? static_cast<tree_position_type>(branch_event->position()) - static_cast<tree_position_type>(_reverse_context_size) + 1
+                                                  : branch_max_end_position_();
+
+        new_branch.branch_end_position = std::max<tree_position_type>(0, max_end_position);
+        new_branch.join_event_it = find_next_relative_branch_event_(new_branch, branch_event);
+        new_branch.next_branch_position = next_branch_position_(new_branch);
+
+        // Only return with no support if this branch is a deletion and is at end of the branch because the deletion
+        // is at the end of the reference sequence. But try again if there are more events left, because there could
+        // be an insertion at the end of the branch such that it is extended with a valid context.
+        if (bool is_deletion = branch_event->is_deletion(); is_deletion &&
+            (new_branch.at_end() && !new_branch.has_more_join_events()))
+        {
+            return branch_creation_status::no_support;
+        }
+        else
+        { // Push the new branch onto the stack, which automatically switches the active branch to the new one.
+            push_branch(traversal_direction::reverse);
+            return is_deletion ? branch_creation_status::success_with_deletion : branch_creation_status::success;
+        }
+    }
+
+    tree_position_type event_offset_(delta_event_shared_type const * delta_event) const noexcept
+    {
+        return static_cast<tree_position_type>(delta_event->deletion_size()) -
+               static_cast<tree_position_type>(delta_event->insertion_size());
+    }
     /*!\brief Terminates all branches that have been fully visited.
      *
      * \details
@@ -274,13 +369,34 @@ private:
         {
             return active_branch().at_end() &&
                    (active_branch().branch_end_position == branch_max_end_position() ||
-                   !active_branch().has_more_branch_events());
+                   !active_branch().has_more_branch_events()); // TODO: Has more join events?
         };
 
         // Drop all visited or unsupported branches except the base branch.
         // Check for 0 coverage only in the very last.
         while (!is_base_branch() && (reached_branch_end() || active_branch().coverage.none()))
-            drop_branch();
+            drop_branch(traversal_direction::forward); // TODO: needs orientation.
+    }
+
+    void terminate_consumed_branches_() noexcept
+    {
+        // Skip if branch not at end.
+        if (!active_branch().at_end())
+            return;
+
+        // Only terminate a branch if it reached the end and either the branch end position is also the branch max
+        // end position or there are no more branch events left.
+        auto reached_branch_end = [&] () -> bool
+        {
+            return active_branch().at_end() &&
+                   (active_branch().branch_end_position == branch_max_end_position_() ||
+                   !active_branch().has_more_join_events());
+        };
+
+        // Drop all visited or unsupported branches except the base branch.
+        // Check for 0 coverage only in the very last.
+        while (!is_base_branch() && (reached_branch_end() || active_branch().coverage.none()))
+            drop_branch(traversal_direction::reverse); // TODO: needs orientation.
     }
     //!\}
 
@@ -292,6 +408,13 @@ private:
     branch_event_queue_iterator next_branch_event(branch const & current_branch) const noexcept
     {
         return std::ranges::next(current_branch.branch_event_it, 1, current_branch.branch_event_sentinel);
+    }
+
+    // Rational: The join event sentinel is the begin iterator.
+
+    join_event_queue_iterator next_branch_event_(branch const & current_branch) const noexcept
+    {
+        return std::ranges::prev(current_branch.join_event_it, 1, current_branch.join_event_sentinel);
     }
 
     /*!\brief Finds the next relative valid branch event.
@@ -331,6 +454,43 @@ private:
         return std::ranges::find_if(it, std::ranges::end(this->branch_event_queue()), event_lies_behind_deletion);
     }
 
+    model_t::join_event_queue_iterator find_next_relative_branch_event_([[maybe_unused]] branch const & new_branch,
+                                                                        delta_event_shared_type const * branch_event)
+    const noexcept
+    {
+        assert(branch_event != nullptr);
+        using insertion_t = typename delta_event_shared_type::insertion_type;
+        // If we are in an insertion we have to skip until the first non insertion.
+        // => lower_bound(join_position, insertion)
+        // If we are in anything else:
+        // => upper_bound(branch_position, insertion)
+        // This makes the case much more interesting.
+
+        delta_event_shared_type key_next{branch_event->position(), insertion_t{}, coverage_type{}};
+        if (branch_event->is_insertion())
+            return this->join_event_queue().lower_bound(join_event_type{std::addressof(key_next)}); // First insertion join event in join queue on this position. -> we use the element before.
+        else
+            return this->join_event_queue().upper_bound(join_event_type{std::addressof(key_next)}); // Cannot be at the same position, so the first iterator that is not on the branch position
+
+        //TODO: Check if optimising this makes sense.
+        // auto is_local_insertion = [&] (auto const & event) constexpr
+        // {
+        //     return event.event_handle()->is_insertion() && event.position() == branch_event->position();
+        // };
+
+        // // We would need to reverse it:
+        // auto it = std::ranges::find_if_not(next_branch_event_(new_branch),
+        //                                    std::ranges::end(this->branch_event_queue()),
+        //                                    is_local_insertion);
+
+        // auto event_lies_behind_deletion = [&] (auto const & event) constexpr
+        // {
+        //     return event.position() >= branch_event->position() + branch_event->deletion_size();
+        // };
+
+        // return std::ranges::find_if(it, std::ranges::end(this->branch_event_queue()), event_lies_behind_deletion);
+    }
+
     /*!\brief Retrieves the next branch position of the given branch.
      *
      * \param[in] The branch to query.
@@ -343,6 +503,21 @@ private:
             return std::numeric_limits<size_t>::max();
         else
             return query_branch.branch_event_it->position() + query_branch.offset;
+    }
+
+    tree_position_type next_branch_position_(branch const & query_branch) const noexcept
+    {
+        if (query_branch.join_event_it == query_branch.join_event_sentinel)
+            return std::numeric_limits<tree_position_type>::max(); // We keep all positions greater or equal 0.
+        else // Next position for the branch: -> could also be just reverse iterator.
+            return static_cast<tree_position_type>(std::prev(query_branch.join_event_it)->position());
+
+            // What about the offset in the join position.
+            // base branch has offset 0 -> we ignore
+            // branch is inside of variant:
+                // insertion: -offset
+                // deletion: +offset
+                //
     }
 
     //!\brief Tests whether the context position of the active branch lies on a branch event.
@@ -363,19 +538,39 @@ private:
      * the respective insertion size of the original branch. The respective information are accessed from the stored
      * root event.
      */
-    size_type branch_max_end_position() const noexcept
+    //TODO: Needs different formula for reverse branch:
+    // branch_position() - _context_size - insertion_size + 1?
+    tree_position_type branch_max_end_position() const noexcept
     {
         assert(active_branch().subtree_root != nullptr);
 
         return branch_position() + _context_size + active_branch().subtree_root->insertion_size() - 1;
     }
 
+    // The reverse operation.
+    tree_position_type branch_max_end_position_() const noexcept
+    {
+        assert(active_branch().subtree_root != nullptr);
+
+        return active_branch().subtree_root->position() - _reverse_context_size + 1;
+    }
+
     //!\brief Return the original branch position of the current branch.
-    size_type branch_position() const noexcept
+    // TODO: branch_position -> join_position
+    tree_position_type branch_position() const noexcept
     {
         assert(active_branch().subtree_root != nullptr);
 
         return active_branch().subtree_root->position();
+    }
+
+    // We need the join position, because we store the root event.
+    // this starts somewhere else but ends here.
+    tree_position_type branch_position_() const noexcept
+    {
+        assert(active_branch().subtree_root != nullptr);
+        // We need to get the join position instead.
+        return active_branch().subtree_root->position() + active_branch().subtree_root->deletion_size();
     }
 
     /*!\brief Tests wether the full context is available in the active branch.
@@ -393,16 +588,31 @@ private:
         return context_end_position() >= (_context_size + this->_begin_pos);
     }
 
+    bool has_full_context_in_branch_() const noexcept
+    {
+        return context_begin_position() <= (this->_end_pos - _reverse_context_size);
+    }
+
     //!\brief Returns the begin position of the context in the active branch.
     size_type context_begin_position() const noexcept
     {
         return active_branch().context_position + 1 - _context_size;
     }
 
+    size_type context_begin_position_() const noexcept
+    {
+        return active_branch().context_position - 1;
+    }
+
     //!\brief Returns the end position of the context in the active branch.
     size_type context_end_position() const noexcept
     {
         return active_branch().context_position + 1;
+    }
+
+    size_type context_end_position_() const noexcept
+    {
+        return active_branch().context_position + _reverse_context_size;
     }
 
     //!\brief Records the represented delta event in the journal decorator of the new branch.
@@ -412,6 +622,24 @@ private:
         using deletion_t = delta_event_shared_type::deletion_type;
 
         size_type position = branch_event->position() + new_branch.offset;
+        journal_decorator_type & jd = new_branch.journal_decorator;
+        std::visit([&] (auto & delta_kind)
+        {
+            seqan3::detail::multi_invocable
+            {
+                [&] (insertion_t const & e) { jd.record_insertion(position, std::span{e.value()}); },
+                [&] (deletion_t const & e) { jd.record_deletion(position, position + e.value()); },
+                [&] (auto const & e) { jd.record_substitution(position, std::span{e.value()}); }
+            } (delta_kind);
+        }, branch_event->delta_variant());
+    }
+
+    void record_delta_event_(branch & new_branch, delta_event_shared_type const * branch_event)
+    {
+        using insertion_t = delta_event_shared_type::insertion_type;
+        using deletion_t = delta_event_shared_type::deletion_type;
+
+        size_type position = branch_event->position();
         journal_decorator_type & jd = new_branch.journal_decorator;
         std::visit([&] (auto & delta_kind)
         {
@@ -478,7 +706,37 @@ private:
 
         // Drop the base branch if fully consumed as well.
         if (is_base_branch() && active_branch().at_end() && !active_branch().has_more_branch_events())
-            drop_branch();
+            drop_branch(traversal_direction::forward);
+
+        return at_end(branch_end);
+    }
+
+    bool advance_reverse(size_t branch_end = 0)
+    {
+        assert(!at_end(branch_end));
+
+        --active_branch().context_position;
+        --active_branch().jd_iter;
+        // --_subtree_steps; // need to be integer value.
+
+        terminate_consumed_branches_(); // terminate all branches -> can we keep this?
+
+        // If on a branch event, try to create a new branch.
+        while (on_branch_event())  // can we keep this?
+        {
+            // how to update create_branch?
+            if (branch_creation_status status = create_branch_(); status == branch_creation_status::success)
+                break;
+            else if (status == branch_creation_status::no_support)
+                terminate_consumed_branches_();
+        }
+
+        // Either on the base branch or there must be at least one supported sequence.
+        assert(is_base_branch() || active_branch().coverage.any());
+
+        // Drop the base branch if fully consumed as well.
+        if (is_base_branch() && active_branch().at_end() && !active_branch().has_more_join_events())
+            drop_branch(traversal_direction::reverse);
 
         return at_end(branch_end);
     }
@@ -497,7 +755,7 @@ private:
 
         // Clear everything until the base branch
         while (_branch_stack.size() > 1)
-            drop_branch();
+            drop_branch(traversal_direction::forward);
 
         // Set the context size.
         _context_size = coordinate.context_size;
@@ -643,13 +901,15 @@ private:
         initial_coverage.resize(this->sequence_count(), true);
 
         _branch_stack.emplace(
-            this->_begin_pos,  // current context position.
-            bin_end_position, // current branch end position.
-            static_cast<size_t>(0),
+            static_cast<tree_position_type>(this->_begin_pos),  // current context position.
+            static_cast<tree_position_type>(bin_end_position), // current branch end position.
+            0,
             0, // branch offset.
             nullptr, // pointer to the delta event causing the branch.
             next_branch_event_it, // next branch event to consider for this branch.
             branch_sentinel, // The sentinel branch event.
+            std::ranges::end(this->join_event_queue()), // join event (reverse iterator)
+            std::ranges::end(this->join_event_queue()), // join sentinel (reverse iterator)
             journal_decorator_type{std::span{this->reference()}}, // the journal decorator of the current branch
             std::move(initial_coverage) // the current branch coverage.
         );
@@ -677,7 +937,7 @@ private:
               // There is no context spanning over the deletion here. The alternative branch has been updated
               // and points to the next branch event.
                 assert(!is_base_branch()); // Cannot be in the base branch.
-                drop_branch(); // remove branch and continue to see if there is another branch.
+                drop_branch(traversal_direction::forward); // remove branch and continue to see if there is another branch.
             }
         }
     }
@@ -727,13 +987,15 @@ private:
 template <typename derived_t, typename jst_t>
 struct journal_sequence_tree_traverser<derived_t, jst_t>::branch
 {
-    size_type context_position{}; //<! The current tail position of the moving window.
-    size_type branch_end_position{}; //!<! The end position of the branch.
-    size_type next_branch_position{}; //!< The next relative branch position.
-    std::make_signed_t<size_type> offset{}; //<! The offset generated by the current branch.
+    tree_position_type context_position{}; //<! The current tail position of the moving window.
+    tree_position_type branch_end_position{}; //!<! The end position of the branch.
+    tree_position_type next_branch_position{}; //!< The next relative branch position.
+    tree_position_type offset{}; //<! The offset generated by the current branch.
     delta_event_shared_type const * subtree_root{}; //!< The pointer to the root event of the subtree.
     branch_event_queue_iterator branch_event_it{}; //!< The iterator pointing to the next branch event.
     branch_event_queue_iterator branch_event_sentinel{}; //!< The iterator pointing to branch event sentinel.
+    join_event_queue_iterator join_event_it{}; //!< The iterator pointing to the next branch event.
+    join_event_queue_iterator join_event_sentinel{}; //!< The iterator pointing to branch event sentinel.
     journal_decorator_type journal_decorator{}; //!< The journal decorator representing the current sequence context.
     coverage_type coverage{}; //!< The coverage for this branch.
     std::ranges::iterator_t<journal_decorator_type> jd_iter{}; //!< Iterator points to the current journal decorator.
@@ -745,13 +1007,13 @@ struct journal_sequence_tree_traverser<derived_t, jst_t>::branch
     }
 
     //!\brief Returns the position of the pointed-to branch event.
-    constexpr size_type branch_event_position() const noexcept
+    constexpr tree_position_type branch_event_position() const noexcept
     {
         return branch_event_it->position();
     }
 
     //!\brief Returns the relative branch event position.
-    constexpr size_type relative_branch_event_position() const noexcept
+    constexpr tree_position_type relative_branch_event_position() const noexcept
     {
         return next_branch_position + offset;
     }
@@ -760,6 +1022,12 @@ struct journal_sequence_tree_traverser<derived_t, jst_t>::branch
     constexpr bool has_more_branch_events() const noexcept
     {
         return branch_event_it != branch_event_sentinel;
+    }
+
+    //!\brief Tests wether the branch has more branch events left.
+    constexpr bool has_more_join_events() const noexcept
+    {
+        return join_event_it != join_event_sentinel;
     }
 };
 }  // namespace libjst::detail

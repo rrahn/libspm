@@ -11,28 +11,65 @@
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
-TEST(jstmap_index, search_jst)
+// TEST(jstmap_index, search_jst)
+// {
+//     std::filesystem::path jst_file{DATADIR"sim_refx5.jst"};
+//     jstmap::jst_t jst = jstmap::load_jst(jst_file);
+
+//     std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
+//     std::vector reads = jstmap::load_queries(queries_file);
+
+//     std::vector results = jstmap::search_queries(std::move(jst), std::move(reads));
+
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 00})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 16})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 36})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 01})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 21})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 41})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 61})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 70})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 41})) != results.end());
+//     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 50})) != results.end());
+
+//     EXPECT_EQ(results.size(), 10u);
+// }
+
+TEST(jstmap_index, search_jst_2)
 {
-    std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
+    // std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
 
-    auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
-    jstmap::partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
+    // auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
+    // jstmap::partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
 
-    std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
-    std::vector reads = jstmap::load_queries(queries_file);
+    // std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
+    // std::vector reads = jstmap::load_queries(queries_file);
 
-    std::vector results = jstmap::search_queries(partitioned_jst, std::move(reads));
+    // std::vector results = jstmap::search_queries(std::move(jst), std::move(reads));
 
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 00})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 16})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 36})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 01})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 21})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 41})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 61})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 70})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 41})) != results.end());
-    EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 50})) != results.end());
+    using seqan3::operator""_dna5;
 
-    EXPECT_EQ(results.size(), 10u);
+    using jst_t = libjst::journaled_sequence_tree<jstmap::raw_sequence_t>;
+    // using event_t = typename jst_t::event_type;
+    // using snp_t = typename event_t::snp_type;
+    // using substitution_t = typename event_t::substitution_type;
+    // using coverage_t = typename event_t::coverage_type;
+
+    //                01234567890123456789
+    jstmap::raw_sequence_t ref = "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna5;
+    //                  aa
+    //                    c
+    jst_t jst{std::move(ref), 4};
+
+    seqan::StringSet<jstmap::raw_sequence_t> pattern_collection{};
+    seqan::appendValue(pattern_collection, "cgtacgtacgtacgtacgtacgta"_dna5);
+    seqan::appendValue(pattern_collection, "acgtacgtacgtacgtacgtacgt"_dna5);
+    seqan::appendValue(pattern_collection, "gtacgtacgtacgtacgtacgtac"_dna5);
+
+    // jst.insert(event_t{2ull, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
+    // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
+    // jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
+
+    std::vector results = jstmap::search_queries_(std::move(jst), pattern_collection);
+    // EXPECT_EQ(results.size(), 10u);
 }
