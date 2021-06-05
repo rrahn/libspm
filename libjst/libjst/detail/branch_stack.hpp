@@ -13,14 +13,14 @@
 #pragma once
 
 #include <concepts>
-#include <vector>
+#include <deque>
 
 namespace libjst::detail
 {
 
 /*!\brief An augmented stack to store the branches during the traversal of the libjst::journal_sequence_tree_enumerator.
  * \tparam branch_t The branch type to use; must model std::semiregular.
- * \tparam container_t The container type to store the branches (defaults to std::vector); must model
+ * \tparam container_t The container type to store the branches (defaults to std::deque); must model
  *                     std::ranges::random_access_range and the
  *                     [sequence container concept](https://en.cppreference.com/w/cpp/named_req/SequenceContainer)
  *
@@ -30,7 +30,7 @@ namespace libjst::detail
  * for the traversal over the libjst::journal_sequence_tree, for example accessing branches at any level or
  * accessing the base branch.
  */
-template <std::semiregular branch_t, std::ranges::random_access_range container_t = std::vector<branch_t>>
+template <std::semiregular branch_t, std::ranges::random_access_range container_t = std::deque<branch_t>>
 class branch_stack
 {
 private:

@@ -18,6 +18,7 @@
 
 #include <libjst/search/horspool_search.hpp>
 #include <libjst/search/naive_search.hpp>
+#include <libjst/search/myers_search.hpp>
 #include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journal_sequence_tree_partitioned.hpp>
@@ -139,6 +140,24 @@ TEST_P(search_test, shift_or_search)
     EXPECT_EQ(hit_count, expected_hits.size());
 }
 
+TEST_P(search_test, myers_search)
+{
+    using state_t = typename decltype(libjst::myers_pattern_searcher{GetParam().pattern})::state_type;
+    libjst::myers_pattern_searcher searcher{GetParam().pattern, 0, libjst::search_state_manager_stack<state_t>{}};
+    auto jst_range_agent = jst.range_agent(context_size(), searcher.state_manager()); // already pushing a branch.
+
+    size_t hit_count{};
+    searcher(jst_range_agent, [&] (auto & it)
+    {
+        for (libjst::context_position hit : jst.sequence_positions_at(it.coordinate()))
+        {
+            ++hit_count;
+            EXPECT_TRUE(hit_exist(hit)) << "hit: " << hit;
+        }
+    });
+    EXPECT_EQ(hit_count, expected_hits.size());
+}
+
 TEST_P(search_test, search_on_partitioned_jst)
 {
     // prepare searcher
@@ -210,4 +229,10 @@ INSTANTIATE_TEST_SUITE_P(search_with_zero_hits, search_test, testing::Values(jst
 {
     .jst_file{DATADIR"sim_refx5.jst"},
     .pattern{"GGGCGAGAACAACTAATTCCA"_dna5}
+}));
+
+INSTANTIATE_TEST_SUITE_P(search_with_long_pattern, search_test, testing::Values(jst_search_fixture
+{
+    .jst_file{DATADIR"sim_refx5.jst"},
+    .pattern{"TGCGGGACGTGAGGACGCCCAATTCTGCCAAGGATTATTTAGGGTGTTTCACTAGAGTTATGCGCCGACC"_dna5}
 }));

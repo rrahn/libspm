@@ -15,11 +15,16 @@
 #include <filesystem>
 #include <vector>
 
+#include <seqan/sequence.h>
+
 #include <libjst/context_position.hpp>
+#include <jstmap/search/search_queries.hpp>
 
 namespace jstmap
 {
 
-void write_results(std::vector<libjst::context_position> &&, std::filesystem::path const &);
+void write_results(std::vector<search_match> const &,
+                   seqan::StringSet<raw_sequence_t> const &,
+                   std::filesystem::path const &);
 
 }  // namespace jstmap

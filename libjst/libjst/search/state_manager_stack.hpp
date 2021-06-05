@@ -76,7 +76,6 @@ public:
     //!\copydoc libjst::search_stack_observer::on_pop()
     constexpr void on_pop()
     {
-        assert(!_state_stack.empty());
         _state_stack.pop();
     }
 };

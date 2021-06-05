@@ -21,6 +21,7 @@
 
 #include <libjst/detail/delta_event.hpp>
 #include <libjst/utility/bit_vector.hpp>
+#include <libjst/utility/bit_vector_simd.hpp>
 
 namespace libjst::detail
 {

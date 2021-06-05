@@ -10,7 +10,14 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
+#include <ranges>
+#include <utility>
+
 // #include <seqan3/core/detail/pack_algorithm.hpp>
+#include <seqan3/alignment/pairwise/align_pairwise.hpp>
+#include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
+#include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
+#include <seqan3/core/debug_stream.hpp>
 #include <seqan3/io/sam_file/output.hpp>
 
 #include <jstmap/search/write_results.hpp>
@@ -66,29 +73,40 @@ namespace jstmap
 // a) query -> produce results for multiple reference genomes -> dump all data
 //
 //
-void write_results(std::vector<libjst::context_position> && results,
+void write_results(std::vector<jstmap::search_match> const & matches,
+                   seqan::StringSet<raw_sequence_t> const & queries,
                    std::filesystem::path const & alignment_map_output_path)
 {
-    // using reference_ids_t = std::vector<std::string>;
-
-    // reference_ids_t reference_ids{};
-    // std::vector<size_t> reference_lengths{};
+    auto alignment_pairs_view = matches | std::views::transform([&] (auto const & match)
+    {
+        return std::pair{match.sequence(), queries[match.query_id] | std::views::all};
+    });
 
     // We need to write more information including the reference sequences and the length of the reference sequences.
     seqan3::sam_file_output map_output_file{alignment_map_output_path,
                                             //   reference_ids,
                                             //   reference_lengths,
-                                            seqan3::fields<seqan3::field::ref_offset>{}};
+                                            seqan3::fields<seqan3::field::ref_offset, seqan3::field::seq, seqan3::field::alignment>{}};
 
-    std::ranges::for_each(results, [&] (libjst::context_position const & result)
+    auto align_cfg = seqan3::align_cfg::method_global{} |
+                     seqan3::align_cfg::scoring_scheme{seqan3::nucleotide_scoring_scheme{}} |
+                     seqan3::align_cfg::gap_cost_affine{seqan3::align_cfg::open_score{-10},
+                                                        seqan3::align_cfg::extension_score{-1}} |
+                     seqan3::align_cfg::output_sequence1_id{} |
+                     seqan3::align_cfg::output_sequence2_id{} |
+                     seqan3::align_cfg::output_alignment{} |
+                     seqan3::align_cfg::output_begin_position{} |
+                     seqan3::align_cfg::output_end_position{} |
+                     seqan3::align_cfg::output_score{};
+
+    for (auto && align_result : seqan3::align_pairwise(alignment_pairs_view, align_cfg)) // | seqan3::align_cfg::on_result{write_record});
     {
-        // map_output_file.push_back(sam_record{.qname = result.query_name(), // only reference?
-        //                                      .rname = result.reference_name(), // only reference?
-        //                                      .pos = result.reference_position(),  // copy not expensive
-        //                                      .mapq = result.score()}}); // mapping quality not expensive
-
-        map_output_file.emplace_back(result.sequence_position);
-    });
+        assert(align_result.sequence1_id() < matches.size());
+        seqan3::debug_stream << "align_result.alignment()\n" << align_result.alignment() << "\n";
+        map_output_file.emplace_back(matches[align_result.sequence1_id()].hit_coordinate.position,
+                                     queries[matches[align_result.sequence2_id()].query_id],
+                                     align_result.alignment());
+    }
 }
 
 }  // namespace jstmap

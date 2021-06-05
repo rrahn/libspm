@@ -39,6 +39,7 @@
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
 #include <libjst/journal_sequence_tree_position_agent.hpp>
 #include <libjst/journal_sequence_tree_range_agent.hpp>
+#include <libjst/journal_sequence_tree_range_extender_agent.hpp>
 #include <libjst/utility/sorted_vector.hpp>
 
 namespace libjst::no_adl
@@ -70,7 +71,7 @@ private:
     using event_list_type = std::list<delta_event_shared_type>;
 
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
-    using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
+
     using position_agent_type = detail::journal_sequence_tree_position_agent<type>; //!< The position agent type.
 
     //!\cond
@@ -89,11 +90,14 @@ public:
      * \{
      */
     using sequence_type = sequence_t; //!< The type of the underlying sequence.
+    using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\brief The type of the context enumerator.
     using context_enumerator_type = detail::journal_sequence_tree_context_enumerator<type>;
     //!\brief The type of the range agent.
     using range_agent_type = detail::journal_sequence_tree_range_agent<type>;
+    //!\brief The type of the range extender.
+    using range_extender_agent_type = detail::journal_sequence_tree_range_extender_agent<type>;
     using event_type = delta_event_shared_type; //!< The internally stored event type.
     //!\}
 
@@ -396,6 +400,12 @@ public:
     range_agent_type range_agent(size_t const context_size, observer_t & ...observer) const noexcept
     {
         return range_agent_type{this, context_size, observer...};
+    }
+
+    //!\brief Returns a new range agent over the current journaled sequence tree.
+    range_extender_agent_type range_extender(journal_sequence_tree_coordinate const coordinate) const noexcept
+    {
+        return range_extender_agent_type{this, coordinate};
     }
 
     //!\brief Returns the sequence positions at the given coordinate.

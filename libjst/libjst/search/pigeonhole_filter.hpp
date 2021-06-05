@@ -124,8 +124,13 @@ public:
         else
             seqan::setStepSize(_qgram_index, min_delta);  // !Important step to change the step size.
 
-        seqan::indexShape(_qgram_index) = qgram_shape_t{std::min(63/3, min_delta)};
+        seqan::indexShape(_qgram_index) = qgram_shape_t{std::min<unsigned>(63/3, min_delta)};
         seqan::indexRequire(_qgram_index, seqan::QGramSADir{});
+
+        std::cout << "Filter settings:\n"
+                  << "\t- min_delta = " << min_delta << "\n"
+                  << "\t- max_delta = " << max_delta << "\n"
+                  << "\t- qgram_size = " << seqan::length(seqan::indexShape(_qgram_index)) << "\n";
 
 //  Filter initialisation by SeqAn.
 //     typedef typename Size<TIndex>::Type TSize;
@@ -272,7 +277,7 @@ private:
         qgram_shape_t & shape = seqan::indexShape(_qgram_index);
         shape.hValue = _state_manager.state().hash;
 
-        for (auto hit : seqan::getOccurrences(_qgram_index, shape))
+        for (auto && hit : seqan::getOccurrences(_qgram_index, shape))
             on_hit(hit, it);
     }
 };
@@ -287,7 +292,7 @@ pigeonhole_filter(collection_t const &) -> pigeonhole_filter<collection_t>;
 
 //!\brief Deduces the pattern and the state manager type from the constructor arguments.
 template <typename collection_t, search_state_manager state_manager_t>
-pigeonhole_filter(collection_t const &, state_manager_t &&)
+pigeonhole_filter(collection_t const &, float const, state_manager_t &&)
     -> pigeonhole_filter<collection_t, std::decay_t<state_manager_t>>;
 //!\}
 
