@@ -5,6 +5,8 @@ jstmap_macro_benchmark(
 )
 target_use_datasources (search_benchmark FILES sim_ref_10Kb_SNP_INDELs.jst sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz)
 
+jstmap_macro_benchmark(pigeonhole_filter_benchmark.cpp)
+target_use_datasources(pigeonhole_filter_benchmark FILES sim_ref_10Kb_SNP_INDELs.jst)
 
 jstmap_macro_benchmark(
     context_enumeration_benchmark.cpp

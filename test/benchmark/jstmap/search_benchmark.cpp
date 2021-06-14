@@ -61,7 +61,7 @@ static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
         hit_count += jstmap::search_queries(*jst_handle.second, query).size();
 
     benchmark::DoNotOptimize(hit_count);
-    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(jst.total_symbol_count());
+    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(jst_handle.first.total_symbol_count());
     state.counters["#hits"] = hit_count;
 }
 
