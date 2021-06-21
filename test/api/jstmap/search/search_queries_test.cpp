@@ -55,7 +55,8 @@ TEST(jstmap_index, search_jst_2)
     // using substitution_t = typename event_t::substitution_type;
     // using coverage_t = typename event_t::coverage_type;
 
-    //                01234567890123456789
+                //                0         1         2         3         4         5         6         7         8         9
+                //                0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
     jstmap::raw_sequence_t ref = "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna5;
     //                  aa
     //                    c
@@ -70,6 +71,11 @@ TEST(jstmap_index, search_jst_2)
     // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
     // jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
 
-    std::vector results = jstmap::search_queries_(std::move(jst), pattern_collection);
+    std::vector matches = jstmap::search_queries_(std::move(jst), pattern_collection, 0.0);
+
+    seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
+    for (auto const & match : matches)
+        seqan3::debug_stream << "\t- match with: " << match.error_count << " errors, sequence = "
+                             << match.jst_sequence << "\n";
     // EXPECT_EQ(results.size(), 10u);
 }

@@ -133,8 +133,10 @@ public:
     constexpr void operator()(haystack_t && haystack, callback_t && callback) noexcept
     {
         constexpr uint64_t carry_mask = (1ull << 63);
+        // size_t count = 0;
         for (auto it = std::ranges::begin(haystack); it != std::ranges::end(haystack); ++it)
         {
+            // std::cout << count++ << "\n";
             state_type & search_state = _state_manager.state();
 
             bool carry_bit{};

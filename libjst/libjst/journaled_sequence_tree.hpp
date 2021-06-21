@@ -71,7 +71,7 @@ private:
     using event_list_type = std::list<delta_event_shared_type>;
 
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
-    using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
+
     using position_agent_type = detail::journal_sequence_tree_position_agent<type>; //!< The position agent type.
 
     //!\cond
@@ -90,6 +90,7 @@ public:
      * \{
      */
     using sequence_type = sequence_t; //!< The type of the underlying sequence.
+    using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\brief The type of the context enumerator.
     using context_enumerator_type = detail::journal_sequence_tree_context_enumerator<type>;

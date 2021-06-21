@@ -61,6 +61,7 @@ private:
     using typename base_t::branch;
     using typename base_t::delta_event_shared_type;
     using typename base_t::traversal_direction;
+    using typename base_t::journal_decorator_type;
 
     // The iterator type.
     template <traversal_direction>
@@ -143,6 +144,7 @@ public:
         // TODO: Reset the extender, when called again.
         //   - What about the old one? -> should not be active anymore.
         _registered_forward_extender.reset(new forward_range_extender_type{*this, extension_size, observer...});
+        _registered_forward_extender->advance();
         return *_registered_forward_extender;
     }
 
@@ -154,6 +156,7 @@ public:
         // initialise the new extended branch to the left
         // return a range over the extended range.
         _registered_reverse_extender.reset(new reverse_range_extender_type{*this, extension_size, observer...});
+        _registered_reverse_extender->advance();
         return *_registered_reverse_extender;
     }
 
@@ -240,6 +243,7 @@ public:
             top_branch.branch_end_position = std::min(_host.max_end_position() + top_branch.offset,
                                                       nil_root_position + extension_size + 1);
             _host._subtree_steps = 0;
+            top_branch.jd_iter = top_branch.journal_decorator.begin() + nil_root_position;
         }
         else // reverse direction
         {
@@ -283,7 +287,7 @@ public:
         coverage.resize(_host.sequence_count(), true);
         _nil_root = delta_event_shared_type{nil_root_position, deletion_t{0}, std::move(coverage)};
         top_branch.subtree_root = std::addressof(_nil_root);
-        advance();
+        // advance();
     }
 
     class iterator
@@ -307,10 +311,22 @@ public:
         explicit iterator(range_extender * host) : _host{host}
         {}
 
+        //\!\brief Returns the underlying iterator of the journal decorator.
+        auto base() const
+        {
+            return _host->_host.current_iterator();
+        }
+
         reference operator*() const noexcept
         {
             assert(_host != nullptr);
             return _host->current_value();
+        }
+
+        auto context() const noexcept
+            -> decltype(_host->current_context())
+        {
+            return _host->current_context();
         }
 
         iterator & operator++() noexcept
@@ -370,6 +386,30 @@ private:
     auto current_value()
     {
         return _host.current_value();
+    }
+
+    auto current_context() const noexcept
+    {
+        size_t begin_position{};
+        size_t end_position{};
+        int32_t total_context_size = _host._context_size + _host._reverse_context_size +
+                                     _host._coordinate.context_size - 3;
+
+        if constexpr (direction == traversal_direction::forward)
+        {
+            end_position = _host.active_branch().context_position + 1;
+            begin_position = end_position - total_context_size;
+        }
+        else
+        {
+            // context_position currently points to one after the dereferenced symbol.
+            // Can we have negative values though? -> we should ensure always positive values by updating the internal reference position with one.
+            assert(_host.active_branch().context_position > 0);
+            begin_position = _host.active_branch().context_position - 1;
+            end_position = begin_position + total_context_size;
+        }
+
+        return std::tuple{_host.active_branch().journal_decorator, begin_position, end_position};
     }
 
     //!\brief Duplicate active branch.

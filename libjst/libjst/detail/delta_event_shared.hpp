@@ -47,7 +47,7 @@ public:
     /*!\name Associated Types
      * \{
      */
-    using coverage_type = libjst::bit_vector<>; //!< The coverage type
+    using coverage_type = libjst::bit_vector_simd<>; //!< The coverage type
     using delta_event_type = base_event_t; //!< The original event type.
     using typename base_event_t::substitution_type;
     using typename base_event_t::snp_type;

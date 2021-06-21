@@ -25,7 +25,29 @@ namespace jstmap
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 
-std::vector<libjst::context_position> search_queries_(jst_t const &, seqan::StringSet<raw_sequence_t> const &);
+struct search_match
+{
+    using journal_decorator_type = typename jst_t::journal_decorator_type;
+    using journal_decorator_iterator_type = std::ranges::iterator_t<journal_decorator_type>;
+    using subrange_type = std::ranges::subrange<journal_decorator_iterator_type, journal_decorator_iterator_type>;
+    // query_id; -> ordered vector by query_id in order to filter duplicates
+    // jst_span; -> sequence region identified within the jst
+    // error_count; -> number of errors identified
+    // jst_coordinate; -> base coordinate where the hit was found (is this enough for overlap duplicates?)
+    journal_decorator_type jst_sequence{};
+    size_t begin_position{};
+    size_t end_position{};
+    libjst::journal_sequence_tree_coordinate hit_coordinate{};
+    size_t query_id{};
+    size_t error_count{};
+
+    subrange_type sequence() const noexcept
+    {
+        return subrange_type{jst_sequence.begin() + begin_position, jst_sequence.begin() + end_position};
+    }
+};
+
+std::vector<search_match> search_queries_(jst_t const &, seqan::StringSet<raw_sequence_t> const &, float const);
 std::vector<libjst::context_position> search_queries(partitioned_jst_t const &, std::vector<raw_sequence_t> const &);
 
 }  // namespace jstmap
