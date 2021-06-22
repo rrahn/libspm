@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides the function to parse a vcf file and construct a JST from it.
+ * \brief Provides the jstmap wide application logger.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 

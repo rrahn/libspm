@@ -9,11 +9,7 @@ target_include_directories (jstmap_index_base INTERFACE ../jstmap-index
 target_compile_features (jstmap_index_base INTERFACE cxx_std_17)
 target_link_libraries (jstmap_index_base INTERFACE libjst::libjst seqan3::seqan3 ${SEQAN_LIBRARIES} jstmap::global)
 add_library (jstmap::index::base ALIAS jstmap_index_base)
-### Create object library for the logging mechanism.
-add_library(jstmap_index_logging OBJECT jstmap/index/application_logger.cpp
-                                        jstmap/index/application_logger.hpp)
-target_include_directories (jstmap_index_logging PUBLIC jstmap::index::base)
-target_link_libraries (jstmap_index_logging PUBLIC jstmap::index::base)
+
 ### Create object library for better build times
 add_library(jstmap_index_input OBJECT jstmap/index/load_sequence.cpp
                                       jstmap/index/load_sequence.hpp)
@@ -48,8 +44,7 @@ target_link_libraries (jstmap_index PUBLIC
                                     jstmap_index_input
                                     jstmap_index_build
                                     jstmap_serialise_jst
-                                    jstmap_index_vcf_parser
-                                    jstmap_index_logging)
+                                    jstmap_index_vcf_parser)
 add_library (jstmap::index ALIAS jstmap_index)
 
 unset (HEADER_LIST)
