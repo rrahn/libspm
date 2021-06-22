@@ -30,7 +30,7 @@ class jst_fuzzy_test : public ::testing::Test,
 {
 public:
 
-    using sequence_type = jstmap::sequence_t;
+    using sequence_type = jstmap::raw_sequence_t;
     using alphabet_type = std::ranges::range_value_t<sequence_type>;
     using alignment_type = jstmap::alignment_t;
     using jst_type = libjst::journaled_sequence_tree<sequence_type>;

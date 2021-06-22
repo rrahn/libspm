@@ -57,7 +57,7 @@ seqan3::gapped<seqan3::dna5> random_char(seqan3::gapped<seqan3::dna5> old_char, 
     return new_char;
 }
 
-alignment_t simulate_alignment(sequence_t & unaligned, double error_rate)
+alignment_t simulate_alignment(raw_sequence_t & unaligned, double error_rate)
 {
     assert(error_rate >= 0.0);
     assert(error_rate <= 1);
