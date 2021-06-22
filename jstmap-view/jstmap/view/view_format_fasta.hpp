@@ -10,7 +10,7 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
-#include <jstmap/view/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 #include <jstmap/view/options.hpp>
 
 namespace jstmap
