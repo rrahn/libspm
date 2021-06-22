@@ -7,11 +7,20 @@
 
 #pragma once
 
-#include <jstmap/simulate/global_types.hpp>
+#include <ranges>
+
+#include <seqan3/alphabet/gap/gapped.hpp>
+
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
 
-alignment_t simulate_alignment(sequence_t & reference, double error_rate);
+//!\brief The aligned sequence type.
+using aligned_sequence_t = std::vector<seqan3::gapped<std::ranges::range_value_t<raw_sequence_t>>>;
+//!\brief The pairwise alignment type.
+using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
+
+alignment_t simulate_alignment(raw_sequence_t & reference, double error_rate);
 
 }

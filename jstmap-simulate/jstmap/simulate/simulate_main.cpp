@@ -15,6 +15,7 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
+#include <jstmap/global/jstmap_type_alias.hpp>
 #include <jstmap/index/serialise_jst.hpp>
 #include <jstmap/simulate/load_reference.hpp>
 #include <jstmap/simulate/options.hpp>
@@ -56,7 +57,7 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     try
     {
         std::cout << "Loading sequences\n";
-        sequence_t reference = load_reference(options.input_file);
+        raw_sequence_t reference = load_reference(options.input_file);
         auto simulated = simulate_alignment(reference, options.error_rate);
         jst_t jst{std::move(reference)};
         jst.add(simulated);
