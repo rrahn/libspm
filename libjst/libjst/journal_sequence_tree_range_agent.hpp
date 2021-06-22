@@ -157,6 +157,11 @@ private:
     }
 };
 
+template <typename jst_t, search_stack_observer ...observer_t>
+journal_sequence_tree_range_agent(libjst::detail::journal_sequence_tree_traverser_model<jst_t>,
+                                  size_t const,
+                                  observer_t &&...) -> journal_sequence_tree_range_agent<jst_t>;
+
 /*!\brief The iterator of the range agent.
  * \implements std::input_iterator
  *
