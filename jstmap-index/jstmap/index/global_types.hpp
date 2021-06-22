@@ -12,37 +12,4 @@
 
 #pragma once
 
-#include <vector>
-
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
-
-#include <libjst/journaled_sequence_tree.hpp>
-#include <libjst/journal_sequence_tree_partitioned.hpp>
-
-namespace jstmap
-{
-
-//!\brief The sequence type loaded from the disk.
-using raw_sequence_t = std::vector<seqan3::dna5>;
-//!\brief The globally available journal sequence tree type.
-using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
-//!\brief The globally available partitioned journal sequence tree type.
-using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
-
-//!\brief An enum to select the verbosity level.
-enum class verbosity_level : uint8_t
-{
-    quite, //!< No logging output is emitted.
-    standard, //!< Logs regular information with no extra information on the output.
-    verbose //!< Extra verbose logging output for debugging purposes.
-};
-
-//!\brief An enum to select the logging level.
-enum class logging_level : uint8_t
-{
-    info, //!< An informative message during the execution.
-    warning, //!< A warning message for non-severe issues during the execution.
-    error //!< An error message for severe issues during the execution.
-};
-
-}  // namespace jstmap
+#include <jstmap/global/jstmap_type_alias.hpp>
