@@ -14,13 +14,13 @@
 
 #include <utility>
 
-#include <jstmap/index/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
 
 //!\cond
-std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<raw_sequence_t> &&, 
+std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<raw_sequence_t> &&,
                                                                   const uint32_t = 1);
 //!\endcond
 
