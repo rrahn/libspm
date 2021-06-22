@@ -7,7 +7,7 @@
 
 #include <filesystem>
 
-#include <jstmap/search/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
