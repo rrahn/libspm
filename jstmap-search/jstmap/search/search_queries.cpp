@@ -153,7 +153,7 @@ void process_hits(std::vector<libjst::context_position> & results,
 //  *  * Apply verification method
 //  *  * Live happily ever after.
 //  */
-std::vector<search_match> search_queries_(jst_t const & jst,
+std::vector<search_match> search_queries_(jst_bin_t const & jst_bin,
                                           seqan::StringSet<raw_sequence_t> const & queries,
                                           float const error_rate)
 {
@@ -170,7 +170,9 @@ std::vector<search_match> search_queries_(jst_t const & jst,
 
     size_t const fragment_size = filter.qgram_size();
 
-    auto jst_range_agent = jst.range_agent(fragment_size, filter.state_manager()); // already pushing a branch.
+    libjst::detail::journal_sequence_tree_range_agent jst_range_agent{jst_bin,
+                                                                      fragment_size,
+                                                                      filter.state_manager()}; // already pushing a branch.
     filter(jst_range_agent, [&] (auto const & hit, auto const & haystack_it)
     {
         auto jst_coordinate = haystack_it.coordinate();
@@ -192,7 +194,7 @@ std::vector<search_match> search_queries_(jst_t const & jst,
         // Verify query suffix
         // ----------------------------------------------------------------------------
 
-        auto jst_range_extender = jst.range_extender(jst_coordinate);
+        libjst::detail::journal_sequence_tree_range_extender_agent jst_range_extender{jst_bin, jst_coordinate};
 
         // We need some mode of verification:
 

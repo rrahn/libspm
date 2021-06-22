@@ -64,11 +64,17 @@ int search_main(seqan3::argument_parser & search_parser)
         auto queries = load_queries(options.query_input_file_path);
 
         std::cout << "load the jst\n";
+
         auto [jst, partitioned_jst_handle] = load_jst(options.jst_input_file_path);
+        partitioned_jst_t pjst{std::addressof(jst), 1};
 
         // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}
+        // list of {bin_id:queries}
+        // partioned_jst[bin_id] -> traverser_model:
+            // range_agent{traverser_model, } we can construct this from the model directly.
+        for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
         { // parallel region
-
+            auto jst_bin = pjst.bin_at(bin_idx);
             // * search queries in bin_id -> matches[]
             // * push results into global queue
             seqan::StringSet<raw_sequence_t> _queries{};
@@ -78,7 +84,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
 
-            std::vector matches = search_queries_(jst, _queries, options.error_rate);
+            std::vector matches = search_queries_(jst_bin, _queries, options.error_rate);
 
             // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
             // for (auto const & match : matches)

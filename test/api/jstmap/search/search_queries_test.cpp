@@ -50,6 +50,7 @@ TEST(jstmap_index, search_jst_2)
     using seqan3::operator""_dna5;
 
     using jst_t = libjst::journaled_sequence_tree<jstmap::raw_sequence_t>;
+    using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
     // using event_t = typename jst_t::event_type;
     // using snp_t = typename event_t::snp_type;
     // using substitution_t = typename event_t::substitution_type;
@@ -61,6 +62,7 @@ TEST(jstmap_index, search_jst_2)
     //                  aa
     //                    c
     jst_t jst{std::move(ref), 4};
+    partitioned_jst_t pjst{std::addressof(jst)};
 
     seqan::StringSet<jstmap::raw_sequence_t> pattern_collection{};
     seqan::appendValue(pattern_collection, "cgtacgtacgtacgtacgtacgta"_dna5);
@@ -71,7 +73,7 @@ TEST(jstmap_index, search_jst_2)
     // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
     // jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
 
-    std::vector matches = jstmap::search_queries_(std::move(jst), pattern_collection, 0.0);
+    std::vector matches = jstmap::search_queries_(pjst.bin_at(0), pattern_collection, 0.0);
 
     seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
     for (auto const & match : matches)
