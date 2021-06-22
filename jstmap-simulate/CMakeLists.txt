@@ -7,21 +7,17 @@ target_include_directories (jstmap_simulate_base INTERFACE ../jstmap-simulate
                                                            libjst::libjst
                                                            seqan3::seqan3)
 target_compile_features (jstmap_simulate_base INTERFACE cxx_std_17)
-target_link_libraries (jstmap_simulate_base INTERFACE libjst::libjst seqan3::seqan3)
+target_link_libraries (jstmap_simulate_base INTERFACE libjst::libjst seqan3::seqan3 jstmap::global)
 add_library (jstmap::simulate::base ALIAS jstmap_simulate_base)
 
 ### Create object library for better build times
-add_library(jstmap_simulate_input OBJECT jstmap/simulate/load_reference.cpp
-                                         jstmap/simulate/load_reference.hpp
-                                         jstmap/simulate/global_types.hpp)
+add_library(jstmap_simulate_input OBJECT jstmap/simulate/load_reference.cpp jstmap/simulate/load_reference.hpp)
 
 target_include_directories (jstmap_simulate_input PUBLIC jstmap::simulate::base)
 target_link_libraries (jstmap_simulate_input PUBLIC jstmap::simulate::base)
 
 ### Simulating the journaled sequence tree
-add_library(jstmap_simulate_build OBJECT jstmap/simulate/simulate_alignment.cpp
-                                         jstmap/simulate/simulate_alignment.hpp
-                                         jstmap/simulate/global_types.hpp)
+add_library(jstmap_simulate_build OBJECT jstmap/simulate/simulate_alignment.cpp jstmap/simulate/simulate_alignment.hpp)
 
 target_include_directories (jstmap_simulate_build PUBLIC jstmap::simulate::base)
 target_link_libraries (jstmap_simulate_build PUBLIC jstmap::simulate::base)

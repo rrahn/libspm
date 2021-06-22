@@ -19,7 +19,7 @@
 TEST(jstmap_simulate, simulate_alignment)
 {
     std::filesystem::path sequence_file{DATADIR"sim_reads_ref1x10.fa"};
-    jstmap::sequence_t reference = jstmap::load_reference(sequence_file);
+    jstmap::raw_sequence_t reference = jstmap::load_reference(sequence_file);
     jstmap::alignment_t alignment = jstmap::simulate_alignment(reference, 0.39); // ceil(20*0.39) = 8 => 4 SNPs, 2 Inserts, 2 Deletes
     EXPECT_EQ(alignment.first.size(), 22u);
     EXPECT_EQ(alignment.second.size(), 22u);
@@ -27,7 +27,7 @@ TEST(jstmap_simulate, simulate_alignment)
     size_t variants = 0;
     for(size_t i = 0; i < alignment.first.size(); ++i)
       variants += (alignment.first[i] != alignment.second[i]);
-      
+
     EXPECT_EQ(variants, 8u);
 
     using alphabet_t = std::ranges::range_value_t<decltype(alignment.first)>;
@@ -38,7 +38,7 @@ TEST(jstmap_simulate, simulate_alignment)
 TEST(jstmap_simulate, simulate_alignment_error_rate_zero)
 {
     std::filesystem::path sequence_file{DATADIR"sim_reads_ref1x10.fa"};
-    jstmap::sequence_t reference = jstmap::load_reference(sequence_file);
+    jstmap::raw_sequence_t reference = jstmap::load_reference(sequence_file);
     jstmap::alignment_t alignment = jstmap::simulate_alignment(reference, 0);
     EXPECT_EQ(alignment.first.size(), 20u);
     EXPECT_EQ(alignment.second.size(), 20u);

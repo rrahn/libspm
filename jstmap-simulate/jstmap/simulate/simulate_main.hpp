@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <jstmap/simulate/global_types.hpp>
-
 namespace seqan3
 {
 
