@@ -17,7 +17,7 @@
 #include <libjst/journaled_sequence_tree.hpp>
 #include <libjst/journal_sequence_tree_partitioned.hpp>
 
-#include <jstmap/search/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
