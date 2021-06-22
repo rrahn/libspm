@@ -199,6 +199,11 @@ private:
 };
 
 template <typename jst_t>
+journal_sequence_tree_range_extender_agent(libjst::detail::journal_sequence_tree_traverser_model<jst_t>,
+                                           journal_sequence_tree_coordinate const)
+                                           -> journal_sequence_tree_range_extender_agent<jst_t>;
+
+template <typename jst_t>
 template <typename journal_sequence_tree_range_extender_agent<jst_t>::traversal_direction direction>
 class journal_sequence_tree_range_extender_agent<jst_t>::range_extender :
     protected search_stack_notification_registry
