@@ -24,7 +24,7 @@
 #include <seqan3/range/views/drop.hpp>
 #include <seqan3/range/views/to.hpp>
 
-#include <jstmap/index/application_logger.hpp>
+#include <jstmap/global/application_logger.hpp>
 #include <jstmap/index/vcf_parser.hpp>
 
 #include <libjst/detail/delta_event_shared.hpp>

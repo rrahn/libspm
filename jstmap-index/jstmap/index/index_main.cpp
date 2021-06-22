@@ -14,7 +14,7 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
-#include <jstmap/index/application_logger.hpp>
+#include <jstmap/global/application_logger.hpp>
 #include <jstmap/index/index_main.hpp>
 #include <jstmap/index/journaled_sequence_tree_builder.hpp>
 #include <jstmap/index/load_sequence.hpp>
