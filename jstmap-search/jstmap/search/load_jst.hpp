@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <utility>
+#include <memory>
 
 #include <libjst/journaled_sequence_tree.hpp>
 #include <libjst/journal_sequence_tree_partitioned.hpp>
@@ -19,6 +20,6 @@ namespace jstmap
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 
-std::pair<jst_t,partitioned_jst_t> load_jst(std::filesystem::path const &);
+std::pair<jst_t, std::unique_ptr<partitioned_jst_t>> load_jst(std::filesystem::path const &);
 
 } // namespace jstmap

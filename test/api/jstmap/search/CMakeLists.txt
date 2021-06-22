@@ -5,10 +5,10 @@ macro (add_jstmap_search_test test_filename)
 endmacro ()
 
 add_jstmap_search_test (load_jst_test.cpp)
-target_use_datasources (load_jst_test FILES sim_refx5.jst)
+target_use_datasources (load_jst_test FILES sim_refx5_p0.jst)
 
 add_jstmap_search_test (load_queries_test.cpp)
 target_use_datasources (load_queries_test FILES sim_reads_ref1x10.fa)
 
 add_jstmap_search_test (search_queries_test.cpp)
-target_use_datasources (search_queries_test FILES sim_refx5.jst sim_reads_ref1x10.fa)
+target_use_datasources (search_queries_test FILES sim_refx5_p0.jst sim_reads_ref1x10.fa)

@@ -13,13 +13,15 @@
 
 TEST(jstmap_index, search_jst)
 {
-    std::filesystem::path jst_file{DATADIR"sim_refx5.jst"};
-    jstmap::jst_t jst = jstmap::load_jst(jst_file);
+    std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
+
+    auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
+    jstmap::partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
 
     std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
     std::vector reads = jstmap::load_queries(queries_file);
 
-    std::vector results = jstmap::search_queries(std::move(jst), std::move(reads));
+    std::vector results = jstmap::search_queries(partitioned_jst, std::move(reads));
 
     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 00})) != results.end());
     EXPECT_TRUE((std::ranges::find(results, libjst::context_position{0, 16})) != results.end());
