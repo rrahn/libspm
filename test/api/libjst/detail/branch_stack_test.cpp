@@ -30,7 +30,7 @@ public:
     }
 };
 
-using branch_stack_t = libjst::detail::branch_stack<branch>;
+using branch_stack_t = libjst::detail::branch_stack<branch, std::vector<branch>>;
 
 } // namespace libjst::test
 

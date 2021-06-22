@@ -10,7 +10,7 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
-#include <jstmap/index/application_logger.hpp>
+#include <jstmap/global/application_logger.hpp>
 
 namespace jstmap
 {
