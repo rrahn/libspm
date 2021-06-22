@@ -8,7 +8,7 @@
 #include <seqan3/std/filesystem>
 #include <vector>
 
-#include <jstmap/index/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {

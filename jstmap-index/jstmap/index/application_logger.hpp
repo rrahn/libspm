@@ -16,7 +16,7 @@
 
 #include <seqan3/core/debug_stream/detail/to_string.hpp>
 
-#include <jstmap/index/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
