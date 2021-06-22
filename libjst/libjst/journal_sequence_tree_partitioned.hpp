@@ -94,6 +94,13 @@ public:
     }
     //!\}
 
+    //!\brief Returns a copy of the bin at the given bin index.
+    traverser_model_t bin_at(size_t bin_index) const noexcept
+    {
+        assert(bin_index < _bins.size());
+        return _bins[bin_index];
+    }
+
     //!\brief Returns the bin count.
     size_t bin_count() const noexcept
     {
