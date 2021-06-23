@@ -62,7 +62,7 @@ TEST_F(journaled_sequence_tree_fixture, reference)
     sequence_t tmp_reference{reference};
     jst_t jst{std::move(tmp_reference)};
 
-    EXPECT_EQ(jst.reference(), reference);
+    EXPECT_EQ(jst.reference().front(), reference);
 }
 
 TEST_F(journaled_sequence_tree_fixture, size)
@@ -78,8 +78,8 @@ TEST_F(journaled_sequence_tree_fixture, construct_with_initial_size)
     jst_t jst{std::move(tmp_reference), 19};
     EXPECT_EQ(jst.size(), 19u);
 
-    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference());
-    EXPECT_RANGE_EQ(jst.sequence_at(18), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference().front());
+    EXPECT_RANGE_EQ(jst.sequence_at(18), jst.reference().front());
 }
 
 TEST_F(journaled_sequence_tree_fixture, insert_deletion_in_empty_jst)
@@ -96,11 +96,11 @@ TEST_F(journaled_sequence_tree_fixture, insert_deletion_in_empty_jst)
     using position_t = typename event_t::position_type;
 
     EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, deletion_t{2}, coverage_t{0, 1, 1, 0, 0}}));
-    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference().front());
     EXPECT_RANGE_EQ(jst.sequence_at(1), "aabbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aabbbbcccc"s);
-    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference());
-    EXPECT_RANGE_EQ(jst.sequence_at(4), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference().front());
+    EXPECT_RANGE_EQ(jst.sequence_at(4), jst.reference().front());
 }
 
 TEST_F(journaled_sequence_tree_fixture, insert_substitution_in_empty_jst)
@@ -116,10 +116,10 @@ TEST_F(journaled_sequence_tree_fixture, insert_substitution_in_empty_jst)
     using coverage_t = typename event_t::coverage_type;
 
     EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, substitution_t{"xx"s}, coverage_t{0, 1, 1, 0, 1}}));
-    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference().front());
     EXPECT_RANGE_EQ(jst.sequence_at(1), "aaxxbbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aaxxbbbbcccc"s);
-    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference().front());
     EXPECT_RANGE_EQ(jst.sequence_at(4), "aaxxbbbbcccc"s);
 }
 
@@ -137,9 +137,9 @@ TEST_F(journaled_sequence_tree_fixture, insert_insetion_in_empty_jst)
 
     EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0, 1}}));
     EXPECT_RANGE_EQ(jst.sequence_at(0), "aaxxaabbbbcccc"s);
-    EXPECT_RANGE_EQ(jst.sequence_at(1), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(1), jst.reference().front());
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aaxxaabbbbcccc"s);
-    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference());
+    EXPECT_RANGE_EQ(jst.sequence_at(3), jst.reference().front());
     EXPECT_RANGE_EQ(jst.sequence_at(4), "aaxxaabbbbcccc"s);
 }
 
@@ -651,5 +651,5 @@ TEST_F(journaled_sequence_tree_fixture, load)
     }
 
     EXPECT_EQ(jst.size(), 3u);
-    EXPECT_EQ(jst.reference(), "aaaabbbbcccc"sv);
+    EXPECT_EQ(jst.reference().front(), "aaaabbbbcccc"sv);
 }

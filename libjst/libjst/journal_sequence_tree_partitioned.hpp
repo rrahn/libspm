@@ -89,7 +89,7 @@ public:
        assert(_jst != nullptr);
        assert(bin_count > 0);
 
-        size_t bin_size = (_jst->reference().size() + bin_count - 1) / bin_count;
+        size_t bin_size = (_jst->reference().front().size() + bin_count - 1) / bin_count;
 
         for (size_t i = 0; i < bin_count; i++)
             _bins.push_back(traverser_model_t{_jst,
