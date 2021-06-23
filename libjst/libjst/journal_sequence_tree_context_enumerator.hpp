@@ -56,6 +56,7 @@ private:
     using typename base_t::size_type;
     using typename base_t::sequence_context_type;
     using typename base_t::traversal_direction;
+    using typename base_t::position_type;
 
     // The iterator type.
     class iterator;
@@ -85,10 +86,13 @@ public:
      */
     journal_sequence_tree_context_enumerator(jst_t const * jst,
                                              size_t const context_size,
-                                             std::ptrdiff_t begin_pos = 0,
-                                             std::ptrdiff_t end_pos = std::numeric_limits<std::ptrdiff_t>::max())
+                                             size_t begin_pos = 0,
+                                             size_t end_pos = std::numeric_limits<size_t>::max())
         noexcept :
-            journal_sequence_tree_context_enumerator{model_t{jst, begin_pos, end_pos}, context_size}
+            journal_sequence_tree_context_enumerator{model_t{jst,
+                                                             position_type{0u, begin_pos},
+                                                             position_type{0u, end_pos}},
+                                                     context_size}
     {}
 
     /*!\brief Constructs the context enumerator from a given traverser model and a context size.

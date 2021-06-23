@@ -59,6 +59,8 @@ public:
     using context_enumerator_type = typename jst_t::context_enumerator_type;
     //!\brief The type of the range agent to use.
     using range_agent_type = typename jst_t::range_agent_type;
+    //!\brief The position type.
+    using position_type = typename jst_t::position_type;
 
 private:
     std::vector<traverser_model_t> _bins{}; //!\< The container stroing the model for each bin.
@@ -87,10 +89,12 @@ public:
        assert(_jst != nullptr);
        assert(bin_count > 0);
 
-        std::ptrdiff_t bin_size = (_jst->reference().size() + bin_count - 1) / bin_count;
+        size_t bin_size = (_jst->reference().size() + bin_count - 1) / bin_count;
 
-        for (std::ptrdiff_t i = 0; i < static_cast<std::ptrdiff_t>(bin_count); i++)
-            _bins.push_back(traverser_model_t{_jst, i * bin_size, (i + 1) * bin_size});
+        for (size_t i = 0; i < bin_count; i++)
+            _bins.push_back(traverser_model_t{_jst,
+                                              position_type{0u, i * bin_size},
+                                              position_type{0u, (i + 1) * bin_size}});
     }
     //!\}
 
