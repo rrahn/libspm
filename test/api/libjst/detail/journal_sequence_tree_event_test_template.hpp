@@ -28,6 +28,7 @@ using substitution_t = typename shared_delta_event_t::substitution_type;
 using insertion_t = typename shared_delta_event_t::insertion_type;
 using deletion_t = typename shared_delta_event_t::deletion_type;
 using coverage_t = typename shared_delta_event_t::coverage_type;
+using position_t = typename shared_delta_event_t::position_type;
 
 enum struct event_category
 {
@@ -40,7 +41,7 @@ enum struct event_category
 struct jst_event_fixture
 {
     libjst::detail::test::shared_delta_event_t event{};
-    size_t expected_position{};
+    libjst::detail::test::position_t expected_position{};
     libjst::detail::test::event_category category{};
 };
 
@@ -54,7 +55,7 @@ struct jst_event_test : public ::testing::TestWithParam<jst_event_fixture>
     jst_event_variant_t test_event{};
     shared_delta_event_t expected_event{};
     libjst::detail::test::coverage_t expected_coverage;
-    size_t expected_position{};
+    libjst::detail::test::position_t expected_position{};
 
     void SetUp() override
     {
@@ -136,7 +137,7 @@ TEST_P(jst_event_test, ordering_by_different_event_position)
 {
     // Create an event that is greater than the given one but assume that the event position is less than the maximal
     // number of size_t.
-    ASSERT_LT(expected_position, std::numeric_limits<size_t>::max());
+    ASSERT_LT(expected_position.offset, std::numeric_limits<size_t>::max());
     libjst::detail::test::shared_delta_event_t greater_delta_event{expected_position + 1,
                                                                    expected_event.delta_variant(),
                                                                    expected_event.coverage()};
@@ -226,8 +227,8 @@ TEST_P(jst_event_test, ordering_by_same_event_position_with_different_delta_kind
 TEST_P(jst_event_test, ordering_by_position)
 {
     // Get position that is greater than the one from the test event.
-    ASSERT_LT(expected_position, std::numeric_limits<size_t>::max());
-    size_t const greater_position = expected_position + 1;
+    ASSERT_LT(expected_position.offset, std::numeric_limits<size_t>::max());
+    libjst::detail::test::position_t const greater_position = expected_position + 1;
 
     { // less and less than equal
         EXPECT_TRUE(apply(std::as_const(test_event), [&] (auto & e) { return e < greater_position; }));

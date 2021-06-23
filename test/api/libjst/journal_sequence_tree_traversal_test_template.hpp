@@ -34,6 +34,7 @@ using substitution_t = typename shared_event_t::substitution_type;
 using insertion_t = typename shared_event_t::insertion_type;
 using deletion_t = typename shared_event_t::deletion_type;
 using coverage_t = typename shared_event_t::coverage_type;
+using position_t = typename shared_event_t::position_type;
 using jst_events_t = std::vector<shared_event_t>;
 
 struct traversal_fixture
@@ -110,7 +111,7 @@ private:
 
                 std::visit([&] (auto const & event_kind)
                 {
-                    size_t const event_position = event.position() + virtual_offset;
+                    size_t const event_position = event.position().offset + virtual_offset;
                     size_t const insertion_size = event.insertion_size();
                     size_t const deletion_size = event.deletion_size();
 

@@ -40,6 +40,7 @@ public:
      */
     using typename base_t::coverage_type;
     using typename base_t::size_type;
+    using typename base_t::position_type;
     //!\}
 
     /*!\name Constructors, destructor and assignment
@@ -72,7 +73,7 @@ private:
     }
 
     //!\copydoc libjst::detail::journal_sequence_tree_event_base::poisition
-    constexpr size_type position_impl() const noexcept
+    constexpr position_type position_impl() const noexcept
     {
         assert(base_t::_delta_event != nullptr);
 

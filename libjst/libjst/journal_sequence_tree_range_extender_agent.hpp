@@ -234,21 +234,22 @@ public:
     {
         using coverage_t = typename delta_event_shared_type::coverage_type;
         using deletion_t = typename delta_event_shared_type::deletion_type;
+        using position_t = typename delta_event_shared_type::position_type;
 
         // First, duplicate the current branch.
         duplicate_active_branch();
         branch & top_branch = _host.active_branch();
-        size_t nil_root_position = _host._original_context_begin_position;
+        position_t nil_root_position{.idx = 0, .offset = _host._original_context_begin_position};
 
         // Initialise the active branch.
         if constexpr (direction == traversal_direction::forward)
         {
-            nil_root_position += _host._coordinate.context_size - 1;
+            nil_root_position.offset += _host._coordinate.context_size - 1;
             _host._context_size = extension_size + 2;
             top_branch.branch_end_position = std::min(_host.max_end_position() + top_branch.offset,
-                                                      nil_root_position + extension_size + 1);
+                                                      nil_root_position.offset + extension_size + 1);
             _host._subtree_steps = 0;
-            top_branch.jd_iter = top_branch.journal_decorator.begin() + nil_root_position;
+            top_branch.jd_iter = top_branch.journal_decorator.begin() + nil_root_position.offset;
         }
         else // reverse direction
         {
@@ -274,7 +275,7 @@ public:
             if (_host._original_branch_root != nullptr && (_host._original_context_begin_position > _host._coordinate.position))
                 top_branch.join_event_it = _host.find_next_relative_branch_event_(top_branch, _host._original_branch_root); //join_event_queue().upper_bound(next_join_position);
             else
-                top_branch.join_event_it = _host.join_event_queue().upper_bound(_host._original_context_begin_position);
+                top_branch.join_event_it = _host.join_event_queue().upper_bound(position_t{.offset = _host._original_context_begin_position});
 
             top_branch.join_event_sentinel = std::ranges::begin(_host.join_event_queue());
 

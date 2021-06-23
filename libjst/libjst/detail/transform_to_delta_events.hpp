@@ -45,6 +45,7 @@ constexpr auto transform_to_delta_events(alignment_t const & alignment)
     using substitution_t = typename delta_event_t::substitution_type;
     using insertion_t = typename delta_event_t::insertion_type;
     using deletion_t = typename delta_event_t::deletion_type;
+    using position_t = typename delta_event_t::position_type;
 
     std::vector<delta_event_t> result{};
 
@@ -79,7 +80,7 @@ constexpr auto transform_to_delta_events(alignment_t const & alignment)
                 return value_pair.first != seqan3::gap{};
             });
 
-            result.emplace_back(reference_position,
+            result.emplace_back(position_t{.offset = reference_position},
                                 insertion_t{extract_inserted_sequence(std::ranges::subrange{it, next_it})});
             it = next_it;
         }
@@ -91,7 +92,7 @@ constexpr auto transform_to_delta_events(alignment_t const & alignment)
             });
 
             size_t const deletion_size = std::ranges::distance(it, next_it);
-            result.emplace_back(reference_position, deletion_t{deletion_size});
+            result.emplace_back(position_t{.offset = reference_position}, deletion_t{deletion_size});
             reference_position += deletion_size;
             it = next_it;
         }
@@ -106,7 +107,7 @@ constexpr auto transform_to_delta_events(alignment_t const & alignment)
 
             auto sequence = extract_inserted_sequence(std::ranges::subrange{it, next_it});
             size_t const substitution_size = std::ranges::size(sequence);
-            result.emplace_back(reference_position, substitution_t{std::move(sequence)});
+            result.emplace_back(position_t{.offset = reference_position}, substitution_t{std::move(sequence)});
             reference_position += substitution_size;
             it = next_it;
         }

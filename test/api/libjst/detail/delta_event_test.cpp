@@ -17,6 +17,7 @@
 struct delta_operation_fixture : public ::testing::Test
 {
     using delta_event_t = libjst::detail::delta_event<char>;
+    using position_t = typename delta_event_t::position_type;
 
     static constexpr std::string_view expected_substitution_archive =
 R"json({
@@ -96,9 +97,9 @@ TEST_F(delta_operation_fixture, construct_from_substitution)
 {
     using namespace std::literals;
 
-    delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
+    delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_substitution{"abc"s}};
 
-    EXPECT_EQ(op.position(), 10u);
+    EXPECT_EQ(op.position(), position_t{.offset = 10u});
     EXPECT_TRUE(op.is_substitution());
 }
 
@@ -106,17 +107,17 @@ TEST_F(delta_operation_fixture, construct_from_insertion)
 {
     using namespace std::literals;
 
-    delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
+    delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_insertion{"abc"s}};
 
-    EXPECT_EQ(op.position(), 10u);
+    EXPECT_EQ(op.position(), position_t{.offset = 10u});
     EXPECT_TRUE(op.is_insertion());
 }
 
 TEST_F(delta_operation_fixture, construct_from_deletion)
 {
-    delta_event_t op{10u, libjst::detail::delta_kind_deletion{3u}};
+    delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
 
-    EXPECT_EQ(op.position(), 10u);
+    EXPECT_EQ(op.position(), position_t{.offset = 10u});
     EXPECT_TRUE(op.is_deletion());
 }
 
@@ -124,9 +125,9 @@ TEST_F(delta_operation_fixture, construct_from_snp)
 {
     using namespace std::literals;
 
-    delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+    delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_snp{"a"s}};
 
-    EXPECT_EQ(op.position(), 10u);
+    EXPECT_EQ(op.position(), position_t{.offset = 10u});
     EXPECT_TRUE(op.is_snp());
 }
 
@@ -135,25 +136,25 @@ TEST_F(delta_operation_fixture, deletion_size)
     using namespace std::literals;
 
     { // substitution
-        delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_substitution{"abc"s}};
 
         EXPECT_EQ(op.deletion_size(), 3u);
     }
 
     { // snp
-        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_snp{"a"s}};
 
         EXPECT_EQ(op.deletion_size(), 1u);
     }
 
     { // insertion
-        delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_insertion{"abc"s}};
 
         EXPECT_EQ(op.deletion_size(), 0u);
     }
 
     { // deletion
-        delta_event_t op{10u, libjst::detail::delta_kind_deletion{3u}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
 
         EXPECT_EQ(op.deletion_size(), 3u);
     }
@@ -164,25 +165,25 @@ TEST_F(delta_operation_fixture, insertion_size)
     using namespace std::literals;
 
     { // substitution
-        delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_substitution{"abc"s}};
 
         EXPECT_EQ(op.insertion_size(), 3u);
     }
 
     { // snp
-        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_snp{"a"s}};
 
         EXPECT_EQ(op.insertion_size(), 1u);
     }
 
     { // insertion
-        delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_insertion{"abc"s}};
 
         EXPECT_EQ(op.insertion_size(), 3u);
     }
 
     { // deletion
-        delta_event_t op{10u, libjst::detail::delta_kind_deletion{3u}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
 
         EXPECT_EQ(op.insertion_size(), 0u);
     }
@@ -193,25 +194,25 @@ TEST_F(delta_operation_fixture, sequence)
     using namespace std::literals;
 
     { // substitution
-        delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_substitution{"abc"s}};
 
         EXPECT_RANGE_EQ(op.sequence(), "abc"s);
     }
 
     { // snp
-        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_snp{"a"s}};
 
         EXPECT_RANGE_EQ(op.sequence(), "a"s);
     }
 
     { // insertion
-        delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_insertion{"abc"s}};
 
         EXPECT_RANGE_EQ(op.sequence(), "abc"s);
     }
 
     { // deletion
-        delta_event_t op{10u, libjst::detail::delta_kind_deletion{3u}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
 
         EXPECT_RANGE_EQ(op.sequence(), ""s);
     }
@@ -221,11 +222,11 @@ TEST_F(delta_operation_fixture, equality)
 {
     using namespace std::literals;
 
-    delta_event_t op1{10u, libjst::detail::delta_kind_deletion{3u}};
-    delta_event_t op2{10u, libjst::detail::delta_kind_deletion{2u}};
-    delta_event_t op3{9u, libjst::detail::delta_kind_deletion{3u}};
-    delta_event_t op4{9u, libjst::detail::delta_kind_substitution{"3u"s}};
-    delta_event_t op5{9u, libjst::detail::delta_kind_insertion{"3u"s}};
+    delta_event_t op1{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
+    delta_event_t op2{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{2u}};
+    delta_event_t op3{position_t{.offset = 9u}, libjst::detail::delta_kind_deletion{3u}};
+    delta_event_t op4{position_t{.offset = 9u}, libjst::detail::delta_kind_substitution{"3u"s}};
+    delta_event_t op5{position_t{.offset = 9u}, libjst::detail::delta_kind_insertion{"3u"s}};
 
     EXPECT_EQ(op1, op1);
     EXPECT_NE(op1, op2);
@@ -263,31 +264,31 @@ TEST_F(delta_operation_fixture, stream)
     using namespace std::literals;
 
     {
-        delta_event_t op{10u, libjst::detail::delta_kind_substitution{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_substitution{"abc"s}};
         std::stringstream sstream;
         sstream << op;
-        EXPECT_EQ(sstream.str(), "(10, sub: abc)"s);
+        EXPECT_EQ(sstream.str(), "([idx: 0, pos: 10], sub: abc)"s);
     }
 
     {
-        delta_event_t op{10u, libjst::detail::delta_kind_snp{"a"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_snp{"a"s}};
         std::stringstream sstream;
         sstream << op;
-        EXPECT_EQ(sstream.str(), "(10, snp: a)"s);
+        EXPECT_EQ(sstream.str(), "([idx: 0, pos: 10], snp: a)"s);
     }
 
     {
-        delta_event_t op{10u, libjst::detail::delta_kind_insertion{"abc"s}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_insertion{"abc"s}};
         std::stringstream sstream;
         sstream << op;
-        EXPECT_EQ(sstream.str(), "(10, ins: abc)"s);
+        EXPECT_EQ(sstream.str(), "([idx: 0, pos: 10], ins: abc)"s);
     }
 
     {
-        delta_event_t op{10u, libjst::detail::delta_kind_deletion{3u}};
+        delta_event_t op{position_t{.offset = 10u}, libjst::detail::delta_kind_deletion{3u}};
         std::stringstream sstream;
         sstream << op;
-        EXPECT_EQ(sstream.str(), "(10, del: 3)"s);
+        EXPECT_EQ(sstream.str(), "([idx: 0, pos: 10], del: 3)"s);
     }
 }
 
@@ -296,7 +297,7 @@ TEST_F(delta_operation_fixture, save_substitution)
     using namespace std::literals;
     std::stringstream archive_stream{};
 
-    delta_event_t substitution_event{23u, libjst::detail::delta_kind_substitution{"abcd"s}};
+    delta_event_t substitution_event{position_t{.offset = 23u}, libjst::detail::delta_kind_substitution{"abcd"s}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -311,7 +312,7 @@ TEST_F(delta_operation_fixture, save_snp)
     using namespace std::literals;
     std::stringstream archive_stream{};
 
-    delta_event_t snp_event{23u, libjst::detail::delta_kind_snp{"a"s}};
+    delta_event_t snp_event{position_t{.offset = 23u}, libjst::detail::delta_kind_snp{"a"s}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -326,7 +327,7 @@ TEST_F(delta_operation_fixture, save_insertion)
     using namespace std::literals;
     std::stringstream archive_stream{};
 
-    delta_event_t insertion_event{5u, libjst::detail::delta_kind_insertion{"ijklm"s}};
+    delta_event_t insertion_event{position_t{.offset = 5u}, libjst::detail::delta_kind_insertion{"ijklm"s}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -340,7 +341,7 @@ TEST_F(delta_operation_fixture, save_deletion)
 {
     std::stringstream archive_stream{};
 
-    delta_event_t deletion_event{100u, libjst::detail::delta_kind_deletion{10}};
+    delta_event_t deletion_event{position_t{.offset = 100u}, libjst::detail::delta_kind_deletion{10}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -362,7 +363,7 @@ TEST_F(delta_operation_fixture, load_substitution)
         substitution_event.load(input_archive);
     }
 
-    EXPECT_EQ(substitution_event, (delta_event_t{23u, libjst::detail::delta_kind_substitution{"abcd"s}}));
+    EXPECT_EQ(substitution_event, (delta_event_t{position_t{.offset = 23u}, libjst::detail::delta_kind_substitution{"abcd"s}}));
 }
 
 TEST_F(delta_operation_fixture, load_snp)
@@ -377,7 +378,7 @@ TEST_F(delta_operation_fixture, load_snp)
         snp_event.load(input_archive);
     }
 
-    EXPECT_EQ(snp_event, (delta_event_t{23u, libjst::detail::delta_kind_snp{"a"s}}));
+    EXPECT_EQ(snp_event, (delta_event_t{position_t{.offset = 23u}, libjst::detail::delta_kind_snp{"a"s}}));
 }
 
 TEST_F(delta_operation_fixture, load_insertion)
@@ -392,7 +393,8 @@ TEST_F(delta_operation_fixture, load_insertion)
         insertion_event.load(input_archive);
     }
 
-    EXPECT_EQ(insertion_event, (delta_event_t{5u, libjst::detail::delta_kind_insertion{"ijklm"s}}));
+    EXPECT_EQ(insertion_event, (delta_event_t{position_t{.offset = 5u},
+                                              libjst::detail::delta_kind_insertion{"ijklm"s}}));
 }
 
 TEST_F(delta_operation_fixture, load_deletion)
@@ -405,5 +407,5 @@ TEST_F(delta_operation_fixture, load_deletion)
         deletion_event.load(input_archive);
     }
 
-    EXPECT_EQ(deletion_event, (delta_event_t{100u, libjst::detail::delta_kind_deletion{10}}));
+    EXPECT_EQ(deletion_event, (delta_event_t{position_t{.offset = 100u}, libjst::detail::delta_kind_deletion{10}}));
 }

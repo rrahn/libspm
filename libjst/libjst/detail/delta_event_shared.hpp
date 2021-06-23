@@ -56,6 +56,7 @@ public:
     using typename base_event_t::alphabet_type;
     using typename base_event_t::segment_type;
     using typename base_event_t::size_type;
+    using typename base_event_t::position_type;
     using typename base_event_t::delta_variant_type;
     //!\}
 
@@ -89,7 +90,7 @@ public:
      * \param[in] event_kind The kind of the delta event.
      * \param[in] coverage The associated event coverage.
      */
-    delta_event_shared(size_type const position, delta_variant_type event_kind, coverage_type coverage) :
+    delta_event_shared(position_type const position, delta_variant_type event_kind, coverage_type coverage) :
         delta_event_shared{delta_event_type{position, std::move(event_kind)}, std::move(coverage)}
     {}
     //!\}

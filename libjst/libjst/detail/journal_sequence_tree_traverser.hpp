@@ -67,6 +67,7 @@ private:
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
     using typename model_t::coverage_type;
     using typename model_t::size_type;
+    using typename model_t::position_type;
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
     //!\}
 
@@ -233,9 +234,9 @@ private:
 
         // The max end position will be determined and possibly cropped if the natural end of the
         // journal sequence tree is reached before (e.g. the end of the reference sequence).
-        tree_position_type const max_end_position = (is_base_branch())
-                                                  ? branch_event->position() + _context_size + branch_event->insertion_size() - 1
-                                                  : branch_max_end_position();
+        tree_position_type const max_end_position =
+            (is_base_branch()) ? branch_event->position().offset + _context_size + branch_event->insertion_size() - 1
+                               : branch_max_end_position();
 
         new_branch.branch_end_position = std::min<tree_position_type>(this->max_end_position() + new_branch.offset,
                                                                       max_end_position);
@@ -276,7 +277,8 @@ private:
         delta_event_shared_type const * branch_event = (--active_branch().join_event_it)->event_handle();
 
         // Ensure that this branch event points to the current context position.
-        assert(branch_event->position() + branch_event->deletion_size() == static_cast<size_t>(active_branch().context_position));
+        assert(branch_event->position().offset + branch_event->deletion_size() ==
+               static_cast<size_t>(active_branch().context_position));
         // Only if we come directly from the base branch we count the subtree steps.
         if (is_base_branch())
         {
@@ -320,9 +322,10 @@ private:
             // Then there is no negative number required?
             // The question is, what reduces the number of operations, and where can I save code duplication, by
             // simply inverting the operations?
-        tree_position_type const max_end_position = (is_base_branch())
-                                                  ? static_cast<tree_position_type>(branch_event->position()) - static_cast<tree_position_type>(_reverse_context_size) + 1
-                                                  : branch_max_end_position_();
+        tree_position_type const max_end_position =
+            (is_base_branch()) ? static_cast<tree_position_type>(branch_event->position().offset) -
+                                    static_cast<tree_position_type>(_reverse_context_size) + 1
+                               : branch_max_end_position_();
 
         new_branch.branch_end_position = std::max<tree_position_type>(0, max_end_position);
         new_branch.join_event_it = find_next_relative_branch_event_(new_branch, branch_event);
@@ -448,7 +451,7 @@ private:
 
         auto event_lies_behind_deletion = [&] (auto const & event) constexpr
         {
-            return event.position() >= branch_event->position() + branch_event->deletion_size();
+            return event.position().offset >= branch_event->position().offset + branch_event->deletion_size();
         };
 
         return std::ranges::find_if(it, std::ranges::end(this->branch_event_queue()), event_lies_behind_deletion);
@@ -502,7 +505,7 @@ private:
         if (query_branch.branch_event_it == query_branch.branch_event_sentinel)
             return std::numeric_limits<size_t>::max();
         else
-            return query_branch.branch_event_it->position() + query_branch.offset;
+            return query_branch.branch_event_it->position().offset + query_branch.offset;
     }
 
     tree_position_type next_branch_position_(branch const & query_branch) const noexcept
@@ -510,7 +513,7 @@ private:
         if (query_branch.join_event_it == query_branch.join_event_sentinel)
             return std::numeric_limits<tree_position_type>::max(); // We keep all positions greater or equal 0.
         else // Next position for the branch: -> could also be just reverse iterator.
-            return static_cast<tree_position_type>(std::prev(query_branch.join_event_it)->position());
+            return static_cast<tree_position_type>(std::prev(query_branch.join_event_it)->position().offset);
 
             // What about the offset in the join position.
             // base branch has offset 0 -> we ignore
@@ -552,7 +555,7 @@ private:
     {
         assert(active_branch().subtree_root != nullptr);
 
-        return active_branch().subtree_root->position() - _reverse_context_size + 1;
+        return active_branch().subtree_root->position().offset - _reverse_context_size + 1;
     }
 
     //!\brief Return the original branch position of the current branch.
@@ -561,7 +564,7 @@ private:
     {
         assert(active_branch().subtree_root != nullptr);
 
-        return active_branch().subtree_root->position();
+        return active_branch().subtree_root->position().offset;
     }
 
     // We need the join position, because we store the root event.
@@ -570,7 +573,7 @@ private:
     {
         assert(active_branch().subtree_root != nullptr);
         // We need to get the join position instead.
-        return active_branch().subtree_root->position() + active_branch().subtree_root->deletion_size();
+        return active_branch().subtree_root->position().offset + active_branch().subtree_root->deletion_size();
     }
 
     /*!\brief Tests wether the full context is available in the active branch.
@@ -621,7 +624,7 @@ private:
         using insertion_t = delta_event_shared_type::insertion_type;
         using deletion_t = delta_event_shared_type::deletion_type;
 
-        size_type position = branch_event->position() + new_branch.offset;
+        size_type position = branch_event->position().offset + new_branch.offset;
         journal_decorator_type & jd = new_branch.journal_decorator;
         std::visit([&] (auto & delta_kind)
         {
@@ -639,7 +642,7 @@ private:
         using insertion_t = delta_event_shared_type::insertion_type;
         using deletion_t = delta_event_shared_type::deletion_type;
 
-        size_type position = branch_event->position();
+        size_type position = branch_event->position().offset;
         journal_decorator_type & jd = new_branch.journal_decorator;
         std::visit([&] (auto & delta_kind)
         {
@@ -824,7 +827,7 @@ private:
 
         std::ranges::for_each(std::ranges::begin(this->branch_event_queue()), branch_event_end, [&] (auto const & event)
         {
-            if (event.position() + event.event_handle()->deletion_size() <= begin_position)
+            if (event.position().offset + event.event_handle()->deletion_size() <= begin_position)
                 this->update_offset_for_event(sequence_offsets, event);
             else
                 branch_coverage.and_not(event.coverage());
@@ -854,7 +857,8 @@ private:
         // ----------------------------------------------------------------------------
 
         // The following steps initialises the parameters for the context specific traverser.
-        size_t const bin_end_position = std::min(this->end_position() + (_context_size - 1), this->max_end_position());
+        position_type const bin_end_position{.offset =
+            std::min(this->end_position() + (_context_size - 1), this->max_end_position())};
         branch_event_queue_iterator branch_sentinel = this->branch_event_queue().end();
         if (!this->is_final_bin())
         { // The base branch of this bin will stop at the first non insertion branch at the end position.
@@ -888,7 +892,8 @@ private:
         if (!this->is_first_bin())
         {
             // First event with a branch position >= last_context_position and a join position > last_context_position
-            size_t last_context_position = std::min(this->begin_position() + (_context_size - 1), bin_end_position);
+            position_type last_context_position{.offset =
+                std::min(this->begin_position() + (_context_size - 1), bin_end_position.offset)};
             delta_event_shared_type key_next{last_context_position, insertion_t{}, coverage_type{}};
             next_branch_event_it = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_next)});
         }
@@ -902,7 +907,7 @@ private:
 
         _branch_stack.emplace(
             static_cast<tree_position_type>(this->begin_position()),  // current context position.
-            static_cast<tree_position_type>(bin_end_position), // current branch end position.
+            static_cast<tree_position_type>(bin_end_position.offset), // current branch end position.
             0,
             0, // branch offset.
             nullptr, // pointer to the delta event causing the branch.

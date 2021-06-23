@@ -28,6 +28,7 @@ struct journaled_sequence_tree_fixture : public ::testing::Test
 {
     using sequence_t = std::string;
     using jst_t = libjst::journaled_sequence_tree<sequence_t>;
+    using position_t = typename jst_t::position_type;
 
     using aligned_sequence_t = std::vector<seqan3::gapped<char>>;
     using alignment_t = std::pair<aligned_sequence_t, aligned_sequence_t>;
@@ -92,8 +93,9 @@ TEST_F(journaled_sequence_tree_fixture, insert_deletion_in_empty_jst)
     using event_t = typename jst_t::event_type;
     using deletion_t = typename event_t::deletion_type;
     using coverage_t = typename event_t::coverage_type;
+    using position_t = typename event_t::position_type;
 
-    EXPECT_TRUE(jst.insert(event_t{2, deletion_t{2}, coverage_t{0, 1, 1, 0, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, deletion_t{2}, coverage_t{0, 1, 1, 0, 0}}));
     EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference());
     EXPECT_RANGE_EQ(jst.sequence_at(1), "aabbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aabbbbcccc"s);
@@ -113,7 +115,7 @@ TEST_F(journaled_sequence_tree_fixture, insert_substitution_in_empty_jst)
     using substitution_t = typename event_t::substitution_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.insert(event_t{2, substitution_t{"xx"s}, coverage_t{0, 1, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, substitution_t{"xx"s}, coverage_t{0, 1, 1, 0, 1}}));
     EXPECT_RANGE_EQ(jst.sequence_at(0), jst.reference());
     EXPECT_RANGE_EQ(jst.sequence_at(1), "aaxxbbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aaxxbbbbcccc"s);
@@ -133,7 +135,7 @@ TEST_F(journaled_sequence_tree_fixture, insert_insetion_in_empty_jst)
     using insertion_t = typename event_t::insertion_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.insert(event_t{2, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 2u}, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0, 1}}));
     EXPECT_RANGE_EQ(jst.sequence_at(0), "aaxxaabbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), jst.reference());
     EXPECT_RANGE_EQ(jst.sequence_at(2), "aaxxaabbbbcccc"s);
@@ -154,8 +156,10 @@ TEST_F(journaled_sequence_tree_fixture, insert_invalid_coverage)
     using substitution_t = typename event_t::substitution_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_THROW(jst.insert(event_t{2, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0}}), std::length_error);
-    EXPECT_THROW(jst.insert(event_t{2, substitution_t{"xx"s}, coverage_t{0, 1, 1, 0, 1, 0}}), std::length_error);
+    EXPECT_THROW(jst.insert(event_t{position_t{.offset = 2u}, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0}}),
+                 std::length_error);
+    EXPECT_THROW(jst.insert(event_t{position_t{.offset = 2u}, substitution_t{"xx"s}, coverage_t{0, 1, 1, 0, 1, 0}}),
+                 std::length_error);
 }
 
 TEST_F(journaled_sequence_tree_fixture, insert_insertions)
@@ -170,13 +174,13 @@ TEST_F(journaled_sequence_tree_fixture, insert_insertions)
     using insertion_t = typename event_t::insertion_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.insert(event_t{0, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{0, insertion_t{"oo"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{8, insertion_t{"i"s}, coverage_t{0, 1, 0, 1, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{5, insertion_t{"lll"s}, coverage_t{1, 0, 0, 0, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{5, insertion_t{"t"s}, coverage_t{0, 1, 1, 1, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{4, insertion_t{"r"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{12, insertion_t{"zzz"s}, coverage_t{0, 0, 0, 1, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, insertion_t{"xx"s}, coverage_t{1, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, insertion_t{"oo"s}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 8u}, insertion_t{"i"s}, coverage_t{0, 1, 0, 1, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, insertion_t{"lll"s}, coverage_t{1, 0, 0, 0, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, insertion_t{"t"s}, coverage_t{0, 1, 1, 1, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 4u}, insertion_t{"r"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 12u}, insertion_t{"zzz"s}, coverage_t{0, 0, 0, 1, 0}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "xxaaaarblllbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "ooaaaarbtbbbicccc"s);
@@ -184,11 +188,11 @@ TEST_F(journaled_sequence_tree_fixture, insert_insertions)
     EXPECT_RANGE_EQ(jst.sequence_at(3), "aaaarbtbbbicccczzz"s);
     EXPECT_RANGE_EQ(jst.sequence_at(4), "xxaaaarbtbbbicccc"s);
 
-    EXPECT_FALSE(jst.insert(event_t{0, insertion_t{"kkk"s}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{5, insertion_t{"yy"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_FALSE(jst.insert(event_t{8, insertion_t{"ppp"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{3, insertion_t{"ppp"s}, coverage_t{0, 0, 0, 0, 0}})); // empty coverage
-    EXPECT_FALSE(jst.insert(event_t{13, insertion_t{"ppp"s}, coverage_t{1, 1, 0, 0, 0}})); // out of range.
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 0u}, insertion_t{"kkk"s}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 5u}, insertion_t{"yy"s}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 8u}, insertion_t{"ppp"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 3u}, insertion_t{"ppp"s}, coverage_t{0, 0, 0, 0, 0}})); // empty coverage
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 13u}, insertion_t{"ppp"s}, coverage_t{1, 1, 0, 0, 0}})); // out of range.
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "xxaaaarblllbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "ooaaaarbtbbbicccc"s);
@@ -209,12 +213,12 @@ TEST_F(journaled_sequence_tree_fixture, insert_deletions)
     using deletion_t = typename event_t::deletion_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.insert(event_t{0, deletion_t{1}, coverage_t{1, 0, 1, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{0, deletion_t{10}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{8, deletion_t{3}, coverage_t{0, 0, 1, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{5, deletion_t{3}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{5, deletion_t{1}, coverage_t{0, 0, 1, 1, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{4, deletion_t{1}, coverage_t{1, 0, 0, 1, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, deletion_t{1}, coverage_t{1, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, deletion_t{10}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 8u}, deletion_t{3}, coverage_t{0, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, deletion_t{3}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, deletion_t{1}, coverage_t{0, 0, 1, 1, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 4u}, deletion_t{1}, coverage_t{1, 0, 0, 1, 1}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "aaabbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "cc"s);
@@ -222,12 +226,12 @@ TEST_F(journaled_sequence_tree_fixture, insert_deletions)
     EXPECT_RANGE_EQ(jst.sequence_at(3), "aaaabbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(4), "aaac"s);
 
-    EXPECT_FALSE(jst.insert(event_t{0, deletion_t{2}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{2, deletion_t{1}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_FALSE(jst.insert(event_t{12, deletion_t{3}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{11, deletion_t{2}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{10, deletion_t{5}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{4, deletion_t{2},  coverage_t{1, 0, 0, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 0u}, deletion_t{2}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 2u}, deletion_t{1}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 12u}, deletion_t{3}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 11u}, deletion_t{2}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 10u}, deletion_t{5}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 4u}, deletion_t{2},  coverage_t{1, 0, 0, 1, 1}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "aaabbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "cc"s);
@@ -248,12 +252,12 @@ TEST_F(journaled_sequence_tree_fixture, insert_substitutions)
     using substitution_t = typename event_t::substitution_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.insert(event_t{0, substitution_t{"r"s}, coverage_t{1, 0, 1, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{0, substitution_t{"qqqqqqqqqqq"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{8, substitution_t{"sss"s}, coverage_t{0, 0, 1, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{5, substitution_t{"ttt"s}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_TRUE(jst.insert(event_t{5, substitution_t{"uuu"s}, coverage_t{0, 0, 1, 1, 0}}));
-    EXPECT_TRUE(jst.insert(event_t{4, substitution_t{"v"s}, coverage_t{1, 0, 0, 1, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, substitution_t{"r"s}, coverage_t{1, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 0u}, substitution_t{"qqqqqqqqqqq"s}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 8u}, substitution_t{"sss"s}, coverage_t{0, 0, 1, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, substitution_t{"ttt"s}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 5u}, substitution_t{"uuu"s}, coverage_t{0, 0, 1, 1, 0}}));
+    EXPECT_TRUE(jst.insert(event_t{position_t{.offset = 4u}, substitution_t{"v"s}, coverage_t{1, 0, 0, 1, 1}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "raaavbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "qqqqqqqqqqqc"s);
@@ -261,12 +265,12 @@ TEST_F(journaled_sequence_tree_fixture, insert_substitutions)
     EXPECT_RANGE_EQ(jst.sequence_at(3), "aaaavuuucccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(4), "raaavtttsssc"s);
 
-    EXPECT_FALSE(jst.insert(event_t{0, substitution_t{"xxx"s}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{2, substitution_t{"xx"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_FALSE(jst.insert(event_t{12, substitution_t{"x"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{11, substitution_t{"xx"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{10, substitution_t{"xxxxx"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{4, substitution_t{"xxxx"s},  coverage_t{1, 0, 0, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 0u}, substitution_t{"xxx"s}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 2u}, substitution_t{"xx"s}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 12u}, substitution_t{"x"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 11u}, substitution_t{"xx"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 10u}, substitution_t{"xxxxx"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 4u}, substitution_t{"xxxx"s},  coverage_t{1, 0, 0, 1, 1}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "raaavbbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "qqqqqqqqqqqc"s);
@@ -289,18 +293,18 @@ TEST_F(journaled_sequence_tree_fixture, emplace_event)
     using deletion_t = typename event_t::deletion_type;
     using coverage_t = typename event_t::coverage_type;
 
-    EXPECT_TRUE(jst.emplace(0, insertion_t{"p"s}, coverage_t{1, 0, 1, 0, 1}));
-    EXPECT_TRUE(jst.emplace(0, substitution_t{"qqqqqqqqqqq"s}, coverage_t{0, 1, 0, 0, 0}));
-    EXPECT_TRUE(jst.emplace(0, deletion_t{3}, coverage_t{0, 0, 1, 0, 1}));
-    EXPECT_TRUE(jst.emplace(3, insertion_t{"rrr"s}, coverage_t{1, 0, 0, 0, 1}));
-    EXPECT_TRUE(jst.emplace(3, substitution_t{"sss"s}, coverage_t{1, 0, 0, 1, 0}));
-    EXPECT_TRUE(jst.emplace(3, deletion_t{2}, coverage_t{0, 0, 1, 0, 0}));
-    EXPECT_TRUE(jst.emplace(4, deletion_t{1}, coverage_t{0, 0, 0, 0, 1}));
-    EXPECT_TRUE(jst.emplace(5, insertion_t{"tt"s}, coverage_t{0, 0, 1, 0, 1}));
-    EXPECT_TRUE(jst.emplace(5, substitution_t{"uuu"s}, coverage_t{0, 0, 1, 0, 0}));
-    EXPECT_TRUE(jst.emplace(5, deletion_t{1}, coverage_t{0, 0, 0, 0, 1}));
-    EXPECT_TRUE(jst.emplace(6, deletion_t{1}, coverage_t{0, 0, 0, 1, 1}));
-    EXPECT_TRUE(jst.emplace(6, insertion_t{"v"s}, coverage_t{1, 0, 0, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 0u}, insertion_t{"p"s}, coverage_t{1, 0, 1, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 0u}, substitution_t{"qqqqqqqqqqq"s}, coverage_t{0, 1, 0, 0, 0}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 0u}, deletion_t{3}, coverage_t{0, 0, 1, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 3u}, insertion_t{"rrr"s}, coverage_t{1, 0, 0, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 3u}, substitution_t{"sss"s}, coverage_t{1, 0, 0, 1, 0}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 3u}, deletion_t{2}, coverage_t{0, 0, 1, 0, 0}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 4u}, deletion_t{1}, coverage_t{0, 0, 0, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 5u}, insertion_t{"tt"s}, coverage_t{0, 0, 1, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 5u}, substitution_t{"uuu"s}, coverage_t{0, 0, 1, 0, 0}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 5u}, deletion_t{1}, coverage_t{0, 0, 0, 0, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 6u}, deletion_t{1}, coverage_t{0, 0, 0, 1, 1}));
+    EXPECT_TRUE(jst.emplace(position_t{.offset = 6u}, insertion_t{"v"s}, coverage_t{1, 0, 0, 0, 1}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "paaarrrsssvbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "qqqqqqqqqqqc"s);
@@ -308,12 +312,12 @@ TEST_F(journaled_sequence_tree_fixture, emplace_event)
     EXPECT_RANGE_EQ(jst.sequence_at(3), "aaasssbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(4), "prrrattvbcccc"s);
 
-    EXPECT_FALSE(jst.insert(event_t{0, substitution_t{"xxx"s}, coverage_t{0, 0, 0, 0, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{2, substitution_t{"xx"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_FALSE(jst.insert(event_t{12, substitution_t{"x"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{11, substitution_t{"xx"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{10, substitution_t{"xxxxx"s}, coverage_t{1, 1, 1, 1, 1}}));
-    EXPECT_FALSE(jst.insert(event_t{4, substitution_t{"xxxx"s},  coverage_t{1, 0, 0, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 0u}, substitution_t{"xxx"s}, coverage_t{0, 0, 0, 0, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 2u}, substitution_t{"xx"s}, coverage_t{0, 1, 0, 0, 0}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 12u}, substitution_t{"x"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 11u}, substitution_t{"xx"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 10u}, substitution_t{"xxxxx"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 4u}, substitution_t{"xxxx"s},  coverage_t{1, 0, 0, 1, 1}}));
 
     EXPECT_RANGE_EQ(jst.sequence_at(0), "paaarrrsssvbbcccc"s);
     EXPECT_RANGE_EQ(jst.sequence_at(1), "qqqqqqqqqqqc"s);

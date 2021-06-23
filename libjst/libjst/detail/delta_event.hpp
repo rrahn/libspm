@@ -58,12 +58,13 @@ public:
     using alphabet_type = alphabet_t; //!< The alphabet type.
     using segment_type = std::span<alphabet_type const>; //!< The segment type.
     using size_type = size_t; //!< The size type.
+    using position_type = reference_position; //!< The position type.
     //!\brief The variant type over the three different delta kinds.
     using delta_variant_type = std::variant<insertion_type, snp_type, substitution_type, deletion_type>;
     //!\}
 
 private:
-    reference_position _position{}; //!< The position of the event.
+    position_type _position{}; //!< The position of the event.
     delta_variant_type _delta_variant{}; //!< The variant holding one of the valid event types.
 
 public:
@@ -82,8 +83,8 @@ public:
      * \param[in] position The position of the delta event.
      * \param[in] kind The kind of the delta event.
      */
-    explicit delta_event(size_t const position, delta_variant_type kind) :
-        _position{.idx = 0, .offset = position},
+    explicit delta_event(position_type position, delta_variant_type kind) :
+        _position{std::move(position)},
         _delta_variant{std::move(kind)}
     {}
     //!\}
@@ -92,9 +93,9 @@ public:
      * \{
      */
     //!\brief Returns the delta event position.
-    constexpr size_type position() const noexcept
+    constexpr position_type position() const noexcept
     {
-        return _position.offset;
+        return _position;
     }
 
     //!\brief Returns the delta event variant.

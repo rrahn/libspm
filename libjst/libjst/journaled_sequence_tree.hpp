@@ -184,7 +184,7 @@ public:
                 using insertion_t = typename delta_event_shared_type::insertion_type;
                 using deletion_t = typename delta_event_shared_type::deletion_type;
 
-                size_type target_position = delta_event->position() + target_position_offset;
+                size_type target_position = delta_event->position().offset + target_position_offset;
 
                 seqan3::detail::multi_invocable
                 {
@@ -257,10 +257,10 @@ public:
             throw std::length_error{"The coverage length: " + std::to_string(event.coverage().size()) +
                                     " differs from the actual size: " + std::to_string(size()) + "!"};
 
-        size_type const event_join_position = event.position() + event.deletion_size();
+        size_type const event_join_position = event.position().offset + event.deletion_size();
         size_type const max_size = std::ranges::size(reference()) + event.is_insertion();
 
-        if (event.position() >= max_size || event_join_position >= max_size || event.coverage().none())
+        if (event.position().offset >= max_size || event_join_position >= max_size || event.coverage().none())
             return false;
 
         // Find the first event whose join position is not less than the event position of the insert element.
@@ -275,8 +275,8 @@ public:
             // needs to be compared. This is checked with the add_one constant.
             event_type const & other_event = *(it->event_handle());
             size_t const add_one = other_event.is_insertion() && event.is_insertion();
-            if (((it->position() + add_one) <= event.position()) ||
-                (other_event.position() >= (event_join_position + add_one)))
+            if (((it->position().offset + add_one) <= event.position().offset) ||
+                (other_event.position().offset >= (event_join_position + add_one)))
                 continue;
 
             coverage_type shared_coverage = other_event.coverage() & event.coverage();
