@@ -73,6 +73,6 @@ static void CustomArguments(benchmark::internal::Benchmark* b)
 
 BENCHMARK_CAPTURE(pigeonhole_filter_bench,
                   pigeonhole_filter,
-                  DATADIR"sim_ref_10Kb_SNP_INDELs")->Apply(CustomArguments);
+                  DATADIR"sim_ref_10Kb_SNP_INDELs.jst")->Apply(CustomArguments);
 
 BENCHMARK_MAIN();
