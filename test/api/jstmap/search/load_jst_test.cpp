@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/core/detail/debug_stream_alphabet.hpp>

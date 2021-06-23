@@ -223,7 +223,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(_position.offset, _delta_variant);
+        archive(_position, _delta_variant);
     }
 
     /*!\brief Loads this delta event from the given input archive.
@@ -235,7 +235,7 @@ public:
     template <seqan3::cereal_input_archive input_archive_t>
     void load(input_archive_t & archive)
     {
-        archive(_position.offset, _delta_variant);
+        archive(_position, _delta_variant);
     }
     //!\}
 
