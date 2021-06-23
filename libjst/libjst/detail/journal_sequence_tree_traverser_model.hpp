@@ -64,9 +64,12 @@ protected:
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
     //!\}
 
+    //!\brief The jst position type.
+    using position_type = typename jst_t::position_type;
+
     jst_t const * _jst_host{}; //!< The referenced jst
-    size_t _begin_pos{}; //!< The begin position of this traverser model.
-    size_t _end_pos{}; //!< The end position of this traverser model.
+    position_type _begin_pos{}; //!< The begin position of this traverser model.
+    position_type _end_pos{}; //!< The end position of this traverser model.
 
 public:
     /*!\name Constructors, destructor and assignment
@@ -102,22 +105,35 @@ public:
         assert(_jst_host != nullptr);
         assert(begin_pos < end_pos);
 
-        _begin_pos = std::max<size_t>(0, begin_pos);
-        _end_pos = std::min<size_t>(end_pos, max_end_position());
+        _begin_pos = position_type{.idx = 0, .offset = std::max<size_t>(0, begin_pos)};
+        _end_pos = position_type{.idx = 0, .offset = std::min<size_t>(end_pos, max_end_position())};
     }
     //!\}
 
 protected:
+
+    //!\brief Returns the begin position of this model.
+    constexpr size_t begin_position() const noexcept
+    {
+        return _begin_pos.offset;
+    }
+
+    //!\brief Returns the end position of this model.
+    constexpr size_t end_position() const noexcept
+    {
+        return _end_pos.offset;
+    }
+
     //!\brief Returns `true` if the end position is equal to the reference size, otherwise `false`.
     bool is_final_bin() const noexcept
     {
-        return _end_pos == max_end_position();
+        return end_position() == max_end_position();
     }
 
     //!\brief Returns `true` if the begin position is `0`, otherwise `false`.
     bool is_first_bin() const noexcept
     {
-        return _begin_pos == 0u;
+        return begin_position() == 0u;
     }
 
     //!\brief Returns the maximal end position of the underlying journal sequence tree.
@@ -214,7 +230,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(_begin_pos, _end_pos);
+        archive(begin_position(), end_position());
     }
 
     /*!\brief Loads this traverser model from the given input archive.
@@ -229,7 +245,7 @@ public:
     {
         assert(jst != nullptr);
         _jst_host = jst;
-        archive(_begin_pos, _end_pos);
+        archive(_begin_pos.offset, _end_pos.offset);
     }
     //!\}
 };

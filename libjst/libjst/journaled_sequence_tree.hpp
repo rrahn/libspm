@@ -40,6 +40,7 @@
 #include <libjst/journal_sequence_tree_position_agent.hpp>
 #include <libjst/journal_sequence_tree_range_agent.hpp>
 #include <libjst/journal_sequence_tree_range_extender_agent.hpp>
+#include <libjst/reference_position.hpp>
 #include <libjst/utility/sorted_vector.hpp>
 
 namespace libjst::no_adl
@@ -92,6 +93,7 @@ public:
     using sequence_type = sequence_t; //!< The type of the underlying sequence.
     using journal_decorator_type = journal_decorator<segment_type>; //!< The journal decorator type.
     using size_type = typename delta_event_shared_type::size_type; //!< The size type.
+    using position_type = reference_position; //!< The position type for the reference collection.
     //!\brief The type of the context enumerator.
     using context_enumerator_type = detail::journal_sequence_tree_context_enumerator<type>;
     //!\brief The type of the range agent.
