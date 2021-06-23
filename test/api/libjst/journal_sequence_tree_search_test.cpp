@@ -46,6 +46,7 @@ struct jst_search_fixture
 struct search_test : public ::testing::TestWithParam<jst_search_fixture>
 {
     using jst_t = libjst::journaled_sequence_tree<sequence_t>;
+    using position_t = typename jst_t::position_type;
 
     jst_t jst{};
     std::set<libjst::context_position> expected_hits{};
@@ -78,7 +79,7 @@ private:
             size_t last_sequence_pos = sequence.size() - context_size() + 1;
             for (size_t j = 0; j < last_sequence_pos; ++j)
                 if (std::ranges::equal(GetParam().pattern, sequence | seqan3::views::slice(j, j + context_size())))
-                    expected_hits.emplace(i, j);
+                    expected_hits.emplace(i, position_t{0u, j});
         }
     }
 };

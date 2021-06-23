@@ -14,6 +14,8 @@
 
 #include <concepts>
 
+#include <libjst/reference_position.hpp>
+
 namespace libjst
 {
 /*!\brief A specific position type for the libjst::journaled_sequence_tree_cursor.
@@ -26,7 +28,7 @@ namespace libjst
 struct context_position
 {
     size_t sequence_id; //!< The id of the sequence.
-    size_t sequence_position; //!< The context begin position within the sequence.
+    reference_position sequence_position; //!< The context begin position within the sequence.
 
     //!\brief Default three-way comparison.
     constexpr auto operator<=>(context_position const &) const noexcept = default;
