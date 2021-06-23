@@ -46,12 +46,12 @@ std::pair<jst_t, partitioned_jst_t> build_journaled_sequence_tree(std::vector<ra
     jst_t jst{std::move(sequences[0])};
 
     // Add first sequence as empty alignment against themself.
-    jst.add(compress(jst.reference(), jst.reference()));
+    jst.add(compress(jst.reference_at(0), jst.reference_at(0)));
 
     // Align remaining sequences against reference sequence and add it to the jst.
     std::for_each(std::next(sequences.begin()), sequences.end(), [&] (auto const & sequence)
     {
-        jst.add(compress(jst.reference(), sequence));
+        jst.add(compress(jst.reference_at(0), sequence));
     });
 
     // Build partitioned journaled sequence tree over the jst

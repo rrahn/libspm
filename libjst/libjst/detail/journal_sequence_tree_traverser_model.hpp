@@ -147,8 +147,8 @@ protected:
     //!\brief Returns the maximal end position of the underlying journal sequence tree.
     size_t max_end_position() const noexcept
     {
-        assert(contig_index() < _jst_host->_reference.size());
-        return _jst_host->_reference[contig_index()].size();
+        assert(contig_index() < _jst_host->reference().size());
+        return _jst_host->reference_at(contig_index()).size();
     }
 
     //!\brief Returns the event queue containing the branch events from the underlying host.
@@ -185,7 +185,7 @@ protected:
 
         size_t contig_idx = contig_index();
 
-        if (contig_idx == _jst_host->_reference.size() - 1)
+        if (contig_idx == _jst_host->reference().size() - 1)
             return std::ranges::end(branch_event_queue());
         else
             return branch_event_queue().lower_bound(position_type{++contig_idx, 0u});
@@ -209,7 +209,7 @@ protected:
 
         size_t contig_idx = contig_index();
 
-        if (contig_idx == _jst_host->_reference.size() - 1)
+        if (contig_idx == _jst_host->reference().size() - 1)
             return std::ranges::end(join_event_queue());
         else
             return join_event_queue().lower_bound(position_type{++contig_idx, 0u});
@@ -219,9 +219,9 @@ protected:
     auto const & reference() const noexcept
     {
         assert(_jst_host != nullptr);
-        assert(contig_index() < _jst_host->_reference.size());
+        assert(contig_index() < _jst_host->reference().size());
 
-        return _jst_host->_reference[contig_index()];
+        return _jst_host->reference_at(contig_index());
     }
 
     //!\brief Returns the number of contained sequences.

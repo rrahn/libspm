@@ -135,10 +135,17 @@ public:
     {}
     //!\}
 
-    //!\brief Returns the stored reference sequence.
-    sequence_type const & reference() const
+    //!\brief Returns the reference collection.
+    sequence_collection_t const & reference() const
     {
-        return _reference.front();
+        return _reference;
+    }
+
+    //!\brief Returns the reference at the given position.
+    sequence_type const & reference_at(size_t const index) const
+    {
+        assert(index < reference().size());
+        return _reference[index];
     }
 
     /*!\brief Returns the target sequence at the specified index.
@@ -169,7 +176,7 @@ public:
             throw std::out_of_range{"The index "s + std::to_string(index) +
                                     " is out of range [0, "s + std::to_string(size()) + ")"s};
 
-        journal_decorator_type target_sequence{reference()};
+        journal_decorator_type target_sequence{reference().front()};
         int32_t target_position_offset = 0;
 
         // Go over the branch event list since it is sorted by the reference position.
@@ -260,7 +267,7 @@ public:
                                     " differs from the actual size: " + std::to_string(size()) + "!"};
 
         size_type const event_join_position = event.position().offset + event.deletion_size();
-        size_type const max_size = std::ranges::size(reference()) + event.is_insertion();
+        size_type const max_size = std::ranges::size(reference().front()) + event.is_insertion();
 
         if (event.position().offset >= max_size || event_join_position >= max_size || event.coverage().none())
             return false;
@@ -351,7 +358,7 @@ public:
 
         constexpr auto out_gaps = [] (gapped_alphabet_t const c) -> bool { return c != seqan3::gap{}; };
 
-        if (!std::ranges::equal(ref | std::views::filter(out_gaps), reference()))
+        if (!std::ranges::equal(ref | std::views::filter(out_gaps), reference().front()))
         {
             throw std::invalid_argument{"The first aligned sequence must be equal to the reference sequence of this "
                                         "journaled sequence tree without the gaps."};
@@ -428,7 +435,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(reference(), _delta_events, _size);
+        archive(reference().front(), _delta_events, _size);
     }
 
     /*!\brief Loads this journaled sequence tree from the given input archive.

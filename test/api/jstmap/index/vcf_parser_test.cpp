@@ -43,7 +43,7 @@ TEST_F(vcf_parser_test, snps_only)
     jstmap::jst_t jst = std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
 
     auto [reference, haplotypes] = load_sequences(reference_file, haplotype_file);
-    EXPECT_RANGE_EQ(jst.reference(), reference);
+    EXPECT_RANGE_EQ(jst.reference().front(), reference);
     test_jst_is_valid(jst, haplotypes);
 }
 
@@ -55,7 +55,7 @@ TEST_F(vcf_parser_test, snps_and_indels)
     jstmap::jst_t jst = std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
 
     auto [reference, haplotypes] = load_sequences(reference_file, haplotype_file);
-    EXPECT_RANGE_EQ(jst.reference(), reference);
+    EXPECT_RANGE_EQ(jst.reference().front(), reference);
     test_jst_is_valid(jst, haplotypes);
 }
 
