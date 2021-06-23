@@ -126,6 +126,12 @@ protected:
         return _end_pos.offset;
     }
 
+    //!\brief Return the contig index.
+    constexpr size_t contig_index() const noexcept
+    {
+        return _begin_pos.idx;
+    }
+
     //!\brief Returns `true` if the end position is equal to the reference size, otherwise `false`.
     bool is_final_bin() const noexcept
     {
@@ -141,8 +147,8 @@ protected:
     //!\brief Returns the maximal end position of the underlying journal sequence tree.
     size_t max_end_position() const noexcept
     {
-        assert(_end_pos.idx < _jst_host->_reference.size());
-        return _jst_host->_reference[_end_pos.idx].size();
+        assert(contig_index() < _jst_host->_reference.size());
+        return _jst_host->_reference[contig_index()].size();
     }
 
     //!\brief Returns the event queue containing the branch events from the underlying host.
@@ -161,12 +167,61 @@ protected:
         return _jst_host->_join_event_queue;
     }
 
+    branch_event_queue_iterator contig_branch_begin() const noexcept
+    {
+        assert(_jst_host != nullptr);
+
+        size_t contig_idx = contig_index();
+
+        if (contig_idx == 0)
+            return std::ranges::begin(branch_event_queue());
+        else
+            return branch_event_queue().upper_bound(position_type{--contig_idx, std::numeric_limits<size_t>::max()});
+    }
+
+    branch_event_queue_iterator contig_branch_end() const noexcept
+    {
+        assert(_jst_host != nullptr);
+
+        size_t contig_idx = contig_index();
+
+        if (contig_idx == _jst_host->_reference.size() - 1)
+            return std::ranges::end(branch_event_queue());
+        else
+            return branch_event_queue().lower_bound(position_type{++contig_idx, 0u});
+    }
+
+    join_event_queue_iterator contig_join_begin() const noexcept
+    {
+        assert(_jst_host != nullptr);
+
+        size_t contig_idx = contig_index();
+
+        if (contig_idx == 0)
+            return std::ranges::begin(join_event_queue());
+        else
+            return join_event_queue().upper_bound(position_type{--contig_idx, std::numeric_limits<size_t>::max()});
+    }
+
+    join_event_queue_iterator contig_join_end() const noexcept
+    {
+        assert(_jst_host != nullptr);
+
+        size_t contig_idx = contig_index();
+
+        if (contig_idx == _jst_host->_reference.size() - 1)
+            return std::ranges::end(join_event_queue());
+        else
+            return join_event_queue().lower_bound(position_type{++contig_idx, 0u});
+    }
+
     //!\brief Returns the event queue from the underlying host.
     auto const & reference() const noexcept
     {
         assert(_jst_host != nullptr);
+        assert(contig_index() < _jst_host->_reference.size());
 
-        return _jst_host->reference();
+        return _jst_host->_reference[contig_index()];
     }
 
     //!\brief Returns the number of contained sequences.
