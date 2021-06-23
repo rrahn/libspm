@@ -229,12 +229,19 @@ public:
     //!\brief The total number of symbols stored inside the jst.
     size_type total_symbol_count() const
     {
-        size_t insertion_count{};
+        size_t symbol_count{};
+
         std::ranges::for_each(_delta_events, [&] (auto const & event)
         {
-            insertion_count += event.insertion_size();
+            symbol_count += event.insertion_size();
         });
-        return reference().size() + insertion_count;
+
+        std::ranges::for_each(_reference, [&] (auto const & sequence)
+        {
+            symbol_count += sequence.size();
+        });
+
+        return symbol_count;
     }
 
     /*!\brief Inserts a new event to the existing journal sequence tree.
@@ -435,7 +442,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(reference().front(), _delta_events, _size);
+        archive(_reference, _delta_events, _size);
     }
 
     /*!\brief Loads this journaled sequence tree from the given input archive.
@@ -447,8 +454,7 @@ public:
     template <seqan3::cereal_input_archive input_archive_t>
     void load(input_archive_t & archive)
     {
-        _reference.resize(1);
-        archive(_reference.front(), _delta_events, _size);
+        archive(_reference, _delta_events, _size);
 
         // Refill the queues which just store pointers.
         std::ranges::for_each(_delta_events, [&] (auto & event)

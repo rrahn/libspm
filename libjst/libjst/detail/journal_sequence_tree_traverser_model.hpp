@@ -288,7 +288,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(begin_position(), end_position());
+        archive(_begin_pos, _end_pos);
     }
 
     /*!\brief Loads this traverser model from the given input archive.
@@ -303,7 +303,7 @@ public:
     {
         assert(jst != nullptr);
         _jst_host = jst;
-        archive(_begin_pos.offset, _end_pos.offset);
+        archive(_begin_pos, _end_pos);
     }
     //!\}
 };

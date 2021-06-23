@@ -31,7 +31,7 @@ std::pair<jst_t, std::unique_ptr<partitioned_jst_t>> load_jst(std::filesystem::p
     cereal::BinaryInputArchive input_archive{jst_input_stream};
     jst_handle.first.load(input_archive);
     jst_handle.second = std::make_unique<partitioned_jst_t>(std::addressof(jst_handle.first));
-    // jst_handle.second->load(input_archive);
+    jst_handle.second->load(input_archive);
 
     return jst_handle;
 }
