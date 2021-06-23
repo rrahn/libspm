@@ -60,7 +60,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{4u}
 }));
@@ -80,7 +80,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{1u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
     },
     .context_size{4u}
 }));
@@ -92,7 +92,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
     },
     .context_size{4u}
 }));
@@ -104,7 +104,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{6u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}}
     },
     .context_size{4u}
 }));
@@ -136,9 +136,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{3u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
-        libjst::test::shared_event_t{3u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 1}}
     },
     .context_size{4u}
 }));
@@ -160,8 +160,8 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{ 0u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0}},
-        libjst::test::shared_event_t{ 2u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  2u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1, 0}}
     },
     .context_size{2u}
 }));
@@ -203,11 +203,11 @@ libjst::test::traversal_fixture
     .sequence_count{5u},
     .events
     {
-        libjst::test::shared_event_t{ 0u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{ 3u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{ 6u, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{ 9u, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1, 0, 1, 1, 0}},
-        libjst::test::shared_event_t{12u, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{0, 1, 0, 1, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  6u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  9u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1, 0, 1, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 12u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{0, 1, 0, 1, 1}}
     },
     .context_size{5u}
 }));
@@ -228,7 +228,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{ 3u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
     },
     .context_size{8u}
 }));
@@ -249,7 +249,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{ 3u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
     },
     .context_size{7u}
 }));
@@ -262,13 +262,13 @@ libjst::test::traversal_fixture
     .sequence_count{1u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{1u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{2u, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{3u, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{4u, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{6u, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
     },
     .context_size{4u}
 }));
@@ -281,13 +281,13 @@ libjst::test::traversal_fixture
     .sequence_count{1u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{1u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{2u, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{3u, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{4u, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{6u, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
     },
     .context_size{1u}
 }));
@@ -300,13 +300,13 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"bbbbb"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{1u, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1, 0, 1}},
-        libjst::test::shared_event_t{1u, libjst::test::substitution_t{"dd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
-        libjst::test::shared_event_t{4u, libjst::test::substitution_t{"cc"s}, libjst::test::coverage_t{0, 0, 1, 0}},
-        libjst::test::shared_event_t{6u, libjst::test::substitution_t{"eee"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{7u, libjst::test::substitution_t{"fff"s}, libjst::test::coverage_t{0, 0, 1, 1}},
-        libjst::test::shared_event_t{11u, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"bbbbb"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"dd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"cc"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"eee"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 7u}, libjst::test::substitution_t{"fff"s}, libjst::test::coverage_t{0, 0, 1, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 11u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1, 1, 0, 0}},
     },
     .context_size{1u}
 }));
@@ -334,7 +334,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -355,7 +355,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -376,7 +376,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -408,9 +408,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -476,12 +476,12 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{2u, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{1, 1, 1, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::insertion_t{"eee"s}, libjst::test::coverage_t{1, 0, 1, 1}},
-        libjst::test::shared_event_t{6u, libjst::test::insertion_t{"f"s}, libjst::test::coverage_t{0, 0, 1, 1}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"gggg"s}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{1, 1, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::insertion_t{"eee"s}, libjst::test::coverage_t{1, 0, 1, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::insertion_t{"f"s}, libjst::test::coverage_t{0, 0, 1, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"gggg"s}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{5u}
 }));
@@ -510,9 +510,9 @@ libjst::test::traversal_fixture
     .sequence_count{5u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{1u, libjst::test::insertion_t{"c"s}, libjst::test::coverage_t{1, 0, 1, 0, 0}},
-        libjst::test::shared_event_t{3u, libjst::test::insertion_t{"d"s}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::insertion_t{"c"s}, libjst::test::coverage_t{1, 0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::insertion_t{"d"s}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
     },
     .context_size{6u}
 }));
@@ -524,9 +524,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -542,7 +542,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -554,7 +554,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -566,7 +566,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{9u, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -578,7 +578,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -590,7 +590,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 1, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 1, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -602,7 +602,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{9u, libjst::test::deletion_t{3}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -614,9 +614,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -628,9 +628,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{1u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{2u, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{3u, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -642,9 +642,9 @@ libjst::test::traversal_fixture
     .sequence_count{6u},
     .events
     {
-        libjst::test::shared_event_t{6u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0, 1, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{9u, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1, 0, 0}},
     },
     .context_size{4u}
 }));
@@ -656,7 +656,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 1}},
     },
     .context_size{3u}
 }));
@@ -668,7 +668,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 1, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 1, 0, 1}},
     },
     .context_size{3u}
 }));
@@ -680,7 +680,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{6u, libjst::test::deletion_t{4}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{3u}
 }));
@@ -692,7 +692,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 0, 0}},
     },
     .context_size{4u}
 }));
@@ -704,7 +704,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 1, 1, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 1, 1, 1}},
     },
     .context_size{4u}
 }));
@@ -731,8 +731,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 1, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 1, 0, 0}},
     },
     .context_size{4u}
 }));
@@ -768,10 +768,10 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 1, 1, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{3u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{6u, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
-        libjst::test::shared_event_t{9u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 1, 1, 1, 0, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -809,19 +809,19 @@ libjst::test::traversal_fixture
     .sequence_count{9u},
     .events
     {
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::deletion_t{2},
                                      libjst::test::coverage_t{1, 1, 1, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{2u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u},
                                      libjst::test::deletion_t{6},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 1, 1, 0}},
-        libjst::test::shared_event_t{3u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u},
                                      libjst::test::deletion_t{1},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{6u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u},
                                      libjst::test::deletion_t{2},
                                      libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{9u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u},
                                      libjst::test::deletion_t{1},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 0, 1, 0}},
     },
@@ -852,8 +852,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{2u, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -889,8 +889,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"bbbbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbbbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -902,8 +902,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -915,8 +915,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{9}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{9}, libjst::test::coverage_t{1, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -928,16 +928,16 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{2u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"iii"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"jjj"s},
                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
     },
@@ -951,9 +951,9 @@ libjst::test::traversal_fixture
     .sequence_count{5u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"q"s}, libjst::test::coverage_t{0, 1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"q"s}, libjst::test::coverage_t{0, 1, 1, 0, 0}},
     },
     .context_size{4u}
 }));
@@ -979,9 +979,9 @@ libjst::test::traversal_fixture
     .sequence_count{5u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
-        libjst::test::shared_event_t{4u, libjst::test::substitution_t{"q"s}, libjst::test::coverage_t{0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"q"s}, libjst::test::coverage_t{0, 1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 0, 0, 0}},
     },
     .context_size{4u}
 }));
@@ -993,8 +993,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -1006,8 +1006,8 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -1019,10 +1019,10 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{2u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 1, 0}},
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"ii"s}, libjst::test::coverage_t{1, 1, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"ii"s}, libjst::test::coverage_t{1, 1, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -1034,10 +1034,10 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
-        libjst::test::shared_event_t{2u, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 1, 0}},
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"ii"s}, libjst::test::coverage_t{0, 0, 0, 1}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"ii"s}, libjst::test::coverage_t{0, 0, 0, 1}},
     },
     .context_size{4u}
 }));
@@ -1049,9 +1049,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"qqq"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"qqq"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{1, 1, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -1063,9 +1063,9 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"qqq"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"qqq"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"i"s}, libjst::test::coverage_t{0, 0, 1, 0}},
     },
     .context_size{4u}
 }));
@@ -1077,28 +1077,28 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::substitution_t{"pppp"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 1, 1}},
-        libjst::test::shared_event_t{2u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 0, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"jjj"s},
                                      libjst::test::coverage_t{0, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"k"s},
                                      libjst::test::coverage_t{0, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::substitution_t{"qq"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 0}},
     },
@@ -1112,31 +1112,31 @@ libjst::test::traversal_fixture
     .sequence_count{16u},
     .events
     {
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::substitution_t{"pppp"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{2u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"jjj"s},
                                      libjst::test::coverage_t{0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::insertion_t{"k"s},
                                      libjst::test::coverage_t{0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::substitution_t{"qq"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{5u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{9u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u},
                                      libjst::test::insertion_t{"llll"},
                                      libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}},
     },
@@ -1178,13 +1178,13 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 1, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"bb"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::deletion_t{5},
                                      libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
     },
@@ -1258,25 +1258,25 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 1, 1, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"jjjj"s},
                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 1, 1}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::substitution_t{"qqqqq"s},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::deletion_t{5},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 0, 1, 0}},
-        libjst::test::shared_event_t{6u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u},
                                      libjst::test::insertion_t{"kkkk"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{8u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u},
                                      libjst::test::substitution_t{"rr"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 1}},
     },
@@ -1290,40 +1290,40 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"f"s},
                                      libjst::test::coverage_t{1, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"gg"s},
                                      libjst::test::coverage_t{0, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"hhh"s},
                                      libjst::test::coverage_t{0, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::substitution_t{"pppp"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"jjjj"s},
                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 1, 1}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::substitution_t{"qqqqq"s},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::deletion_t{5},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 0, 1, 0}},
-        libjst::test::shared_event_t{6u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u},
                                      libjst::test::insertion_t{"kkkk"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{8u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u},
                                      libjst::test::substitution_t{"rr"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 1}},
-        libjst::test::shared_event_t{10u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 10u},
                                      libjst::test::insertion_t{"lll"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 0, 1}},
     },

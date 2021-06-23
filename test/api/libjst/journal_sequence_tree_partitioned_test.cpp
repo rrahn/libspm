@@ -114,7 +114,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{4u},
     .bin_count{1u}
@@ -138,7 +138,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{4u},
     .bin_count{2u}
@@ -155,7 +155,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{2u},
     .bin_count{2u}
@@ -171,7 +171,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -187,7 +187,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{3u, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -203,7 +203,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::insertion_t{"bb"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::insertion_t{"bb"s}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -222,7 +222,7 @@ libjst::test::traversal_fixture
     .sequence_count{4u},
     .events
     {
-        libjst::test::shared_event_t{3u, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 1, 0}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 1, 0}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -235,7 +235,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::insertion_t{"iii"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::insertion_t{"iii"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{4u},
     .bin_count{2u}
@@ -248,7 +248,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{8u, libjst::test::insertion_t{"iii"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"iii"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{4u},
     .bin_count{2u}
@@ -261,7 +261,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -274,7 +274,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -287,7 +287,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{5u, libjst::test::deletion_t{5}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::deletion_t{5}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -300,7 +300,7 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{0u, libjst::test::deletion_t{5}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{5}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{3u},
     .bin_count{2u}
@@ -318,8 +318,8 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{4u, libjst::test::deletion_t{5}, libjst::test::coverage_t{1, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::substitution_t{"cc"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{5}, libjst::test::coverage_t{1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::substitution_t{"cc"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{4u},
     .bin_count{2u}
@@ -337,8 +337,8 @@ libjst::test::traversal_fixture
     .sequence_count{2u},
     .events
     {
-        libjst::test::shared_event_t{6u, libjst::test::insertion_t{"kkkk"s}, libjst::test::coverage_t{1, 0}},
-        libjst::test::shared_event_t{8u, libjst::test::substitution_t{"rr"s}, libjst::test::coverage_t{0, 1}}
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::insertion_t{"kkkk"s}, libjst::test::coverage_t{1, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::substitution_t{"rr"s}, libjst::test::coverage_t{0, 1}}
     },
     .context_size{4u},
     .bin_count{2u}
@@ -362,40 +362,40 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"f"s},
                                      libjst::test::coverage_t{1, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"gg"s},
                                      libjst::test::coverage_t{0, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"hhh"s},
                                      libjst::test::coverage_t{0, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::substitution_t{"pppp"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"jjjj"s},
                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 1, 1}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::substitution_t{"qqqqq"s},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::deletion_t{5},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 0, 1, 0}},
-        libjst::test::shared_event_t{6u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u},
                                      libjst::test::insertion_t{"kkkk"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{8u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u},
                                      libjst::test::substitution_t{"rr"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 1}},
-        libjst::test::shared_event_t{10u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 10u},
                                      libjst::test::insertion_t{"lll"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 0, 1}},
     },
@@ -421,40 +421,40 @@ libjst::test::traversal_fixture
     .sequence_count{8u},
     .events
     {
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"f"s},
                                      libjst::test::coverage_t{1, 0, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"gg"s},
                                      libjst::test::coverage_t{0, 1, 0, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::insertion_t{"hhh"s},
                                      libjst::test::coverage_t{0, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{0u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u},
                                      libjst::test::substitution_t{"pppp"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{1u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u},
                                      libjst::test::deletion_t{3},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"ii"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::insertion_t{"jjjj"s},
                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 1, 1}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::substitution_t{"qqqqq"s},
                                      libjst::test::coverage_t{1, 0, 1, 0, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{4u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u},
                                      libjst::test::deletion_t{5},
                                      libjst::test::coverage_t{0, 0, 0, 0, 1, 0, 1, 0}},
-        libjst::test::shared_event_t{6u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u},
                                      libjst::test::insertion_t{"kkkk"s},
                                      libjst::test::coverage_t{0, 1, 0, 1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{8u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u},
                                      libjst::test::substitution_t{"rr"s},
                                      libjst::test::coverage_t{0, 0, 0, 0, 0, 0, 0, 1}},
-        libjst::test::shared_event_t{10u,
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 10u},
                                      libjst::test::insertion_t{"lll"s},
                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 0, 1}},
     },

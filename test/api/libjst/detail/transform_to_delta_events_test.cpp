@@ -15,6 +15,7 @@
 struct transform_to_delta_events_test : public ::testing::Test
 {
     using delta_event_t = libjst::detail::delta_event<char>;
+    using position_t = typename delta_event_t::position_type;
 
     std::string base_sequence{"aaaaccccggggtttt"};
 
@@ -64,7 +65,8 @@ TEST_F(transform_to_delta_events_test, substitutions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_substitution{"gggg"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_substitution{"gggg"s}}));
     }
 
     { // in middle
@@ -73,7 +75,8 @@ TEST_F(transform_to_delta_events_test, substitutions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{4, libjst::detail::delta_kind_substitution{"gggg"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 4u},
+                                                  libjst::detail::delta_kind_substitution{"gggg"s}}));
     }
 
     { // at end
@@ -82,7 +85,8 @@ TEST_F(transform_to_delta_events_test, substitutions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{12, libjst::detail::delta_kind_substitution{"gggg"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 12u},
+                                                  libjst::detail::delta_kind_substitution{"gggg"s}}));
     }
 
     { // multiple
@@ -92,9 +96,12 @@ TEST_F(transform_to_delta_events_test, substitutions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 3u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_substitution{"gg"s}}));
-        EXPECT_EQ(delta_events[1], (delta_event_t{3, libjst::detail::delta_kind_substitution{"tt"s}}));
-        EXPECT_EQ(delta_events[2], (delta_event_t{6, libjst::detail::delta_kind_substitution{"aa"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_substitution{"gg"s}}));
+        EXPECT_EQ(delta_events[1], (delta_event_t{position_t{.offset = 3u},
+                                                  libjst::detail::delta_kind_substitution{"tt"s}}));
+        EXPECT_EQ(delta_events[2], (delta_event_t{position_t{.offset = 6u},
+                                                  libjst::detail::delta_kind_substitution{"aa"s}}));
     }
 }
 
@@ -108,7 +115,8 @@ TEST_F(transform_to_delta_events_test, deletions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_deletion{4}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_deletion{4}}));
     }
 
     { // in middle
@@ -117,7 +125,8 @@ TEST_F(transform_to_delta_events_test, deletions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{5, libjst::detail::delta_kind_deletion{4}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 5u},
+                                                  libjst::detail::delta_kind_deletion{4}}));
     }
 
     { // at end
@@ -126,7 +135,8 @@ TEST_F(transform_to_delta_events_test, deletions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{11, libjst::detail::delta_kind_deletion{5}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 11u},
+                                                  libjst::detail::delta_kind_deletion{5}}));
     }
 
     { // multiple
@@ -136,9 +146,12 @@ TEST_F(transform_to_delta_events_test, deletions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 3u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_deletion{2}}));
-        EXPECT_EQ(delta_events[1], (delta_event_t{3, libjst::detail::delta_kind_deletion{2}}));
-        EXPECT_EQ(delta_events[2], (delta_event_t{6, libjst::detail::delta_kind_deletion{3}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_deletion{2}}));
+        EXPECT_EQ(delta_events[1], (delta_event_t{position_t{.offset = 3u},
+                                                  libjst::detail::delta_kind_deletion{2}}));
+        EXPECT_EQ(delta_events[2], (delta_event_t{position_t{.offset = 6u},
+                                                  libjst::detail::delta_kind_deletion{3}}));
     }
 }
 
@@ -152,7 +165,8 @@ TEST_F(transform_to_delta_events_test, insertions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_insertion{"aaa"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_insertion{"aaa"s}}));
     }
 
     { // in middle
@@ -161,7 +175,8 @@ TEST_F(transform_to_delta_events_test, insertions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{4, libjst::detail::delta_kind_insertion{"ccc"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 4u},
+                                                  libjst::detail::delta_kind_insertion{"ccc"s}}));
     }
 
     { // at end
@@ -170,7 +185,8 @@ TEST_F(transform_to_delta_events_test, insertions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 1u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{13, libjst::detail::delta_kind_insertion{"ttt"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 13u},
+                                                  libjst::detail::delta_kind_insertion{"ttt"s}}));
     }
 
     { // multiple
@@ -180,9 +196,12 @@ TEST_F(transform_to_delta_events_test, insertions)
         auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
         EXPECT_EQ(delta_events.size(), 3u);
-        EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_insertion{"aaa"s}}));
-        EXPECT_EQ(delta_events[1], (delta_event_t{1, libjst::detail::delta_kind_insertion{"c"s}}));
-        EXPECT_EQ(delta_events[2], (delta_event_t{7, libjst::detail::delta_kind_insertion{"gtttt"s}}));
+        EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                                  libjst::detail::delta_kind_insertion{"aaa"s}}));
+        EXPECT_EQ(delta_events[1], (delta_event_t{position_t{.offset = 1u},
+                                                  libjst::detail::delta_kind_insertion{"c"s}}));
+        EXPECT_EQ(delta_events[2], (delta_event_t{position_t{.offset = 7u},
+                                                  libjst::detail::delta_kind_insertion{"gtttt"s}}));
     }
 }
 
@@ -204,11 +223,18 @@ TEST_F(transform_to_delta_events_test, mixed)
     auto delta_events = libjst::detail::transform_to_delta_events<char>(alignment);
 
     EXPECT_EQ(delta_events.size(), 7u);
-    EXPECT_EQ(delta_events[0], (delta_event_t{0, libjst::detail::delta_kind_insertion{"aa"s}}));
-    EXPECT_EQ(delta_events[1], (delta_event_t{2, libjst::detail::delta_kind_substitution{"c"s}}));
-    EXPECT_EQ(delta_events[2], (delta_event_t{3, libjst::detail::delta_kind_insertion{"c"s}}));
-    EXPECT_EQ(delta_events[3], (delta_event_t{3, libjst::detail::delta_kind_deletion{2}}));
-    EXPECT_EQ(delta_events[4], (delta_event_t{8, libjst::detail::delta_kind_insertion{"g"s}}));
-    EXPECT_EQ(delta_events[5], (delta_event_t{8, libjst::detail::delta_kind_substitution{"a"s}}));
-    EXPECT_EQ(delta_events[6], (delta_event_t{9, libjst::detail::delta_kind_deletion{2}}));
+    EXPECT_EQ(delta_events[0], (delta_event_t{position_t{.offset = 0u},
+                                              libjst::detail::delta_kind_insertion{"aa"s}}));
+    EXPECT_EQ(delta_events[1], (delta_event_t{position_t{.offset = 2u},
+                                              libjst::detail::delta_kind_substitution{"c"s}}));
+    EXPECT_EQ(delta_events[2], (delta_event_t{position_t{.offset = 3u},
+                                              libjst::detail::delta_kind_insertion{"c"s}}));
+    EXPECT_EQ(delta_events[3], (delta_event_t{position_t{.offset = 3u},
+                                              libjst::detail::delta_kind_deletion{2}}));
+    EXPECT_EQ(delta_events[4], (delta_event_t{position_t{.offset = 8u},
+                                              libjst::detail::delta_kind_insertion{"g"s}}));
+    EXPECT_EQ(delta_events[5], (delta_event_t{position_t{.offset = 8u},
+                                              libjst::detail::delta_kind_substitution{"a"s}}));
+    EXPECT_EQ(delta_events[6], (delta_event_t{position_t{.offset = 9u},
+                                              libjst::detail::delta_kind_deletion{2}}));
 }

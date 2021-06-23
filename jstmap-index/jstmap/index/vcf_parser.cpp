@@ -231,6 +231,8 @@ private:
     {
         using namespace std::literals;
 
+        using event_position_t = typename event_type::position_type;
+
         std::vector<event_type> delta_events;
         // ALT either a sequence or a id?
         // ALT value: comma separated list, each value can represent "ACGTN*",
@@ -293,7 +295,7 @@ private:
             assert(ref_it <= ref_it_rev.base());
             assert(alt_it <= alt_it_rev.base());
 
-            size_t delta_position = reference_position() + ref_prefix_offset;
+            event_position_t delta_position{.idx = 0, .offset = reference_position() + ref_prefix_offset};
 
             if (alternative.size() < reference_segment.size()) // Deletion.
             {

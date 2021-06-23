@@ -22,6 +22,7 @@ struct delta_event_shared_fixture : public ::testing::Test
     using deletion_t = typename delta_event_shared_t::deletion_type;
     using delta_event_t = typename delta_event_shared_t::delta_event_type;
     using coverage_t = typename delta_event_shared_t::coverage_type;
+    using position_t = typename delta_event_shared_t::position_type;
 
     static constexpr std::string_view expected_substitution_archive =
 R"json({
@@ -109,22 +110,24 @@ TEST_F(delta_event_shared_fixture, construction)
 
     // Special constructor.
     EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, delta_event_t, coverage_t>));
-    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, size_t, insertion_t, coverage_t>));
-    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, size_t, deletion_t, coverage_t>));
-    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, size_t, substitution_t, coverage_t>));
+    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, position_t, insertion_t, coverage_t>));
+    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, position_t, deletion_t, coverage_t>));
+    EXPECT_TRUE((std::is_constructible_v<delta_event_shared_t, position_t, substitution_t, coverage_t>));
 }
 
 TEST_F(delta_event_shared_fixture, construct_from_substitution)
 {
     using namespace std::literals;
 
-    delta_event_shared_t node1{delta_event_t{10u, substitution_t{"abc"s}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node1{delta_event_t{position_t{.offset = 10u},
+                                             substitution_t{"abc"s}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node1.position(), 10u);
+    EXPECT_EQ(node1.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node1.is_substitution());
 
-    delta_event_shared_t node2{10u, substitution_t{"abc"s}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    EXPECT_EQ(node2.position(), 10u);
+    delta_event_shared_t node2{position_t{.offset = 10u}, substitution_t{"abc"s}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    EXPECT_EQ(node2.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node2.is_substitution());
 }
 
@@ -132,41 +135,49 @@ TEST_F(delta_event_shared_fixture, construct_from_insertion)
 {
     using namespace std::literals;
 
-    delta_event_shared_t node1{delta_event_t{10u, insertion_t{"abc"s}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node1{delta_event_t{position_t{.offset = 10u},
+                               insertion_t{"abc"s}},
+                               coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node1.position(), 10u);
+    EXPECT_EQ(node1.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node1.is_insertion());
 
-    delta_event_shared_t node2{10u, insertion_t{"abc"s}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node2{position_t{.offset = 10u}, insertion_t{"abc"s}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node2.position(), 10u);
+    EXPECT_EQ(node2.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node2.is_insertion());
 }
 
 TEST_F(delta_event_shared_fixture, construct_from_deletion)
 {
-    delta_event_shared_t node1{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node1{delta_event_t{position_t{.offset = 10u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node1.position(), 10u);
+    EXPECT_EQ(node1.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node1.is_deletion());
 
-    delta_event_shared_t node2{10u, deletion_t{1}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node2{position_t{.offset = 10u}, deletion_t{1}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node2.position(), 10u);
+    EXPECT_EQ(node2.position(), position_t{.offset = 10u});
     EXPECT_TRUE(node2.is_deletion());
 }
 
 TEST_F(delta_event_shared_fixture, position)
 {
-    delta_event_shared_t node{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node{delta_event_t{position_t{.offset = 10u},
+                                            deletion_t{1}},
+                                            coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
-    EXPECT_EQ(node.position(), 10u);
-    EXPECT_EQ(std::as_const(node).position(), 10u);
+    EXPECT_EQ(node.position(), position_t{.offset = 10u});
+    EXPECT_EQ(std::as_const(node).position(), position_t{.offset = 10u});
 }
 
 TEST_F(delta_event_shared_fixture, coverage)
 {
-    delta_event_shared_t node{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node{delta_event_t{position_t{.offset = 10u},
+                                            deletion_t{1}},
+                                            coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
     EXPECT_EQ(node.coverage(), (coverage_t{0, 1, 1, 0, 0, 1, 1}));
     EXPECT_EQ(std::as_const(node).coverage(), (coverage_t{0, 1, 1, 0, 0, 1, 1}));
@@ -176,10 +187,18 @@ TEST_F(delta_event_shared_fixture, equality)
 {
     using namespace std::literals;
 
-    delta_event_shared_t node1{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    delta_event_shared_t node2{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 0}};
-    delta_event_shared_t node3{delta_event_t{9u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 0}};
-    delta_event_shared_t node4{delta_event_t{9u, substitution_t{"a"s}}, coverage_t{0, 1, 1, 0, 0, 1, 0}};
+    delta_event_shared_t node1{delta_event_t{position_t{.offset = 10u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node2{delta_event_t{position_t{.offset = 10u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 0}};
+    delta_event_shared_t node3{delta_event_t{position_t{.offset = 9u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 0}};
+    delta_event_shared_t node4{delta_event_t{position_t{.offset = 9u},
+                                             substitution_t{"a"s}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 0}};
 
     EXPECT_EQ(std::as_const(node1), std::as_const(node1));
     EXPECT_NE(std::as_const(node1), std::as_const(node2));
@@ -206,13 +225,27 @@ TEST_F(delta_event_shared_fixture, less)
 {
     using namespace std::literals;
 
-    delta_event_shared_t node1{delta_event_t{0u, deletion_t{2}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    delta_event_shared_t node2{delta_event_t{0u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    delta_event_shared_t node3{delta_event_t{0u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 0}};
-    delta_event_shared_t node4{delta_event_t{0u, substitution_t{"abc"s}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    delta_event_shared_t node5{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
-    delta_event_shared_t node6{delta_event_t{10u, deletion_t{1}}, coverage_t{0, 1, 1, 0, 0, 1, 0}};
-    delta_event_shared_t node7{delta_event_t{10u, substitution_t{"abc"s}}, coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node1{delta_event_t{position_t{.offset = 0u},
+                                             deletion_t{2}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node2{delta_event_t{position_t{.offset = 0u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node3{delta_event_t{position_t{.offset = 0u},
+                                             deletion_t{1}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 0}};
+    delta_event_shared_t node4{delta_event_t{position_t{.offset = 0u},
+                                             substitution_t{"abc"s}},
+                                             coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node5{delta_event_t{position_t{.offset = 10u},
+                                              deletion_t{1}},
+                                              coverage_t{0, 1, 1, 0, 0, 1, 1}};
+    delta_event_shared_t node6{delta_event_t{position_t{.offset = 10u},
+                                              deletion_t{1}},
+                                              coverage_t{0, 1, 1, 0, 0, 1, 0}};
+    delta_event_shared_t node7{delta_event_t{position_t{.offset = 10u},
+                                              substitution_t{"abc"s}},
+                                              coverage_t{0, 1, 1, 0, 0, 1, 1}};
 
     EXPECT_FALSE(std::as_const(node1) < std::as_const(node1));
     EXPECT_FALSE(std::as_const(node1) < std::as_const(node2));
@@ -275,11 +308,11 @@ TEST_F(delta_event_shared_fixture, fill_vector)
 {
     std::vector nodes
     {
-        delta_event_shared_t{delta_event_t{10u, deletion_t{1}}, coverage_t{1, 0}},
-        delta_event_shared_t{delta_event_t{11u, deletion_t{1}}, coverage_t{0, 1}},
+        delta_event_shared_t{delta_event_t{position_t{.offset = 10u}, deletion_t{1}}, coverage_t{1, 0}},
+        delta_event_shared_t{delta_event_t{position_t{.offset = 11u}, deletion_t{1}}, coverage_t{0, 1}},
     };
 
-    nodes.emplace_back(12u, insertion_t{"xxx"}, coverage_t{1, 1});
+    nodes.emplace_back(position_t{.offset = 12u}, insertion_t{"xxx"}, coverage_t{1, 1});
 
     EXPECT_EQ(nodes.size(), 3u);
 }
@@ -288,14 +321,15 @@ TEST_F(delta_event_shared_fixture, formatted_output)
 {
     using namespace std::literals;
 
-    delta_event_shared_t del{10u, deletion_t{1}, coverage_t{1, 0, 1, 0}};
-    delta_event_shared_t ins{11u, insertion_t{"ii"s}, coverage_t{1, 1, 0, 0}};
-    delta_event_shared_t sub{12u, substitution_t{"sss"s}, coverage_t{0, 0, 1, 1}};
+    delta_event_shared_t del{position_t{.offset = 10u}, deletion_t{1}, coverage_t{1, 0, 1, 0}};
+    delta_event_shared_t ins{position_t{.offset = 11u}, insertion_t{"ii"s}, coverage_t{1, 1, 0, 0}};
+    delta_event_shared_t sub{position_t{.offset = 12u}, substitution_t{"sss"s}, coverage_t{0, 0, 1, 1}};
 
     std::stringstream sstream;
 
     sstream << del << '\n' << ins << '\n' << sub;
-    EXPECT_EQ(sstream.str(), ("(10, del: 1) ~ <1010>\n(11, ins: ii) ~ <1100>\n(12, sub: sss) ~ <0011>"s));
+    EXPECT_EQ(sstream.str(),
+             ("([idx: 0, pos: 10], del: 1) ~ <1010>\n([idx: 0, pos: 11], ins: ii) ~ <1100>\n([idx: 0, pos: 12], sub: sss) ~ <0011>"s));
 }
 
 TEST_F(delta_event_shared_fixture, save_substitution)
@@ -303,7 +337,7 @@ TEST_F(delta_event_shared_fixture, save_substitution)
     using namespace std::literals;
     std::stringstream archive_stream{};
 
-    delta_event_shared_t substitution_event{23u, substitution_t{"abcd"s}, coverage_t{1, 0, 1, 0}};
+    delta_event_shared_t substitution_event{position_t{.offset = 23u}, substitution_t{"abcd"s}, coverage_t{1, 0, 1, 0}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -318,7 +352,7 @@ TEST_F(delta_event_shared_fixture, save_insertion)
     using namespace std::literals;
     std::stringstream archive_stream{};
 
-    delta_event_shared_t insertion_event{5u, insertion_t{"ijklm"s}, coverage_t{1, 0, 1, 0}};
+    delta_event_shared_t insertion_event{position_t{.offset = 5u}, insertion_t{"ijklm"s}, coverage_t{1, 0, 1, 0}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -332,7 +366,7 @@ TEST_F(delta_event_shared_fixture, save_deletion)
 {
     std::stringstream archive_stream{};
 
-    delta_event_shared_t deletion_event{100u, deletion_t{10}, coverage_t{1, 0, 1, 0}};
+    delta_event_shared_t deletion_event{position_t{.offset = 100u}, deletion_t{10}, coverage_t{1, 0, 1, 0}};
 
     {
         cereal::JSONOutputArchive output_archive(archive_stream);
@@ -355,7 +389,9 @@ TEST_F(delta_event_shared_fixture, load_substitution)
     }
 
     EXPECT_EQ(substitution_event,
-              (delta_event_shared_t{23u, libjst::detail::delta_kind_substitution{"abcd"s}, coverage_t{1, 0, 1, 0}}));
+              (delta_event_shared_t{position_t{.offset = 23u},
+                                    libjst::detail::delta_kind_substitution{"abcd"s},
+                                    coverage_t{1, 0, 1, 0}}));
 }
 
 TEST_F(delta_event_shared_fixture, load_insertion)
@@ -371,7 +407,9 @@ TEST_F(delta_event_shared_fixture, load_insertion)
     }
 
     EXPECT_EQ(insertion_event,
-              (delta_event_shared_t{5u, libjst::detail::delta_kind_insertion{"ijklm"s}, coverage_t{1, 0, 1, 0}}));
+              (delta_event_shared_t{position_t{.offset = 5u},
+                                    libjst::detail::delta_kind_insertion{"ijklm"s},
+                                    coverage_t{1, 0, 1, 0}}));
 }
 
 TEST_F(delta_event_shared_fixture, load_deletion)
@@ -385,5 +423,7 @@ TEST_F(delta_event_shared_fixture, load_deletion)
     }
 
     EXPECT_EQ(deletion_event,
-              (delta_event_shared_t{100u, libjst::detail::delta_kind_deletion{10}, coverage_t{1, 0, 1, 0}}));
+              (delta_event_shared_t{position_t{.offset = 100u},
+                                    libjst::detail::delta_kind_deletion{10},
+                                    coverage_t{1, 0, 1, 0}}));
 }
