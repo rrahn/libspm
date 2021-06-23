@@ -421,7 +421,9 @@ TEST_F(journaled_sequence_tree_fixture, context_enumerator)
 // The test data serialised to disk.
 inline constexpr std::string_view expected_output =
 R"json({
-    "value0": "aaaabbbbcccc",
+    "value0": [
+        "aaaabbbbcccc"
+    ],
     "value1": [
         {
             "value0": {
