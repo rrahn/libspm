@@ -14,6 +14,8 @@
 
 #include <concepts>
 
+#include <seqan3/core/concept/cereal.hpp>
+
 namespace libjst
 {
 /*!\brief A specific position type for the libjst::journaled_sequence_tree reference collecetion.
@@ -74,6 +76,34 @@ struct reference_position
 
     //!\brief Default three-way comparison.
     constexpr auto operator<=>(reference_position const &) const noexcept = default;
+
+    /*!\name Serialisation
+     * \{
+     */
+    /*!\brief Saves this reference position to the given output archive.
+     *
+     * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object to.
+     */
+    template <seqan3::cereal_output_archive output_archive_t>
+    void save(output_archive_t & archive) const
+    {
+        archive(idx, offset);
+    }
+
+    /*!\brief Loads this reference position from the given input archive.
+     *
+     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     *
+     * \param[in, out] archive The archive to serialise this object from.
+     */
+    template <seqan3::cereal_input_archive input_archive_t>
+    void load(input_archive_t & archive)
+    {
+        archive(idx, offset);
+    }
+    //!\}
 };
 
 /*!\brief A specific position type for the libjst::journaled_sequence_tree reference collection.

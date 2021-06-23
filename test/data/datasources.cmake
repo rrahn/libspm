@@ -41,11 +41,11 @@ declare_datasource (FILE sim_refx5.fasta
 
 declare_datasource (FILE sim_refx5.jst
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_refx5.jst
-                    URL_HASH SHA256=5c9cd825965fd3693b222186a8c0515a5ff2e48715eee134ccdf1af6940b6902)
+                    URL_HASH SHA256=65196d9a73d206cee05feabf14a41377bda42f0a68ebfff61959f28bc6b2340e)
 
 declare_datasource (FILE sim_refx5_p0.jst
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_refx5_p0.jst
-                    URL_HASH SHA256=d018bad5ee143c23991be81e1b01aa22e5f2c2f2de0d030f567e3de6343a9b06)
+                    URL_HASH SHA256=6ddfdfd810f1c1e5fa559603b8146756d78c0b0fc5c6862279e36d1bedb79613)
 
 declare_datasource (FILE sim_reads_ref1x10.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_reads_ref1x10.fa

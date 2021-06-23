@@ -21,7 +21,10 @@ struct delta_operation_fixture : public ::testing::Test
 
     static constexpr std::string_view expected_substitution_archive =
 R"json({
-    "value0": 23,
+    "value0": {
+        "value0": 0,
+        "value1": 23
+    },
     "value1": {
         "index": 2,
         "data": {
@@ -39,7 +42,10 @@ R"json({
 
     static constexpr std::string_view expected_snp_archive =
 R"json({
-    "value0": 23,
+    "value0": {
+        "value0": 0,
+        "value1": 23
+    },
     "value1": {
         "index": 1,
         "data": {
@@ -52,7 +58,10 @@ R"json({
 
     static constexpr std::string_view expected_insertion_archive =
 R"json({
-    "value0": 5,
+    "value0": {
+        "value0": 0,
+        "value1": 5
+    },
     "value1": {
         "index": 0,
         "data": {
@@ -71,7 +80,10 @@ R"json({
 
     static constexpr std::string_view expected_deletion_archive =
 R"json({
-    "value0": 100,
+    "value0": {
+        "value0": 0,
+        "value1": 100
+    },
     "value1": {
         "index": 3,
         "data": {

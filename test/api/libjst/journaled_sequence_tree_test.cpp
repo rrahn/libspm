@@ -425,7 +425,10 @@ R"json({
     "value1": [
         {
             "value0": {
-                "value0": 0,
+                "value0": {
+                    "value0": 0,
+                    "value1": 0
+                },
                 "value1": {
                     "index": 3,
                     "data": {
@@ -444,7 +447,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 12,
+                "value0": {
+                    "value0": 0,
+                    "value1": 12
+                },
                 "value1": {
                     "index": 0,
                     "data": {
@@ -470,7 +476,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 12,
+                "value0": {
+                    "value0": 0,
+                    "value1": 12
+                },
                 "value1": {
                     "index": 0,
                     "data": {
@@ -496,7 +505,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 0,
+                "value0": {
+                    "value0": 0,
+                    "value1": 0
+                },
                 "value1": {
                     "index": 3,
                     "data": {
@@ -515,7 +527,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 4,
+                "value0": {
+                    "value0": 0,
+                    "value1": 4
+                },
                 "value1": {
                     "index": 0,
                     "data": {
@@ -537,7 +552,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 4,
+                "value0": {
+                    "value0": 0,
+                    "value1": 4
+                },
                 "value1": {
                     "index": 3,
                     "data": {
@@ -556,7 +574,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 8,
+                "value0": {
+                    "value0": 0,
+                    "value1": 8
+                },
                 "value1": {
                     "index": 0,
                     "data": {
@@ -578,7 +599,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 8,
+                "value0": {
+                    "value0": 0,
+                    "value1": 8
+                },
                 "value1": {
                     "index": 3,
                     "data": {
@@ -597,7 +621,10 @@ R"json({
         },
         {
             "value0": {
-                "value0": 12,
+                "value0": {
+                    "value0": 0,
+                    "value1": 12
+                },
                 "value1": {
                     "index": 0,
                     "data": {
