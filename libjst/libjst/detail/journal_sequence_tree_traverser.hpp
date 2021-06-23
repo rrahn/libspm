@@ -841,7 +841,10 @@ private:
         for(auto && [offset, is_covered] : seqan3::views::zip(sequence_offsets, branch_coverage))
         {
             if (is_covered)
-                context_positions.emplace_back(sequence_id, offset + begin_position);
+            {
+                context_positions.emplace_back(sequence_id,
+                                               position_type{this->contig_index(), offset + begin_position});
+            }
 
             ++sequence_id;
         };

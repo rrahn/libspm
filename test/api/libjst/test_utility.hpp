@@ -144,7 +144,7 @@ protected:
             for (size_t context_position = 0; context_position < context_end_position; ++context_position)
             {
                 libjst::context_position context_location{.sequence_id = sequence_index,
-                                                          .sequence_position = context_position};
+                                                          .sequence_position = {0u, context_position}};
                 using value_t = context_position_map_t::value_type;
                 value_t insert_value{sv.substr(context_position, context_size), std::vector{context_location}};
                 if (auto [it, inserted] = context_position_map.insert(std::move(insert_value)); !inserted)
