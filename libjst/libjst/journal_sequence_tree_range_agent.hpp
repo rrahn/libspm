@@ -59,6 +59,7 @@ private:
     using typename base_t::size_type;
     using typename base_t::segment_type;
     using typename base_t::traversal_direction;
+    using typename base_t::position_type;
 
     // The iterator type.
     class iterator;
@@ -93,7 +94,9 @@ public:
      */
     template <search_stack_observer ...observer_t>
     journal_sequence_tree_range_agent(jst_t const * jst, size_t const context_size, observer_t & ...observer) noexcept :
-        journal_sequence_tree_range_agent{model_t{jst, 0, std::numeric_limits<std::ptrdiff_t>::max()},
+        journal_sequence_tree_range_agent{model_t{jst,
+                                                  position_type{0u, 0u},
+                                                  position_type{0u, std::numeric_limits<size_t>::max()}},
                                           context_size,
                                           observer...}
     {}

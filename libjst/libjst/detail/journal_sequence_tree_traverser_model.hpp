@@ -98,15 +98,17 @@ public:
      * always return only valid contexts positions.
      */
     journal_sequence_tree_traverser_model(jst_t const * jst,
-                                          std::ptrdiff_t begin_pos,
-                                          std::ptrdiff_t end_pos) noexcept :
-        _jst_host{jst}
+                                          position_type begin_pos,
+                                          position_type end_pos) noexcept :
+        _jst_host{jst},
+        _begin_pos{std::move(begin_pos)},
+        _end_pos{std::move(end_pos)}
     {
         assert(_jst_host != nullptr);
-        assert(begin_pos < end_pos);
+        assert(_begin_pos < _end_pos);
+        assert(_begin_pos.idx == _end_pos.idx);
 
-        _begin_pos = position_type{.idx = 0, .offset = std::max<size_t>(0, begin_pos)};
-        _end_pos = position_type{.idx = 0, .offset = std::min<size_t>(end_pos, max_end_position())};
+        _end_pos.offset = std::min<size_t>(_end_pos.offset, max_end_position());
     }
     //!\}
 
@@ -139,7 +141,8 @@ protected:
     //!\brief Returns the maximal end position of the underlying journal sequence tree.
     size_t max_end_position() const noexcept
     {
-        return _jst_host->reference().size();
+        assert(_end_pos.idx < _jst_host->_reference.size());
+        return _jst_host->_reference[_end_pos.idx].size();
     }
 
     //!\brief Returns the event queue containing the branch events from the underlying host.

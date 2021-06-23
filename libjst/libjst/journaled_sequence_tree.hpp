@@ -75,12 +75,14 @@ private:
 
     using position_agent_type = detail::journal_sequence_tree_position_agent<type>; //!< The position agent type.
 
+    using sequence_collection_t = std::vector<sequence_t>; //!< The type of the sequence collection.
+
     //!\cond
     template <typename>
     friend class detail::journal_sequence_tree_traverser_model;
     //!\endcond
 
-    std::vector<sequence_t> _reference; //!< The internal reference collection used for referential compression.
+    sequence_collection_t _reference; //!< The internal reference collection used for referential compression.
     event_list_type _delta_events{}; //!< The list of stored delta events.
     sorted_vector<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
     sorted_vector<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.

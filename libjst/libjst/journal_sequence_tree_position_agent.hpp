@@ -58,6 +58,7 @@ private:
     using typename base_t::size_type;
     using typename base_t::segment_type;
     using typename base_t::traversal_direction;
+    using typename base_t::position_type;
 
     // The iterator type.
     class iterator;
@@ -87,7 +88,10 @@ public:
      * The range agent is initialised with the given context size and attaches the observer to the stack registry.
      */
     journal_sequence_tree_position_agent(jst_t const * jst, size_t const context_size) noexcept :
-        journal_sequence_tree_position_agent{model_t{jst, 0, std::numeric_limits<std::ptrdiff_t>::max()}, context_size}
+        journal_sequence_tree_position_agent{model_t{jst,
+                                                     position_type{0u, 0u},
+                                                     position_type{0u, std::numeric_limits<size_t>::max()}},
+                                             context_size}
     {}
 
     /*!\brief Constructs the range agent from a given traverser model and a context size.

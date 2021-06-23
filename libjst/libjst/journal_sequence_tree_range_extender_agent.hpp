@@ -62,6 +62,7 @@ private:
     using typename base_t::delta_event_shared_type;
     using typename base_t::traversal_direction;
     using typename base_t::journal_decorator_type;
+    using typename base_t::position_type;
 
     // The iterator type.
     template <traversal_direction>
@@ -104,7 +105,9 @@ public:
      */
     journal_sequence_tree_range_extender_agent(jst_t const * jst,
                                                journal_sequence_tree_coordinate coordinate) noexcept :
-        journal_sequence_tree_range_extender_agent{model_t{jst, 0, std::numeric_limits<std::ptrdiff_t>::max()},
+        journal_sequence_tree_range_extender_agent{model_t{jst,
+                                                           position_type{0u, 0u},
+                                                           position_type{0u, std::numeric_limits<size_t>::max()}},
                                                    std::move(coordinate)}
     {}
 
