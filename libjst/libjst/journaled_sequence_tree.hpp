@@ -79,7 +79,7 @@ private:
     friend class detail::journal_sequence_tree_traverser_model;
     //!\endcond
 
-    sequence_t _reference; //!< The internal reference used for referential compression.
+    std::vector<sequence_t> _reference; //!< The internal reference collection used for referential compression.
     event_list_type _delta_events{}; //!< The list of stored delta events.
     sorted_vector<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
     sorted_vector<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
@@ -134,7 +134,7 @@ public:
     //!\brief Returns the stored reference sequence.
     sequence_type const & reference() const
     {
-        return _reference;
+        return _reference.front();
     }
 
     /*!\brief Returns the target sequence at the specified index.
@@ -347,7 +347,7 @@ public:
 
         constexpr auto out_gaps = [] (gapped_alphabet_t const c) -> bool { return c != seqan3::gap{}; };
 
-        if (!std::ranges::equal(ref | std::views::filter(out_gaps), _reference))
+        if (!std::ranges::equal(ref | std::views::filter(out_gaps), reference()))
         {
             throw std::invalid_argument{"The first aligned sequence must be equal to the reference sequence of this "
                                         "journaled sequence tree without the gaps."};
@@ -424,7 +424,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(_reference, _delta_events, _size);
+        archive(reference(), _delta_events, _size);
     }
 
     /*!\brief Loads this journaled sequence tree from the given input archive.
@@ -436,7 +436,8 @@ public:
     template <seqan3::cereal_input_archive input_archive_t>
     void load(input_archive_t & archive)
     {
-        archive(_reference, _delta_events, _size);
+        _reference.resize(1);
+        archive(_reference.front(), _delta_events, _size);
 
         // Refill the queues which just store pointers.
         std::ranges::for_each(_delta_events, [&] (auto & event)
