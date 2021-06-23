@@ -27,6 +27,7 @@
 #include <libjst/detail/delta_kind_insertion.hpp>
 #include <libjst/detail/delta_kind_snp.hpp>
 #include <libjst/detail/delta_kind_substitution.hpp>
+#include <libjst/reference_position.hpp>
 
 namespace libjst::detail
 {
@@ -62,7 +63,7 @@ public:
     //!\}
 
 private:
-    size_t _position{}; //!< The position of the event.
+    reference_position _position{}; //!< The position of the event.
     delta_variant_type _delta_variant{}; //!< The variant holding one of the valid event types.
 
 public:
@@ -82,7 +83,7 @@ public:
      * \param[in] kind The kind of the delta event.
      */
     explicit delta_event(size_t const position, delta_variant_type kind) :
-        _position{position},
+        _position{.idx = 0, .offset = position},
         _delta_variant{std::move(kind)}
     {}
     //!\}
@@ -93,7 +94,7 @@ public:
     //!\brief Returns the delta event position.
     constexpr size_type position() const noexcept
     {
-        return _position;
+        return _position.offset;
     }
 
     //!\brief Returns the delta event variant.
@@ -221,7 +222,7 @@ public:
     template <seqan3::cereal_output_archive output_archive_t>
     void save(output_archive_t & archive) const
     {
-        archive(_position, _delta_variant);
+        archive(_position.offset, _delta_variant);
     }
 
     /*!\brief Loads this delta event from the given input archive.
@@ -233,7 +234,7 @@ public:
     template <seqan3::cereal_input_archive input_archive_t>
     void load(input_archive_t & archive)
     {
-        archive(_position, _delta_variant);
+        archive(_position.offset, _delta_variant);
     }
     //!\}
 
