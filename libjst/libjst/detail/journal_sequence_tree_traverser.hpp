@@ -585,12 +585,12 @@ private:
      */
     bool has_full_context_in_branch() const noexcept
     {
-        return context_end_position() >= (_context_size + this->_begin_pos);
+        return context_end_position() >= (_context_size + this->begin_position());
     }
 
     bool has_full_context_in_branch_() const noexcept
     {
-        return context_begin_position() <= (this->_end_pos - _reverse_context_size);
+        return context_begin_position() <= (this->end_position() - _reverse_context_size);
     }
 
     //!\brief Returns the begin position of the context in the active branch.
@@ -854,7 +854,7 @@ private:
         // ----------------------------------------------------------------------------
 
         // The following steps initialises the parameters for the context specific traverser.
-        size_t const bin_end_position = std::min(this->_end_pos + (_context_size - 1), this->max_end_position());
+        size_t const bin_end_position = std::min(this->end_position() + (_context_size - 1), this->max_end_position());
         branch_event_queue_iterator branch_sentinel = this->branch_event_queue().end();
         if (!this->is_final_bin())
         { // The base branch of this bin will stop at the first non insertion branch at the end position.
@@ -888,7 +888,7 @@ private:
         if (!this->is_first_bin())
         {
             // First event with a branch position >= last_context_position and a join position > last_context_position
-            size_t last_context_position = std::min(this->_begin_pos + (_context_size - 1), bin_end_position);
+            size_t last_context_position = std::min(this->begin_position() + (_context_size - 1), bin_end_position);
             delta_event_shared_type key_next{last_context_position, insertion_t{}, coverage_type{}};
             next_branch_event_it = this->branch_event_queue().upper_bound(branch_event_type{std::addressof(key_next)});
         }
@@ -901,7 +901,7 @@ private:
         initial_coverage.resize(this->sequence_count(), true);
 
         _branch_stack.emplace(
-            static_cast<tree_position_type>(this->_begin_pos),  // current context position.
+            static_cast<tree_position_type>(this->begin_position()),  // current context position.
             static_cast<tree_position_type>(bin_end_position), // current branch end position.
             0,
             0, // branch offset.
@@ -917,7 +917,7 @@ private:
         active_branch().next_branch_position = next_branch_position(active_branch());
 
         if (!active_branch().journal_decorator.empty())
-            active_branch().jd_iter += this->_begin_pos;
+            active_branch().jd_iter += this->begin_position();
 
         // ----------------------------------------------------------------------------
         // Initialise the first branch if any exists at the first position.
