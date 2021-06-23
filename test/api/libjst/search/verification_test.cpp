@@ -246,6 +246,7 @@ TEST(verification_test, verify_left)
     using snp_t = typename event_t::snp_type;
     using substitution_t = typename event_t::substitution_type;
     using coverage_t = typename event_t::coverage_type;
+    using position_t = typename event_t::position_type;
 
     //                01234567890123456789
     sequence_t ref = "acgtacgtacgtacgtacgt"_dna5;
@@ -253,9 +254,9 @@ TEST(verification_test, verify_left)
     //                    c
     jst_t jst{std::move(ref), 4};
 
-    jst.insert(event_t{2ull, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
-    jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
-    jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
+    jst.insert(event_t{position_t{.offset = 2ull}, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
+    jst.insert(event_t{position_t{.offset = 4ull}, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
+    jst.insert(event_t{position_t{.offset = 4ull}, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
 
     // To test this we could simply create a range traverser:
     auto enumerator = jst.context_enumerator(4ull);

@@ -26,8 +26,51 @@ namespace libjst
  */
 struct reference_position
 {
-    size_t idx; //!< The index of the reference sequence.
-    size_t offset; //!< The offset within the respective reference sequence.
+    size_t idx{}; //!< The index of the reference sequence.
+    size_t offset{}; //!< The offset within the respective reference sequence.
+
+    reference_position & operator++() noexcept
+    {
+        ++offset;
+        return *this;
+    }
+
+    reference_position & operator+=(size_t const n) noexcept
+    {
+        offset += n;
+        return *this;
+    }
+
+    reference_position operator+(size_t const n) const noexcept
+    {
+        reference_position tmp{*this};
+        tmp.offset += n;
+        return tmp;
+    }
+
+    friend reference_position operator+(size_t const n, reference_position const & rhs) noexcept
+    {
+        return rhs + n;
+    }
+
+    reference_position & operator--() noexcept
+    {
+        --offset;
+        return *this;
+    }
+
+    reference_position & operator-=(size_t const n) noexcept
+    {
+        offset -= n;
+        return *this;
+    }
+
+    reference_position operator-(size_t const n) const noexcept
+    {
+        reference_position tmp{*this};
+        tmp.offset -= n;
+        return tmp;
+    }
 
     //!\brief Default three-way comparison.
     constexpr auto operator<=>(reference_position const &) const noexcept = default;
@@ -42,11 +85,11 @@ struct reference_position
  * \param[in] stream The stream to write to.
  * \param[in] reference_pos The object to stream.
  */
-template <typename stream_t, typename reference_position_t>
+template <typename char_t, typename char_traits_t, typename reference_position_t>
 //!\cond
     requires std::same_as<std::remove_cvref_t<reference_position_t>, reference_position>
 //!\endcond
-stream_t & operator<<(stream_t & stream, reference_position && reference_pos)
+inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream, reference_position_t && reference_pos)
 {
     stream << "["
                 << "idx: " << reference_pos.idx << ", "

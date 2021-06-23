@@ -32,6 +32,7 @@ class journal_sequence_tree_event_base
 private:
     using coverage_type = typename delta_event_t::coverage_type; //!< The coverage type.
     using size_type = typename delta_event_t::size_type; //!< The size type.
+    using position_type = typename delta_event_t::position_type; //!< The position type.
 
     friend derived_t;
 
@@ -77,7 +78,7 @@ public:
      * The branch event position corresponds to the position of the wrapped delta event, while the join event position
      * corresponds to the position of the wrapped delta event plus the deletion size of this event.
      */
-    constexpr size_type position() const noexcept
+    constexpr position_type position() const noexcept
     {
         return as_derived().position_impl();
     }
@@ -125,7 +126,7 @@ public:
     }
 
     //!\brief Compares the wrapped event with another position.
-    constexpr std::weak_ordering operator<=>(size_type const & rhs) const noexcept
+    constexpr std::weak_ordering operator<=>(position_type const & rhs) const noexcept
     {
         return position() <=> rhs;
     }
