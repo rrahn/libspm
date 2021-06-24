@@ -13,9 +13,8 @@
 #include <seqan3/test/performance/units.hpp>
 
 #include <jstmap/global/application_logger.hpp>
-#include <jstmap/index/vcf_parser.hpp>
-#include <jstmap/search/load_jst.hpp>
-
+#include <jstmap/global/load_jst.hpp>
+#include <jstmap/create/vcf_parser.hpp>
 using sequence_t = seqan3::dna5_vector;
 
 auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)

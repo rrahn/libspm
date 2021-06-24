@@ -1,0 +1,199 @@
+The system is: Linux - 5.4.39.mx64.334 - x86_64
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /usr/bin/c++
+Build flags:
+Id flags:
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/home/rahn/workspace/jstmap/create/CMakeFiles/3.16.2/CompilerIdCXX/a.out"
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /home/rahn/workspace/jstmap/create/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/ninja cmTC_75d3d && [1/2] Building CXX object CMakeFiles/cmTC_75d3d.dir/testCXXCompiler.cxx.o
+[2/2] Linking CXX executable cmTC_75d3d
+
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /home/rahn/workspace/jstmap/create/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/ninja cmTC_44ca8 && [1/2] Building CXX object CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o
+Using built-in specs.
+COLLECT_GCC=/usr/bin/c++
+Target: x86_64-pc-linux-gnu
+Configured with: /dev/shm/bee-root/gcc/gcc-7.5.0-0/source/configure --prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --libexecdir=/usr/lib --sysconfdir=/etc --sharedstatedir=/var --localstatedir=/var --libdir=/usr/lib --includedir=/usr/include --datarootdir=/usr/share --datadir=/usr/share --infodir=/usr/share/info --localedir=/usr/share/locale --mandir=/usr/share/man --docdir=/usr/share/doc/gcc --exec-prefix=/usr --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c,fortran,c++,objc,obj-c++ --disable-multilib --with-system-zlib --with-diagnostics-color=auto-if-env
+Thread model: posix
+gcc version 7.5.0 (GCC)
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o -version -o /scratch/local/cc9g2IvF.s
+GNU C++14 (GCC) version 7.5.0 (x86_64-pc-linux-gnu)
+	compiled by GNU C version 7.5.0, GMP version 6.1.0, MPFR version 3.1.3, MPC version 0.8.2, isl version none
+warning: GMP header version 6.1.0 differs from library version 6.1.2.
+warning: MPFR header version 3.1.3 differs from library version 3.1.6.
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/x86_64-pc-linux-gnu
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/backward
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include
+ /usr/local/include
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed
+ /usr/include
+End of search list.
+GNU C++14 (GCC) version 7.5.0 (x86_64-pc-linux-gnu)
+	compiled by GNU C version 7.5.0, GMP version 6.1.0, MPFR version 3.1.3, MPC version 0.8.2, isl version none
+warning: GMP header version 6.1.0 differs from library version 6.1.2.
+warning: MPFR header version 3.1.3 differs from library version 3.1.6.
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 1c3a5465814ac464c08b532fb34d10a9
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o /scratch/local/cc9g2IvF.s
+GNU assembler version 2.32 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.32
+COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+[2/2] Linking CXX executable cmTC_44ca8
+Using built-in specs.
+COLLECT_GCC=/usr/bin/c++
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/lto-wrapper
+Target: x86_64-pc-linux-gnu
+Configured with: /dev/shm/bee-root/gcc/gcc-7.5.0-0/source/configure --prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --libexecdir=/usr/lib --sysconfdir=/etc --sharedstatedir=/var --localstatedir=/var --libdir=/usr/lib --includedir=/usr/include --datarootdir=/usr/share --datadir=/usr/share --infodir=/usr/share/info --localedir=/usr/share/locale --mandir=/usr/share/man --docdir=/usr/share/doc/gcc --exec-prefix=/usr --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c,fortran,c++,objc,obj-c++ --disable-multilib --with-system-zlib --with-diagnostics-color=auto-if-env
+Thread model: posix
+gcc version 7.5.0 (GCC)
+COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/
+LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../:/lib/:/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_44ca8' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/lto-wrapper -plugin-opt=-fresolution=/scratch/local/ccuERH0D.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_44ca8 /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtbegin.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0 -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../.. CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtend.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_44ca8' '-shared-libgcc' '-mtune=generic' '-march=x86-64'
+
+
+
+Parsed CXX implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0]
+    add: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/x86_64-pc-linux-gnu]
+    add: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/backward]
+    add: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include]
+    add: [/usr/local/include]
+    add: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed]
+    add: [/usr/include]
+  end of search list found
+  collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0] ==> [/usr/include/c++/7.5.0]
+  collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/x86_64-pc-linux-gnu] ==> [/usr/include/c++/7.5.0/x86_64-pc-linux-gnu]
+  collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/backward] ==> [/usr/include/c++/7.5.0/backward]
+  collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include]
+  collapse include dir [/usr/local/include] ==> [/usr/local/include]
+  collapse include dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed]
+  collapse include dir [/usr/include] ==> [/usr/include]
+  implicit include dirs: [/usr/include/c++/7.5.0;/usr/include/c++/7.5.0/x86_64-pc-linux-gnu;/usr/include/c++/7.5.0/backward;/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include;/usr/local/include;/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed;/usr/include]
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/rahn/workspace/jstmap/create/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/ninja cmTC_44ca8 && [1/2] Building CXX object CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/c++]
+  ignore line: [Target: x86_64-pc-linux-gnu]
+  ignore line: [Configured with: /dev/shm/bee-root/gcc/gcc-7.5.0-0/source/configure --prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --libexecdir=/usr/lib --sysconfdir=/etc --sharedstatedir=/var --localstatedir=/var --libdir=/usr/lib --includedir=/usr/include --datarootdir=/usr/share --datadir=/usr/share --infodir=/usr/share/info --localedir=/usr/share/locale --mandir=/usr/share/man --docdir=/usr/share/doc/gcc --exec-prefix=/usr --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c fortran c++ objc obj-c++ --disable-multilib --with-system-zlib --with-diagnostics-color=auto-if-env]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 7.5.0 (GCC) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/cc1plus -quiet -v -D_GNU_SOURCE /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -mtune=generic -march=x86-64 -auxbase-strip CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o -version -o /scratch/local/cc9g2IvF.s]
+  ignore line: [GNU C++14 (GCC) version 7.5.0 (x86_64-pc-linux-gnu)]
+  ignore line: [	compiled by GNU C version 7.5.0  GMP version 6.1.0  MPFR version 3.1.3  MPC version 0.8.2  isl version none]
+  ignore line: [warning: GMP header version 6.1.0 differs from library version 6.1.2.]
+  ignore line: [warning: MPFR header version 3.1.3 differs from library version 3.1.6.]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring nonexistent directory "/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/include"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0]
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/x86_64-pc-linux-gnu]
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../include/c++/7.5.0/backward]
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include]
+  ignore line: [ /usr/local/include]
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/include-fixed]
+  ignore line: [ /usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C++14 (GCC) version 7.5.0 (x86_64-pc-linux-gnu)]
+  ignore line: [	compiled by GNU C version 7.5.0  GMP version 6.1.0  MPFR version 3.1.3  MPC version 0.8.2  isl version none]
+  ignore line: [warning: GMP header version 6.1.0 differs from library version 6.1.2.]
+  ignore line: [warning: MPFR header version 3.1.3 differs from library version 3.1.6.]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: 1c3a5465814ac464c08b532fb34d10a9]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/as -v --64 -o CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o /scratch/local/cc9g2IvF.s]
+  ignore line: [GNU assembler version 2.32 (x86_64-pc-linux-gnu) using BFD version (GNU Binutils) 2.32]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  ignore line: [[2/2] Linking CXX executable cmTC_44ca8]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/bin/c++]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/lto-wrapper]
+  ignore line: [Target: x86_64-pc-linux-gnu]
+  ignore line: [Configured with: /dev/shm/bee-root/gcc/gcc-7.5.0-0/source/configure --prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --libexecdir=/usr/lib --sysconfdir=/etc --sharedstatedir=/var --localstatedir=/var --libdir=/usr/lib --includedir=/usr/include --datarootdir=/usr/share --datadir=/usr/share --infodir=/usr/share/info --localedir=/usr/share/locale --mandir=/usr/share/man --docdir=/usr/share/doc/gcc --exec-prefix=/usr --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c fortran c++ objc obj-c++ --disable-multilib --with-system-zlib --with-diagnostics-color=auto-if-env]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 7.5.0 (GCC) ]
+  ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib/:/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../:/lib/:/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_44ca8' '-shared-libgcc' '-mtune=generic' '-march=x86-64']
+  link line: [ /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/collect2 -plugin /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/lto-wrapper -plugin-opt=-fresolution=/scratch/local/ccuERH0D.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_44ca8 /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crti.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtbegin.o -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0 -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib -L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../.. CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtend.o /usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crtn.o]
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/scratch/local/ccuERH0D.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-m] ==> ignore
+    arg [elf_x86_64] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_44ca8] ==> ignore
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crt1.o] ==> ignore
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crti.o] ==> ignore
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtbegin.o] ==> ignore
+    arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0]
+    arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64]
+    arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+    arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+    arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib]
+    arg [-L/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../..] ==> dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../..]
+    arg [CMakeFiles/cmTC_44ca8.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/crtend.o] ==> ignore
+    arg [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64/crtn.o] ==> ignore
+  collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0] ==> [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0]
+  collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../lib64] ==> [/usr/lib64]
+  collapse library dir [/lib/../lib64] ==> [/lib64]
+  collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+  collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../../../x86_64-pc-linux-gnu/lib] ==> [/usr/x86_64-pc-linux-gnu/lib]
+  collapse library dir [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0/../../..] ==> [/usr/lib]
+  implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+  implicit dirs: [/usr/lib/gcc/x86_64-pc-linux-gnu/7.5.0;/usr/lib64;/lib64;/usr/x86_64-pc-linux-gnu/lib;/usr/lib]
+  implicit fwks: []
+
+

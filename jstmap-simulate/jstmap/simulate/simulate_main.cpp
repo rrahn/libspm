@@ -16,7 +16,7 @@
 #include <seqan3/argument_parser/validators.hpp>
 
 #include <jstmap/global/jstmap_type_alias.hpp>
-#include <jstmap/index/serialise_jst.hpp>
+#include <jstmap/create/serialise_jst.hpp>
 #include <jstmap/simulate/load_reference.hpp>
 #include <jstmap/simulate/options.hpp>
 #include <jstmap/simulate/simulate_alignment.hpp>

@@ -11,6 +11,7 @@
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 
+#include <jstmap/create/create_main.hpp> // Pulls in the build sub-command.
 #include <jstmap/index/index_main.hpp> // Pulls in the index sub-command.
 #include <jstmap/search/search_main.hpp> // Pulls in the search sub-command.
 #include <jstmap/simulate/simulate_main.hpp> // Pulls in the search sub-command.
@@ -22,6 +23,7 @@ namespace jstmap
 struct tool_names
 {
     inline static const std::string base{"jstmap"};
+    inline static const std::string create{"create"};
     inline static const std::string index{"index"};
     inline static const std::string search{"search"};
     inline static const std::string simulate{"simulate"};
@@ -39,7 +41,8 @@ int main(int const argc, char * const argv[])
 {
 
     seqan3::argument_parser jstmap_parser{jstmap::tool_names::base, argc, argv, seqan3::update_notifications::off,
-                                          {jstmap::tool_names::index,
+                                          {jstmap::tool_names::create,
+                                           jstmap::tool_names::index,
                                            jstmap::tool_names::search,
                                            jstmap::tool_names::simulate,
                                            jstmap::tool_names::view}};
@@ -54,7 +57,9 @@ int main(int const argc, char * const argv[])
 
         seqan3::argument_parser & selected_parser = jstmap_parser.get_sub_parser();
 
-        if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::index))
+        if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::create))
+            return jstmap::create_main(selected_parser);
+        else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::index))
             return jstmap::index_main(selected_parser);
         else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::search))
             return jstmap::search_main(selected_parser);
