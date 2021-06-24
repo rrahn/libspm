@@ -27,10 +27,10 @@ add_library (jstmap_simulate STATIC jstmap/simulate/simulate_main.cpp
                                     jstmap/simulate/simulate_main.hpp)
 target_include_directories (jstmap_simulate PUBLIC jstmap_simulate_input
                                                    jstmap_simulate_build
-                                                   jstmap_index_build)
+                                                   jstmap_create_builder)
 target_link_libraries (jstmap_simulate PUBLIC jstmap_simulate_input
                                               jstmap_simulate_build
-                                              jstmap_index_build)
+                                              jstmap_create_builder)
 add_library (jstmap::simulate ALIAS jstmap_simulate)
 
 unset (HEADER_LIST)
