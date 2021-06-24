@@ -12,8 +12,8 @@
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
+#include <jstmap/create/vcf_parser.hpp>
 #include <jstmap/global/application_logger.hpp>
-#include <jstmap/index/vcf_parser.hpp>
 #include <jstmap/search/load_jst.hpp>
 
 using sequence_t = seqan3::dna5_vector;

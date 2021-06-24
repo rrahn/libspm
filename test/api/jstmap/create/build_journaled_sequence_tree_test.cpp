@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <jstmap/index/journaled_sequence_tree_builder.hpp>
+#include <jstmap/create/journaled_sequence_tree_builder.hpp>
 
 #include "test_data.hpp"
 
@@ -23,6 +23,4 @@ TEST(jstmap_index, build_partitioned_jst)
 
     auto [jst, partitioned_jst] = jstmap::build_journaled_sequence_tree(std::move(data), 2u);
     EXPECT_EQ(jst.size(), jstmap::test::sequences.size() + 1);
-
-    EXPECT_EQ(partitioned_jst.bin_count(), 2u);
 }
