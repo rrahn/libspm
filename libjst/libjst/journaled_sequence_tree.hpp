@@ -131,7 +131,10 @@ public:
      * sequences. All of these sequences represent the original reference sequence. The sequence variation can be
      * added later by the libjst::no_adl::journaled_sequence_tree::type::insert_event interface.
      */
-    type(sequence_type && reference, size_type const count = 0) : _reference{std::move(reference)}, _size(count)
+    type(sequence_collection_t && reference, size_type const count = 0) : _reference{std::move(reference)}, _size(count)
+    {}
+
+    type(sequence_t && reference, size_type const count = 0) : type{sequence_collection_t{std::move(reference)}, count}
     {}
     //!\}
 
