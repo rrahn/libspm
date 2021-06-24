@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides the main entry point of the just_map indexer.
+ * \brief Provides the main entry point of the just_map creator.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
@@ -15,51 +15,51 @@
 #include <seqan3/argument_parser/validators.hpp>
 
 #include <jstmap/global/application_logger.hpp>
-#include <jstmap/index/index_main.hpp>
-#include <jstmap/index/journaled_sequence_tree_builder.hpp>
-#include <jstmap/index/load_sequence.hpp>
-#include <jstmap/index/options.hpp>
-#include <jstmap/index/serialise_jst.hpp>
-#include <jstmap/index/vcf_parser.hpp>
+#include <jstmap/create/create_main.hpp>
+#include <jstmap/create/journaled_sequence_tree_builder.hpp>
+#include <jstmap/create/load_sequence.hpp>
+#include <jstmap/create/options.hpp>
+#include <jstmap/create/serialise_jst.hpp>
+#include <jstmap/create/vcf_parser.hpp>
 
 namespace jstmap
 {
 
-int index_main(seqan3::argument_parser & index_parser)
+int create_main(seqan3::argument_parser & create_parser)
 {
-    index_options options{};
+    create_options options{};
 
-    index_parser.add_positional_option(options.sequence_file,
-                                       "The input file.",
-                                       seqan3::input_file_validator{{"fa", "fasta"}});
-    index_parser.add_positional_option(options.output_file,
-                                       "The output file.",
-                                       seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
-                                                                     {"jst"}});
-    index_parser.add_flag(options.is_quite,
-                          '\0',
-                          "quite",
-                          "No logging output will be emitted.");
-    index_parser.add_flag(options.is_verbose,
-                          '\0',
-                          "verbose",
-                          "Verbose logging output will be emitted.");
-    index_parser.add_option(options.vcf_file,
-                            '\0',
-                            "vcf",
-                            "The vcf file to construct the index for. Note the path given to the sequence file "
-                            "must contain the associated contigs for this vcf file.",
-                            seqan3::option_spec::standard,
-                            seqan3::input_file_validator{{"vcf"}});
-    index_parser.add_option(options.bin_count,
-                            'b',
-                            "bin-count",
-                            "The number of bins used in the partitioned jst.",
-                            seqan3::option_spec::standard);
+    create_parser.add_positional_option(options.sequence_file,
+                                        "The input file.",
+                                        seqan3::input_file_validator{{"fa", "fasta"}});
+    create_parser.add_positional_option(options.output_file,
+                                        "The output file.",
+                                        seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
+                                                                      {"jst"}});
+    create_parser.add_flag(options.is_quite,
+                           '\0',
+                           "quite",
+                           "No logging output will be emitted.");
+    create_parser.add_flag(options.is_verbose,
+                           '\0',
+                           "verbose",
+                           "Verbose logging output will be emitted.");
+    create_parser.add_option(options.vcf_file,
+                             '\0',
+                             "vcf",
+                             "The vcf file to construct the index for. Note the path given to the sequence file "
+                             "must contain the associated contigs for this vcf file.",
+                             seqan3::option_spec::standard,
+                             seqan3::input_file_validator{{"vcf"}});
+    create_parser.add_option(options.bin_count,
+                             'b',
+                             "bin-count",
+                             "The number of bins used in the partitioned jst.",
+                             seqan3::option_spec::standard);
 
     try
     {
-        index_parser.parse();
+        create_parser.parse();
     }
     catch (seqan3::argument_parser_error const & ex)
     {
@@ -84,12 +84,12 @@ int index_main(seqan3::argument_parser & index_parser)
     // Run the index creation.
     // ----------------------------------------------------------------------------
 
-    log(verbosity_level::standard, logging_level::info, "Start index creation");
+    log(verbosity_level::standard, logging_level::info, "Start jst creation");
 
     int error_code = 0;
     try
     {
-        if (index_parser.is_option_set("vcf")) // Construct from the vcf file.
+        if (create_parser.is_option_set("vcf")) // Construct from the vcf file.
         {
             log(verbosity_level::standard, logging_level::info,
                 "Create from vcf ", options.vcf_file, " and contigs ", options.sequence_file);
@@ -130,7 +130,7 @@ int index_main(seqan3::argument_parser & index_parser)
         log(verbosity_level::standard, logging_level::error, "While creating the jst: ", ex.what());
         error_code = -1;
     }
-    log(verbosity_level::standard, logging_level::info, "Stop index creation");
+    log(verbosity_level::standard, logging_level::info, "Stop jst creation");
     return error_code;
 }
 

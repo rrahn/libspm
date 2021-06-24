@@ -12,8 +12,8 @@
 #include <seqan3/core/detail/debug_stream_range.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
-#include <jstmap/index/load_sequence.hpp>
-#include <jstmap/index/vcf_parser.hpp>
+#include <jstmap/create/load_sequence.hpp>
+#include <jstmap/create/vcf_parser.hpp>
 
 class vcf_parser_test : public ::testing::Test
 {

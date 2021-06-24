@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides the main entry point of the just_map indexer.
+ * \brief Provides the main entry point of the just_map creator.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
@@ -22,6 +22,6 @@ class argument_parser;
 namespace jstmap
 {
 
-int index_main(seqan3::argument_parser &);
+int create_main(seqan3::argument_parser &);
 
 } // namespace jstmap

@@ -9,7 +9,7 @@
 
 #include <seqan3/io/sequence_file/input.hpp>
 
-#include <jstmap/index/load_sequence.hpp>
+#include <jstmap/create/load_sequence.hpp>
 
 namespace jstmap
 {

@@ -13,7 +13,7 @@
 #include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
 #include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
 
-#include <jstmap/index/journaled_sequence_tree_builder.hpp>
+#include <jstmap/create/journaled_sequence_tree_builder.hpp>
 
 namespace jstmap
 {

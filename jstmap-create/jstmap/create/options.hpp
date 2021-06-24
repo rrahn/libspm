@@ -17,7 +17,7 @@
 namespace jstmap
 {
 
-struct index_options
+struct create_options
 {
     std::filesystem::path sequence_file{}; //!< The file path contianing the sequences to index.
     std::filesystem::path vcf_file{}; //!< The file path contianing the vcf file to build the jst for.
