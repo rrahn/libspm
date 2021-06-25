@@ -12,18 +12,11 @@
 
 #pragma once
 
-#include <seqan/sequence.h>
-
-#include <libjst/journaled_sequence_tree.hpp>
-#include <libjst/journal_sequence_tree_partitioned.hpp>
-
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/search/type_alias.hpp>
 
 namespace jstmap
 {
 
-using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
-using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 using jst_bin_t = typename partitioned_jst_t::traverser_model_t;
 
 struct search_match
@@ -48,7 +41,7 @@ struct search_match
     }
 };
 
-std::vector<search_match> search_queries_(jst_bin_t const &, seqan::StringSet<raw_sequence_t> const &, float const);
+std::vector<search_match> search_queries_(jst_bin_t const &, bin_t const &, float const);
 std::vector<libjst::context_position> search_queries(partitioned_jst_t const &, std::vector<raw_sequence_t> const &);
 
 }  // namespace jstmap

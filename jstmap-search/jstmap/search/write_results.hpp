@@ -17,14 +17,21 @@
 
 #include <seqan/sequence.h>
 
+#include <seqan3/io/sam_file/output.hpp>
+
 #include <libjst/context_position.hpp>
+
 #include <jstmap/search/search_queries.hpp>
 
 namespace jstmap
 {
 
-void write_results(std::vector<search_match> const &,
-                   seqan::StringSet<raw_sequence_t> const &,
-                   std::filesystem::path const &);
+using sam_file_t = seqan3::sam_file_output<seqan3::fields<seqan3::field::ref_offset,
+                                                          seqan3::field::seq,
+                                                          seqan3::field::alignment>>;
+
+void write_results(sam_file_t &,
+                   std::vector<search_match> const &,
+                   seqan::StringSet<std::views::all_t<raw_sequence_t const &>> const &);
 
 }  // namespace jstmap

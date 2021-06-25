@@ -18,8 +18,10 @@
 
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
+#include <jstmap/search/filter_queries.hpp>
 #include <jstmap/search/search_main.hpp>
 #include <jstmap/search/search_queries.hpp>
+#include <jstmap/search/type_alias.hpp>
 #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/options.hpp>
 
@@ -40,6 +42,12 @@ int search_main(seqan3::argument_parser & search_parser)
                                        "The alignment map output file.",
                                        seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
                                                                      {"sam", "bam"}});
+    search_parser.add_option(options.index_input_file_path,
+                             'i',
+                             "index",
+                             "The prebuilt index to speedup the search.",
+                             seqan3::option_spec::standard,
+                             seqan3::input_file_validator{{"ibf"}});
     search_parser.add_option(options.error_rate,
                              'e',
                              "error-rate",
@@ -64,27 +72,55 @@ int search_main(seqan3::argument_parser & search_parser)
         auto queries = load_queries(options.query_input_file_path);
 
         std::cout << "load the jst\n";
-
         auto jst = load_jst(options.jst_input_file_path);
-        partitioned_jst_t pjst{std::addressof(jst), 1};
+
+        // Now we want to handle the bins as well.
+        // Step 1: prepare bins: seqan::StringSet<std::views::all_t<raw_sequence_t &>>
+        // Step 2:
+        size_t bin_size{std::numeric_limits<size_t>::max()};
+        std::vector<bin_t> bins{};
+        // What if the ibf is not present?
+        if (options.index_input_file_path.empty())
+        {
+            bins.resize(1);
+            std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
+            {
+                seqan::appendValue(bins.front(), query | std::views::all);
+            });
+        }
+        else
+        {
+            std::cout << "Filter the queries\n";
+            std::tie(bin_size, bins) = filter_queries(queries, options);
+        }
+
+        std::cout << "bin_size = " << bin_size << "\n";
+        std::cout << "Prepare search\n";
+        partitioned_jst_t pjst{std::addressof(jst), bin_size}; // default initialisation
 
         // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}
         // list of {bin_id:queries}
         // partioned_jst[bin_id] -> traverser_model:
             // range_agent{traverser_model, } we can construct this from the model directly.
+
+        // We need to write more information including the reference sequences and the length of the reference sequences.
+        sam_file_t sam_file{options.map_output_file_path};
         for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
         { // parallel region
+            if (seqan::empty(bins[bin_idx]))
+                continue;
+
             auto jst_bin = pjst.bin_at(bin_idx);
             // * search queries in bin_id -> matches[]
             // * push results into global queue
-            seqan::StringSet<raw_sequence_t> _queries{};
-            seqan::appendValue(_queries, queries.front());
+            // seqan::StringSet<raw_sequence_t> _queries{};
+            // seqan::appendValue(_queries, queries.front());
             // seqan::reserve(_queries, queries.size());
 
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
-
-            std::vector matches = search_queries_(jst_bin, _queries, options.error_rate);
+            std::cout << "Searching bin = " << bin_idx << "\n";
+            std::vector matches = search_queries_(jst_bin, bins[bin_idx], options.error_rate);
 
             // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
             // for (auto const & match : matches)
@@ -109,7 +145,7 @@ int search_main(seqan3::argument_parser & search_parser)
                 // -> one buffer per thread to fill -> full buffer is pushed into queue -> empty buffer is reserved when available
                 // -> single buffer writes out record stream into bgzf_ostream (possibly unsynchronised?)
             // * report in BAM file
-            write_results(matches, _queries, options.map_output_file_path); // needs synchronised output_buffer
+            write_results(sam_file, matches, bins[bin_idx]); // needs synchronised output_buffer
         }
 
     }
