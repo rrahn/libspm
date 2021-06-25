@@ -333,8 +333,12 @@ private:
             if (large_state.scoreMask == static_cast<word_type>(0))
             {
                 large_state.lastBlock--;
-    //                if (IsSameType<TSpec, FindPrefix>::VALUE && large_state.lastBlock == (unsigned)-1)  // TODO(rmaerker): Check influence of PrefixFind -> We will not support this!
-    //                    break;
+                if constexpr (is_global_alignment)
+                {
+                    if (large_state.lastBlock == static_cast<uint32_t>(-1))
+                        break;
+                }
+
                 large_state.scoreMask = static_cast<word_type>(1) << (MACHINE_WORD_SIZE - 1);
             }
         }
