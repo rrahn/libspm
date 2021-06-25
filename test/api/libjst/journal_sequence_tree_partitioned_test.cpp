@@ -5,8 +5,9 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-#include <libjst/journal_sequence_tree_partitioned.hpp>
+#include <cmath>
 
+#include <libjst/journal_sequence_tree_partitioned.hpp>
 #include <cereal/archives/binary.hpp>
 
 #include "journal_sequence_tree_traversal_test_template.hpp"
@@ -29,7 +30,8 @@ TEST_P(partitioned_traversal_test, enumerate_contexts)
     auto jst = this->construct_jst();
 
     EXPECT_GT(GetParam().bin_count, 0u);
-    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), GetParam().bin_count};
+    size_t const bin_size = (jst.reference_at(0).size() + GetParam().bin_count - 1) / GetParam().bin_count;
+    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_size};
 
     for (uint32_t index = 0; index < p_jst.bin_count(); ++index)
     {
@@ -60,7 +62,9 @@ TEST_P(partitioned_traversal_test, serialisation_test)
 
     EXPECT_GT(GetParam().bin_count, 0u);
 
-    libjst::journal_sequence_tree_partitioned p_jst_original{std::addressof(jst), GetParam().bin_count};
+    size_t const bin_size = (jst.reference_at(0).size() + GetParam().bin_count - 1) / GetParam().bin_count;
+
+    libjst::journal_sequence_tree_partitioned p_jst_original{std::addressof(jst), bin_size};
     // sereialise
     std::stringstream archive_stream{};
     {
