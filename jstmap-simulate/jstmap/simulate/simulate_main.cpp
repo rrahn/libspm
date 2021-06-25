@@ -10,32 +10,72 @@
  * \author Tom Lukas Lankenau <tom.lankenau AT fu-berlin.de>
  */
 
+#include <algorithm>
 
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
+#include <seqan3/io/sequence_file/output.hpp>
 
 #include <jstmap/create/serialise_jst.hpp>
 #include <jstmap/global/jstmap_type_alias.hpp>
-#include <jstmap/simulate/load_reference.hpp>
+#include <jstmap/global/load_jst.hpp>
 #include <jstmap/simulate/options.hpp>
-#include <jstmap/simulate/simulate_alignment.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
 
 namespace jstmap
 {
+
+auto sample_reads(jst_t const & jst, size_t const read_count, size_t const read_size)
+{
+    using seqan3::operator""_dna5;
+
+    auto enumerator = jst.context_enumerator(read_size);
+    size_t const sample_rate = std::ceil(jst.reference_at(0).size() / read_count);
+    size_t counter = 0;
+
+    std::vector<raw_sequence_t> sampled_reads{};
+
+    for (auto it = enumerator.begin(); it != enumerator.end(); ++it)
+    {
+        if (++counter % sample_rate == 0)
+        {
+            auto read = *it;
+            if (std::ranges::any_of(read, [] (auto symbol) { return symbol == 'N'_dna5; }))
+                continue;
+
+            sampled_reads.emplace_back(read.begin(), read.end());
+        }
+    }
+
+    return sampled_reads;
+}
 
 int simulate_main(seqan3::argument_parser & simulate_parser)
 {
     simulate_options options{};
 
     simulate_parser.add_positional_option(options.input_file,
-                                          "The input file.",
-                                          seqan3::input_file_validator{{"fa", "fasta"}});
+                                          "The jst to sample reads from.",
+                                          seqan3::input_file_validator{{"jst"}});
     simulate_parser.add_positional_option(options.output_file,
-                                          "The output file.",
+                                          "The file containing the sampled reads.",
                                           seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
-                                                                        {"jst"}});
+                                                                        {"fa", "fasta"}});
+    simulate_parser.add_option(options.read_size,
+                               's',
+                               "read-size",
+                               "The size of the reads.",
+                               seqan3::option_spec::standard,
+                               seqan3::arithmetic_range_validator{10u, 500u});
+
+    simulate_parser.add_option(options.read_count,
+                               'c',
+                               "read-count",
+                               "The number of reads to sample.",
+                               seqan3::option_spec::standard,
+                               seqan3::arithmetic_range_validator{100u, std::numeric_limits<uint32_t>::max()});
+
     simulate_parser.add_option(options.error_rate,
                                'e',
                                "error-rate",
@@ -56,14 +96,19 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     // Load the sequences.
     try
     {
-        std::cout << "Loading sequences\n";
-        raw_sequence_t reference = load_reference(options.input_file);
-        auto simulated = simulate_alignment(reference, options.error_rate);
-        jst_t jst{std::move(reference)};
-        jst.add(simulated);
-        partitioned_jst_t partitioned_jst(std::addressof(jst), options.bin_count);
-        std::cout << "Serialising JST\n";
-        serialise(jst, partitioned_jst, options.output_file);
+        std::cout << "load the jst\n";
+        auto jst = load_jst(options.input_file);
+        std::cout << "Sample reads\n";
+        auto sampled_reads = sample_reads(jst, options.read_count, options.read_size);
+        seqan3::sequence_file_output sout{options.output_file};
+
+        std::cout << "Write out reads\n";
+        size_t sample_idx{};
+        std::string sampled_read_id{"sample_read_"};
+        std::ranges::for_each(sampled_reads, [&] (raw_sequence_t const & sequence)
+        {
+            sout.emplace_back(sequence, sampled_read_id + std::to_string(sample_idx++));
+        });
     }
     catch (std::exception const & ex)
     {
