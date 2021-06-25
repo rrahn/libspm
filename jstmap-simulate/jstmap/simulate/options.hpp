@@ -21,8 +21,9 @@ struct simulate_options
 {
     std::filesystem::path input_file{}; //!< The file path containing the sequences to simulate.
     std::filesystem::path output_file{}; //!< The file path to write the simulated jst to.
-    double error_rate = 0.01; //!< The relative rate of errors in the simulated sequence.
-    uint32_t bin_count = 1; //!< The number of bins to partition the JST into.
+    size_t read_size = 100; //!< The sampled read size.
+    size_t read_count = 1000; //!< The number of sampled reads.
+    double error_rate = 0.0; //!< The relative rate of errors in the simulated sequence.
 };
 
 }  // namespace jstmap
