@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <jstmap/search/load_jst.hpp>
+#include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 

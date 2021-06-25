@@ -41,11 +41,11 @@ template <typename ...args_t>
 static void jst_context_enumerator_benchmark(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
-    auto jst_handle = jstmap::load_jst(jst_file);
+    auto jst = jstmap::load_jst(jst_file);
 
     size_t context_size = state.range(0);
     size_t context_count{};
-    auto context_enumerator = jst_handle.first.context_enumerator(context_size);
+    auto context_enumerator = jst.context_enumerator(context_size);
 
     for (auto _ : state)
         std::ranges::for_each(context_enumerator, [&] (auto &&) { ++context_count; });

@@ -40,7 +40,7 @@ static void pigeonhole_filter_bench(benchmark::State & state, args_t && ...args)
     auto [jst_file] = std::tuple{args...};
     size_t const read_count = state.range(0);
     size_t const read_length = state.range(1);
-    auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
+    auto jst = jstmap::load_jst(jst_file);
     auto sampled_reads = sample_reads(jst, read_count, read_length);
 
     // Prepare pigeonhole filter.
