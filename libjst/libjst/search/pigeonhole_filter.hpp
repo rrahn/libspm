@@ -127,10 +127,6 @@ public:
         seqan::indexShape(_qgram_index) = qgram_shape_t{std::min<unsigned>(63/3, min_delta)};
         seqan::indexRequire(_qgram_index, seqan::QGramSADir{});
 
-        std::cout << "Filter settings:\n"
-                  << "\t- min_delta = " << min_delta << "\n"
-                  << "\t- max_delta = " << max_delta << "\n"
-                  << "\t- qgram_size = " << seqan::length(seqan::indexShape(_qgram_index)) << "\n";
 
 //  Filter initialisation by SeqAn.
 //     typedef typename Size<TIndex>::Type TSize;
