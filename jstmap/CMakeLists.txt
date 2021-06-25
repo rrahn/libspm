@@ -8,6 +8,7 @@ target_include_directories ("${CMAKE_PROJECT_NAME}" PUBLIC seqan3::seqan3
 target_link_libraries ("${CMAKE_PROJECT_NAME}" PUBLIC seqan3::seqan3
                                                       jstmap::global
                                                       jstmap::create
+                                                      jstmap::index
                                                       jstmap::search
                                                       jstmap::simulate
                                                       jstmap::view)
