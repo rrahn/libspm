@@ -64,10 +64,14 @@ TEST(jstmap_index, search_jst_2)
     jst_t jst{std::move(ref), 4};
     partitioned_jst_t pjst{std::addressof(jst)};
 
-    seqan::StringSet<jstmap::raw_sequence_t> pattern_collection{};
-    seqan::appendValue(pattern_collection, "cgtacgtacgtacgtacgtacgta"_dna5);
-    seqan::appendValue(pattern_collection, "acgtacgtacgtacgtacgtacgt"_dna5);
-    seqan::appendValue(pattern_collection, "gtacgtacgtacgtacgtacgtac"_dna5);
+    jstmap::raw_sequence_t q1{"cgtacgtacgtacgtacgtacgta"_dna5};
+    jstmap::raw_sequence_t q2{"acgtacgtacgtacgtacgtacgt"_dna5};
+    jstmap::raw_sequence_t q3{"gtacgtacgtacgtacgtacgtac"_dna5};
+
+    seqan::StringSet<std::views::all_t<jstmap::raw_sequence_t const &>> pattern_collection{};
+    seqan::appendValue(pattern_collection, std::as_const(q1) | std::views::all);
+    seqan::appendValue(pattern_collection, std::as_const(q2) | std::views::all);
+    seqan::appendValue(pattern_collection, std::as_const(q3) | std::views::all);
 
     // jst.insert(event_t{2ull, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
     // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});

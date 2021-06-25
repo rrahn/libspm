@@ -17,15 +17,22 @@ add_library(jstmap_search_search OBJECT jstmap/search/search_queries.cpp jstmap/
 target_include_directories (jstmap_search_search PUBLIC jstmap::search::base libjst::libjst)
 target_link_libraries (jstmap_search_search PUBLIC jstmap::search::base libjst::libjst)
 
+### Filtering the queries using the additional index
+add_library(jstmap_search_filter OBJECT jstmap/search/filter_queries.cpp jstmap/search/filter_queries.hpp)
+target_include_directories (jstmap_search_filter PUBLIC jstmap::search::base libjst::libjst)
+target_link_libraries (jstmap_search_filter PUBLIC jstmap::search::base libjst::libjst)
+
 ### Building the journaled sequence tree
 add_library(jstmap_search_output OBJECT jstmap/search/write_results.cpp jstmap/search/write_results.hpp)
-target_include_directories (jstmap_search_output PUBLIC jstmap::search::base libjst::libjst)
 target_link_libraries (jstmap_search_output PUBLIC jstmap::search::base libjst::libjst)
 
 ### Create static library for index subcommand
 add_library (jstmap_search STATIC jstmap/search/search_main.cpp)
 target_include_directories (jstmap_search PUBLIC jstmap_search_search jstmap_search_input_queries jstmap_search_output)
-target_link_libraries (jstmap_search PUBLIC jstmap_search_search jstmap_search_input_queries jstmap_search_output)
+target_link_libraries (jstmap_search PUBLIC jstmap_search_search
+                                            jstmap_search_input_queries
+                                            jstmap_search_filter
+                                            jstmap_search_output)
 add_library (jstmap::search ALIAS jstmap_search)
 
 unset (HEADER_LIST)

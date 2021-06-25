@@ -1,0 +1,73 @@
+// -----------------------------------------------------------------------------------------------------
+// Copyright (c) 2006-2021, Knut Reinert & Freie Universität Berlin
+// Copyright (c) 2016-2021, Knut Reinert & MPI für molekulare Genetik
+// This file may be used, modified and/or redistributed under the terms of the 3-clause BSD-License
+// shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
+// -----------------------------------------------------------------------------------------------------
+
+#include <seqan3/search/dream_index/interleaved_bloom_filter.hpp>
+#include <seqan3/range/views/kmer_hash.hpp>
+#include <seqan3/range/views/to.hpp>
+
+#include <jstmap/search/filter_queries.hpp>
+
+namespace jstmap
+{
+
+std::pair<size_t, seqan3::interleaved_bloom_filter<>> load_index(std::filesystem::path const & index_path)
+{
+    std::ifstream instr{index_path};
+    cereal::BinaryInputArchive inarch{instr};
+    // Load the bin size used for the jst partitioning.
+    size_t bin_size{};
+    inarch(bin_size);
+    // Load the corresponding ibf.
+    seqan3::interleaved_bloom_filter<> ibf{};
+    ibf.serialize(inarch);
+
+    return std::pair{bin_size, std::move(ibf)};
+}
+
+std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t> const & queries,
+                                                     search_options const & options)
+{
+    auto [bin_size, ibf] = load_index(options.index_input_file_path);
+
+    std::vector<bin_t> bins{};
+    bins.resize(ibf.bin_count());
+
+    // Change to global constant or serialise it to disk.
+    uint8_t const kmer_size = 25;
+
+    // size_t const kmers_per_window = arguments.window_size - arguments.kmer_size + 1;
+    // size_t const kmers_per_pattern = arguments.pattern_size - arguments.kmer_size + 1;
+    // size_t const min_number_of_minimisers = kmers_per_window == 1 ? kmers_per_pattern :
+    //                                             std::ceil(kmers_per_pattern / static_cast<double>(kmers_per_window));
+    // size_t const kmer_lemma = arguments.pattern_size + 1u > (arguments.errors + 1u) * arguments.kmer_size ?
+    //                             arguments.pattern_size + 1u - (arguments.errors + 1u) * arguments.kmer_size :
+    //                             0;
+
+    auto counting_agent = ibf.template counting_agent<uint16_t>();
+
+    for (auto const & query : queries)
+    {
+        // kmer-lemma:
+        size_t const query_size = std::ranges::size(query);
+        size_t const error_count = std::ceil(query_size * options.error_rate);
+        size_t const kmer_threshold = query_size + 1 - (error_count + 1) * kmer_size;
+
+        // Counting:
+        std::vector hashes = query | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size})
+                                    | seqan3::views::to<std::vector<uint64_t>>;
+        auto & bin_counts = counting_agent.bulk_count(hashes);
+
+        // Bin assignment:
+        for (size_t i = 0; i < bin_counts.size(); ++i)
+            if (bin_counts[i] >= kmer_threshold)
+                seqan::appendValue(bins[i], query | std::views::all);
+    }
+
+    return std::pair{bin_size, std::move(bins)};
+}
+
+} // namespace jstmap
