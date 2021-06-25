@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <ranges>
 #include <set>
 
@@ -165,11 +166,13 @@ TEST_P(search_test, search_on_partitioned_jst)
     using state_t = typename decltype(libjst::naive_pattern_searcher{GetParam().pattern})::state_type;
 
     // Initialise partitioned jst.
-    constexpr uint32_t bin_count = 5u;
-    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_count};
+    size_t const bin_size = (jst.reference_at(0).size() + 4) / 5;
+    libjst::journal_sequence_tree_partitioned p_jst{std::addressof(jst), bin_size};
+
+    EXPECT_EQ(p_jst.bin_count(), 5ull);
 
     size_t hit_count{};
-    for (uint32_t index = 0; index < bin_count; ++index)
+    for (uint32_t index = 0; index < p_jst.bin_count(); ++index)
     {
         libjst::naive_pattern_searcher searcher{GetParam().pattern, libjst::search_state_manager_stack<state_t>{}};
         auto jst_range_agent = p_jst.range_agent(libjst::context_size{static_cast<uint32_t>(context_size())},
