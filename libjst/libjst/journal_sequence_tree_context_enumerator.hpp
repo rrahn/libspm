@@ -139,6 +139,12 @@ private:
     {}
 };
 
+template <typename jst_t>
+journal_sequence_tree_context_enumerator(libjst::detail::journal_sequence_tree_traverser_model<jst_t>,
+                                         size_t const)
+                                           -> journal_sequence_tree_context_enumerator<jst_t>;
+
+
 /*!\brief The iterator of the context enumerator.
  * \implements std::input_iterator
  *
