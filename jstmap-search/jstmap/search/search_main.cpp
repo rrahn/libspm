@@ -16,7 +16,7 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
-#include <jstmap/search/load_jst.hpp>
+#include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_main.hpp>
 #include <jstmap/search/search_queries.hpp>
@@ -65,7 +65,7 @@ int search_main(seqan3::argument_parser & search_parser)
 
         std::cout << "load the jst\n";
 
-        auto [jst, partitioned_jst_handle] = load_jst(options.jst_input_file_path);
+        auto jst = load_jst(options.jst_input_file_path);
         partitioned_jst_t pjst{std::addressof(jst), 1};
 
         // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}

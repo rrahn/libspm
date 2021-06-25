@@ -16,16 +16,15 @@
 #include <seqan3/range/views/to_char.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
-#include <jstmap/search/load_jst.hpp>
+#include <jstmap/global/load_jst.hpp>
 
 TEST(jstmap_index, load_jst)
 {
     using seqan3::operator""_dna5;
 
     std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
-    auto [jst, partitioned_jst] = jstmap::load_jst(jst_file);
+    auto jst = jstmap::load_jst(jst_file);
 
-    std::ignore = partitioned_jst;
     EXPECT_EQ(jst.size(), 5u);
     EXPECT_RANGE_EQ(jst.sequence_at(0),
                     "TATGCACCAGAGTATGGAAGCATAAGCTCTGCATGCAAAGGTACATCAGATCCTGCGGTTGGGTGCCAACCCAAGTGTGTTCACGGGCGC"_dna5);
