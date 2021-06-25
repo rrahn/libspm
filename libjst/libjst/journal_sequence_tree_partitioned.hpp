@@ -82,19 +82,24 @@ public:
     /*!\brief Constructs the partitioned jst from a jst pointer and a bin count.
      *
      * \param[in] jst A pointer to the jst to wrap.
-     * \param[in] bin_count The number of bins. Defaults to 1 and must be `> 0`.
+     * \param[in] bin_size The size of a single bin. Defaults to infinity and must be `> 0`.
      */
-    explicit journal_sequence_tree_partitioned(jst_t const * jst, size_t bin_count = 1) : _jst{jst}
+    explicit journal_sequence_tree_partitioned(jst_t const * jst,
+                                               size_t bin_size = std::numeric_limits<size_t>::max()) : _jst{jst}
     {
        assert(_jst != nullptr);
-       assert(bin_count > 0);
+       assert(bin_size > 0);
 
-        size_t bin_size = (_jst->reference().front().size() + bin_count - 1) / bin_count;
+        for (size_t ref_idx = 0; ref_idx < _jst->reference().size(); ++ref_idx)
+        {
+            // Invariant: bin_count >= 1
+            size_t bin_count = std::max<size_t>(1, (_jst->reference_at(ref_idx).size() + bin_size - 1) / bin_size);
 
-        for (size_t i = 0; i < bin_count; i++)
-            _bins.push_back(traverser_model_t{_jst,
-                                              position_type{0u, i * bin_size},
-                                              position_type{0u, (i + 1) * bin_size}});
+            for (size_t i = 0; i < bin_count; i++)
+                _bins.push_back(traverser_model_t{_jst,
+                                                  position_type{0u, i * bin_size},
+                                                  position_type{0u, (i + 1) * bin_size}});
+        }
     }
     //!\}
 
