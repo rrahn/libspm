@@ -23,8 +23,6 @@
 namespace jstmap
 {
 
-void write_results(std::vector<search_match> const &,
-                   seqan::StringSet<raw_sequence_t> const &,
-                   std::filesystem::path const &);
+void write_results(std::vector<libjst::context_position> &&, std::filesystem::path const &);
 
 }  // namespace jstmap
