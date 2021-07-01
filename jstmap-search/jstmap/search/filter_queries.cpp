@@ -5,6 +5,8 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
+#include <omp.h>
+
 #include <seqan3/search/dream_index/interleaved_bloom_filter.hpp>
 #include <seqan3/range/views/kmer_hash.hpp>
 #include <seqan3/range/views/to.hpp>
@@ -48,25 +50,39 @@ std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t>
     //                             0;
 
     auto counting_agent = ibf.template counting_agent<uint16_t>();
+    std::vector<decltype(bins)> thread_local_buffer{};
+    thread_local_buffer.resize(options.thread_count, bins);
 
-    for (auto const & query : queries)
+    #pragma omp parallel for num_threads(options.thread_count) shared(thread_local_buffer, queries) firstprivate(counting_agent, kmer_size) schedule(dynamic)
+    for (size_t idx = 0; idx < queries.size(); ++idx)
     {
         // kmer-lemma:
+        size_t const thread_id = omp_get_thread_num();
+        auto const & query = queries[idx];
         size_t const query_size = std::ranges::size(query);
         size_t const error_count = std::ceil(query_size * options.error_rate);
         size_t const kmer_threshold = query_size + 1 - (error_count + 1) * kmer_size;
 
         // Counting:
         std::vector hashes = query | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size})
-                                    | seqan3::views::to<std::vector<uint64_t>>;
+                                   | seqan3::views::to<std::vector<uint64_t>>;
         auto & bin_counts = counting_agent.bulk_count(hashes);
 
         // Bin assignment:
         for (size_t i = 0; i < bin_counts.size(); ++i)
             if (bin_counts[i] >= kmer_threshold)
-                seqan::appendValue(bins[i], query | std::views::all);
+                seqan::appendValue(thread_local_buffer[thread_id][i], query | std::views::all);
     }
 
+    // Reduce the local buffer and move them to the final bin vector.
+    std::ranges::for_each(thread_local_buffer, [&](auto & local_bins)
+    {
+        size_t bin_idx = 0;
+        std::ranges::for_each(local_bins, [&] (bin_t & bin)
+        {
+            seqan::append(bins[bin_idx++], bin);
+        });
+    });
     return std::pair{bin_size, std::move(bins)};
 }
 
