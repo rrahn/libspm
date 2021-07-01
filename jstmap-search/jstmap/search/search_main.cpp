@@ -10,9 +10,11 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
-#include <omp.h>
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
+#include <functional>
+#include <omp.h>
 
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
@@ -146,6 +148,12 @@ int search_main(seqan3::argument_parser & search_parser)
             //     seqan::appendValue(_queries, queries[i]);
             // std::cout << "Searching bin = " << bin_idx << "\n";
             bin_matches[bin_idx] = search_queries_(jst_bin, bins[bin_idx], options.error_rate);
+
+            std::ranges::sort(bin_matches[bin_idx], std::less<void>{}); // sort by query_id and by error_count.
+            auto redundant_tail = std::ranges::unique(bin_matches[bin_idx],
+                                                      std::ranges::equal_to{},
+                                                      [] (auto const & match) { return match.query_id; });
+            bin_matches[bin_idx].erase(redundant_tail.begin(), redundant_tail.end());
 
             // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
             // for (auto const & match : matches)
