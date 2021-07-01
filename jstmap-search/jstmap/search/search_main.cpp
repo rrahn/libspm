@@ -10,11 +10,14 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
+#include <omp.h>
+#include <chrono>
 #include <filesystem>
 
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
+#include <seqan3/core/debug_stream.hpp>
 
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
@@ -69,14 +72,27 @@ int search_main(seqan3::argument_parser & search_parser)
     try
     {
         std::cout << "load the queries\n";
+        auto start = std::chrono::high_resolution_clock::now();
         auto queries = load_queries(options.query_input_file_path);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::cout << "Load queries time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
 
         std::cout << "load the jst\n";
+        start = std::chrono::high_resolution_clock::now();
         auto jst = load_jst(options.jst_input_file_path);
+        end = std::chrono::high_resolution_clock::now();
+
+        std::cout << "Load JST time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
 
         // Now we want to handle the bins as well.
         // Step 1: prepare bins: seqan::StringSet<std::views::all_t<raw_sequence_t &>>
         // Step 2:
+        start = std::chrono::high_resolution_clock::now();
         size_t bin_size{std::numeric_limits<size_t>::max()};
         std::vector<bin_t> bins{};
         // What if the ibf is not present?
@@ -93,10 +109,16 @@ int search_main(seqan3::argument_parser & search_parser)
             std::cout << "Filter the queries\n";
             std::tie(bin_size, bins) = filter_queries(queries, options);
         }
+        end = std::chrono::high_resolution_clock::now();
+        std::cout << "Filter time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
 
         std::cout << "bin_size = " << bin_size << "\n";
-        std::cout << "Prepare search\n";
+        start = std::chrono::high_resolution_clock::now();
         partitioned_jst_t pjst{std::addressof(jst), bin_size}; // default initialisation
+        std::cout << "bin count = " << pjst.bin_count() << "\n";
+        std::cout << "Run search\n";
 
         // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}
         // list of {bin_id:queries}
@@ -104,7 +126,10 @@ int search_main(seqan3::argument_parser & search_parser)
             // range_agent{traverser_model, } we can construct this from the model directly.
 
         // We need to write more information including the reference sequences and the length of the reference sequences.
-        sam_file_t sam_file{options.map_output_file_path};
+        std::vector<std::vector<search_match>> bin_matches{};
+        bin_matches.resize(pjst.bin_count());
+
+        #pragma omp parallel for num_threads(options.thread_count) shared(bin_matches, pjst, bins, options) schedule(dynamic)
         for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
         { // parallel region
             if (seqan::empty(bins[bin_idx]))
@@ -119,8 +144,8 @@ int search_main(seqan3::argument_parser & search_parser)
 
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
-            std::cout << "Searching bin = " << bin_idx << "\n";
-            std::vector matches = search_queries_(jst_bin, bins[bin_idx], options.error_rate);
+            // std::cout << "Searching bin = " << bin_idx << "\n";
+            bin_matches[bin_idx] = search_queries_(jst_bin, bins[bin_idx], options.error_rate);
 
             // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
             // for (auto const & match : matches)
@@ -145,9 +170,28 @@ int search_main(seqan3::argument_parser & search_parser)
                 // -> one buffer per thread to fill -> full buffer is pushed into queue -> empty buffer is reserved when available
                 // -> single buffer writes out record stream into bgzf_ostream (possibly unsynchronised?)
             // * report in BAM file
-            write_results(sam_file, matches, bins[bin_idx]); // needs synchronised output_buffer
-        }
+            // We do not want to have a critical region here.
+            // But somehow we need to provide some mechanism to say there is a new batch available.
+            // We need the concurrent queue here!
 
+        }
+        end = std::chrono::high_resolution_clock::now();
+        std::cout << "Search time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
+
+        std::cout << "Write results\n";
+        start = std::chrono::high_resolution_clock::now();
+        sam_file_t sam_file{options.map_output_file_path};
+
+        for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
+            if (!bin_matches[bin_idx].empty())
+                write_results(sam_file, bin_matches[bin_idx], bins[bin_idx]); // needs synchronised output_buffer
+
+        end = std::chrono::high_resolution_clock::now();
+        std::cout << "Write results time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
     }
     catch (std::exception const & ex)
     {
