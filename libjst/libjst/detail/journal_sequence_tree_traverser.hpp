@@ -180,9 +180,14 @@ private:
      *
      * \returns `true`, if no more contexts are available, `false` otherwise.
      */
-    bool at_end(size_t const branch_end = 0) const noexcept
+    bool at_end() const noexcept
     {
-        return _branch_stack.size() == branch_end;
+        return is_base_branch() && active_branch().at_end() && !active_branch().has_more_branch_events();
+    }
+
+    bool at_end_() const noexcept
+    {
+        return is_base_branch() && active_branch().at_end() && !active_branch().has_more_join_events();
     }
 
     //!\brief Pushes a new branch on the branch stack.
@@ -676,8 +681,6 @@ private:
 
     /*!\brief Advances to the next position.
      *
-     * \returns `true` if not at end, `false` otherwise.
-     *
      * \details
      *
      * When called the context of the current branch is advanced by one position.
@@ -686,11 +689,10 @@ private:
      * * update relative context position of each sequence
      * * update base branch coverage with joined branches
      * * create a new branch
-     * * terminate base branch if fully consumed
      */
-    bool advance([[maybe_unused]] size_t branch_end = 0)
+    void advance()
     {
-        assert(!at_end(branch_end));
+        assert(!at_end());
 
         ++active_branch().context_position;
         ++active_branch().jd_iter;
@@ -709,17 +711,11 @@ private:
 
         // Either on the base branch or there must be at least one supported sequence.
         assert(is_base_branch() || active_branch().coverage.any());
-
-        // Drop the base branch if fully consumed as well.
-        if (is_base_branch() && active_branch().at_end() && !active_branch().has_more_branch_events())
-            drop_branch(traversal_direction::forward);
-
-        return at_end(branch_end);
     }
 
-    bool advance_reverse(size_t branch_end = 0)
+    void advance_reverse()
     {
-        assert(!at_end(branch_end));
+        assert(!at_end());
 
         --active_branch().context_position;
         --active_branch().jd_iter;
@@ -739,19 +735,14 @@ private:
 
         // Either on the base branch or there must be at least one supported sequence.
         assert(is_base_branch() || active_branch().coverage.any());
-
-        // Drop the base branch if fully consumed as well.
-        if (is_base_branch() && active_branch().at_end() && !active_branch().has_more_join_events())
-            drop_branch(traversal_direction::reverse);
-
-        return at_end(branch_end);
     }
 
     //!\brief Advances the context by one position.
     //!\returns `true` if there is full context available, otherwise `false`.
     bool next_context()
     {
-        return advance() || has_full_context_in_branch();
+        advance();
+        return at_end() || has_full_context_in_branch();
     }
 
     //!\biref Seeks into the journal sequence tree to the given coordinate.

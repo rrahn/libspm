@@ -381,15 +381,18 @@ private:
 
     bool at_end() const noexcept
     {
-        return _host.at_end(_initial_stack_size);
+        if constexpr (direction == traversal_direction::forward)
+            return _host._branch_stack.size() == _initial_stack_size || _host.at_end();
+        else
+            return _host._branch_stack.size() == _initial_stack_size || _host.at_end_();
     }
 
     auto advance()
     {
         if constexpr (direction == traversal_direction::forward)
-            _host.advance(_initial_stack_size);
+            _host.advance();
         else
-            _host.advance_reverse(_initial_stack_size);
+            _host.advance_reverse();
     }
 
     auto current_value()
