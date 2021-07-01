@@ -39,6 +39,11 @@ struct search_match
     {
         return subrange_type{jst_sequence.begin() + begin_position, jst_sequence.begin() + end_position};
     }
+
+    auto operator<=>(search_match const & rhs) const noexcept
+    {
+        return std::tie(query_id, error_count) <=> std::tie(rhs.query_id, rhs.error_count);
+    }
 };
 
 std::vector<search_match> search_queries_(jst_bin_t const &, bin_t const &, float const);
