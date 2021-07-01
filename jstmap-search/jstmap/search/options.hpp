@@ -24,6 +24,7 @@ struct search_options
     std::filesystem::path index_input_file_path{}; //!< The file path containing the ibf index.
     std::filesystem::path map_output_file_path{}; //!< The file path to write the alignment map file to.
     float error_rate{}; //!< The error rate to use for mapping the reads.
+    size_t thread_count{20}; //!< The number of threads to use for the program.
 };
 
 }  // namespace jstmap
