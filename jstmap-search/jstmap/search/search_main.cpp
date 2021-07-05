@@ -75,7 +75,7 @@ int search_main(seqan3::argument_parser & search_parser)
     {
         std::cout << "load the queries\n";
         auto start = std::chrono::high_resolution_clock::now();
-        auto queries = load_queries(options.query_input_file_path);
+        std::vector const queries = load_queries(options.query_input_file_path);
         auto end = std::chrono::high_resolution_clock::now();
 
         std::cout << "Load queries time: "
@@ -96,15 +96,13 @@ int search_main(seqan3::argument_parser & search_parser)
         // Step 2:
         start = std::chrono::high_resolution_clock::now();
         size_t bin_size{std::numeric_limits<size_t>::max()};
-        std::vector<bin_t> bins{};
+        std::vector<std::vector<size_t>> bins{};
         // What if the ibf is not present?
         if (options.index_input_file_path.empty())
         {
             bins.resize(1);
-            std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
-            {
-                seqan::appendValue(bins.front(), query | std::views::all);
-            });
+            bins[0].resize(queries.size());
+            std::iota(bins[0].begin(), bins[0].end(), 0ull);
         }
         else
         {
@@ -134,8 +132,19 @@ int search_main(seqan3::argument_parser & search_parser)
         #pragma omp parallel for num_threads(options.thread_count) shared(bin_matches, pjst, bins, options) schedule(dynamic)
         for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
         { // parallel region
-            if (seqan::empty(bins[bin_idx]))
+            auto const & bin_query_ids = bins[bin_idx];
+
+            if (bin_query_ids.empty())
                 continue;
+
+            // Step1: generate the local sequence set.
+            bin_t local_bin{};
+            seqan::reserve(local_bin, bin_query_ids.size());
+
+            for (size_t local_bin_idx = 0; local_bin_idx < bin_query_ids.size(); ++local_bin_idx)
+            {
+                seqan::appendValue(local_bin, queries[bin_query_ids[local_bin_idx]] | std::views::all);
+            }
 
             auto jst_bin = pjst.bin_at(bin_idx);
             // * search queries in bin_id -> matches[]
@@ -147,13 +156,19 @@ int search_main(seqan3::argument_parser & search_parser)
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
             // std::cout << "Searching bin = " << bin_idx << "\n";
-            bin_matches[bin_idx] = search_queries_(jst_bin, bins[bin_idx], options.error_rate);
+            bin_matches[bin_idx] = search_queries_(jst_bin, local_bin, options.error_rate);
 
             std::ranges::sort(bin_matches[bin_idx], std::less<void>{}); // sort by query_id and by error_count.
             auto redundant_tail = std::ranges::unique(bin_matches[bin_idx],
                                                       std::ranges::equal_to{},
                                                       [] (auto const & match) { return match.query_id; });
             bin_matches[bin_idx].erase(redundant_tail.begin(), redundant_tail.end());
+
+            // Overwrite the query id here with the global query_id.
+            std::ranges::for_each(bin_matches[bin_idx], [&] (search_match & match)
+            {
+                match.query_id = bins[bin_idx][match.query_id];
+            });
 
             // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
             // for (auto const & match : matches)
@@ -183,6 +198,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // We need the concurrent queue here!
 
         }
+
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Search time: "
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
@@ -194,7 +210,7 @@ int search_main(seqan3::argument_parser & search_parser)
 
         for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
             if (!bin_matches[bin_idx].empty())
-                write_results(sam_file, bin_matches[bin_idx], bins[bin_idx]); // needs synchronised output_buffer
+                write_results(sam_file, bin_matches[bin_idx], queries); // needs synchronised output_buffer
 
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Write results time: "
