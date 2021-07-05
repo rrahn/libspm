@@ -10,14 +10,16 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
+#include <atomic>
+#include <future>
 #include <ranges>
 #include <utility>
 
-// #include <seqan3/core/detail/pack_algorithm.hpp>
 #include <seqan3/alignment/pairwise/align_pairwise.hpp>
 #include <seqan3/alignment/scoring/nucleotide_scoring_scheme.hpp>
 #include <seqan3/core/debug_stream.hpp>
 #include <seqan3/io/sam_file/output.hpp>
+#include <seqan3/contrib/parallel/buffer_queue.hpp>
 
 #include <jstmap/search/write_results.hpp>
 
@@ -72,14 +74,79 @@ namespace jstmap
 // a) query -> produce results for multiple reference genomes -> dump all data
 //
 //
-void write_results(sam_file_t & sam_file,
-                   std::vector<search_match> const & matches,
-                   std::vector<raw_sequence_t> const & queries)
+void write_results(std::vector<search_match> const & matches,
+                   std::vector<raw_sequence_t> const & queries,
+                   search_options const & options)
 {
-    auto alignment_pairs_view = matches | std::views::transform([&] (auto const & match)
+    // ----------------------------------------------------------------------------
+    // Configure the output record for the sam file.
+    // ----------------------------------------------------------------------------
+
+    using field_types_t = seqan3::type_list<int32_t,
+                                            std::views::all_t<raw_sequence_t const &>,
+                                            std::vector<seqan3::cigar>>;
+    using field_ids_t = seqan3::fields<seqan3::field::ref_offset,
+                                       seqan3::field::seq,
+                                       seqan3::field::cigar>;
+    using record_t  = seqan3::record<field_types_t, field_ids_t>;
+
+    // ----------------------------------------------------------------------------
+    // Configure the concurrent resources.
+    // ----------------------------------------------------------------------------
+
+    seqan3::contrib::dynamic_buffer_queue<record_t> result_queue{};
+
+    // One consumer and thread_count - 1 many producer.
+    bool const is_single_threaded = options.thread_count == 1;
+    uint32_t const producer_count = (is_single_threaded) ? 1 : options.thread_count - 1;
+    std::atomic<size_t> alignment_counter{}; // All alignments need to be computed.
+
+    // ----------------------------------------------------------------------------
+    // Define the producer job.
+    // ----------------------------------------------------------------------------
+
+    // FIXME: What if one alignment fails and does not produce a result? Then we never finish!
+    auto async_push = [&] (auto const & align_result)
     {
-        return std::pair{match.sequence(), queries[match.query_id] | std::views::all};
+        std::vector cigar = seqan3::detail::get_cigar_vector(align_result.alignment(),
+                                                             align_result.sequence2_begin_position(),
+                                                             align_result.sequence2_end_position());
+
+        record_t record{matches[align_result.sequence1_id()].hit_coordinate.position,
+                        queries[matches[align_result.sequence2_id()].query_id],
+                        std::move(cigar)};
+        result_queue.wait_push(std::move(record));
+        ++alignment_counter;
+    };
+
+    // ----------------------------------------------------------------------------
+    // Define the consumer job.
+    // ----------------------------------------------------------------------------
+
+    // If we have only one thread available, we have to first produce all alingments and then
+    // write them to the file.
+    std::launch launch_policy = (is_single_threaded) ? std::launch::deferred : std::launch::async;
+
+    // Start thread to asynchronously write results into global sam file resource.
+    std::future<void> serialiser = std::async(launch_policy, [&] ()
+    {
+        seqan3::sam_file_output sam_file{options.map_output_file_path, field_ids_t{}};
+
+        while (true)
+        {
+            record_t record{};
+            if (auto status = result_queue.wait_pop(record); status == seqan3::contrib::queue_op_status::closed)
+                break;
+
+            sam_file.push_back(std::move(record));
+        }
+
+        assert(result_queue.empty());
     });
+
+    // ----------------------------------------------------------------------------
+    // Configure and run the alignment.
+    // ----------------------------------------------------------------------------
 
     auto align_cfg = seqan3::align_cfg::method_global{} |
                      seqan3::align_cfg::scoring_scheme{seqan3::nucleotide_scoring_scheme{}} |
@@ -90,15 +157,31 @@ void write_results(sam_file_t & sam_file,
                      seqan3::align_cfg::output_alignment{} |
                      seqan3::align_cfg::output_begin_position{} |
                      seqan3::align_cfg::output_end_position{} |
-                     seqan3::align_cfg::output_score{};
+                     seqan3::align_cfg::output_score{} |
+                     seqan3::align_cfg::parallel{producer_count} |
+                     seqan3::align_cfg::on_result{async_push};
 
-    for (auto && align_result : seqan3::align_pairwise(alignment_pairs_view, align_cfg)) // | seqan3::align_cfg::on_result{write_record});
+    auto alignment_pairs_view = matches | std::views::transform([&] (auto const & match)
     {
-        assert(align_result.sequence1_id() < matches.size());
-        sam_file.emplace_back(matches[align_result.sequence1_id()].hit_coordinate.position,
-                              queries[matches[align_result.sequence2_id()].query_id],
-                              align_result.alignment());
-    }
+        return std::pair{match.sequence(), queries[match.query_id] | std::views::all};
+    });
+
+    seqan3::align_pairwise(alignment_pairs_view, align_cfg);
+
+    // ----------------------------------------------------------------------------
+    // Closing step.
+    // ----------------------------------------------------------------------------
+
+    // Wait for the last produced alignment.
+    while (alignment_counter.load() < matches.size())
+    {}
+
+    // Close the queue to signal that there are no more alignments coming.
+    assert(alignment_counter.load() == matches.size());
+    result_queue.close();
+
+    // Wait for the async serialiser to write the last records.
+    serialiser.get();
 }
 
 }  // namespace jstmap

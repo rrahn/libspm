@@ -239,9 +239,7 @@ int search_main(seqan3::argument_parser & search_parser)
 
         std::cout << "Write results\n";
         start = std::chrono::high_resolution_clock::now();
-        sam_file_t sam_file{options.map_output_file_path};
-
-        write_results(sam_file, total_matches, queries); // needs synchronised output_buffer
+        write_results(total_matches, queries, options); // needs synchronised output_buffer
 
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Write results time: "
