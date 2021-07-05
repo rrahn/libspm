@@ -12,26 +12,18 @@
 
 #pragma once
 
-#include <filesystem>
 #include <vector>
-
-#include <seqan/sequence.h>
-
-#include <seqan3/io/sam_file/output.hpp>
 
 #include <libjst/context_position.hpp>
 
 #include <jstmap/search/search_queries.hpp>
+#include <jstmap/search/options.hpp>
 
 namespace jstmap
 {
 
-using sam_file_t = seqan3::sam_file_output<seqan3::fields<seqan3::field::ref_offset,
-                                                          seqan3::field::seq,
-                                                          seqan3::field::alignment>>;
-
-void write_results(sam_file_t &,
-                   std::vector<search_match> const &,
-                   std::vector<raw_sequence_t> const &);
+void write_results(std::vector<search_match> const &,
+                   std::vector<raw_sequence_t> const &,
+                   search_options const &);
 
 }  // namespace jstmap
