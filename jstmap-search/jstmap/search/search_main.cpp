@@ -14,6 +14,7 @@
 #include <chrono>
 #include <filesystem>
 #include <functional>
+#include <numeric>
 #include <omp.h>
 
 #include <seqan3/argument_parser/argument_parser.hpp>
@@ -204,13 +205,43 @@ int search_main(seqan3::argument_parser & search_parser)
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
                   << " sec\n";
 
+        std::cout << "Reduce and filter matches\n";
+        start = std::chrono::high_resolution_clock::now();
+        // Filter globally for the best hits.
+        // Ater reducing them to the same file sort, uniquify and then erase redundant matches.
+        std::vector<search_match> total_matches{};
+        if (bins.size() == 1)
+        {
+            total_matches = std::move(bin_matches[0]);
+        }
+        else // Reduce all matches and uniquify all matches.
+        {
+            auto match_counts = bin_matches | std::views::transform([] (auto & bin) { return bin.size(); });
+            size_t total_match_count = std::accumulate(match_counts.begin(), match_counts.end(), 0);
+            total_matches.resize(total_match_count);
+            auto insert_it = total_matches.begin();
+            std::ranges::for_each(bin_matches, [&] (auto && bin)
+            {
+                insert_it = std::ranges::move(bin, insert_it).out;
+            });
+
+            std::ranges::sort(total_matches, std::less<void>{}); // sort by query_id and by error_count.
+            auto redundant_tail = std::ranges::unique(total_matches,
+                                                      std::ranges::equal_to{},
+                                                      [] (auto const & match) { return match.query_id; });
+            total_matches.erase(redundant_tail.begin(), redundant_tail.end());
+        }
+
+        end = std::chrono::high_resolution_clock::now();
+        std::cout << "Reduction time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
+
         std::cout << "Write results\n";
         start = std::chrono::high_resolution_clock::now();
         sam_file_t sam_file{options.map_output_file_path};
 
-        for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
-            if (!bin_matches[bin_idx].empty())
-                write_results(sam_file, bin_matches[bin_idx], queries); // needs synchronised output_buffer
+        write_results(sam_file, total_matches, queries); // needs synchronised output_buffer
 
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Write results time: "
