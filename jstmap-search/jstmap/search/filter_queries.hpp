@@ -15,6 +15,7 @@
 namespace jstmap
 {
 
-std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t> const &, search_options const &);
+std::pair<size_t, std::vector<std::vector<size_t>>>
+filter_queries(std::vector<raw_sequence_t> const &, search_options const &);
 
 } // namespace jstmap

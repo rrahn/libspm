@@ -73,8 +73,8 @@ namespace jstmap
 //
 //
 void write_results(sam_file_t & sam_file,
-                   std::vector<jstmap::search_match> const & matches,
-                   seqan::StringSet<std::views::all_t<raw_sequence_t const &>> const & queries)
+                   std::vector<search_match> const & matches,
+                   std::vector<raw_sequence_t> const & queries)
 {
     auto alignment_pairs_view = matches | std::views::transform([&] (auto const & match)
     {

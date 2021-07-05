@@ -30,12 +30,12 @@ std::pair<size_t, seqan3::interleaved_bloom_filter<>> load_index(std::filesystem
     return std::pair{bin_size, std::move(ibf)};
 }
 
-std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t> const & queries,
-                                                     search_options const & options)
+std::pair<size_t, std::vector<std::vector<size_t>>>
+filter_queries(std::vector<raw_sequence_t> const & queries, search_options const & options)
 {
     auto [bin_size, ibf] = load_index(options.index_input_file_path);
 
-    std::vector<bin_t> bins{};
+    std::vector<std::vector<size_t>> bins{};
     bins.resize(ibf.bin_count());
 
     // Change to global constant or serialise it to disk.
@@ -54,11 +54,11 @@ std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t>
     thread_local_buffer.resize(options.thread_count, bins);
 
     #pragma omp parallel for num_threads(options.thread_count) shared(thread_local_buffer, queries) firstprivate(counting_agent, kmer_size) schedule(dynamic)
-    for (size_t idx = 0; idx < queries.size(); ++idx)
+    for (size_t query_idx = 0; query_idx < queries.size(); ++query_idx)
     {
         // kmer-lemma:
         size_t const thread_id = omp_get_thread_num();
-        auto const & query = queries[idx];
+        auto const & query = queries[query_idx];
         size_t const query_size = std::ranges::size(query);
         size_t const error_count = std::ceil(query_size * options.error_rate);
         size_t const kmer_threshold = query_size + 1 - (error_count + 1) * kmer_size;
@@ -69,20 +69,21 @@ std::pair<size_t, std::vector<bin_t>> filter_queries(std::vector<raw_sequence_t>
         auto & bin_counts = counting_agent.bulk_count(hashes);
 
         // Bin assignment:
-        for (size_t i = 0; i < bin_counts.size(); ++i)
-            if (bin_counts[i] >= kmer_threshold)
-                seqan::appendValue(thread_local_buffer[thread_id][i], query | std::views::all);
+        for (size_t bin_idx = 0; bin_idx < bin_counts.size(); ++bin_idx)
+            if (bin_counts[bin_idx] >= kmer_threshold)
+                thread_local_buffer[thread_id][bin_idx].push_back(query_idx);
     }
 
     // Reduce the local buffer and move them to the final bin vector.
     std::ranges::for_each(thread_local_buffer, [&](auto & local_bins)
     {
         size_t bin_idx = 0;
-        std::ranges::for_each(local_bins, [&] (bin_t & bin)
+        std::ranges::for_each(local_bins, [&] (auto const & bin)
         {
             seqan::append(bins[bin_idx++], bin);
         });
     });
+
     return std::pair{bin_size, std::move(bins)};
 }
 
