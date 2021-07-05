@@ -32,6 +32,6 @@ using sam_file_t = seqan3::sam_file_output<seqan3::fields<seqan3::field::ref_off
 
 void write_results(sam_file_t &,
                    std::vector<search_match> const &,
-                   seqan::StringSet<std::views::all_t<raw_sequence_t const &>> const &);
+                   std::vector<raw_sequence_t> const &);
 
 }  // namespace jstmap
