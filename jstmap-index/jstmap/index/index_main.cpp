@@ -48,6 +48,12 @@ int index_main(seqan3::argument_parser & index_parser)
                             "bin-size",
                             "The size of each bin for the index construction.",
                             seqan3::option_spec::standard);
+    index_parser.add_option(options.bin_overlap,
+                            'o',
+                            "bin-overlap",
+                            "The size of the bin overlap used for the ibf creation. Must be smaller than the bin size.",
+                            seqan3::option_spec::advanced,
+                            seqan3::arithmetic_range_validator{0u, 1000u});
     index_parser.add_option(options.kmer_size,
                             'k',
                             "kmer-size",
@@ -58,6 +64,9 @@ int index_main(seqan3::argument_parser & index_parser)
     try
     {
         index_parser.parse();
+        if (options.bin_overlap >= options.bin_size)
+            throw std::invalid_argument{"The bin overlap of " + std::to_string(options.bin_overlap) + " must be "
+                                        "smaller than the bin size of " + std::to_string(options.bin_size) + "!"};
     }
     catch (seqan3::argument_parser_error const & ex)
     {
@@ -91,7 +100,8 @@ int index_main(seqan3::argument_parser & index_parser)
         auto jst = load_jst(options.jst_input_file);
 
         log(verbosity_level::standard, logging_level::info, "Creating the index with bin size ", options.bin_size,
-                                                            " and kmer-size ", options.kmer_size);
+                                                            ", bin overlap ", options.bin_overlap,
+                                                            ", and kmer-size ", options.kmer_size);
         auto ibf = create_index(jst, options);
 
         log(verbosity_level::standard, logging_level::info, "Saving index: ", options.output_file);
