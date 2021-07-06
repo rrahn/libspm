@@ -21,7 +21,7 @@ namespace jstmap
 
 seqan3::interleaved_bloom_filter<> create_index(jst_t const & jst, index_options const & options)
 {
-    partitioned_jst_t pjst{std::addressof(jst), options.bin_size};
+    partitioned_jst_t pjst{std::addressof(jst), options.bin_size, options.bin_overlap};
     size_t ibf_size = 2ull * 1024ull * 1024ull * 1024ull; // 2GiBi
     size_t computed_bin_size = ibf_size / (((pjst.bin_count() + 63) / 64) * 64);
     // We need to set the options and check how many bins etc.
