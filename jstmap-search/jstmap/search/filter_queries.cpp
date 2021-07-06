@@ -16,30 +16,29 @@
 namespace jstmap
 {
 
-std::pair<size_t, seqan3::interleaved_bloom_filter<>> load_index(std::filesystem::path const & index_path)
+std::tuple<size_t, uint8_t, seqan3::interleaved_bloom_filter<>> load_index(std::filesystem::path const & index_path)
 {
     std::ifstream instr{index_path};
     cereal::BinaryInputArchive inarch{instr};
     // Load the bin size used for the jst partitioning.
     size_t bin_size{};
+    uint8_t kmer_size{};
     inarch(bin_size);
+    inarch(kmer_size);
     // Load the corresponding ibf.
     seqan3::interleaved_bloom_filter<> ibf{};
     ibf.serialize(inarch);
 
-    return std::pair{bin_size, std::move(ibf)};
+    return std::tuple{bin_size, kmer_size, std::move(ibf)};
 }
 
 std::pair<size_t, std::vector<std::vector<size_t>>>
 filter_queries(std::vector<raw_sequence_t> const & queries, search_options const & options)
 {
-    auto [bin_size, ibf] = load_index(options.index_input_file_path);
+    auto [bin_size, kmer_size, ibf] = load_index(options.index_input_file_path);
 
     std::vector<std::vector<size_t>> bins{};
     bins.resize(ibf.bin_count());
-
-    // Change to global constant or serialise it to disk.
-    uint8_t const kmer_size = 25;
 
     // size_t const kmers_per_window = arguments.window_size - arguments.kmer_size + 1;
     // size_t const kmers_per_pattern = arguments.pattern_size - arguments.kmer_size + 1;
