@@ -24,6 +24,7 @@ void save_index(seqan3::interleaved_bloom_filter<> & ibf, index_options const & 
     std::ofstream ostr{options.output_file};
     cereal::BinaryOutputArchive oarch{ostr};
     oarch(options.bin_size);
+    oarch(options.kmer_size);
     ibf.serialize(oarch);
 }
 

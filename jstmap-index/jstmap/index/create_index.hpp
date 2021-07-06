@@ -15,10 +15,11 @@
 #include <seqan3/search/dream_index/interleaved_bloom_filter.hpp>
 
 #include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/index/options.hpp>
 
 namespace jstmap
 {
 
-seqan3::interleaved_bloom_filter<> create_index(jst_t const &, size_t const);
+seqan3::interleaved_bloom_filter<> create_index(jst_t const &, index_options const &);
 
 } // namespace jstmap

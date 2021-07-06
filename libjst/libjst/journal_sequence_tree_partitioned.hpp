@@ -97,8 +97,8 @@ public:
 
             for (size_t i = 0; i < bin_count; i++)
                 _bins.push_back(traverser_model_t{_jst,
-                                                  position_type{0u, i * bin_size},
-                                                  position_type{0u, (i + 1) * bin_size}});
+                                                  position_type{ref_idx, i * bin_size},
+                                                  position_type{ref_idx, (i + 1) * bin_size + bin_overlap}});
         }
     }
     //!\}
