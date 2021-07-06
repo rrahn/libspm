@@ -83,12 +83,15 @@ public:
      *
      * \param[in] jst A pointer to the jst to wrap.
      * \param[in] bin_size The size of a single bin. Defaults to infinity and must be `> 0`.
+     * \param[in] bin_overlap An additional size that is used for overlapping bins.
      */
     explicit journal_sequence_tree_partitioned(jst_t const * jst,
-                                               size_t bin_size = std::numeric_limits<size_t>::max()) : _jst{jst}
+                                               size_t bin_size = std::numeric_limits<size_t>::max(),
+                                               size_t bin_overlap = 0) : _jst{jst}
     {
        assert(_jst != nullptr);
        assert(bin_size > 0);
+       assert(bin_overlap < bin_size);
 
         for (size_t ref_idx = 0; ref_idx < _jst->reference().size(); ++ref_idx)
         {
