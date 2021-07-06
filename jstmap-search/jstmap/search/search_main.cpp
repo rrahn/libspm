@@ -60,6 +60,12 @@ int search_main(seqan3::argument_parser & search_parser)
                              "The error rate allowed for mapping the reads.",
                              seqan3::option_spec::standard,
                              seqan3::arithmetic_range_validator{0.0, 1.0});
+    search_parser.add_option(options.thread_count,
+                             't',
+                             "thread-count",
+                             "The number of threads to use for the search.",
+                             seqan3::option_spec::standard,
+                             seqan3::arithmetic_range_validator{1u, std::thread::hardware_concurrency()});
 
     try
     {
