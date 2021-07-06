@@ -48,6 +48,12 @@ int index_main(seqan3::argument_parser & index_parser)
                             "bin-size",
                             "The size of each bin for the index construction.",
                             seqan3::option_spec::standard);
+    index_parser.add_option(options.kmer_size,
+                            'k',
+                            "kmer-size",
+                            "The kmer-size used for the ibf creation.",
+                            seqan3::option_spec::advanced,
+                            seqan3::arithmetic_range_validator{0u, 31u});
 
     try
     {
@@ -84,8 +90,9 @@ int index_main(seqan3::argument_parser & index_parser)
         log(verbosity_level::standard, logging_level::info, "Load jst: ", options.jst_input_file);
         auto jst = load_jst(options.jst_input_file);
 
-        log(verbosity_level::standard, logging_level::info, "Creating the index with bin size ", options.bin_size);
-        auto ibf = create_index(jst, options.bin_size);
+        log(verbosity_level::standard, logging_level::info, "Creating the index with bin size ", options.bin_size,
+                                                            " and kmer-size ", options.kmer_size);
+        auto ibf = create_index(jst, options);
 
         log(verbosity_level::standard, logging_level::info, "Saving index: ", options.output_file);
         save_index(ibf, options);

@@ -19,10 +19,9 @@
 namespace jstmap
 {
 
-seqan3::interleaved_bloom_filter<> create_index([[maybe_unused]] jst_t const & jst,
-                                                [[maybe_unused]] size_t const bin_size)
+seqan3::interleaved_bloom_filter<> create_index(jst_t const & jst, index_options const & options)
 {
-    partitioned_jst_t pjst{std::addressof(jst), bin_size};
+    partitioned_jst_t pjst{std::addressof(jst), options.bin_size};
     size_t ibf_size = 2ull * 1024ull * 1024ull * 1024ull; // 2GiBi
     size_t computed_bin_size = ibf_size / (((pjst.bin_count() + 63) / 64) * 64);
     // We need to set the options and check how many bins etc.
@@ -30,12 +29,11 @@ seqan3::interleaved_bloom_filter<> create_index([[maybe_unused]] jst_t const & j
                                            seqan3::bin_size{computed_bin_size},
                                            seqan3::hash_function_count{3}};
 
-    uint8_t kmer_size = 25;
     for (size_t bin_id = 0; bin_id < pjst.bin_count(); ++bin_id)
     {
-        libjst::detail::journal_sequence_tree_context_enumerator enumerator{pjst.bin_at(bin_id), kmer_size};
+        libjst::detail::journal_sequence_tree_context_enumerator enumerator{pjst.bin_at(bin_id), options.kmer_size};
         for (auto && context : enumerator)
-            for (uint64_t hash_value : context | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size}))
+            for (uint64_t hash_value : context | seqan3::views::kmer_hash(seqan3::ungapped{options.kmer_size}))
                 ibf.emplace(hash_value, seqan3::bin_index{bin_id});
     }
 
