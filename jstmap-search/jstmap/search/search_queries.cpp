@@ -259,12 +259,12 @@ std::vector<libjst::context_position> search_queries(partitioned_jst_t const & p
 
     std::ranges::for_each(queries, [&] (raw_sequence_t const & query)
     {
-        // prepare searcher
-        using state_t = typename decltype(libjst::horspool_pattern_searcher{query})::state_type;
-        libjst::horspool_pattern_searcher searcher{query, libjst::search_state_manager_stack<state_t>{}};
-
         for (uint32_t index = 0; index < partitioned_jst.bin_count(); ++index)
         {
+            // prepare searcher
+            using state_t = typename decltype(libjst::horspool_pattern_searcher{query})::state_type;
+            libjst::horspool_pattern_searcher searcher{query, libjst::search_state_manager_stack<state_t>{}};
+
             auto jst_range_agent = partitioned_jst.range_agent(libjst::context_size{static_cast<uint32_t>(query.size())},
                                                                libjst::bin_index{index},
                                                                searcher.state_manager()); // already pushing a branch.
