@@ -33,6 +33,9 @@ find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
 find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
 
+# Dependency: OpenMP
+find_package(OpenMP REQUIRED)
+
 ## APPLICATION
 
 add_subdirectory (libjst)
