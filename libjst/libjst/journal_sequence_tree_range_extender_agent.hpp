@@ -249,8 +249,8 @@ public:
         {
             nil_root_position.offset += _host._coordinate.context_size - 1;
             _host._context_size = extension_size + 2;
-            top_branch.branch_end_position = std::min(_host.max_end_position() + top_branch.offset,
-                                                      nil_root_position.offset + extension_size + 1);
+            top_branch.branch_end_position = std::min<size_t>(_host.max_end_position() + top_branch.offset,
+                                                              nil_root_position.offset + extension_size + 1);
             _host._subtree_steps = 0;
             top_branch.jd_iter = top_branch.journal_decorator.begin() + nil_root_position.offset;
         }
