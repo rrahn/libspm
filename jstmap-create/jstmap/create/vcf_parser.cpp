@@ -14,6 +14,7 @@
 #include <charconv>
 #include <ranges>
 #include <span>
+#include <string>
 
 #include <seqan/vcf_io.h>
 
@@ -519,13 +520,20 @@ auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::f
         if (auto [is_valid_record, delta_events] = record.generate_delta_events(); is_valid_record)
         {
             total_event_count += delta_events.size();
+            size_t delta_event_count{};
             for (auto shared_event : delta_events)
             {
                 if (!jst.insert(std::move(shared_event)))
                 {
+                    using namespace std::literals;
                     ++skipped_event_count;
-                    log(verbosity_level::standard, logging_level::error, "Event could not be inserted into the jst!");
+                    log(verbosity_level::standard, logging_level::warning,
+                        "Event could not be inserted into the jst!"s +
+                        " Record No: "s + std::to_string(total_record_count) +
+                        " Total events: "s + std::to_string(delta_events.size()) +
+                        " Current event: "s + std::to_string(delta_event_count));
                 }
+                ++delta_event_count;
             }
         }
         else
