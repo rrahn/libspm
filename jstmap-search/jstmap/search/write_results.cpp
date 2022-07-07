@@ -141,7 +141,7 @@ void write_results(std::vector<search_match> const & matches,
             sam_file.push_back(std::move(record));
         }
 
-        assert(result_queue.empty());
+        assert(result_queue.is_empty());
     });
 
     // ----------------------------------------------------------------------------
