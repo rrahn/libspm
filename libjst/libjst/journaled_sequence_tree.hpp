@@ -298,8 +298,10 @@ public:
                 (other_event.position().offset >= (event_join_position + add_one)))
                 continue;
 
-            coverage_type shared_coverage = other_event.coverage() & event.coverage();
-            if (shared_coverage.any())
+            // Updating strategy: remove overlapping coverages and check if there is at least one sequence
+            // supporting the sequence variant.
+            event.coverage() &= ~other_event.coverage();
+            if (event.coverage().none())
                 return false;
         }
 
