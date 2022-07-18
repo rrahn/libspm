@@ -44,6 +44,7 @@ struct traversal_fixture
     jst_events_t events{};
     uint32_t context_size{};
     uint32_t bin_count{};
+    std::vector<std::string> expected_contexts{};
 
     template <typename char_t>
     friend seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,

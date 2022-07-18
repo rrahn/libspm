@@ -123,7 +123,7 @@ public:
         size_t const pattern_size = std::ranges::distance(_pattern);
         for (auto it = std::ranges::begin(haystack); it != std::ranges::end(haystack); ++it)
         {
-            int32_t res = _state_manager.state();
+            size_t res = _state_manager.state();
             if (res > 0)  // Advance the haystack iterator until we can compare again.
             {
                 --_state_manager.state();
@@ -134,15 +134,15 @@ public:
 
                 auto base_iterator = it.base(); // Returns the original iterator to the JD!
 
-                res = pattern_size;
-                while (--res >= 0 && _pattern[res] == *base_iterator)
-                    --base_iterator;
-
+                for (res = 1; res < pattern_size; ++res, --base_iterator) {
+                    if (_pattern[pattern_size - res] != *base_iterator)
+                        break;
+                }
                 // Store the current jump for this position.
-                _state_manager.state() = occurrence_table[seqan3::to_rank(*it)];
+                _state_manager.state() = occurrence_table[seqan3::to_rank(*it)] + 1;
             }
 
-            callback(res < 0, it);
+            callback(res == pattern_size, it);
         }
     }
 
