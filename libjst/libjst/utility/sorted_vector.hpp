@@ -15,25 +15,45 @@
 #include <compare>
 #include <concepts>
 #include <memory_resource>
+#include <ranges>
 #include <vector>
 
 namespace libjst
 {
+
+// Forward declaration for friend access
+template <std::ranges::view segment_t>
+class journal_decorator;
+
+template <typename journal_decorator_t>
+class journal_decorator_revertable;
+
+// TODO: Call this the journal
+    // can be customised with the dictionary type.
+    // if not specified uses its own dictionary type.
 template <std::semiregular key_t, typename compare_t = std::less<key_t>>
 class sorted_vector
 {
-    using container_t = std::pmr::vector<key_t>;
+    using container_t = std::vector<key_t>;
 
     container_t _elements; //!< The container holding the elements.
-public:
 
     template <bool is_const>
     class bi_iterator;
+
+    template <std::ranges::view>
+    friend class journal_decorator;
+
+    template <typename>
+    friend class journal_decorator_revertable;
+
+public:
 
     using value_type = std::ranges::range_value_t<container_t>;
     using iterator = bi_iterator<false>;
     using const_iterator = bi_iterator<true>;
     using size_type = size_t;
+    using key_compare = compare_t;
 
     sorted_vector() noexcept = default;
     sorted_vector(sorted_vector const &) noexcept = default;
@@ -348,13 +368,13 @@ private:
     template <typename comparable_key_t>
     iterator upper_bound_impl(comparable_key_t const & key)
     {
-        return iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
+        return (_elements.size() == 1) ? begin() : iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
     }
 
     template <typename comparable_key_t>
     const_iterator upper_bound_impl(comparable_key_t const & key) const
     {
-        return const_iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
+        return (_elements.size() == 1) ? begin() : const_iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
     }
 };
 
@@ -376,7 +396,7 @@ public:
     using reference = std::ranges::range_reference_t<maybe_const_container_type>;
     using difference_type = std::ranges::range_difference_t<maybe_const_container_type>;
     using pointer = std::conditional_t<is_const, typename container_t::const_pointer, typename container_t::pointer>;
-    using iterator_category = std::bidirectional_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
 
     constexpr bi_iterator() = default;
     constexpr explicit bi_iterator(iterator_type iter) noexcept : _iter{std::move(iter)}
