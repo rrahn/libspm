@@ -190,7 +190,7 @@ TEST_F(journaled_sequence_tree_fixture, insert_insertions)
 
     EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 0u}, insertion_t{"kkk"s}, coverage_t{0, 0, 0, 0, 1}}));
     EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 5u}, insertion_t{"yy"s}, coverage_t{0, 1, 0, 0, 0}}));
-    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 8u}, insertion_t{"ppp"s}, coverage_t{1, 1, 1, 1, 1}}));
+    EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 8u}, insertion_t{"ppp"s}, coverage_t{0, 1, 0, 1, 1}})); // overlap.
     EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 3u}, insertion_t{"ppp"s}, coverage_t{0, 0, 0, 0, 0}})); // empty coverage
     EXPECT_FALSE(jst.insert(event_t{position_t{.offset = 13u}, insertion_t{"ppp"s}, coverage_t{1, 1, 0, 0, 0}})); // out of range.
 
