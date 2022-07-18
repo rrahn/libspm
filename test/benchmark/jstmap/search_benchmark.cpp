@@ -74,6 +74,6 @@ static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
 
 BENCHMARK_CAPTURE(jst_search_benchmark,
                   vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/ALL.chr1.shapeit2_integrated_v1a.GRCh38.20181129.phased.jst")->Arg(31)->Arg(64)->Arg(100)->Arg(150);
+                  "/home/rahn/workspace/data/jstmap/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.jst")->Arg(64);
 
 BENCHMARK_MAIN();
