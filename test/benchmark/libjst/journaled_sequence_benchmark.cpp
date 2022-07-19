@@ -19,158 +19,8 @@
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
-#include <libjst/journal_decorator_revertable.hpp>
-#include <libjst/journal_decorator.hpp>
-#include <libjst/utility/position_map.hpp>
+#include <libjst/journal.hpp>
 
-template <typename pos_map_t>
-class sequence_iterator {
-
-    using iterator_t = std::ranges::iterator_t<pos_map_t>;
-    using reference_t = std::iter_reference_t<iterator_t>;
-    using sequence_t = typename reference_t::second_type;
-    using sequence_iterator_t = std::ranges::iterator_t<sequence_t>;
-
-    iterator_t _dict_it{};
-    size_t _position{};
-    size_t _next_switch{};
-    sequence_iterator_t _sequence_it{};
-    // reference_t _active_node{};
-    // size_t _end_position{};
-
-public:
-
-    using value_type = char;
-    using reference = char const &;
-    using difference_type = std::ptrdiff_t;
-    using pointer_type = void;
-    using iterator_category = std::forward_iterator_tag;
-
-    sequence_iterator() = default;
-    sequence_iterator(iterator_t dict_it, size_t position) :
-        _dict_it{dict_it},
-        _position{position}
-    {
-        if (position == _next_switch) {
-            _next_switch = (*_dict_it).first + (*_dict_it).second.size();
-            _sequence_it = (*_dict_it).second.begin();
-        }
-        // _active_node = *_dict_it;
-    }
-
-    reference operator*() const noexcept {
-        return *_sequence_it;
-    }
-
-    sequence_iterator & operator++() noexcept {
-        ++_sequence_it;
-        if (++_position == _next_switch) [[unlikely]] {
-            ++_dict_it;
-            _next_switch = (*_dict_it).first + (*_dict_it).second.size();
-            _sequence_it = (*_dict_it).second.begin();
-            // _end_position = _active_node.first + _active_node.second.size();
-        }
-        return *this;
-    }
-
-    sequence_iterator operator++(int) noexcept {
-        sequence_iterator tmp{*this};
-        ++(*this);
-        return tmp;
-    }
-
-    constexpr bool operator==(sequence_iterator const & rhs) const noexcept {
-        return _position == rhs._position;
-    }
-};
-
-// template <typename container_t>
-// inline void insert_element(container_t & container, size_t const & value)
-// {
-//     if constexpr (std::ranges::random_access_range<container_t>)
-//     {
-//         // container.insert(std::ranges::upper_bound(container, value), value);
-//         container.push_back(value);
-//     }
-//     else
-//         container.insert(value);
-// }
-
-// template <typename container_t>
-// inline bool contains(container_t & container, size_t const & value)
-// {
-//     if constexpr (std::ranges::random_access_range<container_t>)
-//         return std::ranges::binary_search(container, value);
-//     else
-//         return container.contains(value);
-// }
-
-// template <typename container_t>
-// void benchmark_insert_random(benchmark::State & state, container_t)
-// {
-//     size_t const size = state.range(0);
-
-//     std::vector<size_t> elements;
-//     std::ranges::generate_n(std::back_inserter(elements), size, [] () { return static_cast<size_t>(std::rand()); });
-
-//     container_t cont{};
-
-//     for (auto _ : state)
-//     {
-//         cont.clear();
-//         for (size_t element : elements)
-//             insert_element(cont, element);
-
-//         if constexpr (std::ranges::random_access_range<container_t>)
-//             std::ranges::sort(cont);
-
-//         benchmark::DoNotOptimize(cont.size());
-//     }
-// }
-
-// template <typename container_t>
-// void benchmark_insert_back(benchmark::State & state, container_t)
-// {
-//     size_t const size = state.range(0);
-
-//     std::vector<size_t> elements;
-//     std::ranges::generate_n(std::back_inserter(elements), size, [] () { return static_cast<size_t>(std::rand()); });
-//     std::ranges::sort(elements);
-
-//     container_t cont{};
-
-//     for (auto _ : state)
-//     {
-//         cont.clear();
-//         for (size_t element : elements)
-//             if constexpr (std::ranges::random_access_range<container_t>)
-//                 cont.push_back(element);
-//             else
-//                 cont.insert(cont.end(), element);
-
-//         benchmark::DoNotOptimize(cont.size());
-//     }
-// }
-
-// template <typename container_t>
-// void benchmark_contains(benchmark::State & state, container_t)
-// {
-//     size_t const size = state.range(0);
-
-//     std::vector<size_t> elements;
-//     std::ranges::generate_n(std::back_inserter(elements), size, [] () { return static_cast<size_t>(std::rand()); });
-//     std::ranges::sort(elements);
-
-//     container_t cont{};
-//     std::ranges::for_each(elements, [&] (size_t const & element) { cont.insert(cont.end(), element); });
-
-//     size_t const pivot = rand();
-//     for (auto _ : state)
-//     {
-//         bool found = contains(cont, pivot);
-//         benchmark::DoNotOptimize(found);
-//     }
-// }
 enum struct variant_kind {
     snv,
     insertion,
@@ -188,9 +38,8 @@ variant_kind kind(variant_t const & var) {
         return variant_kind::deletion;
 }
 
-auto generate_variants(size_t const source_size, int const variation) {
+auto generate_variants(size_t const source_size, int const variant_count) {
     using sequence_t = std::vector<char>;
-    size_t variant_count = variation; //std::ceil(static_cast<float>(source_size) * (variation/100.0));
     // number of SNVs
     // number of small InDels
     // InDel Sizes
@@ -198,11 +47,10 @@ auto generate_variants(size_t const source_size, int const variation) {
         // 99% = SNV
         // 1% = InDels
         //
-    size_t max_indel_size = std::clamp(1, static_cast<int>(std::ceil(0.01*source_size)), 10);
+    size_t max_indel_size = 1; //std::clamp(1, static_cast<int>(std::ceil(0.01*source_size)), 10);
 
     std::mt19937 gen(42);
     std::uniform_int_distribution<> position_dist(0, source_size - max_indel_size);
-    std::uniform_int_distribution<> indel_size_dist(1, max_indel_size);
 
     std::vector<bool> free_positions{};
     free_positions.resize(source_size, true);
@@ -212,10 +60,10 @@ auto generate_variants(size_t const source_size, int const variation) {
     if (variant_count <= 10) { // Only SNVs
         snv_count = variant_count;
     } else { // SNV and InDel
-        snv_count = variant_count; //std::floor(variant_count * 1.00);
-        // indel_count = std::max<int>(variant_count - snv_count, 0);
+        snv_count = std::floor(variant_count * 0.99);
+        indel_count = std::max<int>(variant_count - snv_count, 0);
     }
-
+    // std::cout << "Generate SNVs\n";
     std::vector<std::tuple<size_t, size_t, std::vector<char>>> variants{};
     variants.reserve(variant_count);
     for (size_t i = 0; i < snv_count; ) {
@@ -227,22 +75,17 @@ auto generate_variants(size_t const source_size, int const variation) {
         }
     }
 
-    using namespace std::literals;
-
+    // std::cout << "Generate indels\n";
     for (size_t i = 0; i < indel_count; ) {
         bool is_deletion = i & 1;
         size_t pos = position_dist(gen);
-        size_t indel_size = indel_size_dist(gen);
-        auto pos_it = free_positions.begin() + pos;
-        auto pos_end = pos_it + (is_deletion * indel_size) + !is_deletion;
-        if (std::all_of(pos_it, pos_end, [](bool value) { return value; })) {
-            variants.emplace_back(pos, indel_size*(i&1), (i&1) ? sequence_t{} : sequence_t(indel_size, 'b'));
-            for (; pos_it != pos_end; ++pos_it)
-                *pos_it = false;
-
+        if (free_positions[pos] == true) {
+            variants.emplace_back(pos, is_deletion, (is_deletion) ? sequence_t{} : sequence_t(1, 'b'));
+            free_positions[pos] = false;
             ++i;
         }
     }
+    // std::cout << "Finished generation\n";
     return variants;
 }
 
@@ -252,6 +95,8 @@ void record_variant(container_t & sequence, std::ptrdiff_t & offset, variant_t &
     auto && [p, l, s] = variant;
     size_t begin_pos = p + offset;
 
+    // std::cout << "var: " << p << " " << l << " " << std::string{s.begin(), s.end()} << "\n";
+
     switch(kind(variant)) {
         case variant_kind::snv: {
             if constexpr (std::same_as<container_t, std::vector<char>>) {
@@ -260,15 +105,22 @@ void record_variant(container_t & sequence, std::ptrdiff_t & offset, variant_t &
                 // sequence.insert(sequence.begin() + begin_pos, s.begin(), s.end());
             } else {
                 // sequence.record_substitution(begin_pos, std::span{s});
-                sequence.record_substitution(begin_pos, std::span{s});
+                sequence.record_substitution(begin_pos, s);
             }
             break;
         } case variant_kind::deletion: {
-            sequence.erase(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + l));
+            if constexpr (std::same_as<container_t, std::vector<char>>) {
+                sequence.erase(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + l));
+            } else {
+                sequence.record_deletion(begin_pos, l);
+            }
             break;
         } case variant_kind::insertion: {
-            std::span s_proxy{s};
-            sequence.insert(sequence.begin() + begin_pos, s_proxy.begin(), s_proxy.end());
+            if constexpr (std::same_as<container_t, std::vector<char>>) {
+                sequence.insert(sequence.begin() + begin_pos, s.begin(), s.end());
+            } else {
+                sequence.record_insertion(begin_pos, s);
+            }
             break;
         }
     }
@@ -317,7 +169,7 @@ auto generate_sequence(std::vector<char> & base_sequence,
 
 static void benchmark_args(benchmark::internal::Benchmark* b) {
 
-    for (int i = 6; i <= 10; i+=1) {
+    for (int i = 7; i <= 20; i+=1) {
         b->Args({1u << i, 0}); // 0 variance
         for (float j = 0.01; j <= 0.1; j += 0.01) {
             int64_t size = 1u << i;
@@ -340,14 +192,24 @@ static void benchmark_args(benchmark::internal::Benchmark* b) {
 // ----------------------------------------------------------------------------
 
 template <typename container_t>
-void benchmark_access_forward(benchmark::State & state) {
+void benchmark_sequential_access(benchmark::State & state) {
 
     size_t const sequence_size = state.range(0);
     std::vector<char> base_sequence{};
     base_sequence.resize(sequence_size, 'A');
 
     auto sequence_variants = generate_variants(base_sequence.size(), state.range(1));
-    auto target_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
+    auto modified_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
+
+    auto as_sequence = [] (auto && source) {
+        if constexpr (std::same_as<container_t, std::vector<char>>) {
+            return std::forward<decltype(source)>(source);
+        } else {
+            return source.sequence();
+        }
+    };
+
+    auto target_seq = as_sequence(modified_seq);
 
     size_t b_count{};
     size_t A_count{};
@@ -365,22 +227,32 @@ void benchmark_access_forward(benchmark::State & state) {
     state.counters["b_count"] = b_count;
 }
 
-// BENCHMARK_TEMPLATE(benchmark_access_forward, std::vector<char>)->Apply(benchmark_args);
-// BENCHMARK_TEMPLATE(benchmark_access_forward, libjst::journal_decorator<std::span<char>>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_access, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_access, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark access random
 // ----------------------------------------------------------------------------
 
 template <typename container_t>
-void benchmark_access_random(benchmark::State & state) {
+void benchmark_random_access(benchmark::State & state) {
 
     size_t const sequence_size = state.range(0);
     std::vector<char> base_sequence{};
     base_sequence.resize(sequence_size, 'A');
 
     auto sequence_variants = generate_variants(base_sequence.size(), state.range(1));
-    auto target_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
+    auto generated_sequence = generate_sequence<container_t>(base_sequence, sequence_variants);
+
+    auto as_sequence = [] (auto && source) {
+        if constexpr (std::same_as<container_t, std::vector<char>>) {
+            return std::forward<decltype(source)>(source);
+        } else {
+            return source.sequence();
+        }
+    };
+
+    auto target_seq = as_sequence(generated_sequence);
 
     std::vector<size_t> positions{};
     positions.resize(10000);
@@ -406,8 +278,8 @@ void benchmark_access_random(benchmark::State & state) {
     state.counters["b_count"] = b_count;
 }
 
-// BENCHMARK_TEMPLATE(benchmark_access_random, std::vector<char>)->Apply(benchmark_args);
-// BENCHMARK_TEMPLATE(benchmark_access_random, libjst::journal_decorator<std::span<char>>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_access, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_access, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark record back
@@ -418,21 +290,24 @@ static size_t run_record(benchmark::State & state, sequence_t && base_sequence, 
 
     size_t target_size{};
     for (auto _ : state) {
-        state.PauseTiming();
         container_t target_seq{base_sequence};
+        // benchmark::DoNotOptimize(target_seq = container_t{base_sequence});
         std::ptrdiff_t offset{};
-        state.ResumeTiming();
 
         for (auto && variant : variants) {
             record_variant(target_seq, offset, variant);
         }
-        target_size = target_seq.size();
+        if constexpr (std::same_as<container_t, std::vector<char>>) {
+            target_size = target_seq.size();
+        }  else {
+            target_size = target_seq.sequence().size();
+        }
     }
     return target_size;
 }
 
 template <typename container_t>
-void benchmark_record_back(benchmark::State & state) {
+void benchmark_sequential_record(benchmark::State & state) {
     size_t const sequence_size = state.range(0);
     std::vector<char> base_sequence{};
     base_sequence.resize(sequence_size, 'A');
@@ -449,16 +324,15 @@ void benchmark_record_back(benchmark::State & state) {
     state.counters["size"] = target_size;
 }
 
-BENCHMARK_TEMPLATE(benchmark_record_back, std::vector<char>)->Apply(benchmark_args);
-BENCHMARK_TEMPLATE(benchmark_record_back, libjst::journal_decorator<std::span<char>>)->Apply(benchmark_args);
-// BENCHMARK_TEMPLATE(benchmark_record_back, libjst::journal_decorator_revertable<libjst::journal_decorator<std::span<char>>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_record, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_record, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark record random
 // ----------------------------------------------------------------------------
 
 template <typename container_t>
-void benchmark_record_random(benchmark::State & state) {
+void benchmark_random_record(benchmark::State & state) {
     size_t const sequence_size = state.range(0);
 
     std::vector<char> base_sequence{};
@@ -472,9 +346,8 @@ void benchmark_record_random(benchmark::State & state) {
     state.counters["size"] = target_size;
 }
 
-
-// BENCHMARK_TEMPLATE(benchmark_record_random, std::vector<char>)->Apply(benchmark_args);
-// BENCHMARK_TEMPLATE(benchmark_record_random, libjst::journal_decorator<std::span<char>>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_record, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_record, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Run benchmark
