@@ -25,18 +25,19 @@ class journal_sequence
 {
 private:
 
-    journal_t const & _journal{};
+    journal_t const * _journal{};
 
     class iterator;
 public:
 
-    journal_sequence() = delete;
-    explicit journal_sequence(journal_t const & journal) : _journal{journal}
+    journal_sequence() = default;
+    explicit journal_sequence(journal_t const & journal) : _journal{std::addressof(journal)}
     {}
 
     size_t size() const noexcept
     {
-        return _journal.sequence_size();
+        assert(_journal != nullptr);
+        return _journal->sequence_size();
     }
 
     bool empty() const noexcept
@@ -46,12 +47,14 @@ public:
 
     iterator begin() const noexcept
     {
-        return iterator{_journal, 0};
+        assert(_journal != nullptr);
+        return iterator{*_journal, 0};
     }
 
     iterator end() const noexcept
     {
-        return iterator{_journal, size()};
+        assert(_journal != nullptr);
+        return iterator{*_journal, size()};
     }
 };
 
@@ -102,6 +105,14 @@ public:
             _next_switch = journal_t::entry_last(*_dict_it);
             _sequence_it = std::ranges::begin(journal_t::entry_value(*_dict_it));
         }
+    }
+
+    iterator base() const & noexcept {
+        return *this;
+    }
+
+    iterator && base() && noexcept {
+        return std::move(*this);
     }
 
     /*!\name Element access
