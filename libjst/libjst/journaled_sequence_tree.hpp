@@ -58,7 +58,7 @@ public:
 template <seqan3::sequence sequence_t>
 class journaled_sequence_tree<sequence_t>::type
 {
-private:
+protected:
     using alphabet_t = std::ranges::range_value_t<sequence_t>; //!< The alphabet type of the underlying sequence.
 
     using delta_event_shared_type = detail::delta_event_shared<alphabet_t>; //!< The shared delta event type.
@@ -70,6 +70,9 @@ private:
     using coverage_type = typename delta_event_shared_type::coverage_type;
     //!\brief The container type that stores all delta events.
     using event_list_type = std::list<delta_event_shared_type>;
+
+    using branch_events_type = sorted_vector<branch_event_type, std::less<void>>;
+    using join_events_type = sorted_vector<join_event_type, std::less<void>>;
 
     using segment_type = typename delta_event_shared_type::segment_type; //!< The segment type.
 
@@ -84,8 +87,8 @@ private:
 
     sequence_collection_t _reference; //!< The internal reference collection used for referential compression.
     event_list_type _delta_events{}; //!< The list of stored delta events.
-    sorted_vector<branch_event_type, std::less<void>> _branch_event_queue{}; //!< The queue of branch events.
-    sorted_vector<join_event_type, std::less<void>> _join_event_queue{}; //!< The queue of join events.
+    branch_events_type _branch_event_queue{}; //!< The queue of branch events.
+    join_events_type _join_event_queue{}; //!< The queue of join events.
     size_t _size{}; //!< The sequence count.
 
 public:
