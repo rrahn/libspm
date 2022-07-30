@@ -169,6 +169,8 @@ public:
             } else {
                 _previous_switch = _position;
             }
+        } else {
+            _sequence_it += offset;
         }
 
         return *this;
