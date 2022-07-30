@@ -68,7 +68,9 @@ public:
 
     }
 
-    iterator record_insertion(key_type const position, sequence_t sequence)
+    template <typename insert_sequence_t>
+        requires std::constructible_from<mapped_type, detail::subrange_t<insert_sequence_t>>
+    iterator record_insertion(key_type const position, insert_sequence_t && sequence)
     {
         assert(position <= sequence_size());
 
@@ -77,12 +79,12 @@ public:
             auto sequence_size = std::ranges::size(sequence);
             insert_it = _dictionary.emplace(std::ranges::begin(_dictionary),
                                             position,
-                                            to_mapped(std::forward<sequence_t>(sequence)));
+                                            to_mapped(std::forward<insert_sequence_t>(sequence)));
             rebalance_dictionary(std::ranges::next(insert_it), sequence_size);
         } else { // split entry
             insert_it = record_insertion_impl(find_entry(position),
                                               position,
-                                              to_mapped(std::forward<sequence_t>(sequence)));
+                                              to_mapped(std::forward<insert_sequence_t>(sequence)));
         }
         return iterator{insert_it};
     }
@@ -94,13 +96,15 @@ public:
         return iterator{record_deletion_impl(find_entry(position), position, count)};
     }
 
-    iterator record_substitution(key_type const position, sequence_t sequence)
+    template <typename insert_sequence_t>
+        requires std::constructible_from<mapped_type, detail::subrange_t<insert_sequence_t>>
+    iterator record_substitution(key_type const position, insert_sequence_t && sequence)
     {
         assert(check_valid_range(position, position + std::ranges::size(sequence)));
 
         return iterator{record_substitution_impl(find_entry(position),
                                                  position,
-                                                 to_mapped(std::forward<sequence_t>(sequence)))};
+                                                 to_mapped(std::forward<insert_sequence_t>(sequence)))};
     }
 
     size_t size() const noexcept
@@ -295,8 +299,9 @@ private:
         return is_consistent;
     }
 
-    constexpr mapped_type to_mapped(sequence_t sequence) noexcept {
-        return sequence | seqan3::views::take(std::ranges::size(sequence));
+    template <typename insert_sequence_t>
+    constexpr mapped_type to_mapped(insert_sequence_t && sequence) noexcept {
+        return std::forward<insert_sequence_t>(sequence) | seqan3::views::take(std::ranges::size(sequence));
     }
 
     template <typename entry_t>
