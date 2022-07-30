@@ -59,7 +59,7 @@ template <seqan3::sequence sequence_t>
 class journaled_sequence_tree<sequence_t>::type
 {
 protected:
-    using alphabet_t = std::ranges::range_value_t<sequence_t>; //!< The alphabet type of the underlying sequence.
+    using alphabet_t = std::ranges::range_value_t<sequence_t const &>; //!< The alphabet type of the underlying sequence.
 
     using delta_event_shared_type = detail::delta_event_shared<alphabet_t>; //!< The shared delta event type.
     //!\brief The type used to mark a delta event type as a branch event.
