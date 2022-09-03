@@ -125,13 +125,13 @@ public:
 
         journal_type _journal{};
         variant_iterator _next_variant{};
+        variant_iterator _last_variant{};
         coverage_type _coverage{};
         size_t _first{};
         size_t _next{};
         size_t _last{};
         size_t _window_size{};
-        branch_events_type const * _variants{};
-        sequence_type const * _base_sequence{};
+        size_t _base_size{};
         branch_kind _kind{branch_kind::base};
 
     public:
@@ -140,35 +140,41 @@ public:
         explicit node_type(journaled_sequence_tree_forward const & jst, size_t window_size) :
             _journal{jst.reference_at(0)},
             _next_variant{std::ranges::begin(jst.variants())},
+            _last_variant{std::ranges::end(jst.variants())},
             _coverage{coverage_type(jst.size(), true)},
             _window_size{window_size - 1},
-            _variants{std::addressof(jst.variants())},
-            _base_sequence{std::addressof(jst.reference_at(0))}
+            _base_size{std::ranges::size(jst.reference_at(0))}
         {
             assert(window_size > 0);
 
-            if (_next_variant != std::ranges::end(variants())) {
+            if (_next_variant != _last_variant) {
                 auto && next_variant = *(*_next_variant).event_handle();
                 _next = next_variant.position().offset;
-                _last = std::min<size_t>(_next + next_variant.insertion_size() + _window_size, base_sequence().size());
+                _last = _next + next_variant.insertion_size() + _window_size;
+                    //  _base_size + next_variant.insertion_size() - next_variant.deletion_size());
             } else {
-                _next = base_sequence().size();
+                _next = _base_size;
                 _last = _next;
             }
         }
 
         auto sequence() const noexcept {
             auto seq = _journal.sequence();
+            std::cout << "journal sequence: " << std::string{seq.begin(), seq.end()} << "\n";
             size_t head_position = _first;
             if constexpr (resume_policy == resume_traversal::tail_on_breakpoint) {
                 head_position -= std::min(_window_size, _first);
             }
+            assert(seq.size() >= head_position);
+            assert(_next >= head_position);
+
             auto it = seq.begin() + head_position;
-            return std::ranges::subrange{it, it + (_next - head_position)}; // borrowed range
+            size_t subrange_size = std::min(std::min(_next, _last), seq.size()) - head_position;
+            return std::ranges::subrange{it, it + subrange_size, subrange_size}; // borrowed range
         }
 
         bool at_end() const noexcept {
-            return _next == _last;
+            return _next >= _last;
         }
 
         template <typename node_t>
@@ -182,14 +188,17 @@ public:
             // create branch node
 
             std::optional<node_type> branch_node{std::nullopt};
-            node_type child{};
-            child._variants = parent._variants;
-            child._base_sequence = parent._base_sequence;
-            child._next_variant = parent._next_variant; // base variant
-            child._coverage = parent._coverage & (*child._next_variant).coverage();
-            if (child._coverage.any()) {
+
+            auto child_coverage = parent._coverage & (*parent._next_variant).coverage();
+            if (child_coverage.any()) {
+                node_type child{};
+                child._next_variant = parent._next_variant;
+                child._last_variant = parent._last_variant;
+                child._coverage = std::move(child_coverage);
+                child._base_size = parent._base_size;
                 child._window_size = parent._window_size;
                 child._first = parent._next;
+                child._next = parent._last;
                 child._last = parent._last;
                 child._journal = parent._journal;
                 child._kind = branch_kind::variant;
@@ -197,28 +206,29 @@ public:
                 // find first branch candidate:
                 // First find first variant that is not an insertion including the current variant.
                 child._next_variant = std::ranges::find_if(++child._next_variant,
-                                                           std::ranges::end(child.variants()),
-                                                           [] (auto && branch_event) {
-                    return !branch_event.event_handle()->is_insertion();
+                                                           child._last_variant,
+                                                           [pivot = (*parent._next_variant).position()] (auto && branch_event) {
+                    return !branch_event.event_handle()->is_insertion() || branch_event.position() != pivot;
                 });
                 // second: if next variant is not already the next valid we need to search it.
                 auto last_position = [] (auto && branch_event) {
                     return branch_event.position().offset + branch_event.event_handle()->deletion_size();
                 };
-                if (child._next_variant != std::ranges::end(child.variants()) &&
+                // Of course! We have to check again, if the variant is at end.
+                if (child._next_variant != child._last_variant &&
                     last_position(*parent._next_variant) > (*child._next_variant).position().offset) {
-                    child._next_variant =
-                        std::ranges::lower_bound(child._next_variant,
-                                                 std::ranges::end(child.variants()),
-                                                 last_position(*parent._next_variant),
-                                                 std::less<>{},
-                                                 [] (auto && branch_event) { return branch_event.position().offset; });
+                        child._next_variant =
+                            std::ranges::lower_bound(child._next_variant,
+                                                     child._last_variant,
+                                                     last_position(*parent._next_variant),
+                                                     std::less<>{},
+                                                     [] (auto && variant) { return variant.position().offset; });
                 }
-                // update next relative position for bifurcation.
-                size_t const next_bifurcation = parent._next +
-                                                child.next_variant_position() - last_position(*parent._next_variant) +
-                                                (*parent._next_variant).event_handle()->insertion_size();
-                child._next = std::min(next_bifurcation, child._last);
+
+                if (child._next_variant != child._last_variant) {
+                    child._next = parent._next + (*parent._next_variant).event_handle()->insertion_size() +
+                                  (*child._next_variant).position().offset - last_position(*parent._next_variant);
+                }
                 branch_node = std::move(child);
             }
 
@@ -227,29 +237,30 @@ public:
 
             std::optional<node_type> split_node{std::nullopt};
             parent._first = parent._next;
-            auto & last_variant = *parent._next_variant;
+            auto const & prev_variant = *parent._next_variant;
             ++parent._next_variant;
             if (parent._kind == branch_kind::base) { // update base branch node
-                parent._next = parent.base_sequence().size();
-                size_t insert_size = parent._window_size;
-                if (parent._next_variant != std::ranges::end(child.variants())) {
+                parent._next = parent._base_size;
+                parent._last = parent._base_size;
+                if (parent._next_variant != parent._last_variant) {
                     parent._next = (*parent._next_variant).position().offset;
-                    insert_size += (*parent._next_variant).event_handle()->insertion_size();
+                    parent._last = parent._next + (*parent._next_variant).event_handle()->insertion_size() +
+                                   parent._window_size;
+                                //    , parent._base_size +
+                                //                 (*parent._next_variant).event_handle()->insertion_size() -
+                                //                 (*parent._next_variant).event_handle()->deletion_size());
                 }
-                parent._last = std::min(parent._next + insert_size, parent.base_sequence().size());
                 split_node = std::move(parent);
             } else { // update variant branch node
-                parent._coverage = parent._coverage.and_not(last_variant.coverage());
-                if (parent._coverage.any()) {
-                    // can point to last one.
-                    size_t next_position = parent.base_sequence().size();
-                    if (parent._next_variant != std::ranges::end(child.variants())) {
-                        next_position = (*parent._next_variant).position().offset;
+                parent._coverage = parent._coverage.and_not(prev_variant.coverage());
+                if (parent._coverage.any()) { // is there at least one sequence covering the base branch at this site.
+                    if (parent._next_variant != parent._last_variant) { // might end before.
+                        parent._next += (*parent._next_variant).position().offset - prev_variant.position().offset;
+                    } else {
+                        parent._next = parent._last; // set to last.
                     }
-                    assert(last_variant.position().offset <= next_position);
-
-                    parent._next = std::min(parent._next + next_position - last_variant.position().offset, parent._last);
-
+                    // assert(prev_variant.position().offset <= next_position);
+                    // parent._next = std::min(parent._next + next_position - prev_variant.position().offset, parent._last);
                     split_node = std::move(parent);
                 }
             }
@@ -273,17 +284,8 @@ public:
             }, variant.delta_variant());
         }
 
-        branch_events_type const & variants() const noexcept {
-            return *_variants;
-        }
-
-        sequence_type const & base_sequence() const noexcept {
-            return *_base_sequence;
-        }
-
         size_t next_variant_position() const noexcept {
-            return (_next_variant == std::ranges::end(variants())) ? base_sequence().size()
-                                                                   : (*_next_variant).position().offset;
+            return (_next_variant == _last_variant) ? std::max(_last, _base_size) : (*_next_variant).position().offset;
         }
     };
 

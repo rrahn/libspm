@@ -48,7 +48,11 @@ struct receiver {
     void set_next(sequence_t && sequence) noexcept {
         // std::cout << std::string{std::ranges::begin(sequence), std::ranges::end(sequence)} << "\n";
         EXPECT_LT(count, expected_contexts.size());
-        EXPECT_RANGE_EQ(sequence, expected_contexts[count++]);
+        EXPECT_RANGE_EQ(sequence, expected_contexts[count]);
+        if (!std::ranges::equal(sequence, expected_contexts[count])) {
+            std::cerr << "count [" << count << "]\n";
+        }
+        ++count;
     }
 
     void set_value() noexcept {
@@ -68,372 +72,372 @@ TEST_P(forward_test, enumerate_contexts)
     op.start();
 }
 
-// ----------------------------------------------------------------------------
-// Test no variants
-// ----------------------------------------------------------------------------
+// // ----------------------------------------------------------------------------
+// // Test no variants
+// // ----------------------------------------------------------------------------
 
-INSTANTIATE_TEST_SUITE_P(no_variants, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //          0123456
-    // 0:       aaaa     [0, 0, 0, 0]
-    // 1:        aaaa    [1, 1, 1, 1]
-    // 2:         aaaa   [2, 2, 2, 2]
-    // 3:          aaaa  [3, 3, 3, 3]
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events{},
-    .context_size{4u},
-    .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(no_variants, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //          0123456
+//     // 0:       aaaa     [0, 0, 0, 0]
+//     // 1:        aaaa    [1, 1, 1, 1]
+//     // 2:         aaaa   [2, 2, 2, 2]
+//     // 3:          aaaa  [3, 3, 3, 3]
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events{},
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa"}
+// }));
 
-// ----------------------------------------------------------------------------
-// Test substitutions
-// ----------------------------------------------------------------------------
+// // ----------------------------------------------------------------------------
+// // Test substitutions
+// // ----------------------------------------------------------------------------
 
-INSTANTIATE_TEST_SUITE_P(substitution_1, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //          0123456
-    //               b
-    // 0:       aaaa     [0, 0, 0, 0]
-    // 1:        aaaa    [1, 1, 1, 1]
-    // 2:         aaab   [-, 2, 2, -]
-    // 3:          aaba  [-, 3, 3, -]
-    // 4:         aaaa   [2, -, -, 2]
-    // 5:          aaaa  [3, -, -, 3]
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
-    },
-    .context_size{4u},
-    .expected_contexts{"aaaa", "aaaa", "aaab", "aaba", "aaaa", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(substitution_1, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //          0123456
+//     //               b
+//     // 0:       aaaa     [0, 0, 0, 0]
+//     // 1:        aaaa    [1, 1, 1, 1]
+//     // 2:         aaab   [-, 2, 2, -]
+//     // 3:          aaba  [-, 3, 3, -]
+//     // 4:         aaaa   [2, -, -, 2]
+//     // 5:          aaaa  [3, -, -, 3]
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{0, 1, 1, 0}}
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaab", "aaba", "aaaa", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_event_2, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //           b
-    //          0123456
-    // 0        abaa      [0, 0, -, -]
-    // 1         baaa     [1, 1, -, -]
-    // 2        aaaa      [-, -, 0, 0]
-    // 3         aaaa     [-, -, 1, 1]
-    // 4          aaaa    [2, 2, 2, 2]
-    // 5           aaaa   [3, 3, 3, 3]
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
-    },
-    .context_size{4u},
-    .expected_contexts{"abaa", "baaa", "aaaa", "aaaa", "aaaa", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(substitution_event_2, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //           b
+//     //          0123456
+//     // 0        abaa      [0, 0, -, -]
+//     // 1         baaa     [1, 1, -, -]
+//     // 2        aaaa      [-, -, 0, 0]
+//     // 3         aaaa     [-, -, 1, 1]
+//     // 4          aaaa    [2, 2, 2, 2]
+//     // 5           aaaa   [3, 3, 3, 3]
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"abaa", "baaa", "aaaa", "aaaa", "aaaa", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_at_begin, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
-    },
-    .context_size{4u},
-    .expected_contexts{"baaa", "aaaa", "aaaa", "aaaa", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(substitution_at_begin, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 1, 0, 0}}
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"baaa", "aaaa", "aaaa", "aaaa", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_at_end, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}}
-    },
-    .context_size{4u},
-    .expected_contexts{"aaaa", "aaaa", "aaaa", "aaab", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(substitution_at_end, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}}
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaab", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_at_same_position, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //seq1      aaabada
-    //seq2      aaacaaa
-    //seq3      aaabaaa
-    //seq4      aaaaaaa
-    //             c d
+// INSTANTIATE_TEST_SUITE_P(substitution_at_same_position, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //seq1      aaabada
+//     //seq2      aaacaaa
+//     //seq3      aaabaaa
+//     //seq4      aaaaaaa
+//     //             c d
 
-    // 00:      aaab     [0, -, 0, -]
-    // 01:       aaba    [1, -, 1, -]
-    // 02:        abaa   [2, -, 2, -]
-    // 03:         baaa  [3, -, 3, -]
-    // 04:      aaac     [-, 0, -, -]
-    // 05:       aaca    [-, 1, -, -]
-    // 06:        acad   [-, 2, -, -]
-    // 07:         cada  [-, 3, -, -]
-    // 08:      aaaa     [-, -, -, 0]
-    // 09:       aaaa    [-, -, -, 1]
-    // 10:        aaad   [-, -, -, 2]
-    // 11:         aada  [-, -, -, 3]
-    // 12:        aaaa   [-, -, -, -]
-    // 13:         aaaa  [-, -, -, -]
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 1}}
-    },
-    .context_size{4u},
-    .expected_contexts{"aaab", "aaba", "abaa", "baaa", "aaac", "aaca", "acad",
-                       "cada", "aaaa", "aaaa", "aaad", "aada", "aaaa", "aaaa"}
-}));
+//     // 00:      aaab     [0, -, 0, -]
+//     // 01:       aaba    [1, -, 1, -]
+//     // 02:        abaa   [2, -, 2, -]
+//     // 03:         baaa  [3, -, 3, -]
+//     // 04:      aaac     [-, 0, -, -]
+//     // 05:       aaca    [-, 1, -, -]
+//     // 06:        acad   [-, 2, -, -]
+//     // 07:         cada  [-, 3, -, -]
+//     // 08:      aaaa     [-, -, -, 0]
+//     // 09:       aaaa    [-, -, -, 1]
+//     // 10:        aaad   [-, -, -, 2]
+//     // 11:         aada  [-, -, -, 3]
+//     // 12:        aaaa   [-, -, -, -]
+//     // 13:         aaaa  [-, -, -, -]
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 1}}
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"aaab", "aaba", "abaa", "baaa", "aaac", "aaca", "acad",
+//                        "cada", "aaaa", "aaaa", "aaad", "aada", "aaaa", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_overlapping, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //          b c
-    //          01234
-    //  0:      ba      [ 0, -]
-    //  1:      aa      [ -, 0]
-    //  2:       ac     [ 1, -]
-    //  3:        ca    [ 2, -]
-    //  4:       aa     [ -, 1]
-    //  5:        aa    [ -, 2]
-    //  6:         aa   [ 3, 3]
-    .reference{"aaaaa"s},
+// INSTANTIATE_TEST_SUITE_P(substitution_overlapping, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //          b c
+//     //          01234
+//     //  0:      ba      [ 0, -]
+//     //  1:      aa      [ -, 0]
+//     //  2:       ac     [ 1, -]
+//     //  3:        ca    [ 2, -]
+//     //  4:       aa     [ -, 1]
+//     //  5:        aa    [ -, 2]
+//     //  6:         aa   [ 3, 3]
+//     .reference{"aaaaa"s},
 
-    .sequence_count{2u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  2u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1, 0}}
-    },
-    .context_size{2u},
-    .expected_contexts{"ba", "aa", "ac", "ca", "aa", "aa", "aa"}
-}));
+//     .sequence_count{2u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  2u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1, 0}}
+//     },
+//     .context_size{2u},
+//     .expected_contexts{"ba", "aa", "ac", "ca", "aa", "aa", "aa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(substitution_overlapping_2, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    //          b  c  d  e  f
-    //          0123456789012
-    // 00:      baaaa           0: [0, -, -, -, -]
-    // 01:      aaaca           0: [-, 0, -, -, -]
-    // 02:       aacaa          1: [-, 1, -, -, -]
-    // 03:        acaad         2: [-, 2, -, -, -]
-    // 04:         caada        3: [-, 3, -, -, -]
-    // 05:      aaaaa           0: [-, -, 0, 0, 0]
-    // 06:       aaaaa          1: [1, -, 1, 1, 1]
-    // 07:        aaaad         2: [-, -, -, -, -]
-    // 08:         aaada        3: [-, -, -, -, -]
-    // 09:          aadaa       4: [-, 4, -, -, -]
-    // 10:           adaaa      5: [-, 5, -, -, -]
-    // 11:            daaaa     6: [-, 6, -, -, -]
-    // 12:        aaaaa         2: [2, -, 2, 2, 2]
-    // 13:         aaaaa        3: [3, -, 3, 3, 3]
-    // 14:          aaaaa       4: [4, -, 4, 4, 4]
-    // 15:           aaaae      5: [5, -, 5, 5, -]
-    // 16:            aaaea     6: [6, -, 6, 6, -]
-    // 17:             aaeaa    7: [7, -, 7, 7, -]
-    // 18:              aeaaf   8: [-, -, -, 8, -]
-    // 19:              aeaaa   8: [8, -, 8, -, -]
-    // 20:           aaaaa      5: [-, -, -, -, 5]
-    // 21:            aaaaa     6: [-, -, -, -, 6]
-    // 22:             aaaaa    7: [-, 7, -, -, 7]
-    // 23:              aaaaf   8: [-, 8, -, -, 8]
-    // 24:              aaaaa   8: [-, -, -, -, -]
-    //          0123456789012
-    //                 -----
-    //          b  c  d  e  f
-    .reference{"aaaaaaaaaaaaa"s},
-    .sequence_count{5u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  6u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  9u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1, 0, 1, 1, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 12u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{0, 1, 0, 1, 1}}
-    },
-    .context_size{5u},
-    .expected_contexts{"baaaa", "aaaca", "aacaa", "acaad", "caada", "aaaaa", "aaaaa", "aaaad", "aaada", "aadaa",
-                       "adaaa", "daaaa", "aaaaa", "aaaaa", "aaaaa", "aaaae", "aaaea", "aaeaa", "aeaaf", "aeaaa",
-                       "aaaaa", "aaaaa", "aaaaa", "aaaaf", "aaaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(substitution_overlapping_2, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     //          b  c  d  e  f
+//     //          0123456789012
+//     // 00:      baaaa           0: [0, -, -, -, -]
+//     // 01:      aaaca           0: [-, 0, -, -, -]
+//     // 02:       aacaa          1: [-, 1, -, -, -]
+//     // 03:        acaad         2: [-, 2, -, -, -]
+//     // 04:         caada        3: [-, 3, -, -, -]
+//     // 05:      aaaaa           0: [-, -, 0, 0, 0]
+//     // 06:       aaaaa          1: [1, -, 1, 1, 1]
+//     // 07:        aaaad         2: [-, -, -, -, -]
+//     // 08:         aaada        3: [-, -, -, -, -]
+//     // 09:          aadaa       4: [-, 4, -, -, -]
+//     // 10:           adaaa      5: [-, 5, -, -, -]
+//     // 11:            daaaa     6: [-, 6, -, -, -]
+//     // 12:        aaaaa         2: [2, -, 2, 2, 2]
+//     // 13:         aaaaa        3: [3, -, 3, 3, 3]
+//     // 14:          aaaaa       4: [4, -, 4, 4, 4]
+//     // 15:           aaaae      5: [5, -, 5, 5, -]
+//     // 16:            aaaea     6: [6, -, 6, 6, -]
+//     // 17:             aaeaa    7: [7, -, 7, 7, -]
+//     // 18:              aeaaf   8: [-, -, -, 8, -]
+//     // 19:              aeaaa   8: [8, -, 8, -, -]
+//     // 20:           aaaaa      5: [-, -, -, -, 5]
+//     // 21:            aaaaa     6: [-, -, -, -, 6]
+//     // 22:             aaaaa    7: [-, 7, -, -, 7]
+//     // 23:              aaaaf   8: [-, 8, -, -, 8]
+//     // 24:              aaaaa   8: [-, -, -, -, -]
+//     //          0123456789012
+//     //                 -----
+//     //          b  c  d  e  f
+//     .reference{"aaaaaaaaaaaaa"s},
+//     .sequence_count{5u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  6u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{0, 1, 0, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  9u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1, 0, 1, 1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 12u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{0, 1, 0, 1, 1}}
+//     },
+//     .context_size{5u},
+//     .expected_contexts{"baaaa", "aaaca", "aacaa", "acaad", "caada", "aaaaa", "aaaaa", "aaaad", "aaada", "aadaa",
+//                        "adaaa", "daaaa", "aaaaa", "aaaaa", "aaaaa", "aaaae", "aaaea", "aaeaa", "aeaaf", "aeaaa",
+//                        "aaaaa", "aaaaa", "aaaaa", "aaaaf", "aaaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(0_event_and_too_large_context, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events{},
-    .context_size{8u},
-    .expected_contexts{}
-}));
+// INSTANTIATE_TEST_SUITE_P(0_event_and_too_large_context, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events{},
+//     .context_size{8u},
+//     .expected_contexts{}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(1_substitution_and_too_large_context, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-    },
-    .context_size{8u},
-    .expected_contexts{}
-}));
+// INSTANTIATE_TEST_SUITE_P(1_substitution_and_too_large_context, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+//     },
+//     .context_size{8u},
+//     .expected_contexts{}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(no_event_and_equal_context_size, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events{},
-    .context_size{7u},
-    .expected_contexts{"aaaaaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(no_event_and_equal_context_size, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events{},
+//     .context_size{7u},
+//     .expected_contexts{"aaaaaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(1_substitution_and_equal_context_size, forward_test, testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-    },
-    .context_size{7u},
-    .expected_contexts{"aaabaaa", "aaaaaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(1_substitution_and_equal_context_size, forward_test, testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset =  3u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+//     },
+//     .context_size{7u},
+//     .expected_contexts{"aaabaaa", "aaaaaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(everything_substituted_and_context_size_4, forward_test,
-testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{1u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
-    },
-    .context_size{4u},
-    .expected_contexts{"bcde", "cdef", "defg", "efgh", "aaaa", "aaaa", "aaaa", "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(everything_substituted_and_context_size_4, forward_test,
+// testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{1u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"bcde", "cdef", "defg", "efgh", "aaaa", "aaaa", "aaaa", "aaaa"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(everything_substituted_and_context_size_1, forward_test,
-testing::Values(
-libjst::test::traversal_fixture
-{
-    .reference{"aaaaaaa"s},
-    .sequence_count{1u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
-    },
-    .context_size{1u},
-    .expected_contexts{"b", "c", "d", "e", "f", "g", "h", "a", "a", "a", "a", "a", "a", "a"}
-}));
+// INSTANTIATE_TEST_SUITE_P(everything_substituted_and_context_size_1, forward_test,
+// testing::Values(
+// libjst::test::traversal_fixture
+// {
+//     .reference{"aaaaaaa"s},
+//     .sequence_count{1u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"b"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"c"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::substitution_t{"d"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::substitution_t{"e"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"f"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::substitution_t{"g"s}, libjst::test::coverage_t{1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"h"s}, libjst::test::coverage_t{1}},
+//     },
+//     .context_size{1u},
+//     .expected_contexts{"b", "c", "d", "e", "f", "g", "h", "a", "a", "a", "a", "a", "a", "a"}
+// }));
 
-INSTANTIATE_TEST_SUITE_P(complex_substitutions, forward_test,
-testing::Values(
-libjst::test::traversal_fixture
-{
-   //           bbbbb
-   //            ccccc
-   //            dd
-   //               cc
-   //                 eee
-   //                  fff
-   //                      g
-   //           012345678901
-   // 00:       bbbb
-   // 01:        bbbb
-   // 02:         bbba
-   // 03:          bbae
-   // 04:           baee
-   // 05:       accc
-   // 06:        cccc
-   // 07:         cccc
-   // 08:          ccca
-   // 09:           ccaf
-   // 10:            caff
-   // 11:           ccaa
-   // 12:            caaa
-   // 13:       adda
-   // 14:        ddac
-   // 15:         dacc
-   // 16:       aaaa
-   // 17:        aaac
-   // 18:         aacc
-   // 19:          acca
-   // 20:           ccaf
-   // 21:            caff
-   // 22:        aaaa
-   // 23:         aaaa
-   // 24:          aaae
-   // 25:           aaee
-   // 26:            aeee
-   // 27:             eeea
-   // 28:              eeaa
-   // 29:               eaag
-   // 30:          aaaa
-   // 31:           aaaf
-   // 32:            aaff
-   // 33:             afff
-   // 34:              fffa
-   // 35:               ffaa
-   // 36:           aaaa
-   // 37:            aaaa
-   // 38:             aaaa
-   // 39:              aaaa
-   // 40:               aaag
-   // 41:               aaaa
-   //           012345678901
-    .reference{"aaaaaaaaaaaa"s},
-    .sequence_count{4u},
-    .events
-    {
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"bbbbb"s}, libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1, 0, 1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"dd"s},    libjst::test::coverage_t{0, 0, 1, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"cc"s},    libjst::test::coverage_t{0, 0, 1, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"eee"s},   libjst::test::coverage_t{1, 0, 0, 0}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 7u}, libjst::test::substitution_t{"fff"s},   libjst::test::coverage_t{0, 0, 1, 1}},
-        libjst::test::shared_event_t{libjst::test::position_t{.offset = 11u}, libjst::test::substitution_t{"g"s},    libjst::test::coverage_t{1, 1, 0, 0}},
-    },
-    .context_size{4u},
-    .expected_contexts{"bbbb", "bbbb", "bbba", "bbae", "baee",
-                       "accc", "cccc", "cccc", "ccca", "ccaf", "caff", "ccaa", "caaa",
-                       "adda", "ddac", "dacc",
-                       "aaaa",
-                       "aaac", "aacc", "acca", "ccaf", "caff",
-                       "aaaa", "aaaa",
-                       "aaae", "aaee", "aeee", "eeea", "eeaa", "eaag",
-                       "aaaa",
-                       "aaaf", "aaff", "afff", "fffa", "ffaa",
-                       "aaaa", "aaaa", "aaaa", "aaaa",
-                       "aaag",
-                       "aaaa"}
-}));
+// INSTANTIATE_TEST_SUITE_P(complex_substitutions, forward_test,
+// testing::Values(
+// libjst::test::traversal_fixture
+// {
+//    //           bbbbb
+//    //            ccccc
+//    //            dd
+//    //               cc
+//    //                 eee
+//    //                  fff
+//    //                      g
+//    //           012345678901
+//    // 00:       bbbb
+//    // 01:        bbbb
+//    // 02:         bbba
+//    // 03:          bbae
+//    // 04:           baee
+//    // 05:       accc
+//    // 06:        cccc
+//    // 07:         cccc
+//    // 08:          ccca
+//    // 09:           ccaf
+//    // 10:            caff
+//    // 11:           ccaa
+//    // 12:            caaa
+//    // 13:       adda
+//    // 14:        ddac
+//    // 15:         dacc
+//    // 16:       aaaa
+//    // 17:        aaac
+//    // 18:         aacc
+//    // 19:          acca
+//    // 20:           ccaf
+//    // 21:            caff
+//    // 22:        aaaa
+//    // 23:         aaaa
+//    // 24:          aaae
+//    // 25:           aaee
+//    // 26:            aeee
+//    // 27:             eeea
+//    // 28:              eeaa
+//    // 29:               eaag
+//    // 30:          aaaa
+//    // 31:           aaaf
+//    // 32:            aaff
+//    // 33:             afff
+//    // 34:              fffa
+//    // 35:               ffaa
+//    // 36:           aaaa
+//    // 37:            aaaa
+//    // 38:             aaaa
+//    // 39:              aaaa
+//    // 40:               aaag
+//    // 41:               aaaa
+//    //           012345678901
+//     .reference{"aaaaaaaaaaaa"s},
+//     .sequence_count{4u},
+//     .events
+//     {
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::substitution_t{"bbbbb"s}, libjst::test::coverage_t{1, 0, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"ccccc"s}, libjst::test::coverage_t{0, 1, 0, 1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::substitution_t{"dd"s},    libjst::test::coverage_t{0, 0, 1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::substitution_t{"cc"s},    libjst::test::coverage_t{0, 0, 1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::substitution_t{"eee"s},   libjst::test::coverage_t{1, 0, 0, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 7u}, libjst::test::substitution_t{"fff"s},   libjst::test::coverage_t{0, 0, 1, 1}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 11u}, libjst::test::substitution_t{"g"s},    libjst::test::coverage_t{1, 1, 0, 0}},
+//     },
+//     .context_size{4u},
+//     .expected_contexts{"bbbb", "bbbb", "bbba", "bbae", "baee",
+//                        "accc", "cccc", "cccc", "ccca", "ccaf", "caff", "ccaa", "caaa",
+//                        "adda", "ddac", "dacc",
+//                        "aaaa",
+//                        "aaac", "aacc", "acca", "ccaf", "caff",
+//                        "aaaa", "aaaa",
+//                        "aaae", "aaee", "aeee", "eeea", "eeaa", "eaag",
+//                        "aaaa",
+//                        "aaaf", "aaff", "afff", "fffa", "ffaa",
+//                        "aaaa", "aaaa", "aaaa", "aaaa",
+//                        "aaag",
+//                        "aaaa"}
+// }));
 
 // // ----------------------------------------------------------------------------
 // // Test insertions
@@ -460,7 +464,8 @@ libjst::test::traversal_fixture
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaab", "aaba", "abaa", "baaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(single_base_insertion_at_begin, forward_test, testing::Values(
@@ -481,7 +486,8 @@ libjst::test::traversal_fixture
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"baaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(single_base_insertion_at_end, forward_test, testing::Values(
@@ -502,7 +508,8 @@ libjst::test::traversal_fixture
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"b"s}, libjst::test::coverage_t{1, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaab"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_insertions_at_end, forward_test, testing::Values(
@@ -536,7 +543,9 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaab", "aaac", "aacc", "accc",
+//                        "cccc", "aaad", "aadd", "addd", "dddd", "dddd", "dddd", "dddd", "dddd"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_insertions_overlap, forward_test, testing::Values(
@@ -607,7 +616,19 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::insertion_t{"f"s}, libjst::test::coverage_t{0, 0, 1, 1}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::insertion_t{"gggg"s}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{5u}
+//     .context_size{5u},
+//     .expected_contexts{"baadd",
+//                        "cccca", "cccaa", "ccaad", "caadd",
+//                        "aaddd", "adddd", "ddddd", "ddddd", "ddddd", "ddddd", "dddda", "dddaa", "ddaaa",
+//                        "daaae",
+//                        "daaaa",
+//                        "aaaaa",
+//                        "aaaae", "aaaee", "aaeee", "aeeea", "eeeaf", "eeafa", "eafaa",
+//                        "eeeaa", "eeaaa", "eaaag",
+//                        "aaaaa", "aaaaf", "aaafa", "aafaa", "afaag", "faagg",
+//                        "aaaaa", "aaaaa",
+//                        "aaaag", "aaagg", "aaggg", "agggg"
+//                        }
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(insertion_to_get_exactly_one_context, forward_test, testing::Values(
@@ -638,7 +659,8 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 1u}, libjst::test::insertion_t{"c"s}, libjst::test::coverage_t{1, 0, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::insertion_t{"d"s}, libjst::test::coverage_t{1, 0, 0, 1, 0}},
 //     },
-//     .context_size{6u}
+//     .context_size{6u},
+//     .expected_contexts{"bacaad"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_insertions_into_empty_reference, forward_test, testing::Values(
@@ -652,7 +674,8 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"cccc"s}, libjst::test::coverage_t{0, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"dddddddd"s}, libjst::test::coverage_t{0, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"cccc", "dddd", "dddd", "dddd", "dddd", "dddd"}
 // }));
 
 // // ----------------------------------------------------------------------------
@@ -662,79 +685,111 @@ libjst::test::traversal_fixture
 // INSTANTIATE_TEST_SUITE_P(single_base_deletion_in_middle, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          aaaaaxaaaa
+//     //          aaaaa-aaaa
+//     //          0123456789
+//     .reference{"aaaaaxbbbb"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaab", "aabb", "abbb",
+//                        "aaax", "aaxb", "axbb", "xbbb", "bbbb"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(single_base_deletion_at_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     .reference{"xaaaaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"xaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(single_base_deletion_at_end, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     .reference{"aaaaaaaaax"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaax"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multi_base_deletion_in_middle, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          aaaaxxxbbb
+//     //          aaaa---aaa
+//     //          0123456789
+//     .reference{"aaaaxxxbbb"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaab", "aabb", "abbb", "aaax", "aaxx", "axxx", "xxxb", "xxbb", "xbbb"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multi_base_deletion_at_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          ---aaaaaaa
+//     //          xxxa
+//     //           xxaa
+//     //            xaaa
+//     //             aaaa
+//     //              aaaa
+//     //               aaaa
+//     //                aaaa
+//     //          0123456789
+//     .reference{"xxxaaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{1, 1, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"xxxa", "xxaa", "xaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multi_base_deletion_at_end, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          aaaaaaa---
+//     //          aaaa
+//     //           aaaa
+//     //            aaaa
+//     //             aaaa
+//     //              aaax
+//     //               aaxx
+//     //                axxx
+//     //          0123456789
+//     .reference{"aaaaaaaxxx"s},
 //     .sequence_count{4u},
 //     .events
 //     {
-//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{0, 0, 1, 0}},
+//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 7u}, libjst::test::deletion_t{3}, libjst::test::coverage_t{0, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaax", "aaxx", "axxx"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_deletions_at_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     .reference{"xyzzaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
 //     {
@@ -742,13 +797,18 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"xyzz", "yzza", "zzaa", "zaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_deletions_shortly_after_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     //          a----bbbbb
+//     //          ax--zbbbbb
+//     //          axy-zbbbbb
+//     .reference{"axyyzbbbbb"s},
 //     .sequence_count{4u},
 //     .events
 //     {
@@ -756,13 +816,19 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 3u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"abbb",
+//                        "axzb", "xzbb",
+//                        "axyz", "xyzb", "yzbb",
+//                        "axyy", "xyyz", "yyzb", "yzbb", "zbbb",
+//                        "bbbb", "bbbb"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(multiple_deletions_at_end, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     .reference{"aaaaaaxxyz"s},
 //     .sequence_count{6u},
 //     .events
 //     {
@@ -770,43 +836,51 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{0, 1, 1, 0, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{0, 0, 0, 1, 0, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaax", "aaxx", "axxy", "xxyz"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(deletion_longer_than_context_in_middle, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     .reference{"aaaaxxxxbb"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 4u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 0, 1}},
 //     },
-//     .context_size{3u}
+//     .context_size{3u},
+//     .expected_contexts{"aaa", "aaa", "aab", "abb",
+//                        "aax", "axx", "xxx", "xxx", "xxb", "xbb"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(deletion_longer_than_context_at_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     .reference{"xxxxaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 1, 0, 1}},
 //     },
-//     .context_size{3u}
+//     .context_size{3u},
+//     .expected_contexts{"xxx", "xxx", "xxa", "xaa", "aaa", "aaa", "aaa", "aaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(deletion_longer_than_context_at_end, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     //          0123456789
+//     .reference{"aaaaaaxxxx"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{0, 0, 1, 0}},
 //     },
-//     .context_size{3u}
+//     .context_size{3u},
+//     .expected_contexts{"aaa", "aaa", "aaa", "aaa", "aax", "axx", "xxx", "xxx"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(one_sequence_deleted, forward_test, testing::Values(
@@ -818,19 +892,22 @@ libjst::test::traversal_fixture
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 0, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(all_sequences_deleted, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
+//     //          0123456789
 //     .reference{"aaaaaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 1, 1, 1}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(deletion_generating_only_one_context_in_the_middle, forward_test, testing::Values(
@@ -851,14 +928,15 @@ libjst::test::traversal_fixture
 //     // 04:      aaaa      [ 0,  4,  0,  4]
 //     // 05:       aaaa     [ -,  -,  1,  5]
 //     // 06:        aaaa    [ -,  -,  2,  6]
-//     .reference{"aaaaaaaaaa"s},
+//     .reference{"xxxxaaaazz"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{4}, libjst::test::coverage_t{1, 0, 1, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 8u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 1, 0, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"xxxx", "xxxa", "xxaa", "xaaa", "aaaa", "aaaz", "aazz"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(deletion_generating_only_one_split_context, forward_test, testing::Values(
@@ -888,6 +966,7 @@ libjst::test::traversal_fixture
 //     // 10:     ccaa       [ -, 1, -, 2, -, 3, -, 4]
 //     // 11:      caad      [ -, 2, -, 3, -, 4, -, 5]
 //     // 12:        aada    [ -, -, -, 4, -, -, -, 6]
+//     //          0123456789
 //     .reference{"aabaccaada"s},
 //     .sequence_count{8u},
 //     .events
@@ -897,7 +976,11 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 6u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 9u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aabc", "abcc", "bccd", "bcca",
+//                        "aaba", "abac", "bacc",
+//                        "accd", "ccda",
+//                        "acca", "ccaa", "caad", "aada"},
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(larger_deletion_overlaps_smaller_deletions, forward_test, testing::Values(
@@ -949,7 +1032,10 @@ libjst::test::traversal_fixture
 //                                      libjst::test::deletion_t{1},
 //                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"aada", "aabc", "abcc", "bccd", "bcca",
+//                        "aaba", "abac", "bacc", "accd", "ccda",
+//                        "acca", "ccaa", "caad", "aada"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(small_deletions_behind_each_other, forward_test, testing::Values(
@@ -979,7 +1065,8 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{1}, libjst::test::coverage_t{1, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{2}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"baaa", "aaaa", "bacc", "acca", "ccaa", "caaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // // ----------------------------------------------------------------------------
@@ -1016,12 +1103,15 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbbbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"bbbb", "bbbb", "bbba", "bbaa", "baaa",
+//                        "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(insertion_at_begin_followed_by_deletion_without_valid_context, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
+//     //          0123456789
 //     .reference{"aaaaaaaaaa"s},
 //     .sequence_count{4u},
 //     .events
@@ -1029,44 +1119,60 @@ libjst::test::traversal_fixture
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{10}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"bbba", "bbaa", "baaa",
+//                        "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa"}
 // }));
 
 // INSTANTIATE_TEST_SUITE_P(insertion_at_begin_followed_by_deletion_with_one_valid_context, forward_test, testing::Values(
 // libjst::test::traversal_fixture
 // {
-//     .reference{"aaaaaaaaaa"s},
+//     .reference{"aaaaaaaaax"s},
 //     .sequence_count{4u},
 //     .events
 //     {
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::insertion_t{"bbb"s}, libjst::test::coverage_t{1, 1, 0, 0}},
 //         libjst::test::shared_event_t{libjst::test::position_t{.offset = 0u}, libjst::test::deletion_t{9}, libjst::test::coverage_t{1, 0, 1, 0}},
 //     },
-//     .context_size{4u}
+//     .context_size{4u},
+//     .expected_contexts{"bbbx", "bbba", "bbaa", "baaa",
+//                        "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaaa", "aaax"}
 // }));
 
-// INSTANTIATE_TEST_SUITE_P(two_insertions_with_preceding_and_trailing_deletion, forward_test, testing::Values(
-// libjst::test::traversal_fixture
-// {
-//     .reference{"aaaaaaaaaa"s},
-//     .sequence_count{8u},
-//     .events
-//     {
-//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u},
-//                                      libjst::test::deletion_t{3},
-//                                      libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
-//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
-//                                      libjst::test::insertion_t{"iii"s},
-//                                      libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 0, 0}},
-//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
-//                                      libjst::test::insertion_t{"jjj"s},
-//                                      libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 0, 0}},
-//         libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u},
-//                                      libjst::test::deletion_t{3},
-//                                      libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
-//     },
-//     .context_size{4u}
-// }));
+INSTANTIATE_TEST_SUITE_P(two_insertions_with_preceding_and_trailing_deletion, forward_test, testing::Values(
+libjst::test::traversal_fixture
+{
+    //          01   234   56
+    // s0:      aa---iii---cc
+    // s1:      aa---iiibbbcc
+    // s2:      aaxxxjjj---cc
+    // s3:      aaxxxjjjbbbcc
+    // s4:      aa---___---cc
+    // s5:      aa---___bbbcc
+    // s6:      aaxxx___---cc
+    // s7:      aaxxx___bbbcc
+    //          0123456789
+    .reference{"aaxxxbbbcc"s},
+    .sequence_count{8u},
+    .events
+    {
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 2u}, libjst::test::deletion_t{3},       libjst::test::coverage_t{1, 1, 0, 0, 1, 1, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::insertion_t{"iii"s}, libjst::test::coverage_t{1, 1, 0, 0, 0, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::insertion_t{"jjj"s}, libjst::test::coverage_t{0, 0, 1, 1, 0, 0, 0, 0}},
+        libjst::test::shared_event_t{libjst::test::position_t{.offset = 5u}, libjst::test::deletion_t{3},       libjst::test::coverage_t{1, 0, 1, 0, 1, 0, 1, 0}},
+    },
+    .context_size{4u},
+
+// 0 [b: ([idx: 0, pos: 2], del: 3) ~   <11000100>]
+// 1 [b: ([idx: 0, pos: 2], del: 6) ~   <00001000>]
+// 2 [b: ([idx: 0, pos: 5], ins: iii) ~ <11000000>]
+// 3 [b: ([idx: 0, pos: 5], ins: jjj) ~ <00110000>]
+// 4 [b: ([idx: 0, pos: 5], del: 3) ~   <10100010>]
+    .expected_contexts{"aaii", "aiii", "aacc", "aabb", "abbb", // first deletion
+                       "aaxx", "axxx", "xxxj", "xxjj", "xjjj", "jjjc", "jjcc", "jjjb", "jjbb", "jbbb", // second insertion (first one is not eligible)
+                       "xxxc", "xxcc", // second deletion
+                       "xxxb", "xxbb", "xbbb", "bbbc", "bbcc"} // remaining base branch
+}));
 
 // INSTANTIATE_TEST_SUITE_P(overlapping_insertion_deletion_substitution_at_begin, forward_test, testing::Values(
 // libjst::test::traversal_fixture
