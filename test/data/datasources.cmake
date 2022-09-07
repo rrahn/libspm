@@ -101,4 +101,7 @@ declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_no_variants.vcf
                     URL_HASH SHA256=fa0b191b7cba9e3da323bf7674767a4efce0830ee66750ad6c3b8d8952bbaef1)
 
+# Data sources for benchmarking
 
+declare_datasource (FILE Ash1_v2.2.fa.gz
+                    URL ftp://ftp.ccb.jhu.edu/pub/data/Homo_sapiens/Ash1/v2.2/Assembly/Ash1_v2.2.fa.gz)
