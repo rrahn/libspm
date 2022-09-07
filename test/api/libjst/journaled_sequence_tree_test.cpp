@@ -18,7 +18,7 @@
 #include <seqan3/alphabet/adaptation/char.hpp> // allow std::string be recognised as seqan3::sequence
 #include <seqan3/test/expect_range_eq.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 
 #include "test_utility.hpp" // make_gaped
 

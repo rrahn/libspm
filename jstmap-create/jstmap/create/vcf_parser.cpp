@@ -37,7 +37,7 @@ namespace jstmap
 class augmented_vcf_record
 {
     //!\brief The internally used shared delta event type.
-    using shared_event_type = libjst::detail::delta_event_shared<seqan3::dna5>;
+    using shared_event_type = libjst::detail::delta_event_shared<jst::contrib::dna5>;
     //!\brief The pure delta event type.
     using event_type = typename shared_event_type::delta_event_type;
     //!\brief The substitution type.
@@ -307,7 +307,7 @@ private:
             {
                 size_t const variant_size = std::ranges::distance(alt_it, alt_it_rev.base());
                 auto variant = alternative.subspan(alt_prefix_offset, variant_size)
-                             | seqan3::views::char_to<seqan3::dna5>
+                             | seqan3::views::char_to<jst::contrib::dna5>
                              | seqan3::views::to<std::vector>;
 
                 if (alternative.size() == reference_segment.size()) // Substitution.
@@ -419,7 +419,7 @@ public:
      */
     sequence_index(std::filesystem::path const & contig_file) : _contig_file{contig_file}
     {
-        seqan3::sequence_file_input record_contig_names{_contig_file,  seqan3::fields<seqan3::field::id>{}};
+        seqan3::sequence_file_input<sequence_input_traits> record_contig_names{_contig_file};
 
         std::ranges::for_each(record_contig_names, [&] (auto const & record)
         {
@@ -438,9 +438,9 @@ public:
      *
      * Scans all records stored in the contig file and returns the one that matches the given contig name.
      */
-    raw_sequence_t load_contig_with_name(std::string_view const contig_name)
+    reference_t load_contig_with_name(std::string_view const contig_name)
     {
-        raw_sequence_t contig{};
+        reference_t contig{};
 
         auto find_predicate = [=] (std::string_view const current_contig)
         {
@@ -452,7 +452,7 @@ public:
             size_t const contig_index = std::ranges::distance(_contig_names.begin(), contig_it);
             assert(contig_index < _contig_names.size());
 
-            seqan3::sequence_file_input contig_sequences{_contig_file};
+            seqan3::sequence_file_input<sequence_input_traits> contig_sequences{_contig_file};
             auto record_view = contig_sequences | std::views::drop(contig_index);
             auto record_it = std::ranges::begin(record_view);
 
@@ -465,7 +465,7 @@ public:
 };
 
 auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
-    -> std::vector<jst_t>
+    -> std::vector<rcs_store_t>
 {
     // Get the application logger.
     auto & log = get_application_logger();

@@ -15,11 +15,11 @@
 namespace jstmap
 {
 
-std::vector<raw_sequence_t> load_queries(std::filesystem::path const & query_input_file_path)
+sequence_collection_t load_queries(std::filesystem::path const & query_input_file_path)
 {
-    seqan3::sequence_file_input query_input_file{query_input_file_path};
+    seqan3::sequence_file_input<sequence_input_traits> query_input_file{query_input_file_path};
 
-    std::vector<raw_sequence_t> queries{};
+    sequence_collection_t queries{};
 
     std::ranges::for_each(query_input_file, [&] (auto const & sequence_record)
     {

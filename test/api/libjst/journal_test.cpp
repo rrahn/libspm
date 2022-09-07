@@ -39,6 +39,14 @@ TEST_F(journal_test, sequence)
     // TODO: Check const iterator
 }
 
+TEST_F(journal_test, sequence_size)
+{
+    journal_type journal{sequence};
+    EXPECT_EQ(std::ranges::size(journal.sequence()), std::ranges::size(sequence));
+
+    // TODO: Check const iterator
+}
+
 TEST_F(journal_test, record_insertion)
 {
     using namespace std::literals;

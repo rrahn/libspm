@@ -18,7 +18,7 @@
 
 #include <libjst/journal_sequence_tree_context_enumerator.hpp>
 #include <libjst/journal_sequence_tree_range_agent.hpp>
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/concept.hpp>
 
 namespace libjst
 {

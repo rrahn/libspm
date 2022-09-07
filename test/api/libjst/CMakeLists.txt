@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.14)
 
 set (LIBJST_TEST_DEPENDENCIES "jstmap::simulate" "jstmap::search" "libjst::libjst")
 
+macro (add_libjst2_test test_filename)
+    add_api_test(${test_filename} "libjst::libjst")
+endmacro()
+
 macro (add_libjst_test test_filename)
     add_api_test(${test_filename} "${LIBJST_TEST_DEPENDENCIES}")
 endmacro()
@@ -14,8 +18,8 @@ add_libjst_test (journal_sequence_tree_partitioned_test.cpp)
 add_libjst_test (journal_sequence_tree_search_test.cpp)
 target_use_datasources (journal_sequence_tree_search_test FILES sim_refx5.jst)
 
-add_libjst_test (journal_test.cpp)
-add_libjst_test (journal_sequence_iterator_test.cpp)
+add_libjst2_test (journal_test.cpp)
+add_libjst2_test (journal_sequence_iterator_test.cpp)
 add_libjst_test (journal_decorator_test.cpp)
 add_libjst_test (journal_decorator_iterator_test.cpp)
 

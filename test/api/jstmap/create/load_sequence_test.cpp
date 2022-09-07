@@ -18,14 +18,14 @@
 
 TEST(jstmap_index, load_sequence)
 {
-    using seqan3::operator""_dna5;
+    using jst::contrib::operator""_dna4;
 
     std::filesystem::path input_file{DATADIR"in.fasta"};
     std::vector actual_sequences = jstmap::load_sequences(input_file);
 
     std::vector expected_sequences{
-        "ACGTTTGATTCGCG"_dna5,
-        "TCGGGGGATTCGCG"_dna5
+        "ACGTTTGATTCGCG"_dna4,
+        "TCGGGGGATTCGCG"_dna4
     };
 
     EXPECT_RANGE_EQ(actual_sequences, expected_sequences);

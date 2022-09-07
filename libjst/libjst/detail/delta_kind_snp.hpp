@@ -35,7 +35,8 @@ class delta_kind_snp : public delta_kind_base<seqan3::alphabet_rank_t<alphabet_t
 private:
     using base_t = delta_kind_base<seqan3::alphabet_rank_t<alphabet_t>>; //!< The base type.
 
-    static constexpr std::array<alphabet_t, seqan3::alphabet_size<alphabet_t>> values
+    // requires alphabet to be constexpr constructible?!
+    static const inline std::array<alphabet_t, seqan3::alphabet_size<alphabet_t>> values
     {
         [] () constexpr
         {

@@ -9,12 +9,12 @@
 
 #include <seqan/sequence.h>
 
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-using bin_sequence_t = std::views::all_t<raw_sequence_t const &>;
+using bin_sequence_t = std::views::all_t<reference_t const &>;
 using bin_t = seqan::StringSet<bin_sequence_t>;
 
 } // namespace jstmap

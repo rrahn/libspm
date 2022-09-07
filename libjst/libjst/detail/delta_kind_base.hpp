@@ -42,7 +42,8 @@ public:
      *
      * \param[in] value The value to store.
      */
-    explicit constexpr delta_kind_base(value_t value) noexcept : _value{std::move(value)}
+    explicit constexpr delta_kind_base(value_t value) noexcept
+        requires (!seqan3::sequence<value_t>) : _value{std::move(value)}
     {}
 
     /*!\brief Initialises the delta event kind with the given value if it is a seqan3::sequence.

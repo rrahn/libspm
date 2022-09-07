@@ -20,14 +20,9 @@
 namespace jstmap
 {
 
-struct my_traits : seqan3::sequence_file_input_default_traits_dna
-{
-    using legal_sequence_alphabet_type = seqan3::dna5;
-};
-
 raw_sequence_t load_reference(std::filesystem::path const & sequence_file)
 {
-    seqan3::sequence_file_input<my_traits> fin{sequence_file};
+    seqan3::sequence_file_input<sequence_input_traits> fin{sequence_file};
     auto it = fin.begin();
     if (it == fin.end())
         throw std::invalid_argument("Input file is empty.");

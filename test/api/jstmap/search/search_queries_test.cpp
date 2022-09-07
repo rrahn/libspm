@@ -11,6 +11,10 @@
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
+#include <libcontrib/seqan/alphabet.hpp>
+#include <libcontrib/seqan/horspool_pattern.hpp>
+#include <libjst/journaled_sequence_tree_forward.hpp>
+
 // TEST(jstmap_index, search_jst)
 // {
 //     std::filesystem::path jst_file{DATADIR"sim_refx5.jst"};
@@ -35,53 +39,127 @@
 //     EXPECT_EQ(results.size(), 10u);
 // }
 
-TEST(jstmap_index, search_jst_2)
+// TEST(jstmap_index, search_jst_2)
+// {
+//     // std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
+
+//     // auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
+//     // jstmap::partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
+
+//     // std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
+//     // std::vector reads = jstmap::load_queries(queries_file);
+
+//     // std::vector results = jstmap::search_queries(std::move(jst), std::move(reads));
+
+//     using seqan3::operator""_dna5;
+
+//     using jst_t = libjst::journaled_sequence_tree<jstmap::raw_sequence_t>;
+//     using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
+//     // using event_t = typename jst_t::event_type;
+//     // using snp_t = typename event_t::snp_type;
+//     // using substitution_t = typename event_t::substitution_type;
+//     // using coverage_t = typename event_t::coverage_type;
+
+//                 //                0         1         2         3         4         5         6         7         8         9
+//                 //                0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+//     jstmap::raw_sequence_t ref = "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna5;
+//     //                  aa
+//     //                    c
+//     jst_t jst{std::move(ref), 4};
+//     partitioned_jst_t pjst{std::addressof(jst)};
+
+//     jstmap::raw_sequence_t q1{"cgtacgtacgtacgtacgtacgta"_dna5};
+//     jstmap::raw_sequence_t q2{"acgtacgtacgtacgtacgtacgt"_dna5};
+//     jstmap::raw_sequence_t q3{"gtacgtacgtacgtacgtacgtac"_dna5};
+
+//     seqan::StringSet<std::views::all_t<jstmap::raw_sequence_t const &>> pattern_collection{};
+//     seqan::appendValue(pattern_collection, std::as_const(q1) | std::views::all);
+//     seqan::appendValue(pattern_collection, std::as_const(q2) | std::views::all);
+//     seqan::appendValue(pattern_collection, std::as_const(q3) | std::views::all);
+
+//     // jst.insert(event_t{2ull, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
+//     // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
+//     // jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
+
+//     std::vector matches = jstmap::search_queries_(pjst.bin_at(0), pattern_collection, 0.0);
+
+//     seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
+//     for (auto const & match : matches)
+//         seqan3::debug_stream << "\t- match with: " << match.error_count << " errors, sequence = "
+//                              << match.jst_sequence << "\n";
+//     // EXPECT_EQ(results.size(), 10u);
+// }
+
+struct collect_hits
 {
-    // std::filesystem::path jst_file{DATADIR"sim_refx5_p0.jst"};
+    size_t &hits;
 
-    // auto [jst, partitioned_jst_handle] = jstmap::load_jst(jst_file);
-    // jstmap::partitioned_jst_t const & partitioned_jst = *partitioned_jst_handle;
+    template <typename finder_t>
+    void set_next(finder_t const &) noexcept
+    {
+        ++hits;
+    }
 
-    // std::filesystem::path queries_file{DATADIR"sim_reads_ref1x10.fa"};
-    // std::vector reads = jstmap::load_queries(queries_file);
+    void set_value() const noexcept
+    {}
+};
 
-    // std::vector results = jstmap::search_queries(std::move(jst), std::move(reads));
-
-    using seqan3::operator""_dna5;
-
+TEST(jstmap_search, search_jst_2)
+{
     using jst_t = libjst::journaled_sequence_tree<jstmap::raw_sequence_t>;
-    using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
     // using event_t = typename jst_t::event_type;
     // using snp_t = typename event_t::snp_type;
     // using substitution_t = typename event_t::substitution_type;
     // using coverage_t = typename event_t::coverage_type;
 
-                //                0         1         2         3         4         5         6         7         8         9
-                //                0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-    jstmap::raw_sequence_t ref = "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna5;
+    auto make_ref = [] ()
+    {
+        using jst::contrib::operator""_dna4;
+             // 0         1         2         3         4         5         6         7         8         9
+             // 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+        return "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna4;
+    };
+
+    auto make_needle = [] ()
+    {
+        using jst::contrib::operator""_dna4;
+        return "cgtacgtacgtacgtacgtacgta"_dna4;
+    };
+
     //                  aa
     //                    c
-    jst_t jst{std::move(ref), 4};
-    partitioned_jst_t pjst{std::addressof(jst)};
+    jst_t jst{make_ref(), 4};
+    libjst::journaled_sequence_tree_forward fwd{std::move(jst)};
+    jst::contrib::horspool_pattern pattern{make_needle()};
 
-    jstmap::raw_sequence_t q1{"cgtacgtacgtacgtacgtacgta"_dna5};
-    jstmap::raw_sequence_t q2{"acgtacgtacgtacgtacgtacgt"_dna5};
-    jstmap::raw_sequence_t q3{"gtacgtacgtacgtacgtacgtac"_dna5};
+    auto s = fwd.search(pattern);
+    size_t hit_count{};
+    auto op = s.connect(collect_hits{hit_count});
+    op.start();
 
-    seqan::StringSet<std::views::all_t<jstmap::raw_sequence_t const &>> pattern_collection{};
-    seqan::appendValue(pattern_collection, std::as_const(q1) | std::views::all);
-    seqan::appendValue(pattern_collection, std::as_const(q2) | std::views::all);
-    seqan::appendValue(pattern_collection, std::as_const(q3) | std::views::all);
+    EXPECT_EQ(hit_count, 19);
+
+
 
     // jst.insert(event_t{2ull, substitution_t{"AA"_dna5}, coverage_t{1, 0, 1, 0}});
     // jst.insert(event_t{4ull, snp_t{"C"_dna5}, coverage_t{1, 1, 0, 0}});
     // jst.insert(event_t{4ull, snp_t{"T"_dna5}, coverage_t{0, 0, 0, 1}});
 
-    std::vector matches = jstmap::search_queries_(pjst.bin_at(0), pattern_collection, 0.0);
+    // jstmap::raw_sequence_t q1{"cgtacgtacgtacgtacgtacgta"_dna5};
+    // jstmap::raw_sequence_t q2{"acgtacgtacgtacgtacgtacgt"_dna5};
+    // jstmap::raw_sequence_t q3{"gtacgtacgtacgtacgtacgtac"_dna5};
 
-    seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
-    for (auto const & match : matches)
-        seqan3::debug_stream << "\t- match with: " << match.error_count << " errors, sequence = "
-                             << match.jst_sequence << "\n";
-    // EXPECT_EQ(results.size(), 10u);
+    // seqan::StringSet<std::views::all_t<jstmap::raw_sequence_t const &>> pattern_collection{};
+    // seqan::appendValue(pattern_collection, std::as_const(q1) | std::views::all);
+    // seqan::appendValue(pattern_collection, std::as_const(q2) | std::views::all);
+    // seqan::appendValue(pattern_collection, std::as_const(q3) | std::views::all);
+
+
+    // std::vector matches = jstmap::search_queries_(pjst.bin_at(0), pattern_collection, 0.0);
+
+    // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
+    // for (auto const & match : matches)
+    //     seqan3::debug_stream << "\t- match with: " << match.error_count << " errors, sequence = "
+    //                          << match.jst_sequence << "\n";
+    // // EXPECT_EQ(results.size(), 10u);
 }

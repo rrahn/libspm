@@ -22,7 +22,7 @@
 
 #include <jstmap/simulate/simulate_alignment.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 
 #include "test_utility.hpp"
 class jst_fuzzy_test : public ::testing::Test,

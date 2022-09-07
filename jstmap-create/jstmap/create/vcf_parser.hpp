@@ -14,11 +14,12 @@
 
 #include <filesystem>
 
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-std::vector<jst_t> construct_jst_from_vcf(std::filesystem::path const &, std::filesystem::path const &);
+// read them all
+void construct_jst_from_vcf2(std::filesystem::path const &, std::filesystem::path const &, std::filesystem::path const &);
 
 }  // namespace jstmap

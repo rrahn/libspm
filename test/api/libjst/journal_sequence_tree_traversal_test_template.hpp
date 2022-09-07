@@ -18,7 +18,7 @@
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 
 #include "test_utility.hpp" // make_gaped
 
@@ -45,6 +45,9 @@ struct traversal_fixture
     uint32_t context_size{};
     uint32_t bin_count{};
     std::vector<std::string> expected_contexts{};
+    // TODO: refactor!
+    std::string needle{};
+    std::vector<size_t> expected_positions{};
 
     template <typename char_t>
     friend seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,

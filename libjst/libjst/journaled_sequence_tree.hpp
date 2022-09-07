@@ -367,17 +367,17 @@ public:
     {
         // Step 1: just store full sequences:
         using alphabet_t = std::ranges::range_value_t<sequence_t>;
-        using gapped_alphabet_t = seqan3::gapped<alphabet_t>;
+        // using gapped_alphabet_t = seqan3::gapped<alphabet_t>;
 
         auto & [ref, target] = alignment;
 
-        constexpr auto out_gaps = [] (gapped_alphabet_t const c) -> bool { return c != seqan3::gap{}; };
+        // auto out_gaps = [] (gapped_alphabet_t const c) -> bool { return c != seqan3::gap{}; };
 
-        if (!std::ranges::equal(ref | std::views::filter(out_gaps), reference().front()))
-        {
-            throw std::invalid_argument{"The first aligned sequence must be equal to the reference sequence of this "
-                                        "journaled sequence tree without the gaps."};
-        }
+        // if (!std::ranges::equal(ref | std::views::filter(out_gaps), reference().front()))
+        // {
+        //     throw std::invalid_argument{"The first aligned sequence must be equal to the reference sequence of this "
+        //                                 "journaled sequence tree without the gaps."};
+        // }
 
         // Step 1: Increase coverages by one.
         size_type new_size = size() + 1;

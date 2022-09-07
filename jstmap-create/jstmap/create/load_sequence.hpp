@@ -8,11 +8,11 @@
 #include <seqan3/std/filesystem>
 #include <vector>
 
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-std::vector<raw_sequence_t> load_sequences(std::filesystem::path const &);
+inline sequence_collection_t load_sequences(std::filesystem::path const &);
 
 } // namespace jstmap
