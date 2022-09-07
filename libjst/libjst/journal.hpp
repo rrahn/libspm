@@ -61,6 +61,7 @@ public:
     using reference = value_type;
     using iterator = _iterator<false>;
     using const_iterator = _iterator<true>;
+    using journaled_sequence_type = journal_sequence<journal>;
 
     journal() = default;
     explicit journal(sequence_t sequence) : _sequence_size{std::ranges::size(sequence)} {
@@ -72,7 +73,7 @@ public:
         requires std::constructible_from<mapped_type, detail::subrange_t<insert_sequence_t>>
     iterator record_insertion(key_type const position, insert_sequence_t && sequence)
     {
-        assert(position <= sequence_size());
+        assert(position <= static_cast<key_type>(sequence_size()));
 
         dictionary_iterator insert_it{};
         if (_dictionary.empty() || position == key_type{}) { // direct insertion
@@ -137,8 +138,8 @@ public:
         return const_iterator{std::ranges::end(_dictionary)};
     }
 
-    constexpr auto sequence() const noexcept {
-        return journal_sequence<journal>{*this};
+    constexpr journaled_sequence_type sequence() const noexcept {
+        return journaled_sequence_type{*this};
     }
 
 protected:
@@ -216,7 +217,7 @@ private:
 
     bool check_valid_range(key_type const first, key_type const last) const noexcept
     {
-        return first < last && last <= sequence_size();
+        return first < last && last <= static_cast<key_type>(sequence_size());
     }
 
     constexpr dictionary_iterator emplace_entry_hint(dictionary_iterator hint,

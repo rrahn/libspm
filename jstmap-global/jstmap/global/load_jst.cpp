@@ -15,23 +15,22 @@
 namespace jstmap
 {
 
-jst_t load_jst(std::filesystem::path const & jst_input_file_path)
+rcs_store_t load_jst(std::filesystem::path const & rcs_store_path)
 {
     using namespace std::literals;
 
-    std::fstream jst_input_stream{jst_input_file_path};
-
-    if (!jst_input_stream.good())
+    std::fstream rcs_store_stream{rcs_store_path};
+    if (!rcs_store_stream.good())
         throw std::runtime_error{"Couldn't open path for loading the jst! The path is ["s +
-                                 jst_input_file_path.string() +
+                                 rcs_store_path.string() +
                                  "]"s};
 
-    cereal::BinaryInputArchive input_archive{jst_input_stream};
-
-    jst_t jst{};
-    jst.load(input_archive);
-
-    return jst;
+    rcs_store_t rcs_store{};
+    {
+        cereal::BinaryInputArchive input_archive{rcs_store_stream};
+       rcs_store.load(input_archive);
+    }
+    return rcs_store;
 }
 
 } // namespace jstmap

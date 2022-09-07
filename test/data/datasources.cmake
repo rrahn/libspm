@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.8)
 
 include (app_datasources)
 
+declare_datasource (FILE 1KGP.chr22.vcf_new.jst
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.vcf_new.jst
+                    URL_HASH SHA256=d37426013ba014a8980a4c516b9998535acd2bf6463e8066b170c0fe35de1a97)
+
 # copies file to <build>/data/in.fasta
 declare_datasource (FILE empty.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/empty.fa
@@ -101,4 +105,7 @@ declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_no_variants.vcf
                     URL_HASH SHA256=fa0b191b7cba9e3da323bf7674767a4efce0830ee66750ad6c3b8d8952bbaef1)
 
+# Data sources for benchmarking
 
+declare_datasource (FILE Ash1_v2.2.fa.gz
+                    URL ftp://ftp.ccb.jhu.edu/pub/data/Homo_sapiens/Ash1/v2.2/Assembly/Ash1_v2.2.fa.gz)

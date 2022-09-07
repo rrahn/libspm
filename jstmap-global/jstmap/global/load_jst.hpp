@@ -7,13 +7,11 @@
 
 #include <filesystem>
 
-#include <libjst/journaled_sequence_tree.hpp>
-
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-jst_t load_jst(std::filesystem::path const &);
+rcs_store_t load_jst(std::filesystem::path const &);
 
 } // namespace jstmap

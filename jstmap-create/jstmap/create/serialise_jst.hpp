@@ -19,26 +19,19 @@
 namespace jstmap
 {
 
-template <typename jst_t>
-void serialise_jst(jst_t const & jst, cereal::BinaryOutputArchive & binary_archive)
+template <typename rcs_store_t>
+void serialise(rcs_store_t const & rcs_store, std::filesystem::path const & output_path)
 {
-    jst.save(binary_archive);
-}
+    using namespace std::literals;
 
-template <typename partitioned_jst_t>
-void serialise_partitioned_jst(partitioned_jst_t const & partitioned_jst, cereal::BinaryOutputArchive & binary_archive)
-{
-    partitioned_jst.save(binary_archive);
-}
-
-template <typename jst_t, typename partitioned_jst_t>
-void serialise(jst_t const & jst, partitioned_jst_t const & partitioned_jst,
-               std::filesystem::path const & output_path)
-{
     std::ofstream output_stream{output_path.c_str()};
+    if (!output_stream.good())
+        throw std::runtime_error{"Couldn't open path for storing the rcs store! The path is ["s +
+                                 output_path.string() +
+                                 "]"s};
+
     cereal::BinaryOutputArchive binary_archive{output_stream};
-    serialise_jst(jst, binary_archive);
-    serialise_partitioned_jst(partitioned_jst, binary_archive);
+    rcs_store.save(binary_archive);
 }
 
 } // namespace jstmap

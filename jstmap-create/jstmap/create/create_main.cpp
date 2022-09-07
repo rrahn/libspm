@@ -10,16 +10,18 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
+#include <cereal/archives/binary.hpp>
+
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/create/create_main.hpp>
-#include <jstmap/create/journaled_sequence_tree_builder.hpp>
+// #include <jstmap/create/journaled_sequence_tree_builder.hpp>
 #include <jstmap/create/load_sequence.hpp>
 #include <jstmap/create/options.hpp>
-#include <jstmap/create/serialise_jst.hpp>
+// #include <jstmap/create/serialise_jst.hpp>
 #include <jstmap/create/vcf_parser.hpp>
 
 namespace jstmap
@@ -94,36 +96,38 @@ int create_main(seqan3::argument_parser & create_parser)
             log(verbosity_level::standard, logging_level::info,
                 "Create from vcf ", options.vcf_file, " and contigs ", options.sequence_file);
 
-            auto jst_per_contig = construct_jst_from_vcf(options.sequence_file, options.vcf_file);
-            log(verbosity_level::standard, logging_level::info,
-                "Generated ", jst_per_contig.size(), " journal sequence tree(s).");
+            // auto jst_per_contig = construct_jst_from_vcf(options.sequence_file, options.vcf_file);
+            construct_jst_from_vcf2(options.sequence_file, options.vcf_file, options.output_file);
 
-            // Create jst per contig and give it a proper name.
-            size_t contig_idx{};
-            std::ranges::for_each(jst_per_contig, [&] (auto const & jst)
-            {
-                std::filesystem::path filename_with_id = options.output_file;
-                std::filesystem::path new_filename = filename_with_id.stem();
-                new_filename += std::filesystem::path{std::to_string(contig_idx++)};
-                new_filename += filename_with_id.extension();
-                filename_with_id.replace_filename(new_filename);
+            // log(verbosity_level::standard, logging_level::info,
+            //     "Generated ", jst_per_contig.size(), " journal sequence tree(s).");
 
-                partitioned_jst_t partitioned_jst{std::addressof(jst), options.bin_count};
+            // // Create jst per contig and give it a proper name.
+            // size_t contig_idx{};
+            // std::ranges::for_each(jst_per_contig, [&] (auto const & jst)
+            // {
+            //     std::filesystem::path filename_with_id = options.output_file;
+            //     std::filesystem::path new_filename = filename_with_id.stem();
+            //     new_filename += std::filesystem::path{std::to_string(contig_idx++)};
+            //     new_filename += filename_with_id.extension();
+            //     filename_with_id.replace_filename(new_filename);
 
-                log(verbosity_level::standard, logging_level::info, "Serialise jst ", filename_with_id);
-                serialise(jst, partitioned_jst, options.output_file);
-            });
+            //     partitioned_jst_t partitioned_jst{std::addressof(jst), options.bin_count};
+
+            //     log(verbosity_level::standard, logging_level::info, "Serialise jst ", filename_with_id);
+            //     serialise(jst, partitioned_jst, options.output_file);
+            // });
         }
-        else // Construct from the sequence alignment.
-        {
-            log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
-            auto sequences = load_sequences(options.sequence_file);
-            log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
-            auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
+        // else // Construct from the sequence alignment.
+        // {
+        //     log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
+        //     auto sequences = load_sequences(options.sequence_file);
+        //     log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
+        //     auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
 
-            log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
-            serialise(jst, partitioned_jst, options.output_file);
-        }
+        //     log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
+        //     serialise(jst, partitioned_jst, options.output_file);
+        // }
     }
     catch (std::exception const & ex)
     {

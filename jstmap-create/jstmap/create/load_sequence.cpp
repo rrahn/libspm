@@ -7,18 +7,16 @@
 
 #include <seqan3/std/algorithm>
 
-#include <seqan3/io/sequence_file/input.hpp>
-
 #include <jstmap/create/load_sequence.hpp>
 
 namespace jstmap
 {
 
-std::vector<raw_sequence_t> load_sequences(std::filesystem::path const & sequence_file)
+sequence_collection_t load_sequences(std::filesystem::path const & sequence_file)
 {
-    std::vector<raw_sequence_t> sequences{};
+    sequence_collection_t sequences{};
 
-    seqan3::sequence_file_input fin{sequence_file.c_str()};
+    seqan3::sequence_file_input<sequence_input_traits> fin{sequence_file.c_str()};
     std::ranges::for_each(fin, [&] (auto const & sequence_record)
     {
         sequences.push_back(seqan3::get<seqan3::field::seq>(sequence_record));

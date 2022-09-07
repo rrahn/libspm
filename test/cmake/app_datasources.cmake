@@ -1,4 +1,9 @@
-include (ExternalProject)
+include(ExternalProject)
+
+function(datasource_target source target)
+    string(TOLOWER "datasource--${source}" __datasource_name)
+    set(${target} ${__datasource_name} PARENT_SCOPE)
+endfunction()
 
 # Example call:
 #
@@ -41,10 +46,7 @@ function(declare_datasource)
 
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
-    string(TOLOWER "datasource--${ARG_FILE}" datasource_name)
-
-    # create data folder
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
+    datasource_target("${ARG_FILE}" datasource_name)
 
     ExternalProject_Add(
         "${datasource_name}"
@@ -54,9 +56,10 @@ function(declare_datasource)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND
-            ${CMAKE_COMMAND} -E create_symlink <DOWNLOADED_FILE> ${CMAKE_CURRENT_BINARY_DIR}/data/${ARG_FILE}
+            ${CMAKE_COMMAND} -E create_symlink <DOWNLOADED_FILE> <INSTALL_DIR>/${ARG_FILE}
         TEST_COMMAND ""
-        PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_datasources"
+        PREFIX "${DATA_ROOT_DIR}/_datasources"
+        INSTALL_DIR "${DATA_DIR}"
         DOWNLOAD_NO_EXTRACT TRUE # don't extract archive files like .tar.gz.
         ${ARG_UNPARSED_ARGUMENTS}
     )
@@ -86,7 +89,7 @@ function(target_use_datasources target)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
     foreach(filename ${ARG_FILES})
-        string(TOLOWER "datasource--${filename}" datasource_name)
+        datasource_target("${filename}" datasource_name)
         add_dependencies ("${target}" "${datasource_name}")
     endforeach()
 endfunction()

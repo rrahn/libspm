@@ -45,16 +45,28 @@ public:
         return size() == 0;
     }
 
-    iterator begin() const noexcept
+    iterator begin() const & noexcept
     {
         assert(_journal != nullptr);
-        return iterator{*_journal, 0};
+        return iterator{_journal, _journal->begin()};
     }
 
-    iterator end() const noexcept
+    iterator begin() && noexcept
     {
         assert(_journal != nullptr);
-        return iterator{*_journal, size()};
+        return iterator{_journal, _journal->begin()};
+    }
+
+    iterator end() const & noexcept
+    {
+        assert(_journal != nullptr);
+        return iterator{_journal, _journal->end()};
+    }
+
+    iterator end() && noexcept
+    {
+        assert(_journal != nullptr);
+        return iterator{_journal, _journal->end()};
     }
 };
 
@@ -63,18 +75,27 @@ class journal_sequence<journal_t>::iterator
 {
 private:
 
+    friend journal_sequence;
+
     using journal_iterator = std::ranges::iterator_t<journal_t const &>;
     using journal_entry_t = std::iter_reference_t<journal_iterator>;
     using ref_sequence_t = std::tuple_element_t<1, std::remove_reference_t<journal_entry_t>>;
     using sequence_iterator = std::ranges::iterator_t<ref_sequence_t>;
 
-    journal_iterator _dict_first{};
-    journal_iterator _dict_last{};
+    journal_t const * _journal{};
     journal_iterator _dict_it{};
     size_t _position{}; // the current global position
     size_t _previous_switch{}; // the next position to switch in increment
     size_t _next_switch{}; // the next position to switch in increment
     sequence_iterator _sequence_it{}; // the current segment iterator
+
+    iterator(journal_t const * journal, journal_iterator const init_pos) :
+        _journal{journal},
+        _dict_it{std::move(init_pos)}
+    {
+        init_segment_begin();
+        _position = _previous_switch;
+    }
 
 public:
 
@@ -90,22 +111,6 @@ public:
     iterator & operator=(iterator const &) = default;
     iterator & operator=(iterator &&) = default;
     ~iterator() = default;
-
-    iterator(journal_t const & journal, size_t const position) :
-        _dict_first{journal.begin()},
-        _dict_last{journal.end()},
-        _dict_it{_dict_last},
-        _position{position},
-        _previous_switch{position},
-        _next_switch{position}
-    {
-        // _entry_last = _host->_dictionary.end();
-        if (position == 0) {
-            _dict_it = _dict_first;
-            _next_switch = journal_t::entry_last(*_dict_it);
-            _sequence_it = std::ranges::begin(journal_t::entry_value(*_dict_it));
-        }
-    }
 
     iterator base() const & noexcept {
         return *this;
@@ -139,10 +144,11 @@ public:
      */
     iterator & operator++() noexcept
     {
+        assert(_sequence_it < std::ranges::end(journal_t::entry_value(*_dict_it)));
         ++_sequence_it; // now we may at the end of the segment
         if (++_position == _next_switch) [[unlikely]] { // we may or may not update the index
-            if (++_dict_it != _dict_last) [[likely]]
-                init_segment_begin();
+            ++_dict_it;
+            init_segment_begin();
         }
 
         return *this;
@@ -159,16 +165,13 @@ public:
     {
         // if offset is negative, use the preceding elements of current segment to check if binary search is needed.
         // if offset is positive use remaining elements of current segment to check if binary search is needed.
-        constexpr auto element_proj = [] (auto && element) -> uint32_t { return journal_t::entry_last(element); };
         _position += offset;
         if (_position < _previous_switch || _next_switch <= _position) [[likely]] {
-            if (_dict_it = std::ranges::upper_bound(_dict_first, _dict_last, _position, std::less{}, element_proj);
-                _dict_it != _dict_last) {
-                init_segment_begin();
-                std::ranges::advance(_sequence_it, _position - journal_t::entry_first(*_dict_it));
-            } else {
-                _previous_switch = _position;
-            }
+            _dict_it = std::ranges::upper_bound(*_journal, _position, std::less{}, [] (auto && element) -> uint32_t {
+                return journal_t::entry_last(element);
+            });
+            init_segment_begin();
+            std::ranges::advance(_sequence_it, _position - _previous_switch);
         } else {
             _sequence_it += offset;
         }
@@ -240,9 +243,14 @@ public:
 private:
 
     void init_segment_begin() noexcept {
-        _previous_switch = journal_t::entry_first(*_dict_it);
-        _next_switch = journal_t::entry_last(*_dict_it);
-        _sequence_it = std::ranges::begin(journal_t::entry_value(*_dict_it));
+        if (_dict_it != _journal->end()) [[likely]] {
+            _previous_switch = journal_t::entry_first(*_dict_it);
+            _next_switch = journal_t::entry_last(*_dict_it);
+            _sequence_it = std::ranges::begin(journal_t::entry_value(*_dict_it));
+        } else {
+            _next_switch = _journal->sequence_size();
+            _previous_switch = _next_switch;
+        }
     }
 
     void init_segment_end() noexcept {
@@ -253,3 +261,12 @@ private:
 };
 
 }  // namespace libjst
+
+namespace std::ranges {
+
+template <typename journal_t>
+inline constexpr bool enable_borrowed_range<libjst::journal_sequence<journal_t>> = true;
+
+} // namespace std::ranges
+
+
