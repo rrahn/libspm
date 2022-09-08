@@ -46,19 +46,17 @@ endif()
 # #######################################################################
 
 # Prepare reference_target for the corresponding data source
-message(STATUS "REFERENCE_FILE: ${ARG_REFERENCE_FILE}")
-string(TOLOWER "datasource--${ARG_REFERENCE_FILE}" reference_target)
+datasource_target("${ARG_REFERENCE_FILE}" reference_target)
 
 # Prepare reference file for simulation
-ExternalProject_Get_property("${reference_target}" DOWNLOADED_FILE)
 ExternalProject_Get_property("${reference_target}" DOWNLOAD_NAME)
 ExternalProject_Get_property("${reference_target}" INSTALL_DIR)
+ExternalProject_Get_property("${reference_target}" URL_HASH)
 string(REGEX REPLACE "(.*)\.gz$" "\\1" decompressed_file_name "${DOWNLOAD_NAME}")
 
-set(installed_file "${INSTALL_DIR}/${DOWNLOAD_NAME}")
-message(STATUS "DOWNLOADED_FILE: ${DOWNLOADED_FILE}")
-message(STATUS "Installed file: ${installed_file}")
-message(STATUS "Decompressed file name: ${decompressed_file_name}")
+set(reference_name "${DOWNLOAD_NAME}")
+set(reference_hash "${URL_HASH}")
+set(installed_file "${INSTALL_DIR}/${reference_name}")
 
 # Prepare extraction command
 string(REGEX MATCH ".*tar.gz$" has_tar_gz "${DOWNLOAD_NAME}")
@@ -67,10 +65,9 @@ set (needs_gunzip "$<AND:$<NOT:$<BOOL:${has_tar_gz}>>,$<BOOL:${has_gz}>>")
 
 find_program(GUNZIP_COMMAND "gunzip")
 set (has_gunzip "$<BOOL:${GUNZIP_COMMAND}>")
-add_custom_target(genexdebug COMMAND ${CMAKE_COMMAND} -E echo [DEBUG] "${has_gunzip}")
 
 set (EXTRACT_GUNZIP_COMMAND "${GUNZIP_COMMAND}")
-set (EXTRACT_TAR_COMMAND "${CMAKE_COMMAND} -E tar -xf")
+set (EXTRACT_TAR_COMMAND "${CMAKE_COMMAND}" "-E" "tar" "-xf")
 set (use_gunzip "$<AND:${needs_gunzip},${has_gunzip}>")
 set (EXTRACT_COMMAND "$<IF:${use_gunzip},${EXTRACT_GUNZIP_COMMAND},${EXTRACT_TAR_COMMAND}>")
 
@@ -82,7 +79,7 @@ datasource_target("${ARG_SIMULATION_NAME}" simulation_target)
 # string(TOLOWER "simsource--${ARG_SIMULATION_NAME}" simulation_target)
 
 # Create local working directory for simulated files
-set(SIMULATION_WORKING_DIR "${CMAKE_BINARY_DIR}/_simulation_sources")
+set(SIMULATION_WORKING_DIR "${DATA_ROOT_DIR}/_simulation_sources")
 file(MAKE_DIRECTORY "${SIMULATION_WORKING_DIR}")
 
 # Prepare read file
@@ -122,23 +119,21 @@ set(MASON_ARGS "-n" "${ARG_READ_COUNT}" "-o" "${read_file}" "-oa" "${read_alignm
 
 ExternalProject_Add(
     ${simulation_target}
-    PREFIX            "${SIMULATION_WORKING_DIR}"
-    INSTALL_DIR       "${DATA_DIR}"
     DEPENDS           "${reference_target}"
-    DOWNLOAD_COMMAND  ${CMAKE_COMMAND} -E copy ${DOWNLOADED_FILE} <SOURCE_DIR>/
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> ${EXTRACT_COMMAND} ${DOWNLOAD_NAME}
+    DOWNLOAD_COMMAND  ${CMAKE_COMMAND} -E copy ${installed_file} <SOURCE_DIR>/
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> ${EXTRACT_COMMAND} ${reference_name}
     BUILD_COMMAND     ${CMAKE_COMMAND} -E echo Simulating reads: "${MASON_COMMAND} ${MASON_GLOBAL_OPTIONS} ${MASON_SIM_OPTIONS} -ir <SOURCE_DIR>/${decompressed_file_name} ${MASON_ARGS}"
     COMMAND           ${MASON_COMMAND} ${MASON_GLOBAL_OPTIONS} ${MASON_SIM_OPTIONS} -ir <SOURCE_DIR>/${decompressed_file_name} ${MASON_ARGS}
     INSTALL_COMMAND   ${CMAKE_COMMAND} -E create_symlink <BINARY_DIR>/${read_file} <INSTALL_DIR>/${read_file}
     COMMAND           ${CMAKE_COMMAND} -E create_symlink <BINARY_DIR>/${read_alignment_file} <INSTALL_DIR>/${read_alignment_file}
     TEST_COMMAND      ""
+    PREFIX            "${SIMULATION_WORKING_DIR}"
+    INSTALL_DIR       "${DATA_DIR}"
+    LOG_DOWNLOAD TRUE
+    LOG_CONFIGURE TRUE
     DOWNLOAD_NO_EXTRACT TRUE
     ${ARG_UNPARSED_ARGUMENTS}
 )
-
-add_custom_target(test_extract
-                  COMMAND ${CMAKE_COMMAND} -E echo "Test extraction"
-                  DEPENDS ${simulation_target})
 endfunction()
 
 

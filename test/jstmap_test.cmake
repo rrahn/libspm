@@ -1,9 +1,17 @@
 cmake_minimum_required (VERSION 3.14)
 
+if (NOT DATA_ROOT_DIR)
+    set(DATA_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
+
 # Set directories for test output files, input data and binaries.
-file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/output)
-set (DATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/data/")
-add_definitions (-DOUTPUTDIR=\"${CMAKE_CURRENT_BINARY_DIR}/output/\")
+set (DATA_DIR "${DATA_ROOT_DIR}/data/")
+message(STATUS "Using DATA_ROOT_DIR: ${DATA_ROOT_DIR}")
+
+file (MAKE_DIRECTORY ${DATA_DIR})
+file (MAKE_DIRECTORY ${DATA_ROOT_DIR}/output)
+
+add_definitions (-DOUTPUTDIR=\"${DATA_ROOT_DIR}/output/\")
 add_definitions (-DDATADIR=\"${DATA_DIR}\")
 add_definitions (-DBINDIR=\"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/\")
 

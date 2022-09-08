@@ -48,9 +48,6 @@ function(declare_datasource)
 
     datasource_target("${ARG_FILE}" datasource_name)
 
-    # create data folder
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
-
     ExternalProject_Add(
         "${datasource_name}"
         URL "${ARG_URL}"
@@ -61,7 +58,7 @@ function(declare_datasource)
         INSTALL_COMMAND
             ${CMAKE_COMMAND} -E create_symlink <DOWNLOADED_FILE> <INSTALL_DIR>/${ARG_FILE}
         TEST_COMMAND ""
-        PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_datasources"
+        PREFIX "${DATA_ROOT_DIR}/_datasources"
         INSTALL_DIR "${DATA_DIR}"
         DOWNLOAD_NO_EXTRACT TRUE # don't extract archive files like .tar.gz.
         ${ARG_UNPARSED_ARGUMENTS}
