@@ -84,6 +84,7 @@ add_library (jstmap::test::performance ALIAS jstmap_test_performance)
 
 include (app_datasources)
 include (read_simulation)
+include (decompress_datasource)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (seqan3_require_benchmark)
