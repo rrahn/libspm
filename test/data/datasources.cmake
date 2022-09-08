@@ -104,4 +104,9 @@ declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
 # Data sources for benchmarking
 
 declare_datasource (FILE Ash1_v2.2.fa.gz
-                    URL ftp://ftp.ccb.jhu.edu/pub/data/Homo_sapiens/Ash1/v2.2/Assembly/Ash1_v2.2.fa.gz)
+                    URL ftp://ftp.ccb.jhu.edu/pub/data/Homo_sapiens/Ash1/v2.2/Assembly/Ash1_v2.2.fa.gz
+                    URL_HASH "")
+
+declare_datasource (FILE 1KGP.chr22.vcf.gz
+                    URL /project/archive-index-data/rahn/1KGP/phase3/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz
+                    URL_HASH "")
