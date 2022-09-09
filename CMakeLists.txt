@@ -39,6 +39,7 @@ find_package(OpenMP REQUIRED)
 ## APPLICATION
 
 add_subdirectory (libjst)
+add_subdirectory (libio)
 add_subdirectory (jstmap-global)
 add_subdirectory (jstmap-create)
 add_subdirectory (jstmap-index)
