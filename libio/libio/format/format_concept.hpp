@@ -52,9 +52,10 @@ namespace libio
 
     using _get_record::get_record; //!\brief CPO defintion to get an unformatted record.
 
-    namespace _format_tag {
+    namespace _format_token {
 
         inline constexpr struct _cpo {
+            // TODO: Is there a meaningful default?
 
             // Delegate to the friend overload if default is not found
             template <typename format_t>
@@ -65,11 +66,11 @@ namespace libio
             {
                 return libio::tag_invoke(_cpo{}, std::forward<format_t>(format));
             }
-        } format_tag{};
+        } format_token{};
 
-    } // namespace _format_tag
+    } // namespace _format_token
 
-    using _format_tag::format_tag; //!\brief CPO defintion to read a record.
+    using _format_token::format_token; //!\brief CPO defintion to read a record.
 
     // Definition of the format tag.
     template <typename format_t>

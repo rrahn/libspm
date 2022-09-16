@@ -15,8 +15,12 @@
 #include <string>
 #include <type_traits>
 
+#include <libio/format/fasta/fasta_field_code.hpp>
+#include <libio/file/tokenization.hpp>
+
 namespace libio
 {
+    // Implementation of some custom record type.
     class fasta_record
     {
     private:
@@ -24,18 +28,6 @@ namespace libio
         size_t _seq_offset{};
 
     public:
-        fasta_record() = default;
-        // TODO: We need a special value type here as well.
-        fasta_record(std::string value) noexcept(std::is_nothrow_move_constructible_v<std::string>)
-            : _value{std::move(value)}
-        {
-        }
-
-        fasta_record(std::string id, std::string seq) noexcept(std::is_nothrow_move_assignable_v<std::string>)
-        {
-            _seq_offset = id.size(),
-            _value = std::move(id) + std::move(seq);
-        }
 
         std::string_view seq() const noexcept
         {
@@ -45,6 +37,22 @@ namespace libio
         std::string_view id() const noexcept
         {
             return std::string_view{_value.data(), _seq_offset};
+        }
+
+    private:
+        template <typename chunked_buffer_t>
+        friend auto tag_invoke(tag_t<libio::set_field>, fasta_record & me,
+                                                        field_code_type<fasta_field::id>,
+                                                        chunked_buffer_t && buffer) {
+            libio::read_token(me._value, buffer); //fill record data
+            me._seq_offset = me._value.size();
+        }
+
+        template <typename chunked_buffer_t>
+        friend auto tag_invoke(tag_t<libio::set_field>, fasta_record & me,
+                                                        field_code_type<fasta_field::seq>,
+                                                        chunked_buffer_t && buffer) {
+            libio::read_token(me._value, buffer);
         }
     };
 } // namespace libio

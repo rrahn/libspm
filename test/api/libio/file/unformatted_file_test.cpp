@@ -34,6 +34,11 @@ TEST(unformatted_file_test, formatted)
 
     libio::unformatted_file file{DATADIR"in.fasta", libio::fasta_format{}};
 
+    // using record_t = my_user_record_<Dna4>;
+    // libio::formatted_file<record_t> file{DATADIR"in.fasta", libio::fasta_format{}};
+
+    // record_t & record = *file.begin();
+
     // Idea: add transformation layer!
     // - this reinterprets the records into the user specified types
     // - the transformation is handled by a CPO call which the user can overload for the given container type
@@ -45,6 +50,27 @@ TEST(unformatted_file_test, formatted)
         // - in each block find the delimiter pattern
         // - store the byte offset for each delimter
         // - can be reused in multiple places
+
+    // how do we define or interact with the file?
+    // vcf_format_base is just a abstract base class usable by users to overload the default behaviour
+    // my_vcf_format : vcf_format_base{} {
+    //
+    //      tag_invoke(format, ) -> record
+    //      how can we get this more generic?
+    //      we might not need to run anything specific
+    //      we just need to implement the functionality to this and the remaining part is done differently.
+    //      the record
+
+    //      tag_invoke(read_chr, )
+    //      tag_invoke(read_alt, )
+    //      tag_invoke(read_qual, )
+    //
+    //      tag_invoke(cpo_t) -> tag_invoke(cpo_t, to_base(), args...); // fwd to base class.
+    //      if base_class does not implement it then it moves down.
+    //
+    //      tag_invoke(read_alt, )
+    // }
+    // e.g. formatted_file {path, vcf_format{options?} }
 
     auto record = file.read_record();
     ASSERT_EQ(record.seq(), "ACGTTTGATTCGCG"s);

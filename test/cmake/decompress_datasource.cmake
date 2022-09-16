@@ -44,7 +44,7 @@ set (needs_gunzip "$<AND:$<NOT:$<BOOL:${has_tar_gz}>>,$<BOOL:${has_gz}>>")
 find_program(GUNZIP_COMMAND "gunzip")
 set (has_gunzip "$<BOOL:${GUNZIP_COMMAND}>")
 
-set (EXTRACT_GUNZIP_COMMAND "${GUNZIP_COMMAND}" "-f")
+set (EXTRACT_GUNZIP_COMMAND "${GUNZIP_COMMAND}" "-q" "-f")
 set (EXTRACT_TAR_COMMAND "${CMAKE_COMMAND}" "-E" "tar" "-xf")
 set (use_gunzip "$<AND:${needs_gunzip},${has_gunzip}>")
 set (EXTRACT_COMMAND "$<IF:${use_gunzip},${EXTRACT_GUNZIP_COMMAND},${EXTRACT_TAR_COMMAND}>")
@@ -59,8 +59,9 @@ ExternalProject_Add(
     ${decompressed_file_target}
     DEPENDS           "${file_target}"
     DOWNLOAD_COMMAND  ${CMAKE_COMMAND} -E copy ${installed_file} <SOURCE_DIR>/
+    COMMAND           ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> ${EXTRACT_COMMAND} ${file_name}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND     ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> ${EXTRACT_COMMAND} ${file_name}
+    BUILD_COMMAND     ""
     INSTALL_COMMAND   ${CMAKE_COMMAND} -E create_symlink <SOURCE_DIR>/${decompressed_file_name} <INSTALL_DIR>/${decompressed_file_name}
     TEST_COMMAND      ""
     PREFIX            "${DATA_ROOT_DIR}/_datasources"
