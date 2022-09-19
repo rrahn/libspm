@@ -66,7 +66,7 @@ namespace libio
                 noexcept(is_nothrow_tag_invocable_v<_cpo, token_t &&, value_t &&>)
                 -> tag_invoke_result_t<_cpo, token_t &&, value_t &&>
             {
-                return tag_invoke(_cpo{}, std::forward<token_t>(token), std::forward<value_t>(value));
+                return tag_invoke(_cpo{}, (token_t &&)token, (value_t&&)value);
             }
         } detokenize_to;
     } // namespace _detokenize

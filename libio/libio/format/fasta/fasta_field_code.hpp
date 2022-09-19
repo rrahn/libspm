@@ -24,32 +24,4 @@ namespace libio
         seq = 2
     };
 
-    namespace detail {
-        // Do we need this?
-        // class fasta_field_category final : public field_category
-        // {
-        // public:
-
-        //     virtual std::string_view name() const noexcept override {
-        //         return "fasta";
-        //     }
-
-        // private:
-        //     // we can overload the equivalence value.
-        //     // in this case we can convert what?
-        //     // how do we prevent specific overload issues?
-        // };
-
-    } // namespace detail
-
-    // now global variable only visible in current namespace?
-    // inline constexpr detail::fasta_field_category fasta_field_category{};
-
-    // to translate this into a field code?
-    // overload which needs to be found by dependent lookup
-    // but only if field code fulfils some requirements!
-    // inline constexpr detail::fasta_field_category const & select_field_category(fasta_field f) noexcept
-    // {
-    //     return fasta_field_category;
-    // }
 } // namespace libio

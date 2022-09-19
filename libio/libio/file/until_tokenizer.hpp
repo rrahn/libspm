@@ -17,13 +17,14 @@
 
 namespace libio
 {
+    // borrowed
     template <typename tokenizer_t>
     // requires tokenizer<tokenizer_t> // which is also a view
     class until_tokenizer : public std::ranges::view_base
     {
     public:
-        using char_type = typename tokenizer_t::char_type;
-        using traits_type = typename tokenizer_t::traits_type;
+        using char_type = typename std::remove_reference_t<tokenizer_t>::char_type;
+        using traits_type = typename std::remove_reference_t<tokenizer_t>::traits_type;
         using int_type = typename traits_type::int_type;
         using pos_type = typename traits_type::pos_type;
         using off_type = typename traits_type::off_type;
@@ -34,24 +35,19 @@ namespace libio
         class iterator;
         using sentinel = std::ranges::sentinel_t<tokenizer_t>;
 
-        tokenizer_t _tokeinzer;
-        // TODO: templatize?
+        tokenizer_t _tokenizer;
         std::function<bool(char_type const)> _until_fn{};
 
     public:
-        until_tokenizer() = default; // but then may be not default creatable!
-
+        until_tokenizer() = delete;
         template <typename until_token_t>
         constexpr explicit until_tokenizer(tokenizer_t tokenizer, until_token_t &&until_fn) noexcept :
-            _tokeinzer{std::move(tokenizer)},
+            _tokenizer{(tokenizer_t &&)tokenizer},
             _until_fn{until_fn}
         {
         }
-
-        // ~until_tokenizer() {
-        //     // consume remaining part
-        //     while ()
-        // }
+        until_tokenizer(until_tokenizer const &) = delete;
+        until_tokenizer(until_tokenizer &&) = default;
 
         constexpr iterator begin() noexcept
         {
@@ -66,6 +62,9 @@ namespace libio
 
         sentinel end() const noexcept = delete;
     };
+
+    template <typename tokenizer_t, typename until_token_t>
+    until_tokenizer(tokenizer_t &&, until_token_t &&) -> until_tokenizer<tokenizer_t>;
 
     template <typename tokenizer_t>
     class until_tokenizer<tokenizer_t>::iterator
@@ -90,20 +89,17 @@ namespace libio
         iterator() = default;
         constexpr explicit iterator(until_tokenizer *host) noexcept : _host{host}
         {
-            _it = std::ranges::begin(_host->_tokeinzer); // initialise underlying stream buffer
-            auto get_area = *_it;
-            if (auto initial = std::ranges::find_if_not(get_area, _host->_until_fn); initial == get_area.end())
-            { // variable bumps
-                while (initial == get_area.end())
+            _it = std::ranges::begin(_host->_tokenizer); // initialise underlying stream buffer
+
+            while (_it != std::ranges::end(_host->_tokenizer))
+            {
+                auto get_area = *_it;
+                if (auto initial = std::ranges::find_if_not(get_area, _host->_until_fn); initial != get_area.end())
                 {
-                    bump(initial - get_area.begin()); // bump, including reset of the buffer.
-                    get_area = *_it;
-                    initial = std::ranges::find_if_not(get_area, _host->_until_fn); // finding in next get_area cycle.
+                    bump(initial - get_area.begin()); // found pattern so we set to that symbol.
+                    break;
                 }
-            }
-            else
-            {                                     // single bump
-                bump(initial - get_area.begin()); // found pattern so we set to that symbol.
+                ++_it; // bumps entire lower range.
             }
         }
 

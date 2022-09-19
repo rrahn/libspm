@@ -13,10 +13,6 @@
 #pragma once
 
 #include <iosfwd>
-#include <vector>
-#include <string>
-
-#include <seqan/seq_io.h>
 
 #include <libio/format/fasta/fasta_token.hpp>
 #include <libio/format/format_concept.hpp>
@@ -33,24 +29,15 @@ namespace libio
         {
         }
 
-        // now we set the format from where?
-
     private:
 
-        template <typename stream_t>
-        friend fasta_record tag_invoke(tag_t<libio::read_record>, fasta_format const &/*format*/, stream_t & stream)
+        template <typename char_t, typename char_traits_t>
+        constexpr friend auto tag_invoke(tag_t<libio::format_token>,
+                                         fasta_format const &,
+                                         std::basic_istream<char_t, char_traits_t> & istream)
+            -> decltype(fasta_token{istream})
         {
-            std::string _seq{};
-            std::string _id{};
-            seqan::readRecord(_id, _seq, stream, seqan::Fasta{}); // read with tokenisation!
-            return libio::fasta_record{std::move(_id), std::move(_seq)};
-        }
-
-        // now we get something like the functors.
-        friend fasta_token tag_invoke(tag_t<libio::format_token>, fasta_format const & /*format*/) noexcept
-        {
-            // where do we get the token from the stream?
-            return fasta_token{*this};
+            return fasta_token{istream};
         }
     };
 } // namespace libio

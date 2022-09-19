@@ -14,6 +14,7 @@
 
 #include <concepts>
 #include <ranges>
+#include <span>
 
 namespace libio
 {
@@ -46,23 +47,34 @@ namespace libio
 
     public:
         tokenizer_streambuffer_adaptor() = default;
+        tokenizer_streambuffer_adaptor(tokenizer_streambuffer_adaptor const &) = delete;
+        tokenizer_streambuffer_adaptor(tokenizer_streambuffer_adaptor && other) noexcept :
+            tokenizer_streambuffer_adaptor{}
+        {
+            using std::swap;
+            swap(_get_area, other._get_area);
+        }
+        tokenizer_streambuffer_adaptor &operator=(tokenizer_streambuffer_adaptor const &) = delete;
+        tokenizer_streambuffer_adaptor &operator=(tokenizer_streambuffer_adaptor && other) noexcept
+        {
+            _get_area = other._get_area;
+            other._get_area = nullptr;
+            return *this;
+        }
 
         constexpr explicit tokenizer_streambuffer_adaptor(streambuffer_t *stream_buffer) :
             _get_area{reinterpret_cast<get_area_t *>(stream_buffer)}
         {
-            assert(_get_area != nullptr);
         }
 
         constexpr iterator begin() noexcept
         {
-            assert(_get_area != nullptr);
             return iterator{this};
         }
         iterator begin() const noexcept = delete;
 
         constexpr sentinel end() noexcept
         {
-            assert(_get_area != nullptr);
             return std::default_sentinel;
         }
 
@@ -88,9 +100,11 @@ namespace libio
         using category = std::input_iterator_tag;
 
         iterator() = default;
-        constexpr explicit iterator(tokenizer_streambuffer_adaptor *host) noexcept(noexcept(this->reset_get_area())) : _host{host}
+        constexpr explicit iterator(tokenizer_streambuffer_adaptor *host) noexcept(noexcept(this->reset_get_area())) :
+            _host{host}
         {
-            reset_get_area();
+            if (_host->_get_area != nullptr)
+                reset_get_area();
         }
 
         constexpr reference operator*() const noexcept

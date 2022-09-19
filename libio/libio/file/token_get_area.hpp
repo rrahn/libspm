@@ -15,6 +15,7 @@
 #include <ranges>
 
 #include <libio/file/tokenizer_streambuffer_adaptor.hpp>
+#include <libio/file/consume_tokenizer.hpp>
 #include <libio/file/until_tokenizer.hpp>
 
 namespace libio
@@ -34,12 +35,18 @@ namespace libio
         using typename base_t::off_type;
 
         token_get_area() = default;
+        token_get_area(token_get_area const &) = delete;
+        token_get_area(token_get_area &&) = default;
+        token_get_area &operator=(token_get_area const &) = delete;
+        token_get_area &operator=(token_get_area &&) = default;
 
         template <typename token_delimiter_t>
         constexpr token_get_area(streambuffer_t * stream_buffer, token_delimiter_t token_delimiter_fn) :
             base_t{adaptor_t{stream_buffer}, std::move(token_delimiter_fn)}
         {
         }
+
+        ~token_get_area() = default;
 
         constexpr std::ranges::iterator_t<base_t> begin() noexcept
         {

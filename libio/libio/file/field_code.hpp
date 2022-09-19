@@ -12,44 +12,35 @@
 
 #pragma once
 
+#include <concepts>
 #include <type_traits>
 
 #include <libio/utility/tag_invoke.hpp>
 
 namespace libio
 {
-    // class field_code; // forward declaration
+    template <typename field_tag_t>
+    struct field_code_category;
 
-    // class field_category
-    // {
-    // public:
-    //     constexpr field_category() noexcept = default;
-    //     field_category(const & field_category) = delete; // non-copyable/movable/assignable
-    //     virtual ~field_category() = default;
-    //     virtual std::string_view name() const noexcept = 0;
+    template <typename field_tag_t>
+        // requres is_format_field_tag_v<>
+    using field_code_category_t = typename field_code_category<field_tag_t>::type;
 
-    //     // these are virtual overloads!
-    //     // can we make them overload differently?
-    //     // Basically, this is a CPO now?
-    //     virtual bool equivalent(int32_t fc, field_condition const & fcond)  const noexcept
-    //     {
-    //         return false;
-    //     }
-
-    //     virtual bool equivalent(field_code const & fc, int fcond)  const noexcept
-    //     {
-    //         return false;
-    //     };
-
-    // };// abstract base class?
     // this to customize by the user for the specific format/record
     // something that returns a field_code?
     template <auto field_tag>
+
     class field_code_type
     {
-
         // TODO how can we set the field category?
         // field_category const * _category;
+        // we could set the category and then translate to something differently?
+        using category_t = field_code_category_t<decltype(field_tag)>; // more on a static level.
+        // so we can set the category based on the field set.
+        // we want to compare?
+        // what do we want to do?
+        // and what can we do?
+        category_t _field_category{}; // do we need it to be constexpr?
 
     public:
 
@@ -59,32 +50,28 @@ namespace libio
 
         constexpr field_code_type() noexcept
         {
-            // find overload for the field tag?
-            // requirements for field_tag?
-            // select_field_category(field_tag)
         }
 
-        // template <typename field_category_t>
-        //     // requires is_field_category_v<field_category_t>
-        // constexpr implicit field_code(int32_t fid, field_category_t const & fcat) :
+        // it is already set?
+        // constexpr implicit field_code(int32_t fid, category_t const & fcat) :
         //     _field_id{fid},
         //     _category{std::addressof(fcat)}
         // {}
 
-        // template <typename field_code_t>
+        // template <typename field_tag_t>
         //     // requires is_field_code_v<field_id_t> // not a real concept?
-        // constexpr implicit field_code(field_code_t fc) : field_code{libio::make_field_code(fc)}
+        // constexpr implicit field_code(field_tag_t field_tag) : field_code{libio::make_field_code(fc)}
         // {}
+
+        constexpr category_t const & category() const noexcept
+        {
+            return _field_category;
+        }
 
         constexpr value_type operator()() const noexcept
         {
             return value;
         }
-
-        // constexpr field_category const & category() const noexcept
-        // {
-        //     return *_category;
-        // }
 
         constexpr operator bool() const noexcept
         {
@@ -104,5 +91,67 @@ namespace libio
     // - define domain/category of field_code
     // - need to be templatized? we use it to decide if we can find an alternative field selction?
     // - wether the user wants to provide its own customised access to the records, is not our business.
+
+    namespace _equivalent
+    {
+        inline constexpr struct _cpo
+        {
+            // can we not have a default that switches the arguments?
+            // independent of category the sam
+            template <typename category_t, auto field_tag, typename field_tag_t>
+                requires (std::same_as<decltype(field_tag), field_tag_t>)
+            constexpr friend bool tag_invoke(_cpo,
+                                             category_t const &,
+                                             field_code_type<field_tag> const & fc,
+                                             field_tag_t const & ft) noexcept
+            {
+                return fc() == ft;
+            }
+
+            template <typename category_t, auto field_tag, typename field_tag_t>
+                requires tag_invocable<_cpo, category_t const &, field_code_type<field_tag> const &, field_tag_t const &>
+            constexpr bool operator()(category_t const & category,
+                                      field_code_type<field_tag> const & fc,
+                                      field_tag_t const & ft) const noexcept
+            {
+                return libio::tag_invoke(_cpo{}, category, fc, ft);
+            }
+
+            template <typename category_t, typename field_tag_t, auto field_tag>
+                requires tag_invocable<_cpo, category_t const &, field_code_type<field_tag> const &, field_tag_t const &>
+            constexpr bool operator()(category_t const & category,
+                                      field_tag_t const & ft,
+                                      field_code_type<field_tag> const & fc) const noexcept
+            {
+                return (*this)(category, fc, ft);
+            }
+        } equivalent{};
+    }
+    using _equivalent::equivalent;
+
+    class default_field_code_category  // base implementation
+    {
+    public:
+
+        constexpr default_field_code_category() = default;
+
+    private:
+
+        template <auto field_tag, typename field_tag_t>
+            requires (!std::same_as<decltype(field_tag), field_tag_t>)
+        constexpr friend bool tag_invoke(tag_t<libio::equivalent>,
+                                         default_field_code_category const &,
+                                         field_code_type<field_tag> const &,
+                                         field_tag_t const &) noexcept
+        {
+            return false;
+        }
+    };
+
+        // requres is_format_field_tag_v<>
+    template <typename field_tag_t>
+    struct field_code_category : public std::type_identity<default_field_code_category>
+    {
+    };
 
 } // namespace libio

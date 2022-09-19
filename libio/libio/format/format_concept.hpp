@@ -13,6 +13,8 @@
 #pragma once
 
 #include <concepts>
+#include <filesystem>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -20,62 +22,6 @@
 
 namespace libio
 {
-    namespace _get_record {
-
-        inline constexpr struct _cpo {
-
-            // Defaut implementation calls the free function version.
-            template <typename format_t, typename ...args_t>
-                requires requires (format_t && f, args_t && ...args)
-                {
-                    get_record(std::forward<format_t>(f), std::forward<args_t>(args)...);
-                }
-            friend auto tag_invoke(_cpo, format_t && format, args_t &&...args)
-                noexcept(noexcept(get_record(std::forward<format_t>(format), std::forward<args_t>(args)...)))
-                -> decltype(get_record(std::declval<format_t &&>(), std::declval<args_t &&>()...))
-            {
-                return get_record(std::forward<format_t>(format), std::forward<args_t>(args)...);
-            }
-
-            // Delegate to the friend overload if default is not found
-            template <typename format_t, typename ...args_t>
-                requires tag_invocable<_cpo, format_t, args_t...>
-            auto operator()(format_t && format, args_t &&... args) const
-                noexcept(is_nothrow_tag_invocable_v<_cpo, format_t, args_t...>)
-                -> tag_invoke_result_t<_cpo, format_t, args_t...>
-            {
-                return libio::tag_invoke(_cpo{}, std::forward<format_t>(format), std::forward<args_t>(args)...);
-            }
-        } get_record{};
-
-    } // namespace _get_record
-
-    using _get_record::get_record; //!\brief CPO defintion to get an unformatted record.
-
-    namespace _format_token {
-
-        inline constexpr struct _cpo {
-            // TODO: Is there a meaningful default?
-
-            // Delegate to the friend overload if default is not found
-            template <typename format_t>
-                requires tag_invocable<_cpo, format_t>
-            auto operator()(format_t && format) const
-                noexcept(is_nothrow_tag_invocable_v<_cpo, format_t &&>)
-                -> tag_invoke_result_t<_cpo, format_t &&>
-            {
-                return libio::tag_invoke(_cpo{}, std::forward<format_t>(format));
-            }
-        } format_token{};
-
-    } // namespace _format_token
-
-    using _format_token::format_token; //!\brief CPO defintion to read a record.
-
-    // Definition of the format tag.
-    template <typename format_t>
-    using format_tag_t = tag_invoke_result_t<tag_t<format_tag>, format_t>;
-
     namespace _valid_extensions {
 
         inline constexpr struct _cpo {
@@ -103,6 +49,53 @@ namespace libio
     } // namespace _valid_extensions
 
     using _valid_extensions::valid_extensions; //!\brief CPO defintion to get the format extensions.
+
+    namespace _select_format {
+
+        inline constexpr struct _cpo {
+
+            template <typename format_t>
+                requires requires (format_t const & f) { { libio::valid_extensions(f) } -> std::ranges::input_range; }
+            friend bool tag_invoke(_cpo, format_t const & format, std::filesystem::path const & path)
+            {
+                auto const & extensions = libio::valid_extensions(format);
+                return std::ranges::find_if(extensions, path.extension()) != std::ranges::end(extensions);
+            }
+
+            // Delegate to the friend overload if default is not found
+            template <typename format_t>
+                requires tag_invocable<_cpo, format_t, std::filesystem::path const &>
+            auto operator()(format_t && format, std::filesystem::path const & path) const
+                noexcept(is_nothrow_tag_invocable_v<_cpo, format_t &&, std::filesystem::path const &>)
+                -> tag_invoke_result_t<_cpo, format_t &&, std::filesystem::path const &>
+            {
+                return libio::tag_invoke(_cpo{}, (format_t &&)format, path);
+            }
+        } select_format{};
+
+    } // namespace _select_format
+
+    using _select_format::select_format; //!\brief CPO defintion to get an unformatted record.
+
+    namespace _format_token {
+
+        inline constexpr struct _cpo {
+            // TODO: Is there a meaningful default?
+
+            // Delegate to the friend overload if default is not found
+            template <typename format_t, typename stream_t>
+                requires tag_invocable<_cpo, format_t, stream_t &>
+            auto operator()(format_t && format, stream_t & stream) const
+                noexcept(is_nothrow_tag_invocable_v<_cpo, format_t &&, stream_t &>)
+                -> tag_invoke_result_t<_cpo, format_t &&, stream_t &>
+            {
+                return libio::tag_invoke(_cpo{}, std::forward<format_t>(format), stream);
+            }
+        } format_token{};
+
+    } // namespace _format_token
+
+    using _format_token::format_token; //!\brief CPO defintion to read a record.
 
     // When is this a valid input format?
     // We need to be able to call read record on it, together with a stream.

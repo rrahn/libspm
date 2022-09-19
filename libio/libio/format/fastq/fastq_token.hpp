@@ -15,6 +15,7 @@
 #include <seqan3/utility/char_operations/predicate.hpp>
 
 #include <libio/file/field_code.hpp>
+#include <libio/file/consume_tokenizer.hpp>
 #include <libio/file/line_tokenizer.hpp>
 #include <libio/file/segment_tokenizer.hpp>
 #include <libio/file/until_tokenizer.hpp>
@@ -24,12 +25,20 @@
 
 namespace libio
 {
-    template <typename streambuffer_t>
-    class fastq_token : protected stream_token<streambuffer_t>
+    template <typename record_t, typename token_t>
+    concept fastq_record_c = requires (record_t & record, token_t & token)
+    {
+        libio::set_field(record, field_code<fastq_field::id>, token.get_area());
+        libio::set_field(record, field_code<fastq_field::seq>, token.get_area());
+        libio::set_field(record, field_code<fastq_field::qual>, token.get_area());
+    };
+
+    template <typename stream_t>
+    class fastq_token : protected stream_token<stream_t>
     {
     private:
 
-        using base_t = stream_token<streambuffer_t>;
+        using base_t = stream_token<stream_t>;
         static constexpr auto is_token_signal = seqan3::is_char<'@'>;
         static constexpr auto is_qual_signal = seqan3::is_char<'+'>;
         static constexpr auto is_newline = seqan3::is_char<'+'>;
@@ -37,21 +46,24 @@ namespace libio
 
     public:
         // here we can describe whether we want to skip
-        fastq_token(streambuffer_t *stream_buffer) : base_t{stream_buffer, is_token_signal}
+        fastq_token(stream_t &stream) : base_t{stream, is_token_signal}
         {
         }
+        fastq_token(fastq_token const &) = delete;
+        fastq_token(fastq_token &&) = default;
 
     private:
         // what does this mean? how can materialise this now?
         template <typename record_t>
+            requires fastq_record_c<record_t, fastq_token>
         friend auto tag_invoke(tag_t<libio::detokenize_to>, fastq_token &me, record_t &record)
         {
-            libio::set_field(record, field_code<fastq_field::id>, line_tokenizer{me.get_area()});
-            libio::set_field(record, field_code<fastq_field::seq>, line_tokenizer{me.get_area()});
+            libio::set_field(record, field_code<fastq_field::id>, consume_tokenizer{line_tokenizer{me.get_area()}});
+            libio::set_field(record, field_code<fastq_field::seq>, consume_tokenizer{line_tokenizer{me.get_area()}});
             // Make an assert tokenizer
             std::ranges::for_each(line_tokenizer{me.get_area()},
                                   [] ([[maybe_unused]] auto && seq) { assert(seq.empty() || is_qual_signal(seq[0])); });
-            libio::set_field(record, field_code<fastq_field::qual>, segment_tokenizer{me.get_area(), is_phred});
+            libio::set_field(record, field_code<fastq_field::qual>, consume_tokenizer{segment_tokenizer{me.get_area(), is_phred}});
         }
     };
 

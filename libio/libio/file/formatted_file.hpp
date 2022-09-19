@@ -8,38 +8,33 @@
 #pragma once
 
 #include <string>
+#include <fstream>
 #include <seqan3/std/filesystem>
 
-#include <seqan/stream.h>
-
-#include <libio/file/tokenized_stream.hpp>
+#include <libio/file/formatted_stream.hpp>
 #include <libio/format/format_concept.hpp>
 #include <libio/utility/tag_invoke.hpp>
 
 
 namespace libio
 {
-    template <typename format_t>
+    template <typename record_t, typename format_t>
+        // check compatibility with record.
     class formatted_file
     {
     private:
 
-        // Reusing seqan base implementation for streams etc.
-        using stream_t = seqan::FormattedFile<format_tag_t<format_t>, seqan::Input>;
+        class iterator;
+        using sentinel = std::default_sentinel_t;
 
-        // where is the token coming from?
-        using token_t = typename format_t::token_type;
-        using tokenized_stream_t = tokenized_stream<token_t>
-
-        // format_t:
-            // exposes type of header
-            // exposes type of record
-            // exposes valid file extensions
-            // what
+        using stream_t = std::ifstream;
+        using formatted_stream_t = formatted_stream<format_t, stream_t>;
 
 
         format_t _format{};
-        std::unique_ptr<stream_t> _stream{};
+        std::unique_ptr<formatted_stream_t> _stream{};
+        record_t _cached_record{};
+        bool _is_eof{false};
 
         // every file has its own formatation rule
         // this also means we can set at every type another record type?
@@ -49,11 +44,10 @@ namespace libio
         formatted_file(std::filesystem::path &&file_path, format_t format = {}) : _format{std::move(format)}
         {
             // Step 1: open stream (including decompression/compression)
-            open_stream(std::move(file_path));
-            // Step 2: use the opened stream buffer to initialise the tokenized_stream
+            open_stream(file_path);
 
-            // Step 3:
-            // format the tokens on access
+            // Step 2: use the opened stream buffer to initialise the tokenized_stream
+            libio::select_format(_format, file_path);
         }
 
         // we can always return a header, or keep it disabled.
@@ -61,29 +55,78 @@ namespace libio
         //     libio::parse_header()
         // }
 
-        // TODO: Specify the API!
-        auto read_record() noexcept(is_nothrow_tag_invocable_v<tag_t<libio::format_record>, format_t &, stream_t &>)
-            -> tag_invoke_result_t<tag_t<libio::format_record>, format_t &, stream_t &>
+        iterator begin() noexcept
         {
-            assert(_stream != nullptr);
+            return iterator{this};
+        }
 
-            // Check applicability of a header.
-            // now what are we getting?
-            return libio::format_record(_format, _stream->iter);
+        sentinel end() noexcept
+        {
+            return {};
         }
 
     protected:
         /*!\brief Opens an input file stream with the given path.
          * \param file_path The file path.
          */
-        void open_stream(std::filesystem::path &&file_path)
+        void open_stream(std::filesystem::path const &file_path)
         {
-            _stream = std::make_unique<stream_t>(file_path.c_str());
+            _stream = std::make_unique<formatted_stream_t>(_format, stream_t{file_path});
         }
-
-    private:
     };
 
-    template <typename format_t>
-    formatted_file(std::filesystem::path &&, format_t) -> formatted_file<format_t>;
+    // template <typename format_t>
+    // formatted_file(std::filesystem::path &&, format_t) -> formatted_file<format_t>;
+
+    template <typename record_t, typename format_t>
+        // check compatibility with record.
+    class formatted_file<record_t, format_t>::iterator
+    {
+    private:
+
+        formatted_file * _host{};
+
+    public:
+        using value_type = record_t; // return a new token abstraction
+        using reference = record_t const &;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::add_pointer_t<record_t>;
+        using category = std::input_iterator_tag;
+
+        iterator() = default;
+        constexpr explicit iterator(formatted_file *host) noexcept : _host{host}
+        {
+            ++(*this);  // what if empty stream?
+        }
+
+        constexpr reference operator*() const noexcept
+        {
+            return _host->_cached_record;
+        }
+
+        constexpr pointer operator->() const noexcept
+        {
+            return std::addressof(_host->_cached_record);
+        }
+
+        constexpr iterator &operator++() noexcept
+        {
+            _host->_is_eof = _host->_stream->eof();
+            if (!_host->_is_eof) {
+                _host->_cached_record = record_t{}; // clear record;
+                *(_host->_stream) >> _host->_cached_record;
+            }
+            return *this;
+        }
+
+        constexpr void operator++(int) noexcept
+        {
+            ++(*this);
+        }
+
+        constexpr bool operator==(sentinel const &) const noexcept
+        {
+            return _host->_is_eof;
+        }
+    };
 } // namesapce libio

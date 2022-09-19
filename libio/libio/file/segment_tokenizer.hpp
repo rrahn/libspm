@@ -22,8 +22,8 @@ namespace libio
     class segment_tokenizer : public std::ranges::view_base
     {
     public:
-        using char_type = typename tokenizer_t::char_type;
-        using traits_type = typename tokenizer_t::traits_type;
+        using char_type = typename std::remove_reference_t<tokenizer_t>::char_type;
+        using traits_type = typename std::remove_reference_t<tokenizer_t>::traits_type;
         using int_type = typename traits_type::int_type;
         using pos_type = typename traits_type::pos_type;
         using off_type = typename traits_type::off_type;
@@ -38,18 +38,14 @@ namespace libio
         fn_t _segment_fn{};
 
     public:
-        segment_tokenizer() = default;
-
+        segment_tokenizer() = delete;
         template <typename segment_fn_t>
         constexpr explicit segment_tokenizer(tokenizer_t tokenizer, segment_fn_t segment_fn) noexcept
-            :  _tokenizer{std::move(tokenizer)}, _segment_fn{std::move(segment_fn)}
+            :  _tokenizer{(tokenizer_t &&)tokenizer}, _segment_fn{std::move(segment_fn)}
         {
         }
-
-        // ~line_buffer() {
-        //     // consume remaining part
-        //     while ()
-        // }
+        segment_tokenizer(segment_tokenizer const &) = delete;
+        segment_tokenizer(segment_tokenizer &&) = default;
 
         constexpr iterator begin() noexcept
         {
@@ -64,6 +60,9 @@ namespace libio
 
         sentinel end() const noexcept = delete;
     };
+
+    template <typename tokenizer_t, typename segment_fn_t>
+    segment_tokenizer(tokenizer_t &&, segment_fn_t &&) -> segment_tokenizer<tokenizer_t>;
 
     template <typename tokenizer_t>
     class segment_tokenizer<tokenizer_t>::iterator
@@ -80,11 +79,6 @@ namespace libio
         get_area_iterator _get_end{};
         tokenizer_iterator _it{};
 
-        // segment_tokenizer *_host{};
-        // buffer_span_iterator _get_begin{};
-        // buffer_span_iterator _get_end{};
-        // buffer_iterator _it{};
-
     public:
 
         using value_type = get_area_t;
@@ -97,7 +91,8 @@ namespace libio
         constexpr explicit iterator(segment_tokenizer * host) noexcept : _host{host}
         {
             _it = std::ranges::begin(_host->_tokenizer); // defines the range of the iterator.
-            reset_get_area();
+            if (_it != std::ranges::end(_host->_tokenizer))
+                reset_get_area();
         }
 
         constexpr reference operator*() const noexcept
@@ -116,7 +111,7 @@ namespace libio
             ++(*this);
         }
 
-        constexpr bool operator==(sentinel const &rhs) const noexcept
+        constexpr bool operator==(sentinel const & rhs) const noexcept
         {
             return _it == rhs;
         }

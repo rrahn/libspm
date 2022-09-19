@@ -15,6 +15,7 @@
 #include <functional>
 #include <iosfwd>
 
+#include <libio/file/consume_tokenizer.hpp>
 #include <libio/file/token_get_area.hpp>
 #include <libio/file/tokenization.hpp>
 #include <libio/utility/tag_invoke.hpp>
@@ -22,22 +23,54 @@
 namespace libio
 {
 
-    template <typename streambuffer_t>
+    template <typename stream_t>
     class stream_token
     {
     private:
+        using char_t = typename stream_t::char_type;
+        using traits_t = typename stream_t::traits_type;
         // we already defined the range?
-        using get_area_t = token_get_area<streambuffer_t>;
+        using token_areat_t = token_get_area<std::basic_streambuf<char_t, traits_t>>;
+        using get_area_t = consume_tokenizer<token_areat_t>;
     public:
 
         // when we create, we want to move to the next record already
-        get_area_t _get_area{};
+        stream_t *_stream{};
+        get_area_t _get_area;
 
         // not sure how we handle this efficiently!
         template <typename delimiter_t>
-        explicit stream_token(streambuffer_t *stream_buffer, delimiter_t delim) :
-            _get_area{stream_buffer, std::move(delim)}
+        explicit stream_token(stream_t &stream, delimiter_t delim) :
+            _stream{std::addressof(stream)},
+            _get_area{std::in_place_type<token_areat_t>, stream.rdbuf(), std::move(delim)}
         {
+        }
+        stream_token(stream_token const &) = delete;
+        stream_token(stream_token && other) noexcept :
+            _stream{other._stream},
+            _get_area{std::move(other._get_area)}
+        {
+            other._stream = nullptr;
+        }
+        stream_token &operator=(stream_token const &) = delete;
+        stream_token &operator=(stream_token && other) noexcept
+        {
+            _stream = other._stream;
+            other._stream = nullptr;
+            _get_area = std::move(other._get_area);
+            return *this;
+        }
+        ~stream_token()
+        {
+            if (_stream != nullptr)
+            {
+                // ensure that the get area is consumed for this token!
+                for (auto it = _get_area.begin(); it != _get_area.end(); ++it)
+                {}
+                // now we need to check if the stream is also empty!
+                if (_stream->rdbuf()->sgetc() == traits_t::eof())
+                    _stream->setstate(std::ios_base::eofbit);
+            }
         }
 
     protected:
@@ -61,13 +94,13 @@ namespace libio
 
         // in this form we can handle the stream and run the options to get the stream.
         // not used as default?
-        template <typename value_t>
-        friend auto tag_invoke(tag_t<libio::detokenize_to>, stream_token &token, value_t &value)
-        {
-            libio::read_token(value, token.get_area());
-        }
+        // template <typename value_t>
+        // friend auto tag_invoke(tag_t<libio::detokenize_to>, stream_token &token, value_t &value)
+        // {
+        //     libio::read_token(value, token.get_area());
+        // }
     };
 
-    template <typename stream_buffer_t, typename delimiter_t>
-    stream_token(stream_buffer_t &, delimiter_t &&) -> stream_token<stream_buffer_t>;
+    template <typename stream_t, typename delimiter_t>
+    stream_token(stream_t &, delimiter_t &&) -> stream_token<stream_t>;
 } // namespace libio

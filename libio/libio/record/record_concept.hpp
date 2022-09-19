@@ -21,12 +21,19 @@ namespace libio
         inline constexpr struct _cpo {
 
             template <typename record_t, typename field_code_t, typename ibuffer_t>
+            constexpr friend void tag_invoke(_cpo, record_t const &, field_code_t const &, ibuffer_t && ibuffer)
+                noexcept
+            { // default just consume the field.
+                for (auto it = ibuffer.begin(); it != ibuffer.end(); ++it) {}
+            }
+
+            template <typename record_t, typename field_code_t, typename ibuffer_t>
                 requires tag_invocable<_cpo, record_t &, field_code_t const &, ibuffer_t &&>
             constexpr auto operator()(record_t & record, field_code_t const & field_code, ibuffer_t && ibuffer) const
                 noexcept(is_nothrow_tag_invocable_v<_cpo, record_t &, field_code_t const &, ibuffer_t &&>)
                 -> tag_invoke_result_t<_cpo, record_t &, field_code_t const &, ibuffer_t &&>
             {
-                return libio::tag_invoke(_cpo{}, record, field_code, std::forward<ibuffer_t>(ibuffer));
+                return libio::tag_invoke(_cpo{}, record, field_code, (ibuffer_t &&)ibuffer);
             }
 
         } set_field{};

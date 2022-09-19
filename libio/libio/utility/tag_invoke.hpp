@@ -45,7 +45,7 @@ namespace libio
                 noexcept(noexcept(tag_invoke(std::forward<cpo_t>(cpo), std::forward<args_t>(args)...)))
                     -> decltype(tag_invoke(std::forward<cpo_t>(cpo), std::forward<args_t>(args)...))
             {
-                return tag_invoke(std::forward<cpo_t>(cpo), std::forward<args_t>(args)...);
+                return tag_invoke((cpo_t &&)cpo, (args_t &&)args...);
             }
         };
 
