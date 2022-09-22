@@ -16,6 +16,7 @@
 
 #include <seqan3/utility/char_operations/predicate.hpp>
 
+#include <libio/file/find_if.hpp>
 #include <libio/file/until_tokenizer.hpp>
 
 namespace libio
@@ -27,7 +28,7 @@ namespace libio
         using base_t = until_tokenizer<tokenizer_t>;
 
         // make more versatile by handling it as a multicharacter matcher.
-        static constexpr auto is_newline = seqan3::is_char<'\n'> || seqan3::is_char<'\r'>;
+        static constexpr auto is_newline = [] (char const c) { return c == '\n' || c == '\r'; }; //seqan3::is_char<'\n'> || seqan3::is_char<'\r'>;
 
         class iterator;
         using sentinel = std::ranges::sentinel_t<tokenizer_t>;
@@ -92,6 +93,7 @@ namespace libio
         get_area_iterator _get_end{};
         get_area_iterator _token_end{};
         tokenizer_iterator _it{};
+        bool _found_token_end{false};
 
     public:
         using value_type = get_area_t; // return a new token abstraction
@@ -106,7 +108,10 @@ namespace libio
             // this is the area until the end of the tokenizer
             _it = std::ranges::begin(_host->_tokenizer); // initialise underlying stream buffer
             if (_it != std::ranges::end(_host->_tokenizer))
-                reset_get_area();
+            {
+                underflow();
+            }
+                // reset_get_area();
         }
 
         constexpr reference operator*() const noexcept
@@ -134,29 +139,35 @@ namespace libio
         {
             assert(offset <= _get_end - _get_begin);
             _it.bump(offset);
-            reset_get_area();
+            reset_get_area(offset);
         }
 
         constexpr void bump_with_restore(difference_type const offset) noexcept(noexcept(_it.bump_with_restore(offset)))
         {
             _it.bump_with_restore(offset);
-            reset_get_area();
+            reset_get_area(offset);
         }
 
     private:
-        constexpr void reset_get_area() noexcept
+        constexpr void reset_get_area(difference_type const offset) noexcept
         {
-            get_area_t const &get_area = *_it; // check if something changed in this region!
-            _get_begin = get_area.begin();
-            if (_get_end == _token_end) // only if in the initialisation the end was not found.
+            _get_begin += offset;
+            if (_get_begin == _get_end)  // set to end condition.
             {
-                _get_end = std::ranges::find_if(get_area, is_newline);
-                _token_end = std::ranges::find_if_not(_get_end, get_area.end(), is_newline);
+                if (_found_token_end) // found token inside current get area.
+                    _it.bump(_token_end - _get_end); // consume new line characters.
+                else
+                    underflow(); // underflow in underlying buffer.
             }
-            else if (_get_begin == _get_end)
-            {
-                _it.bump(_token_end - _get_end);
-            }
+        }
+
+        constexpr void underflow() noexcept
+        {
+            get_area_t const &get_area = *_it;
+            _get_begin = get_area.begin(); // get new area.
+            _get_end = std::ranges::find_if(get_area, is_newline);
+            _token_end = std::ranges::find_if_not(_get_end, get_area.end(), is_newline);
+            _found_token_end = _get_end != _token_end;
         }
     };
 } // namespace libio

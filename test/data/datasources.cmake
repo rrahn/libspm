@@ -12,6 +12,18 @@ declare_datasource (FILE 1KGP.chr22.test.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.test.vcf
                     URL_HASH SHA256=ed13488e95d800aa3a1ddd915c9d5872ae0af3f9abb71c2f557114c9703455b5)
 
+declare_datasource (FILE 1KGP.chr22_20k.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22_20k.vcf
+                    URL_HASH SHA256=4152ee4f243159196885fc571256c698df48d6a56a1d8a023e04de6ff0b92a33)
+
+declare_datasource (FILE 1KGP.chr22_100k.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22_100k.vcf
+                    URL_HASH SHA256=a6638912a752b160845e78b02c80df64cc9c2375d5e50d429ccbece5c85f0747)
+
+declare_datasource (FILE 1KGP.chr22.vcf.jst
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.vcf.jst
+                    URL_HASH SHA256=e7fb27a9a3d4ed18ff744f542613b33c3f5b9eae5726ff26fb8d4646db2d28a9)
+
 # copies file to <build>/data/in.fasta
 declare_datasource (FILE empty.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/empty.fa

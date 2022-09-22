@@ -29,7 +29,8 @@ namespace libio
             {
                 for (auto && chunk : chunked_buffer)
                 {
-                    value.reserve(std::ranges::size(value) + std::ranges::size(chunk));
+                    if (auto s = std::ranges::size(value) + std::ranges::size(chunk); value.capacity() < s)
+                        value.reserve(s);
                     std::ranges::copy(chunk, std::back_inserter(value));
                 }
             }

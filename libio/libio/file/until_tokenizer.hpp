@@ -92,6 +92,7 @@ namespace libio
         get_area_iterator _get_begin{};
         get_area_iterator _get_end{};
         tokenizer_iterator _it{};
+        bool _found_token_end{false};
 
     public:
         using value_type = get_area_t; // return a new token abstraction
@@ -110,7 +111,9 @@ namespace libio
                 auto get_area = *_it;
                 if (auto initial = std::ranges::find_if_not(get_area, _host->_until_fn); initial != get_area.end())
                 {
-                    bump(initial - get_area.begin()); // found pattern so we set to that symbol.
+                    _it.bump(initial - get_area.begin()); // skip the beginning.
+                    underflow(); // update the pointer.
+                    // bump(initial - get_area.begin()); // found pattern so we set to that symbol.
                     break;
                 }
                 ++_it; // bumps entire lower range.
@@ -135,27 +138,38 @@ namespace libio
 
         constexpr bool operator==(sentinel const &rhs) const noexcept
         {
-            return _it == rhs || _host->_until_fn(*_get_begin);
+            return _it == rhs || _get_begin == _get_end;//_host->_until_fn(*_get_begin);
         }
 
         constexpr void bump(difference_type const offset) noexcept(noexcept(_it.bump(offset)))
         {
             _it.bump(offset);
-            reset_get_area();
+            reset_get_area(offset);
         }
 
         constexpr void bump_with_restore(difference_type const offset) noexcept(noexcept(_it.bump_with_restore(offset)))
         {
             _it.bump_with_restore(offset);
-            reset_get_area();
+            reset_get_area(offset);
         }
 
     private:
-        constexpr void reset_get_area() noexcept
+        constexpr void reset_get_area(difference_type const offset) noexcept
+        {
+            assert(offset <= (_get_end - _get_begin));
+            _get_begin += offset;
+            if (_get_begin == _get_end && !_found_token_end)
+            {
+                underflow();
+            }
+        }
+
+        constexpr void underflow() noexcept
         {
             get_area_t const &get_area = *_it;
             _get_begin = get_area.begin();
             _get_end = std::ranges::find_if(get_area, _host->_until_fn);
+            _found_token_end = _get_end != get_area.end();
         }
     };
 
