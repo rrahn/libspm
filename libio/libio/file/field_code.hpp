@@ -45,8 +45,13 @@ namespace libio
     public:
 
         using value_type = decltype(field_tag);
+        using index_type = std::underlying_type_t<value_type>;
 
         static constexpr value_type value = field_tag;
+        static constexpr index_type index()
+        {
+            return static_cast<index_type>(value);
+        }
 
         constexpr field_code_type() noexcept
         {

@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include <libio/noop_token.hpp>
 #include <libio/utility/tag_invoke.hpp>
 
 namespace libio
@@ -59,7 +60,7 @@ namespace libio
             friend bool tag_invoke(_cpo, format_t const & format, std::filesystem::path const & path)
             {
                 auto const & extensions = libio::valid_extensions(format);
-                return std::ranges::find_if(extensions, path.extension()) != std::ranges::end(extensions);
+                return std::ranges::find(extensions, path.extension().string()) != std::ranges::end(extensions);
             }
 
             // Delegate to the friend overload if default is not found
@@ -97,6 +98,33 @@ namespace libio
 
     using _format_token::format_token; //!\brief CPO defintion to read a record.
 
+
+    namespace _get_meta_token {
+
+        inline constexpr struct _cpo {
+
+            template <typename format_t, typename stream_t>
+            constexpr friend auto tag_invoke(_cpo, format_t const &, stream_t const &)
+                noexcept
+                -> noop_token
+            {
+                return {};
+            }
+
+            // Delegate to the friend overload if default is not found
+            template <typename format_t, typename stream_t>
+                requires tag_invocable<_cpo, format_t &&, stream_t &>
+            auto operator()(format_t && format, stream_t & stream) const
+                noexcept(is_nothrow_tag_invocable_v<_cpo, format_t &&, stream_t &>)
+                -> tag_invoke_result_t<_cpo, format_t &&, stream_t &>
+            {
+                return libio::tag_invoke(_cpo{}, (format_t &&) format, stream);
+            }
+        } get_meta_token{};
+
+    } // namespace _get_meta_token
+
+    using _get_meta_token::get_meta_token; //!\brief CPO defintion to read a record.
     // When is this a valid input format?
     // We need to be able to call read record on it, together with a stream.
     // template <typename format_t, typename stream_t>

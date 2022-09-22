@@ -39,7 +39,7 @@ function (jstmap_macro_benchmark macro_benchmark_cpp)
     seqan3_test_component (test_name "${macro_benchmark}" TEST_NAME)
 
     add_executable (${target} ${macro_benchmark_cpp})
-    target_link_libraries (${target} jstmap::test::performance jstmap::create jstmap::search)
+    target_link_libraries (${target} jstmap::test::performance jstmap::create jstmap::search libio::libio)
     add_test (NAME "${test_name}"
               COMMAND ${target}
                       --benchmark_repetitions=${MACRO_BENCHMARK_REPETITIONS}

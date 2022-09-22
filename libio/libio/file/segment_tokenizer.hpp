@@ -121,6 +121,12 @@ namespace libio
             _it.bump(offset);
             reset_get_area();
         }
+
+        constexpr void bump_with_restore(difference_type const offset) noexcept(noexcept(_it.bump_with_restore(offset)))
+        {
+            _it.bump_with_restore(offset);
+            reset_get_area();
+        }
     private:
 
         constexpr void reset_get_area() noexcept(noexcept(++_it)) {

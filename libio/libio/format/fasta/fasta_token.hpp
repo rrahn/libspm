@@ -18,6 +18,7 @@
 #include <libio/file/consume_tokenizer.hpp>
 #include <libio/file/line_tokenizer.hpp>
 #include <libio/file/segment_tokenizer.hpp>
+#include <libio/file/until_tokenizer.hpp>
 #include <libio/format/fasta/fasta_field_code.hpp>
 #include <libio/stream_token.hpp>
 #include <libio/record/record_concept.hpp>
@@ -31,21 +32,24 @@ namespace libio
         libio::set_field(record, field_code<fasta_field::seq>, token.get_area());
     };
 
+    using fasta_token_tag_t = decltype(until_token{seqan3::is_char<'>'>});
+
     template <typename stream_t>
-    class fasta_token : protected stream_token<stream_t>
+    class fasta_token : protected stream_token<stream_t, fasta_token_tag_t>
     {
     private:
-        using base_t = stream_token<stream_t>;
-        static constexpr auto token_signal_fn = seqan3::is_char<'>'>;
+        using base_t = stream_token<stream_t, fasta_token_tag_t>;
         static constexpr auto fragment_fn = seqan3::is_char<'\n'> || seqan3::is_char<'\r'>;
 
     public:
-        // here we can describe whether we want to skip
-        fasta_token(stream_t &stream) : base_t{stream, token_signal_fn}
+
+        explicit fasta_token(stream_t &stream) : base_t{stream, fasta_token_tag_t{}}
         {
         }
         fasta_token(fasta_token const &) = delete;
         fasta_token(fasta_token &&) = default;
+
+        using base_t::get_area;
 
     private:
         // what does this mean? how can materialise this now?
@@ -60,6 +64,6 @@ namespace libio
         }
     };
 
-    template <typename stream_buffer_t>
-    fasta_token(stream_buffer_t *) -> fasta_token<stream_buffer_t>;
+    template <typename stream_t>
+    fasta_token(stream_t &) -> fasta_token<stream_t>;
 } // namespace libio

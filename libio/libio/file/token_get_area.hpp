@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <ranges>
 
 #include <libio/file/tokenizer_streambuffer_adaptor.hpp>
@@ -21,11 +22,11 @@
 namespace libio
 {
     // wrapper around
-    template <typename streambuffer_t>
-    class token_get_area : public until_tokenizer<tokenizer_streambuffer_adaptor<streambuffer_t>>
+    template <typename tokenizer_t>
+    class token_get_area : public tokenizer_t // until_tokenizer<tokenizer_streambuffer_adaptor<streambuffer_t>>
     {
-        using adaptor_t = tokenizer_streambuffer_adaptor<streambuffer_t>;
-        using base_t = until_tokenizer<adaptor_t>;
+        // using token_buffer_t = tokenizer_streambuffer_adaptor<streambuffer_t>;
+        using base_t = tokenizer_t;
     public:
 
         using typename base_t::char_type;
@@ -40,9 +41,10 @@ namespace libio
         token_get_area &operator=(token_get_area const &) = delete;
         token_get_area &operator=(token_get_area &&) = default;
 
-        template <typename token_delimiter_t>
-        constexpr token_get_area(streambuffer_t * stream_buffer, token_delimiter_t token_delimiter_fn) :
-            base_t{adaptor_t{stream_buffer}, std::move(token_delimiter_fn)}
+        template <typename stream_buffer_t, typename token_t>
+            requires std::invocable<token_t &&, tokenizer_streambuffer_adaptor<stream_buffer_t>>
+        constexpr token_get_area(stream_buffer_t * stream_buffer, token_t && token) :
+            tokenizer_t{std::invoke((token_t &&)token, tokenizer_streambuffer_adaptor{stream_buffer})}
         {
         }
 
@@ -61,4 +63,9 @@ namespace libio
 
         void end() const noexcept = delete;
     };
+
+    template <typename streambuffer_t, typename token_t>
+        requires std::invocable<token_t &&, tokenizer_streambuffer_adaptor<streambuffer_t>>
+    token_get_area(streambuffer_t *, token_t &&)
+        -> token_get_area<std::invoke_result_t<token_t &&, tokenizer_streambuffer_adaptor<streambuffer_t>>>;
 }  // namespace libio

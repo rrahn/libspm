@@ -22,16 +22,15 @@
 
 namespace libio
 {
-
-    template <typename stream_t>
+    template <typename stream_t, typename token_t>
     class stream_token
     {
     private:
         using char_t = typename stream_t::char_type;
         using traits_t = typename stream_t::traits_type;
         // we already defined the range?
-        using token_areat_t = token_get_area<std::basic_streambuf<char_t, traits_t>>;
-        using get_area_t = consume_tokenizer<token_areat_t>;
+        using buffer_t = decltype(token_get_area{std::declval<stream_t &>().rdbuf(), std::declval<token_t &&>()});
+        using get_area_t = consume_tokenizer<buffer_t>;
     public:
 
         // when we create, we want to move to the next record already
@@ -39,10 +38,9 @@ namespace libio
         get_area_t _get_area;
 
         // not sure how we handle this efficiently!
-        template <typename delimiter_t>
-        explicit stream_token(stream_t &stream, delimiter_t delim) :
+        stream_token(stream_t &stream, token_t &&token) :
             _stream{std::addressof(stream)},
-            _get_area{std::in_place_type<token_areat_t>, stream.rdbuf(), std::move(delim)}
+            _get_area{std::in_place_type<buffer_t>, _stream->rdbuf(), (token_t &&)token}
         {
         }
         stream_token(stream_token const &) = delete;
@@ -101,6 +99,6 @@ namespace libio
         // }
     };
 
-    template <typename stream_t, typename delimiter_t>
-    stream_token(stream_t &, delimiter_t &&) -> stream_token<stream_t>;
+    template <typename stream_t, typename token_t>
+    stream_token(stream_t &, token_t) -> stream_token<stream_t, token_t>;
 } // namespace libio

@@ -131,8 +131,30 @@ namespace libio
 
         constexpr void bump(difference_type offset) noexcept(noexcept(this->reset_get_area()))
         {
+            assert(offset <= _host->_get_area->in_avail());
             _host->_get_area->gbump(offset);
             reset_get_area();
+        }
+
+        constexpr void bump_with_restore(difference_type const offset) noexcept(noexcept(this->reset_get_area()))
+        {
+            assert(offset <= _host->_get_area->in_avail());
+            auto gptr_curr = _host->_get_area->gptr();
+            _host->_get_area->gbump(offset);
+            if (_host->_get_area->gptr() == _get_end)  // reached end.
+            {
+                auto eback_original = _host->_get_area->eback();
+                auto eback_new = std::ranges::copy(gptr_curr, _get_end, eback_original).out; // restore the skipped suffix in put back area
+                _host->_get_area->setg(eback_new, _get_end, _get_end); // set the new dimension of the put back area.
+                reset_get_area(); // reset the get area.
+                assert(_get_begin == eback_new);  // make sure the underlying eback buffer was not removed.
+                _get_begin = eback_original;
+                _host->_get_area->setg(_get_begin, _get_begin, _get_end);
+            }
+            else // did not reach end.
+            {
+                reset_get_area();
+            }
         }
 
     private:

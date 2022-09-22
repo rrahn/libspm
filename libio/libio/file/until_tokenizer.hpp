@@ -12,12 +12,14 @@
 
 #pragma once
 
+#include <concepts>
+#include <algorithm>
 #include <functional>
 #include <ranges>
 
 namespace libio
 {
-    // borrowed
+
     template <typename tokenizer_t>
     // requires tokenizer<tokenizer_t> // which is also a view
     class until_tokenizer : public std::ranges::view_base
@@ -30,7 +32,6 @@ namespace libio
         using off_type = typename traits_type::off_type;
 
     private:
-        // faster options to tokenize a line?
 
         class iterator;
         using sentinel = std::ranges::sentinel_t<tokenizer_t>;
@@ -65,6 +66,19 @@ namespace libio
 
     template <typename tokenizer_t, typename until_token_t>
     until_tokenizer(tokenizer_t &&, until_token_t &&) -> until_tokenizer<tokenizer_t>;
+
+    // Closure object
+    template <typename predicate_t>
+    struct until_token
+    {
+        predicate_t _predicate{};
+
+        template <typename tokenizer_t>
+        constexpr auto operator()(tokenizer_t && tokenizer) const noexcept
+        {
+            return until_tokenizer{(tokenizer_t &&) tokenizer, std::move(_predicate)};
+        }
+    };
 
     template <typename tokenizer_t>
     class until_tokenizer<tokenizer_t>::iterator
@@ -127,6 +141,18 @@ namespace libio
         constexpr void bump(difference_type const offset) noexcept(noexcept(_it.bump(offset)))
         {
             _it.bump(offset);
+            reset_get_area();
+        }
+
+        constexpr void bump_with_restore(difference_type const offset) noexcept(noexcept(_it.bump_with_restore(offset)))
+        {
+            _it.bump_with_restore(offset);
+            reset_get_area();
+        }
+
+    private:
+        constexpr void reset_get_area() noexcept
+        {
             get_area_t const &get_area = *_it;
             _get_begin = get_area.begin();
             _get_end = std::ranges::find_if(get_area, _host->_until_fn);

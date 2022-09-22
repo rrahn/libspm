@@ -24,15 +24,17 @@ namespace libio
     {
     private:
 
-        format_t const *_format{};
+        format_t *_format{};
     public:
         formatted_stream() = default;
-        explicit formatted_stream(format_t const &format) : stream_t{}, _format{std::addressof(format)}
+        explicit formatted_stream(format_t &format) : stream_t{}, _format{std::addressof(format)}
         {}
-        explicit formatted_stream(format_t const &format, stream_t && stream) :
+        explicit formatted_stream(format_t &format, stream_t && stream) :
             stream_t{std::move(stream)},
             _format{std::addressof(format)}
         {
+            auto fmt_meta_tkn = libio::get_meta_token(*_format, static_cast<stream_t &>(*this));
+            libio::detokenize_to(fmt_meta_tkn, *_format); // write tokenized into format.
         }
         formatted_stream(formatted_stream const &) = delete;
         formatted_stream(formatted_stream &&) = default; // does not work.
@@ -42,7 +44,7 @@ namespace libio
         using stream_t::setstate;
         using stream_t::eof;
 
-        auto get() -> decltype(libio::format_token(std::declval<format_t const &>(), std::declval<stream_t &>()))
+        auto get() -> decltype(libio::format_token(std::declval<format_t &>(), std::declval<stream_t &>()))
         {
             if (_format == nullptr || rdbuf() == nullptr)
             {

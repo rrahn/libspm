@@ -2,6 +2,16 @@ cmake_minimum_required (VERSION 3.8)
 
 include (app_datasources)
 
+## Test sources
+
+declare_datasource (FILE test_file.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/test_file.vcf
+                    URL_HASH SHA256=ebce59acc2af48e8cb4258e43f8837073b3a0cac3b85cb0350a965b31d6be23d)
+
+declare_datasource (FILE 1KGP.chr22.test.vcf
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.test.vcf
+                    URL_HASH SHA256=ed13488e95d800aa3a1ddd915c9d5872ae0af3f9abb71c2f557114c9703455b5)
+
 # copies file to <build>/data/in.fasta
 declare_datasource (FILE empty.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/empty.fa
@@ -14,6 +24,7 @@ declare_datasource (FILE in.fasta
 declare_datasource (FILE sim_refx5.fasta
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_refx5.fasta
                     URL_HASH SHA256=591ba084e2b903246a734699e361724ab97631cad07a4778afb82dad5c0cccd2)
+
 
 # The jst was build from the following alignments, where the target sequences come from sim_refx5.fasta
 # reference:

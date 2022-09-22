@@ -41,13 +41,17 @@ namespace libio
         // how can we orchestrate this via the format implementation?
 
     public:
-        formatted_file(std::filesystem::path &&file_path, format_t format = {}) : _format{std::move(format)}
+        formatted_file(std::filesystem::path const &file_path, format_t format = {}) : _format{std::move(format)}
         {
-            // Step 1: open stream (including decompression/compression)
-            open_stream(file_path);
-
-            // Step 2: use the opened stream buffer to initialise the tokenized_stream
+            // Step 1: select format based on file
             libio::select_format(_format, file_path);
+            // Step 2: open stream (including decompression/compression)
+            open_stream(file_path);
+        }
+
+        format_t const & format() const noexcept
+        {
+            return _format;
         }
 
         // we can always return a header, or keep it disabled.
@@ -113,7 +117,7 @@ namespace libio
         {
             _host->_is_eof = _host->_stream->eof();
             if (!_host->_is_eof) {
-                _host->_cached_record = record_t{}; // clear record;
+                _host->_cached_record.clear(); //= record_t{}; // clear record;
                 *(_host->_stream) >> _host->_cached_record;
             }
             return *this;

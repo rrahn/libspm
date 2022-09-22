@@ -23,7 +23,7 @@ namespace libio
             template <typename record_t, typename field_code_t, typename ibuffer_t>
             constexpr friend void tag_invoke(_cpo, record_t const &, field_code_t const &, ibuffer_t && ibuffer)
                 noexcept
-            { // default just consume the field.
+            { // default just consume the field. // or do nothing!
                 for (auto it = ibuffer.begin(); it != ibuffer.end(); ++it) {}
             }
 

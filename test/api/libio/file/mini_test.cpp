@@ -50,11 +50,10 @@ TEST(mini_test, fasta_token)
 {
     std::stringstream str_stream{fa_input.data()};
     libio::fasta_token token{str_stream};
-
     libio::fasta_record fa_record{};
     libio::detokenize_to(token, fa_record); // what happens now?
-
     std::cout << "First token:\nID: " << fa_record.id() << "\nSEQ: " << fa_record.seq() << "\n\n";
+
     // we may clear the record here?
     libio::fasta_record fa_record2{};
     libio::fasta_token token2{str_stream};
@@ -66,11 +65,10 @@ TEST(mini_test, fastq_token)
 {
     std::stringstream str_stream{fq_input.data()};
     libio::fastq_token token1{str_stream};
-
     libio::fastq_record fq_record1{};
     libio::detokenize_to(token1, fq_record1);
-
     std::cout << "First token:\nID: " << fq_record1.id() << "\nSEQ: " << fq_record1.seq() << "\nQUAL: " << fq_record1.qual() << "\n\n";
+
     // we may clear the record here?
     libio::fastq_record fq_record2{};
     libio::fastq_token token2{str_stream};
@@ -81,7 +79,8 @@ TEST(mini_test, fastq_token)
 TEST(mini_test, sequence_token_as_fasta)
 {
     // right! they are more difficult to realize!
-    using sequence_token_t = libio::sequence_token<libio::fasta_token<std::stringstream>, libio::fastq_token<std::stringstream>>;
+    using sequence_token_t = libio::sequence_token<libio::fasta_token<std::stringstream>,
+                                                   libio::fastq_token<std::stringstream>>;
     std::stringstream str_stream{fa_input.data()};
     sequence_token_t token1{libio::fasta_token{str_stream}};
 
@@ -99,7 +98,8 @@ TEST(mini_test, sequence_token_as_fasta)
 TEST(mini_test, sequence_token_as_fastq)
 {
     // right! they are more difficult to realize!
-    using sequence_token_t = libio::sequence_token<libio::fasta_token<std::stringstream>, libio::fastq_token<std::stringstream>>;
+    using sequence_token_t = libio::sequence_token<libio::fasta_token<std::stringstream>,
+                                                   libio::fastq_token<std::stringstream>>;
     std::stringstream str_stream{fq_input.data()};
     sequence_token_t token1{libio::fastq_token{str_stream}};
 

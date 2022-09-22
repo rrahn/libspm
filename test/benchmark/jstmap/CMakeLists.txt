@@ -40,4 +40,4 @@ target_use_datasources (context_enumeration_benchmark FILES sim_ref_10Kb_SNP_IND
 
 jstmap_macro_benchmark(vcf_parsing_benchmark.cpp REPETITIONS 1)
 decompress(FILE 1KGP.chr22.vcf.gz)
-target_use_datasources(vcf_parsing_benchmark FILES 1KGP.chr22.vcf)
+target_use_datasources(vcf_parsing_benchmark FILES 1KGP.chr22.vcf 1KGP.chr22.test.vcf)

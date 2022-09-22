@@ -33,20 +33,22 @@ namespace libio
         libio::set_field(record, field_code<fastq_field::qual>, token.get_area());
     };
 
+
+    using fastq_token_tag_t = decltype(until_token{seqan3::is_char<'@'>});
+
     template <typename stream_t>
-    class fastq_token : protected stream_token<stream_t>
+    class fastq_token : protected stream_token<stream_t, fastq_token_tag_t>
     {
     private:
 
-        using base_t = stream_token<stream_t>;
-        static constexpr auto is_token_signal = seqan3::is_char<'@'>;
+        using base_t = stream_token<stream_t, fastq_token_tag_t>;
         static constexpr auto is_qual_signal = seqan3::is_char<'+'>;
         static constexpr auto is_newline = seqan3::is_char<'+'>;
         static constexpr auto is_phred = seqan3::is_in_interval<33, 126>;
 
     public:
         // here we can describe whether we want to skip
-        fastq_token(stream_t &stream) : base_t{stream, is_token_signal}
+        explicit fastq_token(stream_t &stream) : base_t{stream, fastq_token_tag_t{}}
         {
         }
         fastq_token(fastq_token const &) = delete;
@@ -67,6 +69,6 @@ namespace libio
         }
     };
 
-    template <typename stream_buffer_t>
-    fastq_token(stream_buffer_t *) -> fastq_token<stream_buffer_t>;
+    template <typename stream_t>
+    fastq_token(stream_t &) -> fastq_token<stream_t>;
 } // namespace libio
