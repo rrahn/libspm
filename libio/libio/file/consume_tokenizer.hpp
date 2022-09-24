@@ -56,9 +56,9 @@ namespace libio
 
         ~consume_tokenizer()
         {
-            begin(); // make sure begin on underlying iterator is called.
-            while (_cached_iter != std::ranges::end(_tokenizer))
-                ++_cached_iter;
+            for (auto it = begin(); it != end(); ++it) // is this the same?
+            {}
+                // ++_cached_iter;
         }
 
         constexpr iterator begin() noexcept

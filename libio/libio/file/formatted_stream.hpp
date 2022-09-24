@@ -23,9 +23,15 @@ namespace libio
     class formatted_stream final : protected stream_t
     {
     private:
-
         format_t *_format{};
     public:
+        using typename stream_t::char_type;
+        using typename stream_t::traits_type;
+        using typename stream_t::pos_type;
+        using typename stream_t::int_type;
+        using typename stream_t::off_type;
+
+        // size_t _record_count{};
         formatted_stream() = default;
         explicit formatted_stream(format_t &format) : stream_t{}, _format{std::addressof(format)}
         {}
@@ -43,6 +49,7 @@ namespace libio
         using stream_t::rdstate;
         using stream_t::setstate;
         using stream_t::eof;
+        using stream_t::good;
 
         auto get() -> decltype(libio::format_token(std::declval<format_t &>(), std::declval<stream_t &>()))
         {
@@ -50,6 +57,7 @@ namespace libio
             {
                 setstate(std::ios_base::failbit);
             }
+            // ++_record_count;
             return libio::format_token(*_format, static_cast<stream_t &>(*this));
         }
     };
@@ -66,7 +74,12 @@ namespace libio
     operator>> (formatted_stream<format_t, stream_t> & formatted_istream, record_t & record)
     {
         auto tkn = formatted_istream.get();
-        libio::detokenize_to(tkn, record);
+        // if (formatted_istream._record_count >= 19001) {
+            if (std::error_code ec = libio::detokenize_to(tkn, record); ec)
+                throw std::runtime_error{std::string{ec.category().name()} + "[" + std::to_string(ec.value()) + "]: " +
+                                         ec.category().message(ec.value()) };
+        // }
+
         return formatted_istream;
     }
 

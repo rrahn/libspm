@@ -28,6 +28,7 @@ namespace libio
     private:
         using char_t = typename stream_t::char_type;
         using traits_t = typename stream_t::traits_type;
+        using pos_type = typename traits_t::pos_type;
         // we already defined the range?
         using buffer_t = decltype(token_get_area{std::declval<stream_t &>().rdbuf(), std::declval<token_t &&>()});
         using get_area_t = consume_tokenizer<buffer_t>;
@@ -69,6 +70,11 @@ namespace libio
                 if (_stream->rdbuf()->sgetc() == traits_t::eof())
                     _stream->setstate(std::ios_base::eofbit);
             }
+        }
+
+        pos_type position() const
+        {
+            return _stream->tellg();
         }
 
     protected:

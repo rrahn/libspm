@@ -101,6 +101,10 @@ namespace libio
             std::ranges::for_each(_offsets, [] (size_t & o) { o = 0; });
         }
 
+        size_t bytes() const noexcept
+        {
+            return _values.size();
+        }
     private:
 
         template <vcf_field field_tag>

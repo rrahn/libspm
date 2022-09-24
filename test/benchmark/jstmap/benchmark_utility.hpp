@@ -41,3 +41,10 @@ sequence_t generate_query(size_t const query_size)
     using alphabet_t = std::ranges::range_value_t<sequence_t>;
     return seqan3::test::generate_sequence<alphabet_t>(query_size);
 }
+
+inline benchmark::Counter records_per_second(size_t records)
+{
+    return benchmark::Counter(records,
+                              benchmark::Counter::kIsIterationInvariantRate,
+                              benchmark::Counter::OneK::kIs1000);
+}

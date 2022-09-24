@@ -155,9 +155,26 @@ namespace libio
             if (_get_begin == _get_end)  // set to end condition.
             {
                 if (_found_token_end) // found token inside current get area.
+                {
                     _it.bump(_token_end - _get_end); // consume new line characters.
+                    _get_begin += _token_end - _get_end;
+                    _get_end += _token_end - _get_end;
+                }
                 else
-                    underflow(); // underflow in underlying buffer.
+                {
+                    underflow(); // underflow and call again.
+                    // case 5: begin == end && token end found => we need to signal that we are not at end
+                    if (_get_begin == _get_end && _found_token_end)  // set to end condition.
+                    {
+                        _it.bump(_token_end - _get_end); // consume new line characters.
+                        _get_begin += _token_end - _get_end;
+                        _get_end += _token_end - _get_end;
+                    }
+                    // case 1: eof stream -> next time we compare we reached eof.
+                    // case 2: begin < end && token end not found -> we can just continue searching
+                    // case 3: begin < end && token end found -> we can just continue searching
+                    // case 4: begin == end  && token end not found => same as case 1: -> we stop
+                }
             }
         }
 

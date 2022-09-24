@@ -113,7 +113,7 @@ namespace libio
             return std::addressof(_host->_cached_record);
         }
 
-        constexpr iterator &operator++() noexcept
+        constexpr iterator &operator++()
         {
             _host->_is_eof = _host->_stream->eof();
             if (!_host->_is_eof) {
@@ -123,7 +123,7 @@ namespace libio
             return *this;
         }
 
-        constexpr void operator++(int) noexcept
+        constexpr void operator++(int)
         {
             ++(*this);
         }

@@ -12,12 +12,15 @@
 
 #pragma once
 
+#include <system_error>
+
 #include <seqan3/utility/char_operations/predicate.hpp>
 
 #include <libio/file/field_code.hpp>
 #include <libio/file/consume_tokenizer.hpp>
 #include <libio/file/line_tokenizer.hpp>
 #include <libio/file/until_tokenizer.hpp>
+#include <libio/format/vcf/vcf_error_code.hpp>
 #include <libio/format/vcf/vcf_field_code.hpp>
 #include <libio/stream_token.hpp>
 #include <libio/record/record_concept.hpp>
@@ -42,26 +45,49 @@ namespace libio
         vcf_token(vcf_token const &) = delete;
         vcf_token(vcf_token &&) = default;
 
+        using base_t::position;
+
     private:
         // what does this mean? how can materialise this now?
         template <typename record_t>
-        friend void tag_invoke(tag_t<libio::detokenize_to>, vcf_token &me, record_t &record)
+        friend std::error_code tag_invoke(tag_t<libio::detokenize_to>, vcf_token &me, record_t &record)
         {
-            auto next_field = [&] ()
+            // we need to know if the current stream value has the correct value.
+            auto & token_get_area = me.get_area();
+
+            auto parse_field = [&] (auto const & fc) -> std::error_code
             {
-                return consume_tokenizer{until_tokenizer{me.get_area(), delimiter_fn}};
+                libio::set_field(record, fc, consume_tokenizer{until_tokenizer{token_get_area, delimiter_fn}});
+                auto it = token_get_area.begin();
+                return (delimiter_fn((*it)[0])) ? std::error_code{} : std::error_code{fc()};
             };
 
-            [&] <size_t ...idx> (std::index_sequence<idx...> const &)
+            std::error_code ec = [&] <size_t ...idx> (std::index_sequence<idx...> const &) -> std::error_code
             {
-                (libio::set_field(record, field_code<static_cast<vcf_field>(idx + 1)>, next_field()),...);
+                std::array errors{parse_field(field_code<static_cast<vcf_field>(idx + 1)>)...};
+                auto it = std::ranges::find_if(errors, [] (std::error_code const & fe) { return (bool) fe; });
+                return (it == errors.end()) ? std::error_code{} : *it;
             } (std::make_index_sequence<static_cast<int32_t>(vcf_field::genotype_format)>());
 
-            // we need to read the last field!
-            while (me.get_area().begin() != me.get_area().end())
-                libio::set_field(record,
-                                 field_code<vcf_field::genotypes>,
-                                 consume_tokenizer{until_tokenizer{me.get_area(), delimiter_fn}});
+            std::error_code genotypes_error{};
+            while (!ec && (token_get_area.begin() != token_get_area.end()))
+            {
+                if (genotypes_error)
+                {
+                    ec = genotypes_error;
+                }
+                else
+                {
+                    libio::set_field(record,
+                                     field_code<vcf_field::genotypes>,
+                                     consume_tokenizer{until_tokenizer{me.get_area(), delimiter_fn}});
+                    auto it = token_get_area.begin();
+                    if (!delimiter_fn((*it)[0])) // might be at the end of the token.
+                        genotypes_error = vcf_field::genotypes;
+                }
+            }
+
+            return ec;
         }
     };
 
