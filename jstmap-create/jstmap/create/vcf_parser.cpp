@@ -37,7 +37,7 @@ namespace jstmap
 class augmented_vcf_record
 {
     //!\brief The internally used shared delta event type.
-    using shared_event_type = libjst::detail::delta_event_shared<seqan3::dna5>;
+    using shared_event_type = libjst::detail::delta_event_shared<jst::contrib::dna5>;
     //!\brief The pure delta event type.
     using event_type = typename shared_event_type::delta_event_type;
     //!\brief The substitution type.
@@ -307,7 +307,7 @@ private:
             {
                 size_t const variant_size = std::ranges::distance(alt_it, alt_it_rev.base());
                 auto variant = alternative.subspan(alt_prefix_offset, variant_size)
-                             | seqan3::views::char_to<seqan3::dna5>
+                             | seqan3::views::char_to<jst::contrib::dna5>
                              | seqan3::views::to<std::vector>;
 
                 if (alternative.size() == reference_segment.size()) // Substitution.
@@ -393,6 +393,12 @@ std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t
     return stream;
 }
 
+struct input_traits : public seqan3::sequence_file_input_default_traits_dna
+{
+    using sequence_alphabet = jst::contrib::dna5;
+    using sequence_legal_alphabet = jst::contrib::dna15;
+};
+
 //!\brief A sequence index that loads only the sequence with the given contig name.
 class sequence_index
 {
@@ -419,7 +425,7 @@ public:
      */
     sequence_index(std::filesystem::path const & contig_file) : _contig_file{contig_file}
     {
-        seqan3::sequence_file_input record_contig_names{_contig_file,  seqan3::fields<seqan3::field::id>{}};
+        seqan3::sequence_file_input<input_traits> record_contig_names{_contig_file};
 
         std::ranges::for_each(record_contig_names, [&] (auto const & record)
         {
@@ -452,7 +458,7 @@ public:
             size_t const contig_index = std::ranges::distance(_contig_names.begin(), contig_it);
             assert(contig_index < _contig_names.size());
 
-            seqan3::sequence_file_input contig_sequences{_contig_file};
+            seqan3::sequence_file_input<input_traits> contig_sequences{_contig_file};
             auto record_view = contig_sequences | std::views::drop(contig_index);
             auto record_it = std::ranges::begin(record_view);
 

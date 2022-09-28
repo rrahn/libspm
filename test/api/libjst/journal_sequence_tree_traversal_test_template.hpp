@@ -45,6 +45,9 @@ struct traversal_fixture
     uint32_t context_size{};
     uint32_t bin_count{};
     std::vector<std::string> expected_contexts{};
+    // TODO: refactor!
+    std::string needle{};
+    std::vector<size_t> expected_positions{};
 
     template <typename char_t>
     friend seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,

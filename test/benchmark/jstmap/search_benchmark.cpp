@@ -11,6 +11,10 @@
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
+#include <libcontrib/seqan/horspool_pattern.hpp>
+#include <libjst/concept.hpp>
+#include <libjst/journaled_sequence_tree_forward.hpp>
+
 #include "benchmark_utility.hpp"
 
 template <typename ...args_t>
@@ -49,21 +53,60 @@ static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
     state.counters["#hits"] = hit_count;
 }
 
+// template <typename ...args_t>
+// static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
+// {
+//     auto [jst_file] = std::tuple{args...};
+//     auto jst = jstmap::load_jst(jst_file);
+
+//     jstmap::partitioned_jst_t pjst{std::addressof(jst)};
+
+//     std::vector<sequence_t> query{generate_query(state.range(0))};
+
+//     size_t hit_count{};
+//     for (auto _ : state)
+//         hit_count += jstmap::search_queries(pjst, query).size();
+
+//     benchmark::DoNotOptimize(hit_count);
+//     state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(jst.total_symbol_count());
+//     state.counters["#hits"] = hit_count;
+// }
+
+struct collect_hits
+{
+    size_t &hits;
+
+    template <typename finder_t>
+    void set_next(finder_t const &) noexcept
+    {
+        ++hits;
+    }
+
+    void set_value() const noexcept
+    {}
+};
+
 template <typename ...args_t>
-static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
+static void jst_search_benchmark2(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
-    auto jst = jstmap::load_jst(jst_file);
-    jstmap::partitioned_jst_t pjst{std::addressof(jst)};
+    auto jst = jstmap::load_jst(jst_file); // loads the sequences as seqan3::dna5!
+
+    libjst::journaled_sequence_tree_forward fwd{std::move(jst)};
 
     std::vector<sequence_t> query{generate_query(state.range(0))};
+    jst::contrib::horspool_pattern pattern{query[0]};
 
     size_t hit_count{};
-    for (auto _ : state)
-        hit_count += jstmap::search_queries(pjst, query).size();
+    auto s = fwd.search(pattern);
+    auto op = s.connect(collect_hits{hit_count});
 
-    benchmark::DoNotOptimize(hit_count);
-    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(jst.total_symbol_count());
+    for (auto _ : state)
+        op.start();
+        // hit_count += jstmap::search_queries(pjst, query).size();
+
+    state.counters["bytes"] = fwd.total_symbol_count();
+    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(fwd.total_symbol_count());
     state.counters["#hits"] = hit_count;
 }
 
@@ -72,8 +115,9 @@ static void jst_search_benchmark(benchmark::State & state, args_t && ...args)
 //                   vcf_indel_test,
 //                   DATADIR"sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz")->Arg(64)->Arg(100)->Arg(150);
 
-BENCHMARK_CAPTURE(jst_search_benchmark,
+BENCHMARK_CAPTURE(jst_search_benchmark2,
                   vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.jst")->Arg(64);
+                  DATADIR"1KGP.chr22.vcf_new.jst")->Arg(64);
+                //   "/home/rahn/workspace/data/jstmap/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.jst")->Arg(64);
 
 BENCHMARK_MAIN();

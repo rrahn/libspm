@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.8)
 
 include (app_datasources)
 
+declare_datasource (FILE 1KGP.chr22.vcf_new.jst
+                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.vcf_new.jst
+                    URL_HASH SHA256=d37426013ba014a8980a4c516b9998535acd2bf6463e8066b170c0fe35de1a97)
+
 # copies file to <build>/data/in.fasta
 declare_datasource (FILE empty.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/empty.fa

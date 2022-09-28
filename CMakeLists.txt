@@ -33,11 +33,32 @@ find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
 find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
 
+separate_arguments (SEQAN_CXX_FLAGS_LIST UNIX_COMMAND "${SEQAN_CXX_FLAGS}")
+
+add_library (seqan2_seqan2 INTERFACE IMPORTED)
+target_compile_definitions (seqan2_seqan2 INTERFACE ${SEQAN_DEFINITIONS})
+target_compile_options (seqan2_seqan2 INTERFACE "${SEQAN_CXX_FLAGS_LIST}")
+target_link_libraries (seqan2_seqan2 INTERFACE ${SEQAN_LIBRARIES})
+target_include_directories (seqan2_seqan2 INTERFACE ${SEQAN_INCLUDE_DIRS})
+add_library (seqan2::seqan2 ALIAS seqan2_seqan2)
+
+get_target_property(seqan2_definitions seqan2_seqan2 COMPILE_DEFINITIONS)
+get_target_property(seqan2_options seqan2_seqan2 COMPILE_OPTIONS)
+get_target_property(seqan2_libs seqan2_seqan2 LINK_LIBRARIES)
+get_target_property(seqan2_dirs seqan2_seqan2 INCLUDE_DIRECTORIES)
+
+message(STATUS "seqan2_lib: ${SEQAN_FOUND}")
+message(STATUS "seqan2_definitions: ${SEQAN_DEFINITIONS}")
+message(STATUS "seqan2_options: ${SEQAN_CXX_FLAGS} ${SEQAN3_CXX_FLAGS}")
+message(STATUS "seqan2_libs: ${SEQAN_LIBRARIES} | ${SEQAN3_LIBRARIES}")
+message(STATUS "seqan2_dirs: ${SEQAN_INCLUDE_DIRS}")
+
 # Dependency: OpenMP
 find_package(OpenMP REQUIRED)
 
 ## APPLICATION
 
+add_subdirectory (libcontrib)
 add_subdirectory (libjst)
 add_subdirectory (jstmap-global)
 add_subdirectory (jstmap-create)

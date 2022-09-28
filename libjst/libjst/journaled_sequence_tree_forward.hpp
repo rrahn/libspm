@@ -17,17 +17,14 @@
 #include <ranges>
 #include <stack>
 #include <type_traits>
+#include <variant>
 
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
+#include <libjst/concept.hpp>
 #include <libjst/journal.hpp>
 
 namespace libjst {
-
-enum struct resume_traversal {
-    head_on_breakpoint,
-    tail_on_breakpoint
-};
 
 // JST is a data structure and we may add features by wrapping it.
 // but now we want to search it with some algorithm.
@@ -38,12 +35,18 @@ namespace _forward {
 template <typename jst_t, typename searcher_t, typename receiver_t>
 struct operation {
 
-    using search_state_t = std::decay_t<searcher_t>;
-    using node_t = typename jst_t::node_type<std::remove_cvref_t<searcher_t>::resume_policy>;
+    using search_t = search_operation_t<searcher_t>;
 
-    static_assert(std::semiregular<search_state_t>);
+    // TODO: needs to be part of the is resumable concept.
+    // Query properties!
+    static constexpr bool _is_resumable = libjst::is_resumable_v<search_t>;
 
-    using algorithm_stack_t = std::stack<search_state_t, std::vector<search_state_t>>;
+    using node_t = typename jst_t::node_type<_is_resumable>;
+
+    static_assert(std::semiregular<search_t>);
+
+    // do not need to be global!
+    using algorithm_stack_t = std::stack<search_t, std::vector<search_t>>;
     using node_stack_t = std::stack<node_t, std::vector<node_t>>;
 
     jst_t const & _jst;
@@ -55,11 +58,12 @@ struct operation {
         algorithm_stack_t algorithm_stack{};
         node_stack_t node_stack{};
 
-        algorithm_stack.push(std::move(_searcher));
-        node_stack.emplace(_jst, _searcher.window_size());
+        search_t op = libjst::search_operation((searcher_t &&)_searcher);
+        node_stack.emplace(_jst, libjst::window_size(op));
+        algorithm_stack.push(std::move(op));
 
         while (!node_stack.empty()) {
-            search_state_t & algorithm = algorithm_stack.top();
+            search_t & algorithm = algorithm_stack.top();
             node_t & node = node_stack.top();
             // now every time the algorithm is invoked we need
             algorithm(node.sequence(), [&] (auto && hit) { _receiver.set_next(std::forward<decltype(hit)>(hit)); });
@@ -93,7 +97,8 @@ struct sender {
     searcher_t _searcher;
 
     template <typename receiver_t>
-    auto connect(receiver_t && receiver) {
+    auto connect(receiver_t && receiver) /*conditional noexcept + return type definition*/
+    {
         using operation_t = operation<jst_t, searcher_t, receiver_t>;
         return operation_t{_jst, std::forward<searcher_t>(_searcher), std::forward<receiver_t>(receiver)};
     }
@@ -112,7 +117,7 @@ private:
 
 public:
 
-    template <resume_traversal resume_policy = resume_traversal::tail_on_breakpoint>
+    template <bool is_resumable = false>
     class node_type {
 
         enum branch_kind {
@@ -160,15 +165,15 @@ public:
 
         auto sequence() const noexcept {
             auto seq = _journal.sequence();
-            std::cout << "journal sequence: " << std::string{seq.begin(), seq.end()} << "\n";
-            size_t head_position = _first;
-            if constexpr (resume_policy == resume_traversal::tail_on_breakpoint) {
-                head_position -= std::min(_window_size, _first);
+            // std::cout << "journal sequence: " << std::string{seq.begin(), seq.end()} << "\n";
+            size_t head_position{};
+            auto it = seq.begin();
+            if constexpr (!is_resumable) {
+                head_position = _first - std::min(_window_size, _first);
+                assert(seq.size() >= head_position);
+                assert(_next >= head_position);
+                it += head_position;
             }
-            assert(seq.size() >= head_position);
-            assert(_next >= head_position);
-
-            auto it = seq.begin() + head_position;
             size_t subrange_size = std::min(std::min(_next, _last), seq.size()) - head_position;
             return std::ranges::subrange{it, it + subrange_size, subrange_size}; // borrowed range
         }
@@ -277,9 +282,9 @@ public:
             // TODO: Revert dirty fix and let journaled sequence tree decide which type of sequence to allocate.
             std::visit([&] (auto & delta_kind) {
                 seqan3::detail::multi_invocable {
-                    [&] (insertion_t const & e) { node._journal.record_insertion(node._first, std::string_view{e.value().data(), e.value().size()}); },
+                    [&] (insertion_t const & e) { node._journal.record_insertion(node._first, e.value()/*std::string_view{e.value().data(), e.value().size()}*/); },
                     [&] (deletion_t const & e) { node._journal.record_deletion(node._first, e.value()); },
-                    [&] (auto const & e) { node._journal.record_substitution(node._first, std::string_view{e.value().data(), e.value().size()}); }
+                    [&] (auto const & e) { node._journal.record_substitution(node._first, e.value()/*std::string_view{e.value().data(), e.value().size()}*/); }
                 } (delta_kind);
             }, variant.delta_variant());
         }
@@ -302,6 +307,10 @@ public:
     // forbid rvalue invocation
     template <typename searcher_t>
     void search(searcher_t) && = delete;
+
+    using jst_t::reference_at;
+    using jst_t::reference;
+    using jst_t::total_symbol_count;
 
 protected:
 

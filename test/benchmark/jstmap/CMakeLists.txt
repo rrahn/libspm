@@ -24,8 +24,8 @@ jstmap_macro_benchmark(
     REPETITIONS 10 # optional, default: 3
 )
 
-target_use_datasources (search_benchmark FILES sim_ref_10Kb_SNP_INDELs.jst sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz)
-target_use_datasources (search_benchmark FILES simulate_vg)
+target_use_datasources (search_benchmark FILES sim_ref_10Kb_SNP_INDELs.jst sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz 1KGP.chr22.vcf_new.jst)
+# target_use_datasources (search_benchmark FILES simulate_vg)
 
 jstmap_macro_benchmark(pigeonhole_filter_benchmark.cpp)
 target_use_datasources(pigeonhole_filter_benchmark FILES sim_ref_10Kb_SNP_INDELs.jst)

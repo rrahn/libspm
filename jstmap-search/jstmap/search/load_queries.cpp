@@ -15,9 +15,15 @@
 namespace jstmap
 {
 
+struct input_traits : public seqan3::sequence_file_input_default_traits_dna
+{
+    using sequence_alphabet = jst::contrib::dna5;
+    using sequence_legal_alphabet = jst::contrib::dna5;
+};
+
 std::vector<raw_sequence_t> load_queries(std::filesystem::path const & query_input_file_path)
 {
-    seqan3::sequence_file_input query_input_file{query_input_file_path};
+    seqan3::sequence_file_input<input_traits> query_input_file{query_input_file_path};
 
     std::vector<raw_sequence_t> queries{};
 

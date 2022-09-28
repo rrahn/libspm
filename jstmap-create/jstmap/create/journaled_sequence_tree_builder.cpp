@@ -22,7 +22,7 @@ template <typename reference_t, typename sequence_t>
 auto compress(reference_t const & reference, sequence_t const & sequence)
 {
     auto align_cfg = seqan3::align_cfg::method_global{} |
-                     seqan3::align_cfg::scoring_scheme{seqan3::nucleotide_scoring_scheme{seqan3::match_score{5}, seqan3::mismatch_score{-4}}} |
+                     seqan3::align_cfg::scoring_scheme{jstmap::scoring_scheme{seqan3::match_score{5}, seqan3::mismatch_score{-4}}} |
                      seqan3::align_cfg::gap_cost_affine{seqan3::align_cfg::open_score{-10},
                                                         seqan3::align_cfg::extension_score{-1}} |
                      seqan3::align_cfg::output_sequence1_id{} |

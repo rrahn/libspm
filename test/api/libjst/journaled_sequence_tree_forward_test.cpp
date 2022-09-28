@@ -8,6 +8,7 @@
 #include "journal_sequence_tree_traversal_test_template.hpp"
 
 #include <libjst/journaled_sequence_tree_forward.hpp>
+
 struct forward_test : public libjst::test::traversal_fixture_base
 {};
 
@@ -23,8 +24,7 @@ TEST_P(forward_test, construct)
 
 struct window_enumerator {
 
-    static constexpr libjst::resume_traversal resume_policy{libjst::resume_traversal::tail_on_breakpoint};
-    size_t _window_size;
+    size_t _window_size{};
 
     template <typename sequence_t, typename callback_t>
     void operator()(sequence_t && sequence, callback_t && callback) {
@@ -34,8 +34,20 @@ struct window_enumerator {
         }
     }
 
-    size_t window_size() const noexcept {
+    constexpr size_t window_size() const noexcept {
         return _window_size;
+    }
+    private:
+
+    constexpr friend size_t tag_invoke(std::tag_t<libjst::window_size>, window_enumerator const & me) noexcept
+    {
+        return me.window_size();
+    }
+
+    constexpr friend bool tag_invoke(std::tag_t<libjst::is_resumable>,
+                                     jst::contrib::any_instance_of_t<window_enumerator> const &) noexcept
+    {
+        return false;
     }
 };
 

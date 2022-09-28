@@ -16,7 +16,9 @@
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/global/load_jst.hpp>
 
-using sequence_t = seqan3::dna5_vector;
+#include <libcontrib/seqan/alphabet.hpp>
+
+using sequence_t = std::vector<jst::contrib::dna5>;
 
 auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
 {

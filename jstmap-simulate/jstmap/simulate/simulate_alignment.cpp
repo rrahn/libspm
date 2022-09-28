@@ -16,6 +16,7 @@
 
 #include <seqan3/alignment/aligned_sequence/aligned_sequence_concept.hpp>
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
 #include <jstmap/simulate/simulate_alignment.hpp>

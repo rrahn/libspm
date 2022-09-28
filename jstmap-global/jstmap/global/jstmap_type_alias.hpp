@@ -14,7 +14,8 @@
 
 #include <vector>
 
-#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/alignment/scoring/scoring_scheme_base.hpp>
+#include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
 #include <libjst/journal_sequence_tree_partitioned.hpp>
@@ -23,7 +24,7 @@ namespace jstmap
 {
 
 //!\brief The sequence type loaded from the disk.
-using raw_sequence_t = std::vector<seqan3::dna5>;
+using raw_sequence_t = std::vector<jst::contrib::dna5>;
 //!\brief The globally available journal sequence tree type.
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 //!\brief The globally available partitioned journal sequence tree type.
@@ -44,5 +45,48 @@ enum class logging_level : uint8_t
     warning, //!< A warning message for non-severe issues during the execution.
     error //!< An error message for severe issues during the execution.
 };
+
+template <typename char_t, seqan3::arithmetic score_t = int8_t>
+class scoring_scheme : public seqan3::scoring_scheme_base<scoring_scheme<char_t, score_t>, char_t, score_t>
+{
+private:
+    //!\brief Type of the CRTP-base.
+    using base_t = seqan3::scoring_scheme_base<scoring_scheme, char_t, score_t>;
+
+    //!\brief Befriend base_t so it can access itself through this derived type.
+    friend base_t;
+
+public:
+    //!\privatesection
+    //!\copydoc scoring_scheme_base::matrix_type
+    using typename base_t::matrix_type;
+    //!\publicsection
+
+    /*!\name Constructors, destructor and assignment
+     * \{
+     */
+    //!\copydoc scoring_scheme_base::scoring_scheme_base()
+    constexpr scoring_scheme() noexcept = default;
+    //!\copydoc scoring_scheme_base::scoring_scheme_base(match_score<score_arg_t> const ms, mismatch_score<score_arg_t> const mms)
+    template <seqan3::arithmetic score_arg_t>
+    constexpr scoring_scheme(seqan3::match_score<score_arg_t> const ms, seqan3::mismatch_score<score_arg_t> const mms)
+        : base_t{ms, mms}
+    {}
+    //!\copydoc scoring_scheme_base::scoring_scheme_base(matrix_type const & matrix)
+    constexpr scoring_scheme(matrix_type const & matrix) noexcept
+        : base_t{matrix}
+    {}
+    //!\}
+};
+
+//!\brief Default constructed objects deduce to `int8_t`.
+scoring_scheme() -> scoring_scheme<jst::contrib::dna5, int8_t>;
+
+/*!\brief Attention: This guide does not actually deduce from the underlying type, but always defaults to `int8_t`.
+ * To use a larger type, specify the template argument manually.
+ */
+template <seqan3::arithmetic score_arg_type>
+scoring_scheme(seqan3::match_score<score_arg_type>,
+               seqan3::mismatch_score<score_arg_type>) -> scoring_scheme<jst::contrib::dna5, int8_t>;
 
 }  // namespace jstmap
