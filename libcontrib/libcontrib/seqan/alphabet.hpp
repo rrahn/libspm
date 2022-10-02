@@ -21,7 +21,7 @@
 #include <seqan3/core/platform.hpp>
 #include <seqan3/alphabet/concept.hpp>
 #include <seqan3/core/concept/cereal.hpp>
-
+#include <seqan3/core/detail/debug_stream_alphabet.hpp>
 
 namespace jst::contrib
 {
@@ -56,8 +56,18 @@ namespace jst::contrib
     }
 } // namespace jst::contrib
 
-// namespace seqan
-// {
+namespace seqan
+{
+    template <typename char_t, typename alphabet_value_t, typename spec_t>
+    inline seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,
+                                                          SimpleType<alphabet_value_t, spec_t> const & symbol)
+    // //!\cond
+    //     requires (!output_stream_over<std::basic_ostream<char_t>, alphabet_t>)
+    // //!\endcond
+    {
+        return stream << seqan3::to_char(symbol);
+    }
+} // namespace seqan
 //     // use a simple adaptor!
 //     // Idea: define a wrapper for seqan3::dna5 as seqan::SimpleType<seqan3::dna5, struct _>
 //     // then provide
