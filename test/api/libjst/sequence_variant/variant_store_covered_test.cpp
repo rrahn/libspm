@@ -67,6 +67,12 @@ TYPED_TEST(variant_store_covered_test, concept)
 {
     using covered_store_t = typename TestFixture::covered_store_t;
     EXPECT_TRUE(std::ranges::random_access_range<covered_store_t>);
+    EXPECT_TRUE(libjst::sequence_variant_store<covered_store_t>);
+    EXPECT_TRUE(libjst::sequence_variant_store<covered_store_t &>);
+    EXPECT_TRUE(libjst::sequence_variant_store<covered_store_t const &>);
+    EXPECT_TRUE(libjst::covered_sequence_variant_store<covered_store_t>);
+    EXPECT_TRUE(libjst::covered_sequence_variant_store<covered_store_t &>);
+    EXPECT_TRUE(libjst::covered_sequence_variant_store<covered_store_t const &>);
 }
 
 TYPED_TEST(variant_store_covered_test, type_traits)

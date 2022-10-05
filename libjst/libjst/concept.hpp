@@ -60,7 +60,7 @@ namespace libjst
     using _window_size::window_size;
 
     // search_operation(searcher);
-    namespace _search_operation
+    namespace _search_operation_old
     {
         template <typename obj_t>
         concept has_member = requires (obj_t && o)
@@ -91,12 +91,12 @@ namespace libjst
                     return  (searcher_t &&) searcher;
                 // maybe alternative using free function?
             }
-        } search_operation{};
+        } search_operation_old{};
     } // namespace _search_operation
-    using _search_operation::search_operation;
+    using _search_operation_old::search_operation_old;
 
     template <typename searcher_t>
-    using search_operation_t = std::remove_cvref_t<std::invoke_result_t<_search_operation::_cpo, searcher_t>>;
+    using search_operation_t_old = std::remove_cvref_t<std::invoke_result_t<_search_operation_old::_cpo, searcher_t>>;
 
     // is_resumable property
     namespace _is_resumable
@@ -157,48 +157,48 @@ namespace libjst
     using _search::search;
 
 
-    // ----------------------------------------------------------------------------
-    // Concept for sender object.
-    // ----------------------------------------------------------------------------
-    // TODO: possible interface from future design of unified executor proposal.
-    // connect(sender, receiver) -> operation
-    namespace _connect
-    {
-        inline constexpr struct _cpo
-        {
-            // add possible implementation for member function and maybe free function
-            template <typename sender_t, typename receiver_t>
-                requires std::tag_invocable<_cpo, sender_t, receiver_t>
-            constexpr auto operator()(sender_t && sender, receiver_t && receiver) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, sender_t, receiver_t>)
-                -> std::tag_invoke_result_t<_cpo, sender_t, receiver_t>
-            {
-                return std::tag_invoke(_cpo{}, (sender_t &&) sender, (receiver_t &&) receiver);
-            }
-        } connect{};
-    } // namespace _connect
-    using _connect::connect;
+    // // ----------------------------------------------------------------------------
+    // // Concept for sender object.
+    // // ----------------------------------------------------------------------------
+    // // TODO: possible interface from future design of unified executor proposal.
+    // // connect(sender, receiver) -> operation
+    // namespace _connect
+    // {
+    //     inline constexpr struct _cpo
+    //     {
+    //         // add possible implementation for member function and maybe free function
+    //         template <typename sender_t, typename receiver_t>
+    //             requires std::tag_invocable<_cpo, sender_t, receiver_t>
+    //         constexpr auto operator()(sender_t && sender, receiver_t && receiver) const
+    //             noexcept(std::is_nothrow_tag_invocable_v<_cpo, sender_t, receiver_t>)
+    //             -> std::tag_invoke_result_t<_cpo, sender_t, receiver_t>
+    //         {
+    //             return std::tag_invoke(_cpo{}, (sender_t &&) sender, (receiver_t &&) receiver);
+    //         }
+    //     } connect{};
+    // } // namespace _connect
+    // using _connect::connect;
 
-    // ----------------------------------------------------------------------------
-    // Concept for operation object.
-    // ----------------------------------------------------------------------------
-    // TODO: possible interface from future design of unified executor proposal.
-    // start(operation)
-    namespace _start
-    {
-        inline constexpr struct _cpo
-        {
-            // add possible implementation for member function and maybe free function
-            template <typename operation_t>
-                requires std::tag_invocable<_cpo, operation_t>
-            constexpr auto operator()(operation_t && operation) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, operation_t>)
-                -> std::tag_invoke_result_t<_cpo, operation_t>
-            {
-                return std::tag_invoke(_cpo{}, (operation_t &&) operation);
-            }
-        } start{};
-    } // namespace _start
-    using _start::start;
+    // // ----------------------------------------------------------------------------
+    // // Concept for operation object.
+    // // ----------------------------------------------------------------------------
+    // // TODO: possible interface from future design of unified executor proposal.
+    // // start(operation)
+    // namespace _start
+    // {
+    //     inline constexpr struct _cpo
+    //     {
+    //         // add possible implementation for member function and maybe free function
+    //         template <typename operation_t>
+    //             requires std::tag_invocable<_cpo, operation_t>
+    //         constexpr auto operator()(operation_t && operation) const
+    //             noexcept(std::is_nothrow_tag_invocable_v<_cpo, operation_t>)
+    //             -> std::tag_invoke_result_t<_cpo, operation_t>
+    //         {
+    //             return std::tag_invoke(_cpo{}, (operation_t &&) operation);
+    //         }
+    //     } start{};
+    // } // namespace _start
+    // using _start::start;
 
 }  // namespace libjst

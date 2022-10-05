@@ -35,7 +35,7 @@ namespace _forward {
 template <typename jst_t, typename searcher_t, typename receiver_t>
 struct operation {
 
-    using search_t = search_operation_t<searcher_t>;
+    using search_t = search_operation_t_old<searcher_t>;
 
     // TODO: needs to be part of the is resumable concept.
     // Query properties!
@@ -58,7 +58,7 @@ struct operation {
         algorithm_stack_t algorithm_stack{};
         node_stack_t node_stack{};
 
-        search_t op = libjst::search_operation((searcher_t &&)_searcher);
+        search_t op = libjst::search_operation_old((searcher_t &&)_searcher);
         node_stack.emplace(_jst, libjst::window_size(op));
         algorithm_stack.push(std::move(op));
 

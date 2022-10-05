@@ -55,6 +55,12 @@ TYPED_TEST(variant_store_composite_test, concept)
 {
     using composite_store_t = typename TestFixture::composite_store_t;
     EXPECT_TRUE(std::ranges::random_access_range<composite_store_t>);
+    EXPECT_TRUE(libjst::sequence_variant_store<composite_store_t>);
+    EXPECT_TRUE(libjst::sequence_variant_store<composite_store_t &>);
+    EXPECT_TRUE(libjst::sequence_variant_store<composite_store_t const &>);
+    EXPECT_FALSE(libjst::covered_sequence_variant_store<composite_store_t>);
+    EXPECT_FALSE(libjst::covered_sequence_variant_store<composite_store_t &>);
+    EXPECT_FALSE(libjst::covered_sequence_variant_store<composite_store_t const &>);
 }
 
 TYPED_TEST(variant_store_composite_test, type_traits)

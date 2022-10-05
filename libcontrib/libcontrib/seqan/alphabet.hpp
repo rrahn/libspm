@@ -20,14 +20,76 @@
 
 #include <seqan3/core/platform.hpp>
 #include <seqan3/alphabet/concept.hpp>
+#include <seqan3/alphabet/nucleotide/dna4.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
+#include <seqan3/alphabet/nucleotide/dna15.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/core/detail/debug_stream_alphabet.hpp>
+#include <seqan3/utility/math.hpp>
+namespace seqan
+{
+    template <seqan3::alphabet alphabet_t>
+    struct alphabet_adaptor
+    {
+        alphabet_t _symbol{};
+        // make this applicable to simple type adapter of seqan?
+        constexpr alphabet_adaptor() = default;
+
+        template <typename char_t>
+            requires requires { seqan3::assign_char_to(char_t{}, alphabet_t{}); }
+        constexpr explicit alphabet_adaptor(char_t c) : _symbol{seqan3::assign_char_to(c, alphabet_t{})}
+        {}
+
+        constexpr bool operator==(alphabet_adaptor const &) const noexcept = default;
+        constexpr std::strong_ordering operator<=>(alphabet_adaptor const & other) const noexcept
+        {
+            return _symbol <=> other._symbol;
+        }
+
+        // impicit conversion enough for assignment in seqan2 simple types?
+        template <std::integral int_t>
+        constexpr operator int_t() const noexcept
+        {
+            return seqan3::to_rank(_symbol);
+        }
+    };
+
+    template <seqan3::cereal_output_archive archive_t, typename alphabet_t>
+    seqan3::alphabet_rank_t<alphabet_adaptor<alphabet_t>>
+    CEREAL_SAVE_MINIMAL_FUNCTION_NAME(archive_t const &, alphabet_adaptor<alphabet_t> const & l)
+    {
+        return seqan3::to_rank(l);
+    }
+
+    template <seqan3::cereal_input_archive archive_t, typename alphabet_t>
+    void CEREAL_LOAD_MINIMAL_FUNCTION_NAME(archive_t const &,
+                                           alphabet_adaptor<alphabet_t> & l,
+                                           seqan3::alphabet_rank_t<alphabet_adaptor<alphabet_t>> const & r)
+    {
+        seqan3::assign_rank_to(r, l);
+    }
+
+    template <typename alphabet_t>
+    struct ValueSize<alphabet_adaptor<alphabet_t>>
+    {
+        using Type = decltype(seqan3::alphabet_size<alphabet_t>);
+        static constexpr Type VALUE = seqan3::alphabet_size<alphabet_t>;
+    };
+
+    template <typename alphabet_t>
+    struct BitsPerValue<alphabet_adaptor<alphabet_t>>
+    {
+        using Type = decltype(seqan3::alphabet_size<alphabet_t>);
+        static constexpr Type VALUE = seqan3::detail::ceil_log2(seqan3::alphabet_size<alphabet_t>);
+    };
+
+} //namespace seqan
 
 namespace jst::contrib
 {
-    using dna4 = seqan::Dna;
-    using dna5 = seqan::Dna5;
-    using dna15 = seqan::Iupac;
+    using dna4 =  seqan::alphabet_adaptor<seqan3::dna4>;  //seqan::Dna;
+    using dna5 =  seqan::alphabet_adaptor<seqan3::dna5>;  //seqan::Dna5;
+    using dna15 = seqan::alphabet_adaptor<seqan3::dna15>; //seqan::Iupac;
 
     inline dna4 operator""_dna4(char const c) noexcept
     {
@@ -38,7 +100,9 @@ namespace jst::contrib
     {
         std::vector<dna4> r;
         r.reserve(n);
-        std::ranges::copy_n(s, n, std::back_inserter(r));
+        std::ranges::copy(std::string_view{s, n} | std::views::transform([] (char c) {
+            return dna4{c};
+        }), std::back_inserter(r));
         return r;
     }
 
@@ -51,7 +115,9 @@ namespace jst::contrib
     {
         std::vector<dna5> r;
         r.reserve(n);
-        std::ranges::copy_n(s, n, std::back_inserter(r));
+        std::ranges::copy(std::string_view{s, n} | std::views::transform([] (char c) {
+            return dna5{c};
+        }), std::back_inserter(r));
         return r;
     }
 } // namespace jst::contrib
@@ -61,9 +127,6 @@ namespace seqan
     template <typename char_t, typename alphabet_value_t, typename spec_t>
     inline seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,
                                                           SimpleType<alphabet_value_t, spec_t> const & symbol)
-    // //!\cond
-    //     requires (!output_stream_over<std::basic_ostream<char_t>, alphabet_t>)
-    // //!\endcond
     {
         return stream << seqan3::to_char(symbol);
     }
@@ -181,6 +244,37 @@ namespace seqan3::custom
         static alphabet_t & assign_char_to(char const c, alphabet_t & a) noexcept
         {
             a = c;
+            return a;
+        }
+    };
+
+    template <seqan3::alphabet wrapped_t>
+    struct alphabet<seqan::alphabet_adaptor<wrapped_t>>
+    {
+        using alphabet_t = seqan::alphabet_adaptor<wrapped_t>;
+        using rank_t = seqan3::alphabet_rank_t<wrapped_t>;
+
+        static constexpr rank_t alphabet_size = seqan3::alphabet_size<wrapped_t>;
+
+        static rank_t to_rank(alphabet_t const a) noexcept
+        {
+            return seqan3::to_rank(a._symbol);
+        }
+
+        static alphabet_t & assign_rank_to(rank_t const r, alphabet_t & a) noexcept
+        {
+            seqan3::assign_rank_to(r, a._symbol);
+            return a;
+        }
+
+        static char to_char(alphabet_t const a) noexcept
+        {
+            return seqan3::to_char(a._symbol);
+        }
+
+        static alphabet_t & assign_char_to(char const c, alphabet_t & a) noexcept
+        {
+            seqan3::assign_char_to(c, a._symbol);
             return a;
         }
     };

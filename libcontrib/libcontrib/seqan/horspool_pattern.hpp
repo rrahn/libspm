@@ -14,7 +14,7 @@
 
 #include <concepts>
 
-#include <libcontrib/seqan/holder_tristate.hpp> // must come before seqan/find.h
+#include <seqan/sequence.h>
 #include <seqan/find.h>
 
 #include <libcontrib/seqan/concept.hpp>
@@ -99,7 +99,7 @@ namespace jst::contrib
         // member type trait
         template <typename cpo_t, typename operation_t, typename ...args_t>
             requires std::same_as<std::remove_cvref_t<operation_t>, operation>
-        constexpr friend auto tag_invoke(cpo_t const & cpo, operation_t && me, args_t &&...args)
+        constexpr friend auto tag_invoke(cpo_t cpo, operation_t && me, args_t &&...args)
             noexcept(std::is_nothrow_invocable_v<cpo_t, member_type_t<operation_t, base_t>, args_t...>)
             -> std::invoke_result_t<cpo_t, member_type_t<operation_t, base_t>, args_t...>
         {

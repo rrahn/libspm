@@ -13,6 +13,7 @@
 #pragma once
 
 #include <concepts>
+#include <iterator>
 #include <ranges>
 #include <type_traits>
 
@@ -21,7 +22,7 @@
 namespace libjst
 {
     // ----------------------------------------------------------------------------
-    // CPO defintions
+    // Operation CPOs for variants
     // ----------------------------------------------------------------------------
 
     // position
@@ -78,6 +79,87 @@ namespace libjst
     template <typename variant_t>
     using variant_deletion_t = std::invoke_result_t<_variant_deletion::_cpo, variant_t>;
 
+    //is_deletion
+    namespace _is_deletion {
+        inline constexpr struct _cpo  {
+            template <typename variant_t>
+                requires std::tag_invocable<_cpo, variant_t const &>
+            constexpr bool operator()(variant_t const & var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
+            {
+                return std::tag_invoke(_cpo{}, var);
+            }
+
+            template <typename variant_t>
+                requires (!std::tag_invocable<_cpo, variant_t const &>)
+            constexpr bool operator()(variant_t const & var) const noexcept
+            {
+                if constexpr (std::tag_invocable<std::tag_t<libjst::insertion>, variant_t const &> &&
+                              std::tag_invocable<std::tag_t<libjst::deletion>, variant_t const &>)
+                    return libjst::deletion(var) > 0 && std::ranges::size(libjst::insertion(var)) == 0;
+                else
+                    static_assert(std::same_as<variant_t, void>, "No valid default for is_deletion(variant) found!");
+            }
+
+        } is_deletion;
+    }
+    using _is_deletion::is_deletion;
+
+    //is_insertion
+    namespace _is_insertion {
+        inline constexpr struct _cpo  {
+            template <typename variant_t>
+                requires std::tag_invocable<_cpo, variant_t const &>
+            constexpr bool operator()(variant_t const & var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
+            {
+                return std::tag_invoke(_cpo{}, var);
+            }
+
+            template <typename variant_t>
+                requires (!std::tag_invocable<_cpo, variant_t const &>)
+            constexpr bool operator()(variant_t const & var) const noexcept
+            {
+                if constexpr (std::tag_invocable<std::tag_t<libjst::insertion>, variant_t const &> &&
+                              std::tag_invocable<std::tag_t<libjst::deletion>, variant_t const &>)
+                    return libjst::deletion(var) == 0 && std::ranges::size(libjst::insertion(var)) > 0;
+                else
+                    static_assert(std::same_as<variant_t, void>, "No valid default for is_insertion(variant) found!");
+            }
+
+        } is_insertion;
+    }
+    using _is_insertion::is_insertion;
+
+    //is_replacement
+    namespace _is_replacement {
+        inline constexpr struct _cpo  {
+            template <typename variant_t>
+                requires std::tag_invocable<_cpo, variant_t const &>
+            constexpr bool operator()(variant_t const & var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
+            {
+                return std::tag_invoke(_cpo{}, var);
+            }
+
+            template <typename variant_t>
+                requires (!std::tag_invocable<_cpo, variant_t const &>)
+            constexpr bool operator()(variant_t const & var) const noexcept
+            {
+                if constexpr (std::tag_invocable<std::tag_t<libjst::insertion>, variant_t const &> &&
+                              std::tag_invocable<std::tag_t<libjst::deletion>, variant_t const &>)
+                {
+                    return libjst::deletion(var) == std::ranges::size(libjst::insertion(var)) &&
+                           libjst::deletion(var) > 0;
+                } else {
+                    static_assert(std::same_as<variant_t, void>, "No valid default for is_replacement(variant) found!");
+                }
+            }
+
+        } is_replacement;
+    }
+    using _is_replacement::is_replacement;
+
     // coverage
     namespace _variant_coverage {
         inline constexpr struct _cpo  {
@@ -94,24 +176,68 @@ namespace libjst
     using _variant_coverage::coverage;
 
     template <typename variant_t>
-    using variant_coverage_t = std::invoke_result_t<_variant_coverage::_cpo, variant_t>;
+    using variant_coverage_t = std::remove_cvref_t<std::invoke_result_t<_variant_coverage::_cpo, variant_t>>;
+
+    // ----------------------------------------------------------------------------
+    // Operation CPOs for variant stores
+    // ----------------------------------------------------------------------------
+
+    namespace _insert {
+        inline constexpr struct _cpo  {
+            template <typename variant_store_t, typename variant_t>
+                requires std::tag_invocable<_cpo, variant_store_t &, variant_t>
+            constexpr auto operator()(variant_store_t & store, variant_t && variant) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_store_t &, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_store_t &, variant_t>
+            {
+                return std::tag_invoke(_cpo{}, store, (variant_t &&)variant);
+            }
+        } insert;
+    }
+    using _insert::insert;
 
     // ----------------------------------------------------------------------------
     // Concept defintions
     // ----------------------------------------------------------------------------
 
-    template <typename type>
-    concept sequence_variant = requires (type const & value)
+    template <typename variant_t>
+    concept sequence_variant = requires
+    (variant_t const & variant)
     {
-        { libjst::position(value) } -> std::integral;
-        { libjst::deletion(value) } -> std::integral;
-        { libjst::insertion(value) } -> std::ranges::forward_range;
+        { libjst::position(variant) } -> std::integral;
+        { libjst::deletion(variant) } -> std::integral;
+        { libjst::insertion(variant) } -> std::ranges::forward_range;
+        { libjst::is_replacement(variant) } -> std::same_as<bool>;
+        { libjst::is_insertion(variant) } -> std::same_as<bool>;
+        { libjst::is_deletion(variant) } -> std::same_as<bool>;
     };
 
-    template <typename type>
-    concept covered_sequence_variant = sequence_variant<type> && requires (type const & value)
+    template <typename variant_t>
+    concept covered_sequence_variant = sequence_variant<variant_t> && requires
+    (variant_t const & variant)
     {
-        { libjst::coverage(value) } -> std::ranges::random_access_range;
+        { libjst::coverage(variant) } -> std::ranges::random_access_range;
     };
+
+    template <typename store_t>
+    concept sequence_variant_store = std::ranges::random_access_range<store_t>
+    && requires
+    (store_t const & store, std::ranges::range_value_t<store_t> const & variant)
+    {
+        requires sequence_variant<std::ranges::range_value_t<store_t>>;
+        requires sequence_variant<std::ranges::range_reference_t<store_t>>;
+
+        // { store.insert(variant) } -> std::random_access_iterator;
+    }
+    ;
+
+    template <typename store_t>
+    concept covered_sequence_variant_store = sequence_variant_store<store_t>
+    && requires
+    {
+        requires covered_sequence_variant<std::ranges::range_value_t<store_t>>;
+        requires covered_sequence_variant<std::ranges::range_reference_t<store_t>>;
+    }
+    ;
 
 }  // namespace libjst

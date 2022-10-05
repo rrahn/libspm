@@ -7,12 +7,22 @@
 
 #pragma once
 
+#include <algorithm>
+#include <ranges>
 #include <string>
+#include <type_traits>
 
 namespace seqan
 {
     inline void set(std::string & target, std::string const & source)
     {
        target = source;
+    }
+
+    template <typename value_t, typename allocator_t>
+    inline void set(std::vector<value_t, allocator_t> & target, std::vector<value_t, allocator_t> const & source)
+    {
+        target.resize(source.size());
+        std::ranges::copy(source, target.begin());
     }
 } // namespace seqan
