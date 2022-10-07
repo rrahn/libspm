@@ -28,7 +28,7 @@ namespace jstmap
 
 auto sample_reads(jst_t const & jst, size_t const read_count, size_t const read_size)
 {
-    using seqan3::operator""_dna5;
+    using jst::contrib::operator""_dna4;
 
     auto enumerator = jst.context_enumerator(read_size);
     size_t const sample_rate = std::ceil(jst.reference_at(0).size() / read_count);
@@ -41,7 +41,7 @@ auto sample_reads(jst_t const & jst, size_t const read_count, size_t const read_
         if (++counter % sample_rate == 0)
         {
             auto read = *it;
-            if (std::ranges::any_of(read, [] (auto symbol) { return symbol == 'N'_dna5; }))
+            if (std::ranges::any_of(read, [] (auto symbol) { return symbol == 'N'_dna4; }))
                 continue;
 
             sampled_reads.emplace_back(read.begin(), read.end());

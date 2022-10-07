@@ -114,16 +114,16 @@ TEST(jstmap_search, search_jst_2)
 
     auto make_ref = [] ()
     {
-        using jst::contrib::operator""_dna5;
+        using jst::contrib::operator""_dna4;
              // 0         1         2         3         4         5         6         7         8         9
              // 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-        return "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna5;
+        return "acgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgtacgt"_dna4;
     };
 
     auto make_needle = [] ()
     {
-        using jst::contrib::operator""_dna5;
-        return "cgtacgtacgtacgtacgtacgta"_dna5;
+        using jst::contrib::operator""_dna4;
+        return "cgtacgtacgtacgtacgtacgta"_dna4;
     };
 
     //                  aa

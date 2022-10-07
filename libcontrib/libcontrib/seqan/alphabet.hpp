@@ -26,6 +26,8 @@
 #include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/core/detail/debug_stream_alphabet.hpp>
 #include <seqan3/utility/math.hpp>
+
+#include <libcontrib/std/tag_invoke.hpp>
 namespace seqan
 {
     template <seqan3::alphabet alphabet_t>
@@ -51,6 +53,11 @@ namespace seqan
         constexpr operator int_t() const noexcept
         {
             return seqan3::to_rank(_symbol);
+        }
+
+        constexpr operator alphabet_t() const noexcept
+        {
+            return _symbol;
         }
     };
 
@@ -256,26 +263,35 @@ namespace seqan3::custom
 
         static constexpr rank_t alphabet_size = seqan3::alphabet_size<wrapped_t>;
 
-        static rank_t to_rank(alphabet_t const a) noexcept
+        constexpr static rank_t to_rank(alphabet_t const a) noexcept
         {
             return seqan3::to_rank(a._symbol);
         }
 
-        static alphabet_t & assign_rank_to(rank_t const r, alphabet_t & a) noexcept
+        constexpr static alphabet_t & assign_rank_to(rank_t const r, alphabet_t & a) noexcept
         {
             seqan3::assign_rank_to(r, a._symbol);
             return a;
         }
 
-        static char to_char(alphabet_t const a) noexcept
+        constexpr static char to_char(alphabet_t const a) noexcept
         {
             return seqan3::to_char(a._symbol);
         }
 
-        static alphabet_t & assign_char_to(char const c, alphabet_t & a) noexcept
+        constexpr static alphabet_t & assign_char_to(char const c, alphabet_t & a) noexcept
         {
             seqan3::assign_char_to(c, a._symbol);
             return a;
+        }
+
+        template <seqan3::nucleotide_alphabet _wrapped_t = wrapped_t>
+            requires std::same_as<_wrapped_t, wrapped_t>
+        constexpr static auto complement(alphabet_t const a)
+            noexcept(std::is_nothrow_invocable_v<std::tag_t<seqan3::complement>, wrapped_t const &>)
+            -> std::invoke_result_t<std::tag_t<seqan3::complement>, wrapped_t const &>
+        {
+            return seqan3::complement(a._symbol);
         }
     };
 } // namespace seqan3::custom

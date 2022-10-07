@@ -7,24 +7,16 @@
 
 #include <seqan3/std/algorithm>
 
-#include <seqan3/io/sequence_file/input.hpp>
-
 #include <jstmap/create/load_sequence.hpp>
 
 namespace jstmap
 {
 
-struct input_traits : public seqan3::sequence_file_input_default_traits_dna
-{
-    using sequence_alphabet = jst::contrib::dna5;
-    using sequence_legal_alphabet = jst::contrib::dna15;
-};
-
 std::vector<raw_sequence_t> load_sequences(std::filesystem::path const & sequence_file)
 {
     std::vector<raw_sequence_t> sequences{};
 
-    seqan3::sequence_file_input<input_traits> fin{sequence_file.c_str()};
+    seqan3::sequence_file_input<sequence_input_traits> fin{sequence_file.c_str()};
     std::ranges::for_each(fin, [&] (auto const & sequence_record)
     {
         sequences.push_back(seqan3::get<seqan3::field::seq>(sequence_record));

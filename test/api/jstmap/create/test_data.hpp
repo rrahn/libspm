@@ -12,15 +12,15 @@
 namespace jstmap::test
 {
 
-using seqan3::operator""_dna5;
+using jst::contrib::operator""_dna4;
 
-inline const raw_sequence_t reference = "aacctt"_dna5;
+inline const raw_sequence_t reference = "aacctt"_dna4;
 
 inline const std::vector<raw_sequence_t> sequences
 {
-    "aaaaaa"_dna5,
-    "cccccc"_dna5,
-    "tttttt"_dna5
+    "aaaaaa"_dna4,
+    "cccccc"_dna4,
+    "tttttt"_dna4
 };
 
 }  // namespace jstmap::test

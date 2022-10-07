@@ -40,20 +40,20 @@ std::map<size_t, short> generate_random_positions(size_t length, size_t n, rando
 }
 
 template <std::uniform_random_bit_generator random_generator_t>
-seqan3::gapped<seqan3::dna5> random_char(random_generator_t & generator)
+seqan3::gapped<jst::contrib::dna4> random_char(random_generator_t & generator)
 {
     std::uniform_int_distribution<short> distr{0, 3};
-    return static_cast<seqan3::gapped<seqan3::dna5> >(seqan3::dna4{}.assign_rank(distr(generator)));
+    return static_cast<seqan3::gapped<jst::contrib::dna4> >(seqan3::assign_rank_to(distr(generator), jst::contrib::dna4{}));
 }
 
 template <std::uniform_random_bit_generator random_generator_t>
-seqan3::gapped<seqan3::dna5> random_char(seqan3::gapped<seqan3::dna5> old_char, random_generator_t & generator)
+seqan3::gapped<jst::contrib::dna4> random_char(seqan3::gapped<jst::contrib::dna4> old_char, random_generator_t & generator)
 {
     std::uniform_int_distribution<short> distr{0, 3};
-    seqan3::gapped<seqan3::dna5> new_char;
+    seqan3::gapped<jst::contrib::dna4> new_char;
     do
     {
-        new_char = static_cast<seqan3::dna5>(seqan3::dna4{}.assign_rank(distr(generator)));
+        new_char = seqan3::assign_rank_to(distr(generator), jst::contrib::dna4{});
     } while (new_char == old_char);
     return new_char;
 }

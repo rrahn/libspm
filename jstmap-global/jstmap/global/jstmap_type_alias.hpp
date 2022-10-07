@@ -14,7 +14,9 @@
 
 #include <vector>
 
+#include <seqan3/io/sequence_file/input.hpp>
 #include <seqan3/alignment/scoring/scoring_scheme_base.hpp>
+
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/journaled_sequence_tree.hpp>
@@ -24,7 +26,7 @@ namespace jstmap
 {
 
 //!\brief The sequence type loaded from the disk.
-using raw_sequence_t = std::vector<jst::contrib::dna5>;
+using raw_sequence_t = std::vector<jst::contrib::dna4>;
 //!\brief The globally available journal sequence tree type.
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 //!\brief The globally available partitioned journal sequence tree type.
@@ -89,4 +91,10 @@ template <seqan3::arithmetic score_arg_type>
 scoring_scheme(seqan3::match_score<score_arg_type>,
                seqan3::mismatch_score<score_arg_type>) -> scoring_scheme<jst::contrib::dna5, int8_t>;
 
+
+struct sequence_input_traits : public seqan3::sequence_file_input_default_traits_dna
+{
+    using sequence_alphabet = jst::contrib::dna4;
+    using sequence_legal_alphabet = jst::contrib::dna15; // conversion?
+};
 }  // namespace jstmap
