@@ -12,11 +12,13 @@
 
 #pragma once
 
+#include <functional>
 #include <ranges>
 
 #include <seqan3/range/concept.hpp>
 
 #include <libjst/sequence_variant/concept.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
 
 namespace libjst
 {
@@ -29,36 +31,49 @@ namespace libjst
 
         using variant_value_t = std::ranges::range_value_t<variant_store_t>;
 
-        sequence_t _base_sequence{};
+        std::reference_wrapper<sequence_t const> _base_sequence;
         variant_store_t _variant_store{};
         size_t _sequence_count{};
     public:
 
-        journaled_sequence_tree_model() = default;
-        template <seqan3::sequence other_sequence_t>
-            requires std::constructible_from<sequence_t, other_sequence_t>
-        explicit journaled_sequence_tree_model(other_sequence_t && sequence, size_t count)
-            noexcept(std::is_nothrow_constructible_v<sequence_t, other_sequence_t>) :
-            _base_sequence{(other_sequence_t &&)sequence},
+        explicit journaled_sequence_tree_model(sequence_t const & sequence, size_t const count) noexcept :
+            _base_sequence{sequence},
             _sequence_count{count}
         {}
 
         bool insert(variant_value_t covered_variant)
         {  // initial contract
-            assert(end_position(covered_variant) <= std::ranges::size(_base_sequence));
+            assert(end_position(covered_variant) <= std::ranges::size(_base_sequence.get()));
             assert(std::ranges::size(libjst::coverage(covered_variant)) == _sequence_count);
 
             auto inserted = _variant_store.insert(std::move(covered_variant));
             return inserted != _variant_store.end();
         }
 
-        // TODO: add serialisation support!
     private:
+
+        template <typename archive_t>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::load>,
+                                         journaled_sequence_tree_model & me,
+                                         archive_t & archive)
+        {
+            libjst::load_extern(archive, me._base_sequence.get());
+            archive(me._sequence_count, me._variant_store);
+        }
+
+        template <typename archive_t>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::save>,
+                                         journaled_sequence_tree_model const & me,
+                                         archive_t & archive)
+        {
+            libjst::save_extern(archive, me._base_sequence.get());
+            archive(me._sequence_count, me._variant_store);
+        }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::base_sequence>,
                                          journaled_sequence_tree_model const &me) noexcept -> sequence_t const &
         {
-            return me._base_sequence;
+            return me._base_sequence.get();
         }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::variant_store>,

@@ -16,10 +16,13 @@
 #include <ranges>
 #include <vector>
 
+#include <cereal/types/vector.hpp>
+
 #include <seqan3/range/views/type_reduce.hpp>
 
 #include <libjst/sequence_variant/variant_store_iterator.hpp>
 #include <libjst/journaled_sequence_tree/concept.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
 
 namespace libjst
 {
@@ -40,10 +43,10 @@ namespace libjst
     public:
 
         journaled_sequence_tree_forward_() = default;
-        journaled_sequence_tree_forward_(journaled_sequence_tree_forward_ const &) = default;
-        journaled_sequence_tree_forward_(journaled_sequence_tree_forward_ &&) = default;
-        journaled_sequence_tree_forward_ &operator=(journaled_sequence_tree_forward_ const &) = default;
-        journaled_sequence_tree_forward_ &operator=(journaled_sequence_tree_forward_ &&) = default;
+        // journaled_sequence_tree_forward_(journaled_sequence_tree_forward_ const &) = default;
+        // journaled_sequence_tree_forward_(journaled_sequence_tree_forward_ &&) = default;
+        // journaled_sequence_tree_forward_ &operator=(journaled_sequence_tree_forward_ const &) = default;
+        // journaled_sequence_tree_forward_ &operator=(journaled_sequence_tree_forward_ &&) = default;
         explicit journaled_sequence_tree_forward_(jst_t const & jst) : _jst{std::addressof(jst)}
         {
             position_t store_size = std::ranges::size(libjst::variant_store(jst));
@@ -67,6 +70,24 @@ namespace libjst
         }
 
     private:
+        template <typename archive_t>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::load>,
+                                         journaled_sequence_tree_forward_ & me,
+                                         archive_t & archive)
+        {
+            libjst::load_extern(archive, *me._jst);
+            archive(me._event_queue);
+        }
+
+        template <typename archive_t>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::save>,
+                                         journaled_sequence_tree_forward_ const & me,
+                                         archive_t & archive)
+        {
+            libjst::save_extern(archive, *me._jst);
+            archive(me._event_queue);
+        }
+
         template <typename cpo_t>
             requires std::invocable<cpo_t, jst_t const &>
         constexpr friend auto tag_invoke(cpo_t cpo, journaled_sequence_tree_forward_ const &me)

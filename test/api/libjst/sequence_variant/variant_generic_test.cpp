@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cereal/archives/json.hpp>
+
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
@@ -81,4 +83,44 @@ TYPED_TEST(generic_variant_test, deletion)
     EXPECT_EQ(libjst::deletion(this->variant_sub), std::ranges::size(TestFixture::insertion_sequence));
     EXPECT_EQ(libjst::deletion(this->variant_ins), 0u);
     EXPECT_EQ(libjst::deletion(this->variant_del), 7u);
+}
+
+TYPED_TEST(generic_variant_test, serialise)
+{
+    using generic_variant_t = typename TestFixture::generic_variant_t;
+    using alphabet_t = typename TestFixture::alphabet_t;
+
+    generic_variant_t var_sub_out{0, this->insertion_sequence, (uint32_t)std::ranges::size(this->insertion_sequence)};
+    generic_variant_t var_del_out{1234, std::vector<alphabet_t>{}, 15};
+    generic_variant_t var_ins_out{((1 << 30) - 1), this->insertion_sequence, 0};
+
+    generic_variant_t var_sub_in{};
+    generic_variant_t var_ins_in{};
+    generic_variant_t var_del_in{};
+
+    std::stringstream archive_stream{};
+    {
+        cereal::JSONOutputArchive output_archive(archive_stream);
+        output_archive(var_sub_out);
+        output_archive(var_del_out);
+        output_archive(var_ins_out);
+    }
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        input_archive(var_sub_in);
+        input_archive(var_del_in);
+        input_archive(var_ins_in);
+    }
+
+    EXPECT_EQ(libjst::position(var_sub_in), libjst::position(var_sub_out));
+    EXPECT_EQ(libjst::deletion(var_sub_in), libjst::deletion(var_sub_out));
+    EXPECT_RANGE_EQ(libjst::insertion(var_sub_in), libjst::insertion(var_sub_out));
+
+    EXPECT_EQ(libjst::position(var_del_in), libjst::position(var_del_out));
+    EXPECT_EQ(libjst::deletion(var_del_in), libjst::deletion(var_del_out));
+    EXPECT_RANGE_EQ(libjst::insertion(var_del_in), libjst::insertion(var_del_out));
+
+    EXPECT_EQ(libjst::position(var_ins_in), libjst::position(var_ins_out));
+    EXPECT_EQ(libjst::deletion(var_ins_in), libjst::deletion(var_ins_out));
+    EXPECT_RANGE_EQ(libjst::insertion(var_ins_in), libjst::insertion(var_ins_out));
 }

@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <memory>
 #include <ranges>
+#include <typeinfo>
 #include <vector>
 
 namespace libjst
@@ -65,8 +66,9 @@ namespace libjst
         void unsubscribe(subscriber_t & subscriber) {
             // how do we find this subscriber!
             // subscriber must be able to compare with equality
+            std::type_info const & subscriber_type = typeid(subscriber);
             auto it = std::ranges::find_if(_subscribers, [&] (auto && subscriber_ptr) {
-                return reinterpret_cast<uint64_t>(std::addressof(subscriber)) == subscriber_ptr->address();
+                return subscriber_ptr->is_same_type(subscriber_type);
             });
             if (it != std::ranges::end(_subscribers))
                 _subscribers.erase(it);
@@ -93,7 +95,7 @@ namespace libjst
             //!\brief Notifies the attached observer about a push event.
             virtual void notify_push() = 0;
             //!\brief Notifies the attached observer about a push event.
-            virtual uint64_t address() = 0;
+            virtual bool is_same_type(std::type_info const & other_type) const noexcept = 0;
         };
 
         template <typename subscriber_t>
@@ -114,9 +116,9 @@ namespace libjst
                 _subscriber.push(_subscriber.top());
             }
 
-            uint64_t address() noexcept override
+            bool is_same_type(std::type_info const & other_type) const noexcept override
             {
-                return reinterpret_cast<uint64_t>(std::addressof(_subscriber));
+                return typeid(_subscriber) == other_type;
             }
         };
     };

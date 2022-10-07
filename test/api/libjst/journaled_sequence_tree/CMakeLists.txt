@@ -1,2 +1,4 @@
 add_libjst2_test (journaled_sequence_tree_model_test.cpp)
 add_libjst2_test (journaled_sequence_tree_forward2_test.cpp)
+add_libjst2_test (journaled_sequence_tree_serialiser_test.cpp)
+add_libjst2_test (journaled_sequence_tree_forward_serialiser_test.cpp)

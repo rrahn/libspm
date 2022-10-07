@@ -7,6 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/json.hpp>
+
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
@@ -34,7 +37,7 @@ struct variant_store_composite_test : public ::testing::Test
     }
 };
 
-using test_types = ::testing::Types<//jst::contrib::dna4,
+using test_types = ::testing::Types<jst::contrib::dna4,
                                     seqan3::dna4
                                     >;
 TYPED_TEST_SUITE(variant_store_composite_test, test_types);
@@ -246,4 +249,43 @@ TYPED_TEST(variant_store_composite_test, iterator)
 
     ++it;
     EXPECT_EQ(it, store.end());
+}
+
+TYPED_TEST(variant_store_composite_test, serialise)
+{
+    using composite_store_t = typename TestFixture::composite_store_t;
+    using alphabet_t = typename TestFixture::alphabet_t;
+    using snp_variant_t = typename TestFixture::snp_variant_t;
+    using generic_variant_t = typename TestFixture::generic_variant_t;
+
+    composite_store_t store_out{};
+    composite_store_t store_in{};
+    auto ins = this->make_insertion();
+
+    EXPECT_NO_THROW((store_out.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})})));
+    EXPECT_NO_THROW((store_out.insert(generic_variant_t{44, ins, (uint32_t) ins.size()})));
+    EXPECT_NO_THROW((store_out.insert(generic_variant_t{93, ins, 0})));
+    EXPECT_NO_THROW((store_out.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})})));
+    EXPECT_NO_THROW((store_out.insert(generic_variant_t{154, {}, 1})));
+
+    generic_variant_t var_sub_in{};
+    generic_variant_t var_ins_in{};
+    generic_variant_t var_del_in{};
+
+    std::stringstream archive_stream{};
+    {
+        cereal::JSONOutputArchive output_archive(archive_stream);
+        output_archive(store_out);
+    }
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        input_archive(store_in);
+    }
+
+    for (size_t i = 0; i < std::ranges::size(store_out); ++i)
+    {
+        EXPECT_EQ(libjst::position(store_in[i]), libjst::position(store_out[i]));
+        EXPECT_EQ(libjst::deletion(store_in[i]), libjst::deletion(store_out[i]));
+        EXPECT_RANGE_EQ(libjst::insertion(store_in[i]), libjst::insertion(store_out[i]));
+    }
 }

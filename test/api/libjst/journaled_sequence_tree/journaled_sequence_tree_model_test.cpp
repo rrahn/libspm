@@ -57,7 +57,7 @@ TYPED_TEST(journaled_sequence_tree_model_test, construction)
     using jst_t = typename TestFixture::jst_t;
     using sequence_t = typename TestFixture::sequence_t;
 
-    EXPECT_TRUE(std::is_nothrow_default_constructible_v<jst_t>);
+    EXPECT_FALSE(std::is_default_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_nothrow_move_constructible_v<jst_t>);
     EXPECT_TRUE(std::is_copy_assignable_v<jst_t>);
@@ -98,9 +98,7 @@ TYPED_TEST(journaled_sequence_tree_model_test, size)
 {
     using jst_t = typename TestFixture::jst_t;
 
-    jst_t def_jst{};
     jst_t jst{this->base_sequence, 4};
 
-    EXPECT_EQ(libjst::size(def_jst), 0);
     EXPECT_EQ(libjst::size(jst), 4u);
 }

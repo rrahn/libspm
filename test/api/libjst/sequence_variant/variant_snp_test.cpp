@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cereal/archives/json.hpp>
+
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
@@ -75,4 +77,48 @@ TYPED_TEST(snp_test, deletion)
 {
     EXPECT_EQ(libjst::deletion(this->default_snp), 1u);
     EXPECT_EQ(libjst::deletion(this->snp), 1u);
+}
+
+TYPED_TEST(snp_test, serialise)
+{
+    using snp_type = typename TestFixture::snp_t;
+    using alphabet_t = typename TestFixture::alphabet_t;
+
+    snp_type snp_a_out{0, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp_type snp_c_out{23, seqan3::assign_rank_to(1, alphabet_t{})};
+    snp_type snp_g_out{1234, seqan3::assign_rank_to(2, alphabet_t{})};
+    snp_type snp_t_out{((1 << 30) - 1), seqan3::assign_rank_to(3, alphabet_t{})};
+
+    snp_type snp_a_in{};
+    snp_type snp_c_in{};
+    snp_type snp_g_in{};
+    snp_type snp_t_in{};
+
+    std::stringstream archive_stream{};
+    {
+        cereal::JSONOutputArchive output_archive(archive_stream);
+        output_archive(snp_a_out);
+        output_archive(snp_c_out);
+        output_archive(snp_g_out);
+        output_archive(snp_t_out);
+    }
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        input_archive(snp_a_in);
+        input_archive(snp_c_in);
+        input_archive(snp_g_in);
+        input_archive(snp_t_in);
+    }
+
+    EXPECT_EQ(libjst::position(snp_a_in), libjst::position(snp_a_out));
+    EXPECT_RANGE_EQ(libjst::insertion(snp_a_in), libjst::insertion(snp_a_out));
+
+    EXPECT_EQ(libjst::position(snp_c_in), libjst::position(snp_c_out));
+    EXPECT_RANGE_EQ(libjst::insertion(snp_c_in), libjst::insertion(snp_c_out));
+
+    EXPECT_EQ(libjst::position(snp_g_in), libjst::position(snp_g_out));
+    EXPECT_RANGE_EQ(libjst::insertion(snp_g_in), libjst::insertion(snp_g_out));
+
+    EXPECT_EQ(libjst::position(snp_t_in), libjst::position(snp_t_out));
+    EXPECT_RANGE_EQ(libjst::insertion(snp_t_in), libjst::insertion(snp_t_out));
 }

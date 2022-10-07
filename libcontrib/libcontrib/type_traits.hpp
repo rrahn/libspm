@@ -49,4 +49,23 @@ namespace jst::contrib
     template<typename type_t>
     inline constexpr any_instance_of_t<type_t> any_instance_of_v{};
 
+    // ----------------------------------------------------------------------------
+    // maybe_unwrap
+    // ----------------------------------------------------------------------------
+
+    template <typename t, typename t_original>
+    struct maybe_unwrap
+    {
+        using type = t_original;
+    };
+
+    template <typename t, typename t_original>
+    struct maybe_unwrap<std::reference_wrapper<t>, t_original>
+    {
+        using type = t &;
+    };
+
+    template <typename t>
+    using maybe_unwrap_t = typename maybe_unwrap<std::decay_t<t>, t>::type;
+
 } // namespace jst::contrib

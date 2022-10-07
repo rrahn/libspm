@@ -7,6 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/json.hpp>
+
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
@@ -46,7 +49,7 @@ struct variant_store_covered_test : public ::testing::Test
     }
 };
 
-using test_types = ::testing::Types<//jst::contrib::dna4,
+using test_types = ::testing::Types<jst::contrib::dna4,
                                     seqan3::dna4
                                     >;
 TYPED_TEST_SUITE(variant_store_covered_test, test_types);
@@ -232,4 +235,38 @@ TYPED_TEST(variant_store_covered_test, iterator)
 
     ++it;
     EXPECT_EQ(it, store.end());
+}
+
+TYPED_TEST(variant_store_covered_test, serialise)
+{
+    using covered_store_t = typename TestFixture::covered_store_t;
+    using coverage_t = typename TestFixture::coverage_t;
+    using value_t = std::ranges::range_value_t<covered_store_t>;
+
+    covered_store_t store_out{};
+    covered_store_t store_in{};
+
+    store_out.insert(value_t{this->snp0, coverage_t{0, 0, 0, 1}});
+    store_out.insert(value_t{this->var0, coverage_t{0, 0, 1, 0}});
+    store_out.insert(value_t{this->var1, coverage_t{0, 1, 0, 0}});
+    store_out.insert(value_t{this->snp1, coverage_t{1, 0, 0, 0}});
+    store_out.insert(value_t{this->var2, coverage_t{0, 0, 1, 1}});
+
+    std::stringstream archive_stream{};
+    {
+        cereal::JSONOutputArchive output_archive(archive_stream);
+        output_archive(store_out);
+    }
+    {
+        cereal::JSONInputArchive input_archive(archive_stream);
+        input_archive(store_in);
+    }
+
+    for (size_t i = 0; i < std::ranges::size(store_out); ++i)
+    {
+        EXPECT_EQ(libjst::position(store_in[i]), libjst::position(store_out[i]));
+        EXPECT_EQ(libjst::deletion(store_in[i]), libjst::deletion(store_out[i]));
+        EXPECT_RANGE_EQ(libjst::insertion(store_in[i]), libjst::insertion(store_out[i]));
+        EXPECT_RANGE_EQ(libjst::coverage(store_in[i]), libjst::coverage(store_out[i]));
+    }
 }

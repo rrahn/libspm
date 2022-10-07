@@ -33,6 +33,7 @@ namespace libjst
     }()};
 
     template <seqan3::semialphabet alphabet_t>
+        requires (seqan3::alphabet_size<alphabet_t> <= 4)
     class snp_variant
     {
         uint32_t _value : 2;
@@ -44,6 +45,21 @@ namespace libjst
             _value{seqan3::to_rank(value)},
             _position{pos}
         {
+        }
+
+        template <seqan3::cereal_output_archive output_archive_t>
+        uint32_t save_minimal(output_archive_t const &) const
+        {
+            uint32_t tmp = _value;
+            tmp = (tmp << 30) | _position; // make space for the position.
+            return tmp;
+        }
+
+        template <seqan3::cereal_input_archive input_archive_t>
+        void load_minimal(input_archive_t const &, uint32_t const &tmp)
+        {
+            _position = tmp & ((1 << 30) - 1);
+            _value = (tmp >> 30);
         }
 
     private:

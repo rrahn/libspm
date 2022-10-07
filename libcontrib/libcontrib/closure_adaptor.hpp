@@ -104,7 +104,7 @@ namespace jst::contrib
             {
                 // return a new closure object that resolves the nested closures in the correct order.
                 using closure_t = closure<nested_closure, std::decay_t<fst_closure_t>, std::decay_t<snd_closure_t>>;
-                return closure_t{{}, (fst_closure_t &&)fst_closure, (snd_closure_t &&)me};
+                return closure_t{nested_closure{}, (fst_closure_t &&)fst_closure, (snd_closure_t &&)me};
             }
 
         };

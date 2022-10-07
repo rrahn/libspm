@@ -43,7 +43,7 @@ namespace seqan
         constexpr bool operator==(alphabet_adaptor const &) const noexcept = default;
         constexpr std::strong_ordering operator<=>(alphabet_adaptor const & other) const noexcept
         {
-            return _symbol <=> other._symbol;
+            return seqan3::to_rank(_symbol) <=> seqan3::to_rank(other._symbol);
         }
 
         // impicit conversion enough for assignment in seqan2 simple types?

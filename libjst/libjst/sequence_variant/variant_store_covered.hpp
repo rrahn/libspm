@@ -18,6 +18,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <cereal/types/vector.hpp>
+
 #include <libjst/sequence_variant/concept.hpp>
 #include <libjst/sequence_variant/variant_store_iterator.hpp>
 
@@ -150,6 +152,12 @@ namespace libjst
 
         iterator begin() const noexcept { return iterator{*this, 0u}; }
         iterator end() const noexcept { return iterator{*this, base_t::size()}; }
+
+        template <seqan3::cereal_archive archive_t>
+        void serialize(archive_t & ioarchive)
+        {
+            ioarchive(cereal::base_class<base_t>( this ), _coverage);
+        }
     };
 }  // namespace libjst
 

@@ -235,6 +235,14 @@ namespace libjst
         iterator begin() const noexcept { return iterator{*this, 0u}; }
         iterator end() const noexcept { return iterator{*this, size()}; }
 
+        template <seqan3::cereal_archive archive_t>
+        void serialize(archive_t & ioarchive)
+        {
+            for_each_store(*this, [&] <typename store_t> (store_t & store) {
+                ioarchive(store);
+            });
+        }
+
     private:
         template <typename this_t, typename fn_t>
         constexpr static void for_each_store(this_t && me, fn_t && fn) noexcept

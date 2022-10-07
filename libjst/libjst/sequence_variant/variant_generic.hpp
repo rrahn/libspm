@@ -14,6 +14,8 @@
 
 #include <vector>
 
+#include <cereal/types/vector.hpp>
+
 #include <seqan3/alphabet/concept.hpp>
 
 #include <libjst/sequence_variant/concept.hpp>
@@ -34,6 +36,12 @@ namespace libjst
             _position{pos},
             _deletion{del}
         {
+        }
+
+        template <seqan3::cereal_archive archive_t>
+        void serialize(archive_t & ioarchive)
+        {
+            ioarchive(_insertion, _position, _deletion);
         }
 
     private:
