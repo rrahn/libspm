@@ -9,6 +9,7 @@
 
 #include <seqan/sequence.h>
 
+#include <jstmap/global/jstmap_jst_types.hpp>
 #include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap

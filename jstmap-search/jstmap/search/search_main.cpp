@@ -22,7 +22,7 @@
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/core/debug_stream.hpp>
 
-#include <jstmap/global/load_jst.hpp>
+#include <jstmap/global/jstmap_jst_types.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/filter_queries.hpp>
 #include <jstmap/search/search_main.hpp>
@@ -30,6 +30,10 @@
 #include <jstmap/search/type_alias.hpp>
 #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/options.hpp>
+
+#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_direct.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_delegate.hpp>
 
 namespace jstmap
 {
@@ -91,7 +95,18 @@ int search_main(seqan3::argument_parser & search_parser)
 
         std::cout << "load the jst\n";
         start = std::chrono::high_resolution_clock::now();
-        auto jst = load_jst(options.jst_input_file_path);
+        // TODO replace for now!
+        raw_sequence_t reference{};
+        jst_model_t jst_model{reference, 0};
+        fwd_jst_t jst{jst_model};
+        // load the jst!
+        {
+            std::ifstream archive_stream{options.jst_input_file_path, std::ios_base::binary | std::ios_base::in};
+            cereal::BinaryInputArchive in_archive{archive_stream};
+            auto jst_archive = in_archive | libjst::direct_serialiser(reference)
+                                        | libjst::delegate_serialiser(jst_model);
+            libjst::load(jst, jst_archive);
+        }
         end = std::chrono::high_resolution_clock::now();
 
         std::cout << "Load JST time: "
@@ -121,11 +136,12 @@ int search_main(seqan3::argument_parser & search_parser)
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
                   << " sec\n";
 
-        std::cout << "bin_size = " << bin_size << "\n";
-        start = std::chrono::high_resolution_clock::now();
-        partitioned_jst_t pjst{std::addressof(jst), bin_size}; // default initialisation
-        std::cout << "bin count = " << pjst.bin_count() << "\n";
-        std::cout << "Run search\n";
+        // #TODO: add later
+        // std::cout << "bin_size = " << bin_size << "\n";
+        // start = std::chrono::high_resolution_clock::now();
+        // partitioned_jst_t pjst{std::addressof(jst), bin_size}; // default initialisation
+        // std::cout << "bin count = " << pjst.bin_count() << "\n";
+        // std::cout << "Run search\n";
 
         // * filter step with ibf -> {bin_id, {ref_view(query_l)[, ref_view(query_r)], global_query_id}[]}
         // list of {bin_id:queries}
@@ -133,11 +149,11 @@ int search_main(seqan3::argument_parser & search_parser)
             // range_agent{traverser_model, } we can construct this from the model directly.
 
         // We need to write more information including the reference sequences and the length of the reference sequences.
-        std::vector<std::vector<search_match>> bin_matches{};
-        bin_matches.resize(pjst.bin_count());
+        std::vector<std::vector<search_match2>> bin_matches{};
+        bin_matches.resize(1 /*pjst.bin_count()*/);
 
-        #pragma omp parallel for num_threads(options.thread_count) shared(bin_matches, pjst, bins, options) schedule(dynamic)
-        for (size_t bin_idx = 0; bin_idx < pjst.bin_count(); ++bin_idx)
+        #pragma omp parallel for num_threads(options.thread_count) shared(bin_matches, jst, bins, options) schedule(dynamic)
+        for (size_t bin_idx = 0; bin_idx < 1; ++bin_idx)
         { // parallel region
             auto const & bin_query_ids = bins[bin_idx];
 
@@ -153,7 +169,7 @@ int search_main(seqan3::argument_parser & search_parser)
                 seqan::appendValue(local_bin, queries[bin_query_ids[local_bin_idx]] | std::views::all);
             }
 
-            auto jst_bin = pjst.bin_at(bin_idx);
+            auto & jst_bin = jst; //pjst.bin_at(bin_idx);
             // * search queries in bin_id -> matches[]
             // * push results into global queue
             // seqan::StringSet<raw_sequence_t> _queries{};
@@ -163,7 +179,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
             // std::cout << "Searching bin = " << bin_idx << "\n";
-            bin_matches[bin_idx] = search_queries_(jst_bin, local_bin, options.error_rate);
+            bin_matches[bin_idx] = search_queries_horsppol(jst_bin, local_bin, options.error_rate);
 
             std::ranges::sort(bin_matches[bin_idx], std::less<void>{}); // sort by query_id and by error_count.
             auto redundant_tail = std::ranges::unique(bin_matches[bin_idx],
@@ -172,7 +188,7 @@ int search_main(seqan3::argument_parser & search_parser)
             bin_matches[bin_idx].erase(redundant_tail.begin(), redundant_tail.end());
 
             // Overwrite the query id here with the global query_id.
-            std::ranges::for_each(bin_matches[bin_idx], [&] (search_match & match)
+            std::ranges::for_each(bin_matches[bin_idx], [&] (search_match2 & match)
             {
                 match.query_id = bins[bin_idx][match.query_id];
             });
@@ -215,7 +231,9 @@ int search_main(seqan3::argument_parser & search_parser)
         start = std::chrono::high_resolution_clock::now();
         // Filter globally for the best hits.
         // Ater reducing them to the same file sort, uniquify and then erase redundant matches.
-        std::vector<search_match> total_matches{};
+
+        // #TODO: readd again
+        std::vector<search_match2> total_matches{};
         if (bins.size() == 1)
         {
             total_matches = std::move(bin_matches[0]);
@@ -239,18 +257,19 @@ int search_main(seqan3::argument_parser & search_parser)
         }
 
         end = std::chrono::high_resolution_clock::now();
+        std::cout << "Found " << total_matches.size() << " matches\n";
         std::cout << "Reduction time: "
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
                   << " sec\n";
 
-        std::cout << "Write results\n";
-        start = std::chrono::high_resolution_clock::now();
-        write_results(total_matches, queries, options); // needs synchronised output_buffer
+        // std::cout << "Write results\n";
+        // start = std::chrono::high_resolution_clock::now();
+        // write_results(total_matches, queries, options); // needs synchronised output_buffer
 
-        end = std::chrono::high_resolution_clock::now();
-        std::cout << "Write results time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
+        // end = std::chrono::high_resolution_clock::now();
+        // std::cout << "Write results time: "
+        //           << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+        //           << " sec\n";
     }
     catch (std::exception const & ex)
     {
