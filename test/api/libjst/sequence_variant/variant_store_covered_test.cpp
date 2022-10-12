@@ -37,8 +37,8 @@ struct variant_store_covered_test : public ::testing::Test
 
     inline static const std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};
 
-    snp_variant_t snp0{4, seqan3::assign_rank_to(3, alphabet_t{})};
-    snp_variant_t snp1{112, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp_variant_t snp0{4, seqan3::assign_char_to('T', alphabet_t{})};
+    snp_variant_t snp1{112, seqan3::assign_char_to('A', alphabet_t{})};
     generic_variant_t var0{44, insertion_sequence, 10};
     generic_variant_t var1{93, insertion_sequence, 0};
     generic_variant_t var2{154, {}, 1};
@@ -50,8 +50,10 @@ struct variant_store_covered_test : public ::testing::Test
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,
-                                    seqan3::dna4
-                                    >;
+                                    seqan3::dna4,
+                                    jst::contrib::dna5,
+                                    jst::contrib::dna15
+                                >;
 TYPED_TEST_SUITE(variant_store_covered_test, test_types);
 
 TYPED_TEST(variant_store_covered_test, construction)
@@ -94,7 +96,7 @@ TYPED_TEST(variant_store_covered_test, type_traits)
     EXPECT_TRUE((std::constructible_from<const_reference_t, value_t const &>));
     EXPECT_TRUE((std::constructible_from<value_t, reference_t>));
 
-    snp_variant_t snp{4, seqan3::assign_rank_to(3, alphabet_t{})};
+    snp_variant_t snp{4, seqan3::assign_char_to('T', alphabet_t{})};
     coverage_t coverage{0, 1, 1, 0};
     reference_t ref{snp, coverage};
     value_t val{snp, coverage};
@@ -104,7 +106,7 @@ TYPED_TEST(variant_store_covered_test, type_traits)
     EXPECT_RANGE_EQ(libjst::coverage(ref), (coverage_t{0, 1, 1, 0}));
     EXPECT_RANGE_EQ(libjst::coverage(val), (coverage_t{0, 1, 1, 0}));
 
-    snp = snp_variant_t{10, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp = snp_variant_t{10, seqan3::assign_char_to('A', alphabet_t{})};
     coverage[0] = 1;
     coverage[1] = 0;
     EXPECT_EQ(libjst::position(snp), 10u);
@@ -185,8 +187,8 @@ TYPED_TEST(variant_store_covered_test, subscript)
     EXPECT_EQ(libjst::position(store[3]), 93u);
     EXPECT_EQ(libjst::position(store[4]), 154u);
 
-    EXPECT_RANGE_EQ(libjst::insertion(store[0]), (std::vector{seqan3::assign_rank_to(3, alphabet_t{})}));
-    EXPECT_RANGE_EQ(libjst::insertion(store[1]), (std::vector{seqan3::assign_rank_to(0, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(store[0]), (std::vector{seqan3::assign_char_to('T', alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(store[1]), (std::vector{seqan3::assign_char_to('A', alphabet_t{})}));
     EXPECT_RANGE_EQ(libjst::insertion(store[2]), this->insertion_sequence);
     EXPECT_RANGE_EQ(libjst::insertion(store[3]), this->insertion_sequence);
     EXPECT_RANGE_EQ(libjst::insertion(store[4]), std::vector<alphabet_t>{});
@@ -221,13 +223,13 @@ TYPED_TEST(variant_store_covered_test, iterator)
 
     auto it = store.begin();
     EXPECT_EQ(libjst::position(*it), 4u);
-    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_rank_to(3, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_char_to('T', alphabet_t{})}));
     EXPECT_EQ(libjst::deletion(*it), 1u);
     EXPECT_RANGE_EQ(libjst::coverage(*it), (coverage_t{0, 0, 0, 1}));
 
     ++it;
     EXPECT_EQ(libjst::position(*it), 112u);
-    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_rank_to(0, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_char_to('A', alphabet_t{})}));
     EXPECT_EQ(libjst::deletion(*it), 1u);
     EXPECT_RANGE_EQ(libjst::coverage(*it), (coverage_t{1, 0, 0, 0}));
 

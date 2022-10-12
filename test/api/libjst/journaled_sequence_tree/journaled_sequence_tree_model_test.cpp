@@ -40,16 +40,17 @@ struct journaled_sequence_tree_model_test : public ::testing::Test
     inline static const std::vector<alphabet_t> base_sequence{seqan3::test::generate_sequence<alphabet_t>(200)};
     inline static const std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};
 
-    snp_variant_t snp0{4, seqan3::assign_rank_to(3, alphabet_t{})};
-    snp_variant_t snp1{112, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp_variant_t snp0{4, seqan3::assign_char_to('T', alphabet_t{})};
+    snp_variant_t snp1{112, seqan3::assign_char_to('A', alphabet_t{})};
     generic_variant_t var0{44, insertion_sequence, 10};
     generic_variant_t var1{93, insertion_sequence, 0};
     generic_variant_t var2{154, {}, 1};
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,
-                                    seqan3::dna4
-                                    >;
+                                    seqan3::dna4,
+                                    jst::contrib::dna5
+                                >;
 TYPED_TEST_SUITE(journaled_sequence_tree_model_test, test_types);
 
 TYPED_TEST(journaled_sequence_tree_model_test, construction)

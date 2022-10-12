@@ -19,7 +19,7 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-using sequence_t = std::vector<jst::contrib::dna4>;
+using sequence_t = std::vector<jst::contrib::dna5>;
 
 // auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
 // {
@@ -56,7 +56,8 @@ sequence_t sample_query(sequence_t const & reference, size_t const query_size)
     while (true) {
         size_t offset = dist(rng);
         auto ref_it = std::ranges::next(std::ranges::begin(reference)) + offset;
-        if (std::ranges::all_of(ref_it, ref_it + query_size, [] (auto s) { return s == jst::contrib::dna4{'A'}; })) {
+        if (std::ranges::all_of(ref_it, ref_it + query_size, [] (auto s) { return s == jst::contrib::dna5{'A'} ||
+                                                                                  s == jst::contrib::dna5{'N'}; })) {
             continue;
         } else {
             std::ranges::copy_n(ref_it, query_size, std::ranges::begin(query));

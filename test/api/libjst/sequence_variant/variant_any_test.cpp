@@ -31,15 +31,17 @@ struct any_variant_test : ::testing::Test
 
     inline static const std::vector<alphabet_t> insertion_sequence = seqan3::test::generate_sequence<alphabet_t>(10);
 
-    snp_variant_t snp_var{6, seqan3::assign_rank_to(2, alphabet_t{})};
+    snp_variant_t snp_var{6, seqan3::assign_char_to('G', alphabet_t{})};
     generic_variant_t variant_sub{10, insertion_sequence, 10};
     generic_variant_t variant_ins{20, insertion_sequence, 0};
     generic_variant_t variant_del{34, {}, 7};
 };
 
-using test_types = ::testing::Types<//jst::contrib::dna4,
-                                    seqan3::dna4
-                                    >;
+using test_types = ::testing::Types<jst::contrib::dna4,
+                                    seqan3::dna4,
+                                    jst::contrib::dna5,
+                                    jst::contrib::dna15
+                                >;
 TYPED_TEST_SUITE(any_variant_test, test_types);
 
 TYPED_TEST(any_variant_test, construction)

@@ -31,7 +31,7 @@
 
 TEST(journaled_sequence_tree_serialiser_test, protoype_jst)
 {
-    using alphabet_t = jst::contrib::dna4;
+    using alphabet_t = jst::contrib::dna5;
     using sequence_t = std::vector<alphabet_t>;
     using snp_variant_t = libjst::snp_variant<alphabet_t>;
     using generic_variant_t = libjst::generic_variant<alphabet_t>;
@@ -49,8 +49,8 @@ TEST(journaled_sequence_tree_serialiser_test, protoype_jst)
     std::vector<alphabet_t> base_sequence{seqan3::test::generate_sequence<alphabet_t>(200)};
     std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};
 
-    snp_variant_t snp0{4, seqan3::assign_rank_to(3, alphabet_t{})};
-    snp_variant_t snp1{112, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp_variant_t snp0{4, seqan3::assign_char_to('T', alphabet_t{})};
+    snp_variant_t snp1{112, seqan3::assign_char_to('A', alphabet_t{})};
     generic_variant_t var0{44, insertion_sequence, 10};
     generic_variant_t var1{93, insertion_sequence, 0};
     generic_variant_t var2{154, {}, 1};

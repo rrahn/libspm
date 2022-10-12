@@ -47,9 +47,9 @@ struct lazy_tree_test : public ::testing::Test
     inline static const std::vector<alphabet_t> base_sequence{seqan3::test::generate_sequence<alphabet_t>(200)};
     inline static const std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};
 
-    snp_variant_t snp0{4, seqan3::assign_rank_to(3, alphabet_t{})};
-    snp_variant_t snp1{44, seqan3::assign_rank_to(0, alphabet_t{})};
-    snp_variant_t snp2{112, seqan3::assign_rank_to(1, alphabet_t{})};
+    snp_variant_t snp0{4, seqan3::assign_char_to('T', alphabet_t{})};
+    snp_variant_t snp1{44, seqan3::assign_char_to('A', alphabet_t{})};
+    snp_variant_t snp2{112, seqan3::assign_char_to('C', alphabet_t{})};
     generic_variant_t var0{44, insertion_sequence, 10};
     generic_variant_t var1{93, insertion_sequence, 0};
     generic_variant_t var2{154, {}, 1};
@@ -70,7 +70,8 @@ struct lazy_tree_test : public ::testing::Test
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,
-                                    seqan3::dna4
+                                    seqan3::dna4,
+                                    seqan3::dna5
                                     >;
 TYPED_TEST_SUITE(lazy_tree_test, test_types);
 

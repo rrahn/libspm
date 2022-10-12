@@ -23,12 +23,14 @@ struct snp_test : ::testing::Test
     using snp_t = libjst::snp_variant<alphabet_t>;
 
     snp_t default_snp{};
-    snp_t snp{10, seqan3::assign_rank_to(1, alphabet_t{})};
+    snp_t snp{10, seqan3::assign_char_to('C', alphabet_t{})};
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,
-                                    seqan3::dna4
-                                    >;
+                                    seqan3::dna4,
+                                    jst::contrib::dna5,
+                                    jst::contrib::dna15
+                                >;
 TYPED_TEST_SUITE(snp_test, test_types);
 
 TYPED_TEST(snp_test, construction)
@@ -36,7 +38,7 @@ TYPED_TEST(snp_test, construction)
     using alphabet_t = typename TestFixture::alphabet_t;
     using snp_t = typename TestFixture::snp_t;
 
-    EXPECT_TRUE((std::is_nothrow_constructible_v<snp_t, uint32_t, alphabet_t>));
+    EXPECT_TRUE((std::is_constructible_v<snp_t, uint32_t, alphabet_t>));
     EXPECT_TRUE(std::is_nothrow_default_constructible_v<snp_t>);
     EXPECT_TRUE(std::is_nothrow_copy_constructible_v<snp_t>);
     EXPECT_TRUE(std::is_nothrow_move_constructible_v<snp_t>);
@@ -69,8 +71,8 @@ TYPED_TEST(snp_test, position)
 TYPED_TEST(snp_test, insertion)
 {
     using alphabet_t = typename TestFixture::alphabet_t;
-    EXPECT_RANGE_EQ(libjst::insertion(this->default_snp), std::vector{seqan3::assign_rank_to(0, alphabet_t{})});
-    EXPECT_RANGE_EQ(libjst::insertion(this->snp), std::vector{seqan3::assign_rank_to(1, alphabet_t{})});
+    EXPECT_RANGE_EQ(libjst::insertion(this->default_snp), std::vector{seqan3::assign_char_to('A', alphabet_t{})});
+    EXPECT_RANGE_EQ(libjst::insertion(this->snp), std::vector{seqan3::assign_char_to('C', alphabet_t{})});
 }
 
 TYPED_TEST(snp_test, deletion)
@@ -84,10 +86,10 @@ TYPED_TEST(snp_test, serialise)
     using snp_type = typename TestFixture::snp_t;
     using alphabet_t = typename TestFixture::alphabet_t;
 
-    snp_type snp_a_out{0, seqan3::assign_rank_to(0, alphabet_t{})};
-    snp_type snp_c_out{23, seqan3::assign_rank_to(1, alphabet_t{})};
-    snp_type snp_g_out{1234, seqan3::assign_rank_to(2, alphabet_t{})};
-    snp_type snp_t_out{((1 << 30) - 1), seqan3::assign_rank_to(3, alphabet_t{})};
+    snp_type snp_a_out{0, seqan3::assign_char_to('A', alphabet_t{})};
+    snp_type snp_c_out{23, seqan3::assign_char_to('C', alphabet_t{})};
+    snp_type snp_g_out{1234, seqan3::assign_char_to('G', alphabet_t{})};
+    snp_type snp_t_out{((1 << 30) - 1), seqan3::assign_char_to('T', alphabet_t{})};
 
     snp_type snp_a_in{};
     snp_type snp_c_in{};

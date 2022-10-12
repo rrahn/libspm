@@ -38,8 +38,10 @@ struct variant_store_composite_test : public ::testing::Test
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,
-                                    seqan3::dna4
-                                    >;
+                                    seqan3::dna4,
+                                    jst::contrib::dna5,
+                                    jst::contrib::dna15
+                                >;
 TYPED_TEST_SUITE(variant_store_composite_test, test_types);
 
 TYPED_TEST(variant_store_composite_test, construction)
@@ -122,14 +124,14 @@ TYPED_TEST(variant_store_composite_test, type_traits)
 
     EXPECT_EQ(sizeof(reference_t), 16u);
 
-    snp_variant_t snp{4, seqan3::assign_rank_to(3, alphabet_t{})};
+    snp_variant_t snp{4, seqan3::assign_char_to('T', alphabet_t{})};
     reference_t any_ref{snp};
     value_t any_val{snp_variant_t{snp}};
     EXPECT_EQ(libjst::position(snp), 4u);
     EXPECT_EQ(libjst::position(any_ref), 4u);
     EXPECT_EQ(libjst::position(any_val), 4u);
 
-    snp = snp_variant_t{10, seqan3::assign_rank_to(0, alphabet_t{})};
+    snp = snp_variant_t{10, seqan3::assign_char_to('A', alphabet_t{})};
     EXPECT_EQ(libjst::position(snp), 10u);
     EXPECT_EQ(libjst::position(any_ref), 10u);
     EXPECT_EQ(libjst::position(any_val), 4u);
@@ -143,10 +145,10 @@ TYPED_TEST(variant_store_composite_test, insert)
     using generic_variant_t = typename TestFixture::generic_variant_t;
 
     composite_store_t store{};
-    EXPECT_EQ((store.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})}) - store.begin()), 0);
+    EXPECT_EQ((store.insert(snp_variant_t{4, seqan3::assign_char_to('T', alphabet_t{})}) - store.begin()), 0);
     EXPECT_EQ((store.insert(generic_variant_t{44, this->make_insertion(), 10}) - store.begin()), 1);
     EXPECT_EQ((store.insert(generic_variant_t{93, this->make_insertion(), 0}) - store.begin()), 2);
-    EXPECT_EQ((store.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})}) - store.begin()), 1);
+    EXPECT_EQ((store.insert(snp_variant_t{112, seqan3::assign_char_to('A', alphabet_t{})}) - store.begin()), 1);
     EXPECT_EQ((store.insert(generic_variant_t{154, {}, 1}) - store.begin()), 4);
 }
 
@@ -158,10 +160,10 @@ TYPED_TEST(variant_store_composite_test, emplace)
     // using generic_variant_t = typename TestFixture::generic_variant_t;
 
     composite_store_t store{};
-    EXPECT_EQ((store.emplace(uint32_t{4}, seqan3::assign_rank_to(3, alphabet_t{})) - store.begin()), 0);
+    EXPECT_EQ((store.emplace(uint32_t{4}, seqan3::assign_char_to('T', alphabet_t{})) - store.begin()), 0);
     EXPECT_EQ((store.emplace(uint32_t{44}, this->make_insertion(), uint32_t{10}) - store.begin()), 1);
     EXPECT_EQ((store.emplace(uint32_t{93}, this->make_insertion(), uint32_t{0}) - store.begin()), 2);
-    EXPECT_EQ((store.emplace(uint32_t{112}, seqan3::assign_rank_to(0, alphabet_t{})) - store.begin()), 1);
+    EXPECT_EQ((store.emplace(uint32_t{112}, seqan3::assign_char_to('A', alphabet_t{})) - store.begin()), 1);
     EXPECT_EQ((store.emplace(uint32_t{154}, std::vector<alphabet_t>{}, uint32_t{1}) - store.begin()), 4);
 }
 
@@ -174,13 +176,13 @@ TYPED_TEST(variant_store_composite_test, size)
 
     composite_store_t store{};
     EXPECT_EQ(store.size(), 0u);
-    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_char_to('T', alphabet_t{})})));
     EXPECT_EQ(store.size(), 1u);
     EXPECT_NO_THROW((store.insert(generic_variant_t{44, this->make_insertion(), 10})));
     EXPECT_EQ(store.size(), 2u);
     EXPECT_NO_THROW((store.insert(generic_variant_t{93, this->make_insertion(), 0})));
     EXPECT_EQ(store.size(), 3u);
-    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_char_to('A', alphabet_t{})})));
     EXPECT_EQ(store.size(), 4u);
     EXPECT_NO_THROW((store.insert(generic_variant_t{154, {}, 1})));
     EXPECT_EQ(store.size(), 5u);
@@ -196,10 +198,10 @@ TYPED_TEST(variant_store_composite_test, subscript)
     composite_store_t store{};
     auto ins = this->make_insertion();
 
-    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_char_to('T', alphabet_t{})})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{44, ins, (uint32_t) ins.size()})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{93, ins, 0})));
-    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_char_to('A', alphabet_t{})})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{154, {}, 1})));
 
     EXPECT_EQ(libjst::position(store[0]), 4u);
@@ -208,8 +210,8 @@ TYPED_TEST(variant_store_composite_test, subscript)
     EXPECT_EQ(libjst::position(store[3]), 93u);
     EXPECT_EQ(libjst::position(store[4]), 154u);
 
-    EXPECT_RANGE_EQ(libjst::insertion(store[0]), (std::vector{seqan3::assign_rank_to(3, alphabet_t{})}));
-    EXPECT_RANGE_EQ(libjst::insertion(store[1]), (std::vector{seqan3::assign_rank_to(0, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(store[0]), (std::vector{seqan3::assign_char_to('T', alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(store[1]), (std::vector{seqan3::assign_char_to('A', alphabet_t{})}));
     EXPECT_RANGE_EQ(libjst::insertion(store[2]), ins);
     EXPECT_RANGE_EQ(libjst::insertion(store[3]), ins);
     EXPECT_RANGE_EQ(libjst::insertion(store[4]), std::vector<alphabet_t>{});
@@ -231,20 +233,20 @@ TYPED_TEST(variant_store_composite_test, iterator)
     composite_store_t store{};
     auto ins = this->make_insertion();
 
-    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{4, seqan3::assign_char_to('T', alphabet_t{})})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{44, ins, (uint32_t) ins.size()})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{93, ins, 0})));
-    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})})));
+    EXPECT_NO_THROW((store.insert(snp_variant_t{112, seqan3::assign_char_to('A', alphabet_t{})})));
     EXPECT_NO_THROW((store.insert(generic_variant_t{154, {}, 1})));
 
     auto it = store.begin();
     EXPECT_EQ(libjst::position(*it), 4u);
-    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_rank_to(3, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_char_to('T', alphabet_t{})}));
     EXPECT_EQ(libjst::deletion(*it), 1u);
 
     ++it;
     EXPECT_EQ(libjst::position(*it), 112u);
-    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_rank_to(0, alphabet_t{})}));
+    EXPECT_RANGE_EQ(libjst::insertion(*it), (std::vector{seqan3::assign_char_to('A', alphabet_t{})}));
     EXPECT_EQ(libjst::deletion(*it), 1u);
 
     ++it;
@@ -277,10 +279,10 @@ TYPED_TEST(variant_store_composite_test, serialise)
     composite_store_t store_in{};
     auto ins = this->make_insertion();
 
-    EXPECT_NO_THROW((store_out.insert(snp_variant_t{4, seqan3::assign_rank_to(3, alphabet_t{})})));
+    EXPECT_NO_THROW((store_out.insert(snp_variant_t{4, seqan3::assign_char_to('T', alphabet_t{})})));
     EXPECT_NO_THROW((store_out.insert(generic_variant_t{44, ins, (uint32_t) ins.size()})));
     EXPECT_NO_THROW((store_out.insert(generic_variant_t{93, ins, 0})));
-    EXPECT_NO_THROW((store_out.insert(snp_variant_t{112, seqan3::assign_rank_to(0, alphabet_t{})})));
+    EXPECT_NO_THROW((store_out.insert(snp_variant_t{112, seqan3::assign_char_to('A', alphabet_t{})})));
     EXPECT_NO_THROW((store_out.insert(generic_variant_t{154, {}, 1})));
 
     generic_variant_t var_sub_in{};

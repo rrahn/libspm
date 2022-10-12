@@ -12,28 +12,25 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <ranges>
 #include <span>
 
-#include <seqan3/alphabet/concept.hpp>
+#include <seqan3/alphabet/nucleotide/concept.hpp>
 
 #include <libjst/sequence_variant/concept.hpp>
 
 namespace libjst
 {
-    template <seqan3::semialphabet alphabet_t>
-    inline const std::array<alphabet_t, seqan3::alphabet_size<alphabet_t>> snp_value{[] ()
-    {
-        std::array<alphabet_t, seqan3::alphabet_size<alphabet_t>> tmp{};
-        using rank_t = seqan3::alphabet_rank_t<alphabet_t>;
-        for (size_t i = 0; i < tmp.size(); ++i)
-            seqan3::assign_rank_to(static_cast<rank_t>(i), tmp[i]);
+    template <seqan3::nucleotide_alphabet alphabet_t>
+    inline constexpr std::array<alphabet_t, 4> snp_value{
+        seqan3::assign_char_to('A', alphabet_t{}),
+        seqan3::assign_char_to('C', alphabet_t{}),
+        seqan3::assign_char_to('G', alphabet_t{}),
+        seqan3::assign_char_to('T', alphabet_t{})};
 
-        return tmp;
-    }()};
-
-    template <seqan3::semialphabet alphabet_t>
-        requires (seqan3::alphabet_size<alphabet_t> <= 4)
+    template <seqan3::nucleotide_alphabet alphabet_t>
     class snp_variant
     {
         uint32_t _value : 2;
@@ -41,10 +38,15 @@ namespace libjst
 
     public:
         snp_variant() = default;
-        constexpr explicit snp_variant(uint32_t pos, alphabet_t value) noexcept :
-            _value{seqan3::to_rank(value)},
+
+        constexpr explicit snp_variant(uint32_t pos, alphabet_t value) :
             _position{pos}
         {
+            if (auto it = std::ranges::find(snp_value<alphabet_t>, value); it != std::ranges::end(snp_value<alphabet_t>)) {
+                _value = std::ranges::distance(std::ranges::begin(snp_value<alphabet_t>), it);
+            } else {
+                throw std::runtime_error{"Unsupported SNP value!"};
+            }
         }
 
         template <seqan3::cereal_output_archive output_archive_t>

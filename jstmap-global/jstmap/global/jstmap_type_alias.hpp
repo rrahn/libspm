@@ -26,7 +26,7 @@ namespace jstmap
 {
 
 //!\brief The sequence type loaded from the disk.
-using raw_sequence_t = std::vector<jst::contrib::dna4>;
+using raw_sequence_t = std::vector<jst::contrib::dna5>;
 //!\brief The globally available journal sequence tree type.
 using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 //!\brief The globally available partitioned journal sequence tree type.
@@ -94,7 +94,7 @@ scoring_scheme(seqan3::match_score<score_arg_type>,
 
 struct sequence_input_traits : public seqan3::sequence_file_input_default_traits_dna
 {
-    using sequence_alphabet = jst::contrib::dna4;
+    using sequence_alphabet = jst::contrib::dna5;
     using sequence_legal_alphabet = jst::contrib::dna15; // conversion?
 };
 }  // namespace jstmap

@@ -37,7 +37,7 @@ namespace jstmap
 class augmented_vcf_record
 {
     //!\brief The internally used shared delta event type.
-    using shared_event_type = libjst::detail::delta_event_shared<jst::contrib::dna4>;
+    using shared_event_type = libjst::detail::delta_event_shared<jst::contrib::dna5>;
     //!\brief The pure delta event type.
     using event_type = typename shared_event_type::delta_event_type;
     //!\brief The substitution type.
@@ -307,7 +307,7 @@ private:
             {
                 size_t const variant_size = std::ranges::distance(alt_it, alt_it_rev.base());
                 auto variant = alternative.subspan(alt_prefix_offset, variant_size)
-                             | seqan3::views::char_to<jst::contrib::dna4>
+                             | seqan3::views::char_to<jst::contrib::dna5>
                              | seqan3::views::to<std::vector>;
 
                 if (alternative.size() == reference_segment.size()) // Substitution.

@@ -29,7 +29,7 @@
 namespace jstmap
 {
 
-using alphabet_t = jst::contrib::dna4;
+using alphabet_t = jst::contrib::dna5;
 using snp_t = libjst::snp_variant<alphabet_t>;
 using indel_t = libjst::generic_variant<alphabet_t>;
 using coverage_t = libjst::bit_vector<>;
