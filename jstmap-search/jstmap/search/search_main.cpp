@@ -179,7 +179,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // for (unsigned i = 0; i < queries.size(); ++i)
             //     seqan::appendValue(_queries, queries[i]);
             // std::cout << "Searching bin = " << bin_idx << "\n";
-            bin_matches[bin_idx] = search_queries_horsppol(jst_bin, local_bin, options.error_rate);
+            bin_matches[bin_idx] = search_queries_shiftor(jst_bin, local_bin, options.error_rate);
 
             std::ranges::sort(bin_matches[bin_idx], std::less<void>{}); // sort by query_id and by error_count.
             auto redundant_tail = std::ranges::unique(bin_matches[bin_idx],

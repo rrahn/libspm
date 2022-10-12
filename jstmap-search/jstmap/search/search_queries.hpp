@@ -79,6 +79,6 @@ std::vector<search_match> search_queries_(jst_bin_t const &, bin_t const &, floa
 std::vector<libjst::context_position> search_queries(partitioned_jst_t const &, std::vector<raw_sequence_t> const &);
 
 std::vector<search_match2> search_queries_horsppol(fwd_jst_t const &, bin_t const &, float const);
-std::vector<search_match2> search_queries_bitap(fwd_jst_t const &, bin_t const &, float const);
+std::vector<search_match2> search_queries_shiftor(fwd_jst_t const &, bin_t const &, float const);
 
 }  // namespace jstmap

@@ -68,6 +68,11 @@ namespace jst::contrib
 
     protected:
 
+        pattern_t & pattern() const noexcept
+        {
+            return *_pattern;
+        }
+
     private:
         derived_operation_t &derived() noexcept
         {
