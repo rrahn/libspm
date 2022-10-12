@@ -260,6 +260,7 @@ namespace seqan3::custom
     {
         using alphabet_t = seqan::alphabet_adaptor<wrapped_t>;
         using rank_t = seqan3::alphabet_rank_t<wrapped_t>;
+        using char_t = seqan3::alphabet_char_t<wrapped_t>;
 
         static constexpr rank_t alphabet_size = seqan3::alphabet_size<wrapped_t>;
 
@@ -292,6 +293,11 @@ namespace seqan3::custom
             -> std::invoke_result_t<std::tag_t<seqan3::complement>, wrapped_t const &>
         {
             return seqan3::complement(a._symbol);
+        }
+
+        constexpr static auto char_is_valid(char_t const c) noexcept
+        {
+            return seqan3::char_is_valid_for<wrapped_t>(c);
         }
     };
 } // namespace seqan3::custom

@@ -38,10 +38,16 @@ namespace libjst
         {
         }
 
-        template <seqan3::cereal_archive archive_t>
-        void serialize(archive_t & ioarchive)
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive)
         {
-            ioarchive(_insertion, _position, _deletion);
+            iarchive(_insertion, _position, _deletion);
+        }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const
+        {
+            oarchive(_insertion, _position, _deletion);
         }
 
     private:

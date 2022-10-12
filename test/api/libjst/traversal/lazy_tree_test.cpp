@@ -54,13 +54,10 @@ struct lazy_tree_test : public ::testing::Test
     generic_variant_t var1{93, insertion_sequence, 0};
     generic_variant_t var2{154, {}, 1};
 
-    jst_t jst;
-    fwd_jst_t fwd_jst;
+    jst_t jst{this->base_sequence, 4};
 
     void SetUp() override
     {
-        jst = jst_t{this->base_sequence, 4};
-
         using value_t = std::ranges::range_value_t<covered_store_t>;
 
         jst.insert(value_t{this->snp0, coverage_t{0, 0, 0, 1}});
@@ -69,8 +66,6 @@ struct lazy_tree_test : public ::testing::Test
         jst.insert(value_t{this->var0, coverage_t{0, 0, 1, 0}});
         jst.insert(value_t{this->var1, coverage_t{0, 1, 0, 0}});
         jst.insert(value_t{this->var2, coverage_t{0, 0, 1, 1}});
-
-        fwd_jst = fwd_jst_t{jst};
     }
 };
 
@@ -101,8 +96,10 @@ TYPED_TEST(lazy_tree_test, concept)
 
 TYPED_TEST(lazy_tree_test, iterate)
 {
+    using fwd_jst_t = typename TestFixture::fwd_jst_t;
     using lazy_tree_t = typename TestFixture::lazy_tree_t;
-    lazy_tree_t tree{this->fwd_jst, 4};
+    fwd_jst_t fwd_jst{this->jst};
+    lazy_tree_t tree{fwd_jst, 4};
 
     for (auto && node : tree) {
         seqan3::debug_stream << node.sequence() << "\n";

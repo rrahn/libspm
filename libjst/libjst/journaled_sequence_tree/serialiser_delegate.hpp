@@ -49,7 +49,7 @@ namespace libjst
         requires std::same_as<external_target_t, std::remove_cvref_t<target_t>>
         constexpr friend auto tag_invoke(std::tag_t<libjst::load_extern>,
                                          delegate_serialiser_impl &me,
-                                         external_target_t const &external_target)
+                                         [[maybe_unused]] external_target_t const &external_target)
         {
             assert(std::addressof(me._target.get()) == std::addressof(external_target)); // reading the same object
             libjst::load(me._target.get(), me._archive);                                 // delegate the load process

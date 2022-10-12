@@ -7,13 +7,23 @@
 
 #include <benchmark/benchmark.h>
 
+#include <cereal/archives/binary.hpp>
+#include <numeric>
+
 #include <libjst/search/naive_search.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/search_queries.hpp>
 
 #include <libcontrib/seqan/horspool_pattern.hpp>
 #include <libjst/concept.hpp>
-#include <libjst/journaled_sequence_tree_forward.hpp>
+#include <libjst/search/concept.hpp>
+#include <libjst/search/search_base.hpp>
+#include <libjst/journaled_sequence_tree/journaled_sequence_tree_model.hpp>
+#include <libjst/journaled_sequence_tree/journaled_sequence_tree_forward.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_direct.hpp>
+#include <libjst/journaled_sequence_tree/serialiser_delegate.hpp>
+#include <libjst/traversal/searcher_factory.hpp>
 
 #include "benchmark_utility.hpp"
 
@@ -90,23 +100,39 @@ template <typename ...args_t>
 static void jst_search_benchmark2(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
-    auto jst = jstmap::load_jst(jst_file); // loads the sequences as seqan3::dna5!
 
-    libjst::journaled_sequence_tree_forward fwd{std::move(jst)};
+    jstmap::raw_sequence_t reference{};
+    jstmap::jst_model_t jst_model{reference, 0};
+    jstmap::fwd_jst_t jst{jst_model};
 
-    std::vector<sequence_t> query{generate_query(state.range(0))};
+    std::ifstream archive_stream{jst_file, std::ios_base::binary | std::ios_base::in};
+    {
+        cereal::BinaryInputArchive in_archive{archive_stream};
+        auto jst_archive = in_archive | libjst::direct_serialiser(reference)
+                                      | libjst::delegate_serialiser(jst_model);
+        libjst::load(jst, jst_archive);
+    }
+
+    // libjst::journaled_sequence_tree fwd{std::move(jst)};
+
+    std::vector<jstmap::raw_sequence_t> query{sample_query(reference, state.range(0))};
     jst::contrib::horspool_pattern pattern{query[0]};
+    // auto pattern_state = pattern.search_operation();
 
     size_t hit_count{};
-    auto s = fwd.search(pattern);
-    auto op = s.connect(collect_hits{hit_count});
+    for (auto _ : state) {
+        libjst::search_base(jst, libjst::jst_searcher(pattern.search_operation()), [&] (auto const &) { ++hit_count; });
+    }
 
-    for (auto _ : state)
-        op.start();
-        // hit_count += jstmap::search_queries(pjst, query).size();
+    size_t pangenome_bytes = std::ranges::size(reference);
+    auto && store = libjst::variant_store(jst);
+    pangenome_bytes = std::accumulate(store.begin(), store.end(), pangenome_bytes, [] (size_t bytes, auto const & variant)
+    {
+        return bytes + std::ranges::size(libjst::insertion(variant));
+    });
 
-    state.counters["bytes"] = fwd.total_symbol_count();
-    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(fwd.total_symbol_count());
+    state.counters["bytes"] = pangenome_bytes;
+    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(pangenome_bytes);
     state.counters["#hits"] = hit_count;
 }
 
@@ -117,7 +143,9 @@ static void jst_search_benchmark2(benchmark::State & state, args_t && ...args)
 
 BENCHMARK_CAPTURE(jst_search_benchmark2,
                   vcf_indel_test,
-                  DATADIR"1KGP.chr22.vcf_new.jst")->Arg(64);
+                  "/home/rahn/workspace/jstmap/build/data/1KGP.chr22.vcf_new3.jst")->Arg(16)->Arg(32)->Arg(64)->Arg(128)->Arg(256);
+                //   "/home/rahn/workspace/jstmap/build/bench/Release/test1.jst")->Arg(16)->Arg(32)->Arg(64)->Arg(128)->Arg(256);
+                //   DATADIR"1KGP.chr22.vcf_new.jst")->Arg(64);
                 //   "/home/rahn/workspace/data/jstmap/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.jst")->Arg(64);
 
 BENCHMARK_MAIN();

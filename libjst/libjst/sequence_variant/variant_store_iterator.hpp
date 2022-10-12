@@ -22,20 +22,35 @@ template <typename variant_store_t>
 class variant_store_iterator
 {
 private:
-    variant_store_t const *_variant_store{};
+    static constexpr bool is_const = std::is_const_v<variant_store_t>;
+
+    variant_store_t *_variant_store{};
     uint64_t _position{};
 
+    template <typename>
+    friend class variant_store_iterator;
+
 public:
-    using value_type = typename variant_store_t::value_type;
-    using reference = typename variant_store_t::reference;
+    using value_type = typename std::remove_cvref_t<variant_store_t>::value_type;
+    using reference = std::conditional_t<is_const,
+                                         typename std::remove_cvref_t<variant_store_t>::const_reference,
+                                         typename std::remove_cvref_t<variant_store_t>::reference>;
     using difference_type =	std::ptrdiff_t;
     using pointer =	void;
     using iterator_category	= std::random_access_iterator_tag;
 
     constexpr variant_store_iterator() = default;
-    constexpr explicit variant_store_iterator(variant_store_t const & variant_store, size_t const position) noexcept :
+    constexpr explicit variant_store_iterator(variant_store_t & variant_store, size_t const position) noexcept :
         _variant_store{std::addressof(variant_store)},
         _position{position}
+    {}
+
+    template <typename other_variant_store_t>
+        requires (std::same_as<std::remove_cvref_t<variant_store_t>, std::remove_cvref_t<other_variant_store_t>> &&
+                  is_const && !variant_store_iterator<other_variant_store_t>::is_const)
+    constexpr explicit variant_store_iterator(variant_store_iterator<other_variant_store_t> other) noexcept :
+        _variant_store{std::addressof(other._variant_store)},
+        _position{other._position}
     {}
 
     constexpr reference operator*() const noexcept
@@ -108,14 +123,23 @@ public:
         return tmp -= offset;
     }
 
-    constexpr difference_type operator-(variant_store_iterator const & rhs) const noexcept
+    template <typename other_variant_store_t>
+        requires std::same_as<std::remove_cvref_t<variant_store_t>, std::remove_cvref_t<other_variant_store_t>>
+    constexpr difference_type operator-(variant_store_iterator<other_variant_store_t> const & rhs) const noexcept
     {
         return _position - rhs._position;
     }
 
-    constexpr bool operator==(variant_store_iterator const &) const noexcept = default;
+    template <typename other_variant_store_t>
+        requires std::same_as<std::remove_cvref_t<variant_store_t>, std::remove_cvref_t<other_variant_store_t>>
+    constexpr bool operator==(variant_store_iterator<other_variant_store_t> const & rhs) const noexcept
+    {
+        return _position == rhs._position;
+    }
 
-    constexpr std::strong_ordering operator<=>(variant_store_iterator const & rhs) const noexcept
+    template <typename other_variant_store_t>
+        requires std::same_as<std::remove_cvref_t<variant_store_t>, std::remove_cvref_t<other_variant_store_t>>
+    constexpr std::strong_ordering operator<=>(variant_store_iterator<other_variant_store_t> const & rhs) const noexcept
     {
         return _position <=> rhs._position;
     }

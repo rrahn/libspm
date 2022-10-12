@@ -150,6 +150,21 @@ TYPED_TEST(variant_store_composite_test, insert)
     EXPECT_EQ((store.insert(generic_variant_t{154, {}, 1}) - store.begin()), 4);
 }
 
+TYPED_TEST(variant_store_composite_test, emplace)
+{
+    using composite_store_t = typename TestFixture::composite_store_t;
+    using alphabet_t = typename TestFixture::alphabet_t;
+    // using snp_variant_t = typename TestFixture::snp_variant_t;
+    // using generic_variant_t = typename TestFixture::generic_variant_t;
+
+    composite_store_t store{};
+    EXPECT_EQ((store.emplace(uint32_t{4}, seqan3::assign_rank_to(3, alphabet_t{})) - store.begin()), 0);
+    EXPECT_EQ((store.emplace(uint32_t{44}, this->make_insertion(), uint32_t{10}) - store.begin()), 1);
+    EXPECT_EQ((store.emplace(uint32_t{93}, this->make_insertion(), uint32_t{0}) - store.begin()), 2);
+    EXPECT_EQ((store.emplace(uint32_t{112}, seqan3::assign_rank_to(0, alphabet_t{})) - store.begin()), 1);
+    EXPECT_EQ((store.emplace(uint32_t{154}, std::vector<alphabet_t>{}, uint32_t{1}) - store.begin()), 4);
+}
+
 TYPED_TEST(variant_store_composite_test, size)
 {
     using composite_store_t = typename TestFixture::composite_store_t;

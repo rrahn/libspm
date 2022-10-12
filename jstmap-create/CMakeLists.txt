@@ -7,7 +7,7 @@ target_include_directories (jstmap_create_base INTERFACE ../jstmap-create
                                                          jstmap::global
                                                          ${SEQAN_INCLUDE_DIRS})
 target_compile_features (jstmap_create_base INTERFACE cxx_std_17)
-target_link_libraries (jstmap_create_base INTERFACE libjst::libjst seqan3::seqan3 ${SEQAN_LIBRARIES} jstmap::global)
+target_link_libraries (jstmap_create_base INTERFACE libjst::libjst seqan3::seqan3 seqan2::seqan2 jstmap::global)
 add_library (jstmap::create::base ALIAS jstmap_create_base)
 
 ### Create object library for better build times
@@ -30,8 +30,10 @@ target_link_libraries (jstmap_serialise_jst PUBLIC jstmap::create::base libjst::
 
 ### Parsing the vcf file
 add_library(jstmap_create_vcf_parser OBJECT jstmap/create/vcf_parser.cpp
-                                            jstmap/create/vcf_parser.hpp)
-target_include_directories (jstmap_create_vcf_parser PUBLIC jstmap::create::base)
+                                            jstmap/create/vcf_parser2.cpp
+                                            jstmap/create/stripped_vcf_record.cpp
+                                            jstmap/create/vcf_parser.hpp
+                                            jstmap/create/stripped_vcf_record.hpp)
 target_link_libraries (jstmap_create_vcf_parser PUBLIC jstmap::create::base)
 ### Create static library for build subcommand
 add_library (jstmap_create STATIC jstmap/create/create_main.cpp

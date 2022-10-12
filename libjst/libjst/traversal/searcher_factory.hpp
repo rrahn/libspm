@@ -90,11 +90,14 @@ namespace libjst
                     auto jst_tree = me.make_tree(algorithm_stack);
 
                     for (auto && node : jst_tree) {
-                        seqan3::debug_stream << node.sequence() << '\n';
                         std::invoke(algorithm_stack.top(), me.label(node), [&] (auto && it) {
                             libjst::set_next(me._publisher, result{node, it});
                         });
                     }
+
+                    std::cout << "Number of prunes: " << jst_tree._prune_count
+                              << " branches: " << jst_tree._branch_count
+                              << " total: " << (jst_tree._branch_count + jst_tree._prune_count) << '\n';
 
                     // finished: so we call finished.
                     libjst::set_value((publisher_t &&)(me._publisher));

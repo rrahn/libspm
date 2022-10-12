@@ -12,7 +12,10 @@
 
 #pragma once
 
+#include <ranges>
+
 #include <seqan3/utility/detail/multi_invocable.hpp>
+#include <seqan3/range/views/type_reduce.hpp>
 
 #include <libjst/journaled_sequence_tree/concept.hpp>
 #include <libjst/concept.hpp>
@@ -34,17 +37,18 @@ namespace libjst
         using store_t = variant_store_t<jst_t const &>;
         using variant_t = std::ranges::range_value_t<store_t>;
         using position_t = variant_position_t<variant_t>;
-        using variant_iterator = std::ranges::iterator_t<store_t>;
-        using coverered_variant_t = std::iter_value_t<variant_iterator>;
-        using coverage_t = variant_coverage_t<coverered_variant_t>;
+        using coverage_t = variant_coverage_t<variant_t>;
 
-        using sequence_t = base_sequence_t<jst_t const &>;
+        using sequence_t = decltype(libjst::base_sequence(std::declval<jst_t const &>()) | seqan3::views::type_reduce);
+        using store_view_t = std::views::all_t<store_t const &>;
+        using variant_iterator = std::ranges::iterator_t<store_view_t>;
+
         // must be compatible with insertion type
         // must be validated by concept first.
         using journal_t = journal<position_t, sequence_t>;
 
         journal_t _journal{};
-        store_t _store{}; // expect view!
+        store_view_t _store{};
         variant_iterator _next_variant{};
         variant_iterator _last_variant{};
         coverage_t _coverage{};
@@ -62,8 +66,8 @@ namespace libjst
         jst_node & operator=(jst_node const &) = default;
         jst_node & operator=(jst_node &&) = default;
         explicit jst_node(jst_t const &jst, size_t const window_size) :
-            _journal{libjst::base_sequence(jst)},
-            _store{libjst::variant_store(jst)},
+            _journal{libjst::base_sequence(jst) | seqan3::views::type_reduce},
+            _store{libjst::variant_store(jst) | std::views::all},
             _next_variant{std::ranges::begin(_store)},
             _last_variant{std::ranges::end(_store)},
             _coverage{coverage_t(libjst::size(jst), true)},
@@ -139,7 +143,7 @@ namespace libjst
 
             std::optional<jst_node> branch_node{std::nullopt};
 
-            auto child_coverage = parent._coverage & libjst::coverage(*parent._next_variant);
+            coverage_t child_coverage = parent._coverage & libjst::coverage(*parent._next_variant);
             if (child_coverage.any())
             {
                 jst_node child{};
@@ -213,7 +217,7 @@ namespace libjst
             }
             else
             { // update variant branch node
-                parent._coverage = parent._coverage.and_not(libjst::coverage(prev_variant));
+                parent._coverage.and_not(libjst::coverage(prev_variant));
                 if (parent._coverage.any())
                 { // is there at least one sequence covering the base branch at this site.
                     if (parent._next_variant != parent._last_variant)

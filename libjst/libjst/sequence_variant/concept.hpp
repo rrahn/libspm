@@ -29,12 +29,12 @@ namespace libjst
     namespace _variant_position {
         inline constexpr struct _cpo  {
             template <typename variant_t>
-                requires std::tag_invocable<_cpo, variant_t const &>
-            constexpr auto operator()(variant_t const & var) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
-                -> std::tag_invoke_result_t<_cpo, variant_t const &>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr auto operator()(variant_t && var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_t>
             {
-                return std::tag_invoke(_cpo{}, var);
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
         } position;
     } // namespace _variant_position
@@ -47,12 +47,12 @@ namespace libjst
     namespace _variant_insertion {
         inline constexpr struct _cpo  {
             template <typename variant_t>
-                requires std::tag_invocable<_cpo, variant_t const &>
-            constexpr auto operator()(variant_t const & var) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
-                -> std::tag_invoke_result_t<_cpo, variant_t const &>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr auto operator()(variant_t &&var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_t>
             {
-                return std::tag_invoke(_cpo{}, var);
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
         } insertion;
     } // namespace insertion
@@ -65,12 +65,12 @@ namespace libjst
     namespace _variant_deletion {
         inline constexpr struct _cpo  {
             template <typename variant_t>
-                requires std::tag_invocable<_cpo, variant_t const &>
-            constexpr auto operator()(variant_t const & var) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
-                -> std::tag_invoke_result_t<_cpo, variant_t const &>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr auto operator()(variant_t &&var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_t>
             {
-                return std::tag_invoke(_cpo{}, var);
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
         } deletion;
     }
@@ -164,12 +164,12 @@ namespace libjst
     namespace _variant_coverage {
         inline constexpr struct _cpo  {
             template <typename variant_t>
-                requires std::tag_invocable<_cpo, variant_t const &>
-            constexpr auto operator()(variant_t const & var) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t const &>)
-                -> std::tag_invoke_result_t<_cpo, variant_t const &>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr auto operator()(variant_t &&var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_t>
             {
-                return std::tag_invoke(_cpo{}, var);
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
         } coverage;
     }

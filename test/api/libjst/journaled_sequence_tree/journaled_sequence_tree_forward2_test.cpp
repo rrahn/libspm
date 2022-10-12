@@ -60,7 +60,7 @@ TYPED_TEST(jst_node_test, construction)
     using jst_t = typename TestFixture::jst_t;
     using fwd_jst_t = typename TestFixture::fwd_jst_t;
 
-    EXPECT_TRUE(std::is_nothrow_default_constructible_v<fwd_jst_t>);
+    EXPECT_FALSE(std::is_default_constructible_v<fwd_jst_t>);
     EXPECT_TRUE(std::is_copy_constructible_v<fwd_jst_t>);
     EXPECT_TRUE(std::is_nothrow_move_constructible_v<fwd_jst_t>);
     EXPECT_TRUE(std::is_copy_assignable_v<fwd_jst_t>);

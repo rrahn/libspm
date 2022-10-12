@@ -18,7 +18,11 @@
 #include <type_traits>
 #include <utility>
 
+#include <cereal/types/base_class.hpp>
 #include <cereal/types/vector.hpp>
+
+#include <libcontrib/type_traits.hpp>
+#include <libcontrib/std/tag_invoke.hpp>
 
 #include <libjst/sequence_variant/concept.hpp>
 #include <libjst/sequence_variant/variant_store_iterator.hpp>
@@ -83,18 +87,28 @@ namespace libjst
         }
 
     private:
-        constexpr friend _coverage_t const & tag_invoke(std::tag_t<libjst::coverage>, variant_proxy const &me) noexcept
+
+        template <typename this_t, typename member_t>
+        using fwd_t = std::conditional_t<std::is_lvalue_reference_v<member_t>,
+                                         member_t,
+                                         jst::contrib::member_type_t<this_t, std::remove_cvref_t<member_t>>>;
+
+        template <typename this_t>
+            requires std::same_as<std::remove_cvref_t<this_t>, variant_proxy>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::coverage>, this_t &&me) noexcept
+            -> fwd_t<this_t, _coverage_t>
         {
-            return me._coverage;
+            return (fwd_t<this_t, _coverage_t> &&)me._coverage;
         }
 
-        template <typename cpo_t>
-            requires std::tag_invocable<cpo_t, _variant_t const &>
-        constexpr friend auto tag_invoke(cpo_t cpo, variant_proxy const &me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, _variant_t const &>)
-            -> std::tag_invoke_result_t<cpo_t, _variant_t const &>
+        template <typename cpo_t, typename this_t>
+            requires std::same_as<std::remove_cvref_t<this_t>, variant_proxy> &&
+                     std::tag_invocable<cpo_t, fwd_t<this_t, _variant_t>>
+        constexpr friend auto tag_invoke(cpo_t cpo, this_t &&me)
+            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, fwd_t<this_t, _variant_t>>)
+            -> std::tag_invoke_result_t<cpo_t, fwd_t<this_t, _variant_t>>
         {
-            return std::tag_invoke(cpo, me._variant);
+            return std::tag_invoke(cpo, (fwd_t<this_t, _variant_t> &&)me._variant);
         }
     };
 
@@ -106,10 +120,13 @@ namespace libjst
         using base_t = variant_store_t;
 
         using value_type = variant_proxy<std::ranges::range_value_t<base_t>, coverage_t>; // TODO: maybe some thing different?
-        using reference = variant_proxy<std::ranges::range_reference_t<base_t const &>, coverage_t const &>;
+        using reference = variant_proxy<std::ranges::range_reference_t<base_t &>, coverage_t &>;
+        using const_reference = variant_proxy<std::ranges::range_reference_t<base_t const &>, coverage_t const &>;
         using iterator = variant_store_iterator<variant_store_covered>;
+        using const_iterator = variant_store_iterator<variant_store_covered const>;
 
         friend iterator;
+        friend const_iterator;
 
         std::vector<coverage_t> _coverage{};
 
@@ -123,14 +140,40 @@ namespace libjst
         // Access
         // ----------------------------------------------------------------------------
 
-        constexpr reference operator[](size_t offset) const noexcept {
+        constexpr reference operator[](size_t offset) noexcept {
             assert(offset < _coverage.size());
-            return reference{static_cast<base_t const &>(*this)[offset], _coverage[offset]};
+            return reference{static_cast<base_t &>(*this)[offset], _coverage[offset]};
+        }
+
+        constexpr const_reference operator[](size_t offset) const noexcept {
+            assert(offset < _coverage.size());
+            return const_reference{static_cast<base_t const &>(*this)[offset], _coverage[offset]};
         }
 
         // ----------------------------------------------------------------------------
         // Modifier
         // ----------------------------------------------------------------------------
+
+        void push_back(value_type covered_variant) // may throw
+        {
+            // we do not know the insert position in the underlying, so how do we connect it?
+            emplace_back(std::move(covered_variant.get()), std::move(libjst::coverage(covered_variant)));
+            assert(variant_store_t::size() == _coverage.size());
+        }
+
+        template <typename ...args_t>
+        void emplace_back(args_t &&...args) // may throw
+        {
+            constexpr size_t coverage_idx = sizeof...(args_t) - 1;
+            return [&] <size_t ...var_idx> (auto && tpl, std::index_sequence<var_idx...>) {
+                using tpl_t = std::remove_reference_t<decltype(tpl)>;
+                _coverage.resize(_coverage.size() + 1); // may throw
+                base_t::emplace_back((std::tuple_element_t<var_idx, tpl_t>)get<var_idx>(tpl)...);
+                _coverage.back() = ((std::tuple_element_t<coverage_idx, tpl_t>)(get<coverage_idx>(tpl)));
+            } (std::forward_as_tuple((args_t &&)args...), std::make_index_sequence<coverage_idx>());
+
+            assert(variant_store_t::size() == _coverage.size());
+        }
 
         iterator insert(value_type covered_variant) // may throw
         {
@@ -146,18 +189,48 @@ namespace libjst
             return std::ranges::next(begin(), position);
         }
 
+        template <typename ...args_t>
+        iterator emplace(args_t &&...args)
+        {
+            constexpr size_t coverage_idx = sizeof...(args_t) - 1;
+            return [&] <size_t ...var_idx> (auto && tpl, std::index_sequence<var_idx...>) {
+                using tpl_t = std::remove_reference_t<decltype(tpl)>;
+                return split_emplace((std::tuple_element_t<coverage_idx, tpl_t> &&)(get<coverage_idx>(tpl)),
+                                     (std::tuple_element_t<var_idx, tpl_t> &&)get<var_idx>(tpl)...);
+            } (std::forward_as_tuple((args_t &&)args...), std::make_index_sequence<coverage_idx>());
+        }
+
         // ----------------------------------------------------------------------------
         // Iterator
         // ----------------------------------------------------------------------------
 
-        iterator begin() const noexcept { return iterator{*this, 0u}; }
-        iterator end() const noexcept { return iterator{*this, base_t::size()}; }
+        iterator begin() noexcept { return iterator{*this, 0u}; }
+        const_iterator begin() const noexcept { return const_iterator{*this, 0u}; }
+        iterator end() noexcept { return iterator{*this, base_t::size()}; }
+        const_iterator end() const noexcept { return const_iterator{*this, base_t::size()}; }
 
-        template <seqan3::cereal_archive archive_t>
-        void serialize(archive_t & ioarchive)
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive)
         {
-            ioarchive(cereal::base_class<base_t>( this ), _coverage);
+            iarchive(cereal::base_class<base_t>( this ), _coverage);
         }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const
+        {
+            oarchive(cereal::base_class<base_t>( this ), _coverage);
+        }
+
+    private:
+
+        // TODO: not yet really emplace semantics (allocates into temporary memory instead of writing directly into container)
+        template <typename _coverage_t, typename ...var_args_t>
+        auto split_emplace(_coverage_t && coverage, var_args_t &&...var_args)
+        {
+            using store_value_t = std::ranges::range_value_t<variant_store_t>;
+            return insert(value_type{store_value_t{(var_args_t &&)var_args...}, (_coverage_t &&)coverage});
+        }
+
     };
 }  // namespace libjst
 
@@ -178,3 +251,10 @@ namespace std
                                            std::common_reference_t<qualifier_t<coverage_t>, qualifier_u<coverage_u>>>;
     };
 } // namespace std
+
+namespace cereal
+{
+  template <typename archive_t, typename variant_store_t, typename coverage_t>
+  struct specialize<archive_t, libjst::variant_store_covered<variant_store_t, coverage_t>, cereal::specialization::member_load_save>
+  {};
+}

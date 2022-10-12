@@ -73,6 +73,9 @@ namespace libjst
     using _default_search::default_search;
 
     namespace _search {
+        template <typename...>
+        inline constexpr std::false_type always_false{};
+
         inline constexpr struct _cpo_t {
             template <typename haystack_t, typename searcher_t, typename callback_t>
                 requires std::tag_invocable<_cpo_t, haystack_t, searcher_t, callback_t>
@@ -89,8 +92,12 @@ namespace libjst
             constexpr void operator()(haystack_t &&haystack, searcher_t &&searcher, callback_t &&callback) const
             {
                 // now we can search for defaults!
-                if constexpr (std::invocable<std::tag_t<default_search>, haystack_t, searcher_t, callback_t>) {
-                    default_search((haystack_t &&)haystack, (searcher_t &&)searcher, (callback_t &&)callback);
+                if constexpr (std::invocable<std::tag_t<libjst::default_search>, haystack_t, searcher_t, callback_t>) {
+                    libjst::default_search((haystack_t &&)haystack, (searcher_t &&)searcher, (callback_t &&)callback);
+                } else {
+                    static_assert(always_false<haystack_t, searcher_t, callback_t>,
+                                  "No suitable default overload found!");
+                    // throw std::runtime_error{"No suitable default overload found!"};
                 }
             }
         } search_base;

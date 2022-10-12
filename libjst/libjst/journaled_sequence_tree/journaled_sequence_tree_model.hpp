@@ -17,6 +17,7 @@
 
 #include <seqan3/range/concept.hpp>
 
+#include <libjst/journaled_sequence_tree/concept.hpp>
 #include <libjst/sequence_variant/concept.hpp>
 #include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
 
@@ -41,12 +42,31 @@ namespace libjst
             _sequence_count{count}
         {}
 
+        explicit journaled_sequence_tree_model(sequence_t const & sequence, variant_store_t &&variant_store) :
+            _base_sequence{sequence},
+            _variant_store{std::move(variant_store)}
+        {
+            _sequence_count = std::ranges::size(libjst::coverage(_variant_store[0]));
+            for (auto && variant : _variant_store) {
+                if (end_position(variant) > std::ranges::size(_base_sequence.get()) ||
+                    std::ranges::size(libjst::coverage(variant)) != _sequence_count)
+                    throw std::runtime_error{"Invalid variant store."};
+            }
+        }
+
         bool insert(variant_value_t covered_variant)
         {  // initial contract
             assert(end_position(covered_variant) <= std::ranges::size(_base_sequence.get()));
             assert(std::ranges::size(libjst::coverage(covered_variant)) == _sequence_count);
 
             auto inserted = _variant_store.insert(std::move(covered_variant));
+            return inserted != _variant_store.end();
+        }
+
+        template <typename ...args_t>
+        bool emplace(args_t &&...args)
+        { // check for consistency?
+            auto inserted = _variant_store.emplace((args_t &&)args...);
             return inserted != _variant_store.end();
         }
 

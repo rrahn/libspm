@@ -37,6 +37,9 @@ namespace libjst
 
     public:
 
+        size_t _prune_count{};
+        size_t _branch_count{};
+
         template <traversable_journaled_sequence_tree jst_t, observable_stack ...subscriber_t>
         explicit lazy_tree(jst_t const & jst, size_t const window_size, subscriber_t &...subscriber) noexcept :
             _window_size{window_size}
@@ -106,7 +109,8 @@ namespace libjst
             {
                 auto [branch, split] = bifurcate(std::move(node)); // remove the top node element
                 assert(branch.has_value() || split.has_value()); // optional values
-
+                _tree->_prune_count += !branch.has_value() + !split.has_value();
+                _tree->_branch_count += branch.has_value() + split.has_value();
                 if (split.has_value()) // if split has no value then branch state must have?
                 {
                     current_node() = std::move(*split);

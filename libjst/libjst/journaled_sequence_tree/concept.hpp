@@ -80,7 +80,7 @@ namespace libjst
     // ----------------------------------------------------------------------------
     // Concept defintions
     // ----------------------------------------------------------------------------
-
+    inline namespace current {
     template <typename jst_t>
     concept journaled_sequence_tree = requires (jst_t const & jst)
     {
@@ -101,5 +101,5 @@ namespace libjst
     template <typename jst_t>
     concept traversable_journaled_sequence_tree = journaled_sequence_tree<jst_t> &&
                                                   std::is_base_of_v<traversable_jst_base, std::remove_cvref_t<jst_t>>;
-
+    } // namespace current
 }  // namespace libjst

@@ -86,10 +86,12 @@ TYPED_TEST(variant_store_covered_test, type_traits)
     using snp_variant_t = typename TestFixture::snp_variant_t;
     using value_t = std::ranges::range_value_t<covered_store_t>;
     using reference_t = std::ranges::range_reference_t<covered_store_t>;
+    using const_reference_t = std::ranges::range_reference_t<covered_store_t const>;
 
     EXPECT_TRUE(libjst::covered_sequence_variant<value_t>);
     EXPECT_TRUE(libjst::covered_sequence_variant<reference_t>);
-    EXPECT_TRUE((std::constructible_from<reference_t, value_t const &>));
+    // EXPECT_TRUE((std::constructible_from<reference_t, value_t &>));
+    EXPECT_TRUE((std::constructible_from<const_reference_t, value_t const &>));
     EXPECT_TRUE((std::constructible_from<value_t, reference_t>));
 
     snp_variant_t snp{4, seqan3::assign_rank_to(3, alphabet_t{})};
@@ -125,6 +127,20 @@ TYPED_TEST(variant_store_covered_test, insert)
     EXPECT_EQ((store.insert(value_t{this->var1, coverage_t{0, 1, 0, 0}}) - store.begin()), 2);
     EXPECT_EQ((store.insert(value_t{this->snp1, coverage_t{1, 0, 0, 0}}) - store.begin()), 1);
     EXPECT_EQ((store.insert(value_t{this->var2, coverage_t{0, 0, 1, 1}}) - store.begin()), 4);
+}
+
+TYPED_TEST(variant_store_covered_test, emplace)
+{
+    using covered_store_t = typename TestFixture::covered_store_t;
+    using coverage_t = typename TestFixture::coverage_t;
+
+    covered_store_t store{};
+
+    EXPECT_EQ((store.emplace(this->snp0, coverage_t{0, 0, 0, 1}) - store.begin()), 0);
+    EXPECT_EQ((store.emplace(this->var0, coverage_t{0, 0, 1, 0}) - store.begin()), 1);
+    EXPECT_EQ((store.emplace(this->var1, coverage_t{0, 1, 0, 0}) - store.begin()), 2);
+    EXPECT_EQ((store.emplace(this->snp1, coverage_t{1, 0, 0, 0}) - store.begin()), 1);
+    EXPECT_EQ((store.emplace(this->var2, coverage_t{0, 0, 1, 1}) - store.begin()), 4);
 }
 
 TYPED_TEST(variant_store_covered_test, size)

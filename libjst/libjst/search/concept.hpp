@@ -41,21 +41,21 @@ namespace libjst
     // Concept defintions
     // ----------------------------------------------------------------------------
 
-    template <typename searcher_t, typename text_t>
-    concept searcher_for = requires
-    (searcher_t const & op, text_t const & text)
-    {
-        { libjst::window_size(ob) } -> std::integral;
-        { op(text, [] (auto &&) { }) };
-    };
+    // template <typename searcher_t, typename text_t>
+    // concept searcher_for = requires
+    // (searcher_t const & op, text_t const & text)
+    // {
+    //     { libjst::window_size(op) } -> std::integral;
+    //     { op(text, [] (auto &&) { }) };
+    // };
 
-    template <typename searcher_t, typename text_t>
-    concept stateful_searcher_for = searcher<searcher_t, text_t> && requires
-    (searcher_t const & c_op, searcher_t & op)
-    {
-        typename libjst::search_state_t<searcher_t>;
-        { libjst::state(c_op) } -> std::same_as<libjst::search_state_t<searcher_t> const &>; // TODO: must be searcher for
-        { libjst::state(op) } -> std::same_as<libjst::search_state_t<searcher_t> &>; // TODO: must be searcher for
-        { libjst::state(op, libjst::search_state_t<searcher_t>{}) };
-    };
+    // template <typename searcher_t, typename text_t>
+    // concept stateful_searcher_for = searcher_for<searcher_t, text_t> && requires
+    // (searcher_t const & c_op, searcher_t & op)
+    // {
+    //     typename libjst::search_state_t<searcher_t>;
+    //     { libjst::state(c_op) } -> std::same_as<libjst::search_state_t<searcher_t> const &>; // TODO: must be searcher for
+    //     { libjst::state(op) } -> std::same_as<libjst::search_state_t<searcher_t> &>; // TODO: must be searcher for
+    //     { libjst::state(op, libjst::search_state_t<searcher_t>{}) };
+    // };
 }  // namespace libjst
