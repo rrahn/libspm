@@ -23,7 +23,7 @@
 #include <libjst/search/shift_or_search.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 #include <libjst/journal_sequence_tree_partitioned.hpp>
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 
 #include "test_utility.hpp" // make_gaped
 

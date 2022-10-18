@@ -16,7 +16,7 @@
 #include <seqan3/range/views/slice.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 #include <libjst/search/pigeonhole_filter.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 

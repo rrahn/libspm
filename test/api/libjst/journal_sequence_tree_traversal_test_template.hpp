@@ -18,7 +18,7 @@
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 
 #include "test_utility.hpp" // make_gaped
 

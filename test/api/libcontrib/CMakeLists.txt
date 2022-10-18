@@ -8,4 +8,6 @@ endmacro()
 
 add_subdirectories ()
 
+add_libcontrib_test(copyable_box_test.cpp)
+
 unset (LIBJST_TEST_DEPENDENCIES)

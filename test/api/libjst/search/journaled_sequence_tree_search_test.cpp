@@ -15,8 +15,8 @@
 #include <libcontrib/seqan/horspool_pattern.hpp>
 
 #include <libjst/concept.hpp>
-#include <libjst/journaled_sequence_tree.hpp>
-#include <libjst/journaled_sequence_tree_forward.hpp>
+#include <libjst/set.hpp>
+#include <libjst/set_forward.hpp>
 
 #include "../journal_sequence_tree_traversal_test_template.hpp"
 

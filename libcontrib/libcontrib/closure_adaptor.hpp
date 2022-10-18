@@ -44,6 +44,7 @@ namespace jst::contrib
         public:
 
             template <typename _enclosee_t, typename ..._args_t>
+                requires (!std::same_as<std::remove_cvref_t<_enclosee_t>, closure>)
             constexpr explicit closure(_enclosee_t &&enclosee, _args_t &&...args)
                 noexcept(std::is_nothrow_constructible_v<enclosee_t, _enclosee_t> &&
                          std::is_nothrow_constructible_v<std::tuple<args_t...>, _args_t...>) :
@@ -113,13 +114,16 @@ namespace jst::contrib
     namespace _make_closure {
         inline constexpr struct _fn
         {
+            template <typename enclosee_t, typename ...args_t>
+            using closure_t = detail::closure<enclosee_t, std::decay_t<args_t>...>;
+
             // now we are creating the closure from a valid enclosee object
             template <typename enclosee_t, typename ...args_t>
             constexpr auto operator()(enclosee_t && enclosee, args_t &&...args) const
-                noexcept(std::is_nothrow_constructible_v<detail::closure<enclosee_t, std::decay_t<args_t>...>, enclosee_t, args_t...>)
-                -> detail::closure<enclosee_t, std::decay_t<args_t>...>
+                noexcept(std::is_nothrow_constructible_v<closure_t<enclosee_t, args_t...>, enclosee_t, args_t...>)
+                -> closure_t<enclosee_t, args_t...>
             {
-                return detail::closure<enclosee_t, std::decay_t<args_t>...>{(enclosee_t &&)enclosee, (args_t &&)args...};
+                return closure_t<enclosee_t, args_t...>{(enclosee_t &&)enclosee, (args_t &&)args...};
             }
         } make_closure;
     } // namespace _closure

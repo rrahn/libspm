@@ -10,7 +10,7 @@
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/core/debug_stream.hpp>
 
-#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/set.hpp>
 #include <libjst/search/pigeonhole_filter.hpp>
 #include <libjst/search/state_manager_stack.hpp>
 
