@@ -17,8 +17,8 @@
 #include <libjst/journal.hpp>
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
-#include <libjst/tree/jst_node_base.hpp>
-#include <libjst/tree/branch_state.hpp>
+#include <libjst/traversal/source_branch_node.hpp>
+#include <libjst/traversal/node_label.hpp>
 
 template <typename alphabet_type>
 struct jst_node_test : public ::testing::Test
@@ -33,7 +33,7 @@ struct jst_node_test : public ::testing::Test
     using journal_t = libjst::journal<position_t, std::span<alphabet_t>>;
     using node_value_t = libjst::jst_node_value<journal_t, coverage_t>;
     using store_iterator_t = std::ranges::iterator_t<store_t const>;
-    using jst_node_t = libjst::jst_node_base<node_value_t, store_iterator_t>;
+    using jst_node_t = libjst::source_branch_node<node_value_t, store_iterator_t>;
 };
 
 using test_types = ::testing::Types<jst::contrib::dna4,

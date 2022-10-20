@@ -17,9 +17,9 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/type_traits.hpp>
 
-#include <libjst/set/concept_set.hpp>
-#include <libjst/tree/concept.hpp>
-#include <libjst/tree/lazy_tree.hpp>
+#include <libjst/structure/concept_jst.hpp>
+#include <libjst/traversal/concept_execution.hpp>
+#include <libjst/traversal/lazy_tree.hpp>
 #include <libjst/concept.hpp>
 
 namespace libjst

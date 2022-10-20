@@ -17,19 +17,19 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/set/concept_set.hpp>
-#include <libjst/set/set_base.hpp>
-#include <libjst/set/set_forward.hpp>
+#include <libjst/structure/concept_jst.hpp>
+#include <libjst/structure/jst_base.hpp>
+#include <libjst/structure/jst_forward.hpp>
 #include <libjst/utility/bit_vector.hpp>
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_generic.hpp>
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
 
-#include <libjst/set/serialiser_direct.hpp>
-#include <libjst/set/serialiser_delegate.hpp>
+#include <libjst/structure/serialiser_direct.hpp>
+#include <libjst/structure/serialiser_delegate.hpp>
 
-TEST(journaled_sequence_set_forward_serialisation_test, protoype_jst)
+TEST(journaled_sequence_jst_forward_serialisation_test, protoype_jst)
 {
     using alphabet_t = jst::contrib::dna5;
     using sequence_t = std::vector<alphabet_t>;
@@ -43,8 +43,8 @@ TEST(journaled_sequence_set_forward_serialisation_test, protoype_jst)
     using covered_store_t = libjst::variant_store_covered<composite_store_t, libjst::bit_vector<>>;
     using value_t = std::ranges::range_value_t<covered_store_t>;
 
-    using jst_t = libjst::set_base<sequence_t, covered_store_t>;
-    using fwd_jst_t = libjst::set_forward<jst_t>;
+    using jst_t = libjst::jst_base<sequence_t, covered_store_t>;
+    using fwd_jst_t = libjst::jst_forward<jst_t>;
 
     std::vector<alphabet_t> base_sequence{seqan3::test::generate_sequence<alphabet_t>(200)};
     std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};

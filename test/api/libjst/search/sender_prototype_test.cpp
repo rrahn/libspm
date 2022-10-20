@@ -19,11 +19,11 @@
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
-#include <libjst/set/set_forward.hpp>
-#include <libjst/set/set_base.hpp>
+#include <libjst/structure/jst_forward.hpp>
+#include <libjst/structure/jst_base.hpp>
 #include <libjst/search/search_base.hpp>
-#include <libjst/tree/concept.hpp>
-#include <libjst/tree/searcher_factory.hpp>
+#include <libjst/traversal/concept_execution.hpp>
+#include <libjst/traversal/searcher_factory.hpp>
 #include <libjst/utility/bit_vector.hpp>
 
 // #include "../journal_sequence_tree_traversal_test_template.hpp"
@@ -79,8 +79,8 @@ TEST(sender_prototype_test, sender_api)
     // create the jst model!
     using snp_store_t = libjst::variant_store_composite<std::vector<libjst::snp_variant<alphabet_t>>>;
     using covered_store_t = libjst::variant_store_covered<snp_store_t, libjst::bit_vector<>>;
-    using jst_model_t = libjst::set_base<sequence_t, covered_store_t>;
-    using fwd_jst_t = libjst::set_forward<jst_model_t>;
+    using jst_model_t = libjst::jst_base<sequence_t, covered_store_t>;
+    using fwd_jst_t = libjst::jst_forward<jst_model_t>;
 
     jst_model_t jst_model{reference, 4}; // empty basic jst model
     fwd_jst_t fwd_jst{jst_model}; // now the elements should be sorted! // also if this is empty!

@@ -12,15 +12,15 @@
 
 #pragma once
 
-#include <libjst/set/concept_set.hpp>
-#include <libjst/set/concept_serialiser.hpp>
+#include <libjst/structure/concept_jst.hpp>
+#include <libjst/structure/concept_serialiser.hpp>
 
 namespace libjst
 {
     namespace detail {
 
         template <traversable_journaled_sequence_tree jst_t>
-        class set_partitioned : private traversable_jst_base
+        class jst_partitioned : private traversable_jst_base
         {
         private:
 
@@ -28,8 +28,8 @@ namespace libjst
             size_t _bin_index{};
 
         public:
-            set_partitioned() = default;
-            explicit set_partitioned(jst_t const * jst, size_t const bin_index) :
+            jst_partitioned() = default;
+            explicit jst_partitioned(jst_t const * jst, size_t const bin_index) :
                 _jst{jst},
                 _bin_index{bin_index}
             {}
@@ -39,7 +39,7 @@ namespace libjst
             // delegate to all getter interfaces of the wrapped component
             template <typename cpo_t>
                 requires std::invocable<cpo_t, jst_t const &>
-            constexpr friend auto tag_invoke(cpo_t cpo, set_partitioned const &me)
+            constexpr friend auto tag_invoke(cpo_t cpo, jst_partitioned const &me)
                 noexcept(std::is_nothrow_invocable_v<cpo_t, jst_t const &>)
                 -> std::invoke_result_t<cpo_t, jst_t const &>
             {
@@ -108,7 +108,7 @@ namespace libjst
 
     public:
 
-        using value_type = detail::set_partitioned<jst_t>;
+        using value_type = detail::jst_partitioned<jst_t>;
         using reference = value_type;
         using difference_type = std::ptrdiff_t;
         using pointer = void;

@@ -77,35 +77,20 @@ namespace libjst
     } // namespace _size
     using _size::size;
 
-    // root
-    namespace _root {
+    // path
+    namespace _path {
         inline constexpr struct _cpo  {
             template <typename jst_t>
-                requires std::tag_invocable<_cpo, jst_t const &, size_t>
-            constexpr auto operator()(jst_t const & jst, size_t const window_size) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, jst_t const &, size_t>)
-                -> std::tag_invoke_result_t<_cpo, jst_t const &, size_t>
+                requires std::tag_invocable<_cpo, jst_t const &>
+            constexpr auto operator()(jst_t const & jst) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, jst_t const &>)
+                -> std::tag_invoke_result_t<_cpo, jst_t const &>
             {
-                return std::tag_invoke(_cpo{}, jst, window_size);
+                return std::tag_invoke(_cpo{}, jst);
             }
-        } root;
-    } // namespace _root
-    using _root::root;
-
-    // sink
-    namespace _sink {
-        inline constexpr struct _cpo  {
-            template <typename jst_t>
-                requires std::tag_invocable<_cpo, jst_t const &, size_t>
-            constexpr auto operator()(jst_t const & jst, size_t const window_size) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, jst_t const &, size_t>)
-                -> std::tag_invoke_result_t<_cpo, jst_t const &, size_t>
-            {
-                return std::tag_invoke(_cpo{}, jst, window_size);
-            }
-        } sink;
-    } // namespace _sink
-    using _sink::sink;
+        } path;
+    } // namespace _path
+    using _path::path;
 
     // ----------------------------------------------------------------------------
     // Concept defintions
@@ -133,7 +118,7 @@ namespace libjst
                                                   std::is_base_of_v<traversable_jst_base, std::remove_cvref_t<jst_t>> &&
     requires (jst_t && jst)
     {
-        libjst::root((jst_t &&)jst, 1u);
+        libjst::path((jst_t &&)jst);
     };
     } // namespace current
 }  // namespace libjst

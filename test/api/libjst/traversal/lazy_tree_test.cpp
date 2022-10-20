@@ -14,16 +14,16 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/set/concept_set.hpp>
-#include <libjst/set/set_forward.hpp>
-#include <libjst/set/set_base.hpp>
+#include <libjst/structure/concept_jst.hpp>
+#include <libjst/structure/jst_forward.hpp>
+#include <libjst/structure/jst_base.hpp>
 #include <libjst/utility/bit_vector.hpp>
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_generic.hpp>
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
-#include <libjst/tree/lazy_tree.hpp>
-#include <libjst/tree/jst_node.hpp>
+#include <libjst/traversal/lazy_tree.hpp>
+#include <libjst/traversal/jst_node.hpp>
 
 template <typename alphabet_type>
 struct lazy_tree_test : public ::testing::Test
@@ -39,8 +39,8 @@ struct lazy_tree_test : public ::testing::Test
     using composite_store_t = libjst::variant_store_composite<snp_store_t, generic_store_t>;
     using covered_store_t = libjst::variant_store_covered<composite_store_t, libjst::bit_vector<>>;
 
-    using jst_t = libjst::set_base<sequence_t, covered_store_t>;
-    using fwd_jst_t = libjst::set_forward<jst_t>;
+    using jst_t = libjst::jst_base<sequence_t, covered_store_t>;
+    using fwd_jst_t = libjst::jst_forward<jst_t>;
     using jst_node_t = libjst::jst_node<fwd_jst_t>;
     using lazy_tree_t = libjst::lazy_tree<jst_node_t>;
 

@@ -15,7 +15,7 @@
 #include <ranges>
 #include <vector>
 
-#include <libjst/set/concept_set.hpp>
+#include <libjst/structure/concept_jst.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libio
@@ -61,7 +61,7 @@ namespace libio
     };
 
     template <typename jst_t>
-    class set_backward : traversable_jst_base
+    class jst_backward : traversable_jst_base
     {
     private:
         using variant_store_t = variant_store_t<jst_t>;
@@ -74,7 +74,7 @@ namespace libio
 
     public:
 
-        explicit set_backward(jst_t const & jst) : _jst{jst}
+        explicit jst_backward(jst_t const & jst) : _jst{jst}
         {
             _event_queue.resize(libjst::variant_store(_jst).size());
             std::ranges::copy(libjst::variant_store(_jst) | std::views::reverse
@@ -102,7 +102,7 @@ namespace libio
     private:
         template <typename cpo_t>
             requires std::invocable<cpo_t, jst_t const &>;
-        constexpr friend auto tag_invoke(cpo_t cpo, set_backward const &me)
+        constexpr friend auto tag_invoke(cpo_t cpo, jst_backward const &me)
             noexcept(std::is_nothrow_invocable_v<cpo_t, jst_t const &>)
             -> std::invoke_result_t<cpo_t, jst_t const &>
         {
@@ -110,13 +110,13 @@ namespace libio
         }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::base_sequence>,
-                                         set_backward const &me) noexcept -> variant_store_t const &
+                                         jst_backward const &me) noexcept -> variant_store_t const &
         {
             return std::views::reverse(libjst::base_sequence(me._jst));
         }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::variant_store>,
-                                         set_backward const &me) noexcept -> variant_store_t const &
+                                         jst_backward const &me) noexcept -> variant_store_t const &
         {
             return me._event_queue;
         }

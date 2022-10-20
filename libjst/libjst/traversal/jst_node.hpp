@@ -17,7 +17,7 @@
 #include <seqan3/utility/detail/multi_invocable.hpp>
 #include <seqan3/range/views/type_reduce.hpp>
 
-#include <libjst/set/concept_set.hpp>
+#include <libjst/structure/concept_jst.hpp>
 #include <libjst/concept.hpp>
 #include <libjst/journal.hpp>
 

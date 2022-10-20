@@ -7,7 +7,7 @@
 
 #include "journal_sequence_tree_traversal_test_template.hpp"
 
-#include <libjst/set_forward.hpp>
+#include <libjst/jst_forward.hpp>
 
 struct forward_test : public libjst::test::traversal_fixture_base
 {};

@@ -26,9 +26,9 @@ namespace libjst
         explicit chached_branch_state(branch_state_t && base) : branch_state_t{std::move(base)}
         {}
 
-        void reset_coverage(coverage_t const & coverage)
+        void unset(coverage_t const & coverage)
         {
-            branch_state_t::reset_coverage(coverage);
+            branch_state_t::unset(coverage);
             _is_cached = false;
         }
 

@@ -17,8 +17,8 @@
 
 #include <seqan3/range/concept.hpp>
 
-#include <libjst/set/concept_set.hpp>
-#include <libjst/set/concept_serialiser.hpp>
+#include <libjst/structure/concept_jst.hpp>
+#include <libjst/structure/concept_serialiser.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
@@ -26,7 +26,7 @@ namespace libjst
     template <seqan3::sequence sequence_t, typename variant_store_t>
         requires std::ranges::random_access_range<sequence_t> &&
                  covered_sequence_variant<std::ranges::range_reference_t<variant_store_t>>
-    class set_base
+    class jst_base
     {
     private:
 
@@ -37,12 +37,12 @@ namespace libjst
         size_t _sequence_count{};
     public:
 
-        explicit set_base(sequence_t const & sequence, size_t const count) noexcept :
+        explicit jst_base(sequence_t const & sequence, size_t const count) noexcept :
             _base_sequence{sequence},
             _sequence_count{count}
         {}
 
-        explicit set_base(sequence_t const & sequence, variant_store_t &&variant_store) :
+        explicit jst_base(sequence_t const & sequence, variant_store_t &&variant_store) :
             _base_sequence{sequence},
             _variant_store{std::move(variant_store)}
         {
@@ -74,7 +74,7 @@ namespace libjst
 
         template <typename archive_t>
         constexpr friend auto tag_invoke(std::tag_t<libjst::load>,
-                                         set_base & me,
+                                         jst_base & me,
                                          archive_t & archive)
         {
             libjst::load_extern(archive, me._base_sequence.get());
@@ -83,7 +83,7 @@ namespace libjst
 
         template <typename archive_t>
         constexpr friend auto tag_invoke(std::tag_t<libjst::save>,
-                                         set_base const & me,
+                                         jst_base const & me,
                                          archive_t & archive)
         {
             libjst::save_extern(archive, me._base_sequence.get());
@@ -91,18 +91,18 @@ namespace libjst
         }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::base_sequence>,
-                                         set_base const &me) noexcept -> sequence_t const &
+                                         jst_base const &me) noexcept -> sequence_t const &
         {
             return me._base_sequence.get();
         }
 
         constexpr friend auto tag_invoke(std::tag_t<libjst::variant_store>,
-                                         set_base const &me) noexcept -> variant_store_t const &
+                                         jst_base const &me) noexcept -> variant_store_t const &
         {
             return me._variant_store;
         }
 
-        constexpr friend size_t tag_invoke(std::tag_t<libjst::size>, set_base const &me) noexcept
+        constexpr friend size_t tag_invoke(std::tag_t<libjst::size>, jst_base const &me) noexcept
         {
             return me._sequence_count;
         }

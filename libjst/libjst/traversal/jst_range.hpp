@@ -14,7 +14,7 @@
 
 #include <iterator>
 
-#include <libjst/tree/lazy_tree.hpp>
+#include <libjst/traversal/lazy_tree.hpp>
 
 namespace libjst
 {

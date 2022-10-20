@@ -16,7 +16,7 @@
 
 #include <libcontrib/std/tag_invoke.hpp>
 
-#include <libjst/tree/concept.hpp>
+#include <libjst/traversal/concept_execution.hpp>
 
 namespace libjst
 {
