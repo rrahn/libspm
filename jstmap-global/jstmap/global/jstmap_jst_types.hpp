@@ -18,13 +18,13 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/journaled_sequence_tree/journaled_sequence_tree_forward.hpp>
-#include <libjst/journaled_sequence_tree/journaled_sequence_tree_model.hpp>
+#include <libjst/structure/jst_forward.hpp>
+#include <libjst/structure/jst_base.hpp>
 #include <libjst/utility/bit_vector.hpp>
-#include <libjst/sequence_variant/variant_snp.hpp>
-#include <libjst/sequence_variant/variant_generic.hpp>
-#include <libjst/sequence_variant/variant_store_composite.hpp>
-#include <libjst/sequence_variant/variant_store_covered.hpp>
+#include <libjst/variant/variant_snp.hpp>
+#include <libjst/variant/variant_generic.hpp>
+#include <libjst/variant/variant_store_composite.hpp>
+#include <libjst/variant/variant_store_covered.hpp>
 
 namespace jstmap
 {
@@ -39,7 +39,7 @@ using snp_store_t = libjst::variant_store_covered<std::vector<snp_t>, coverage_t
 using indel_store_t = libjst::variant_store_covered<std::vector<indel_t>, coverage_t>;
 using variant_store_t = libjst::variant_store_composite<snp_store_t, indel_store_t>;
 
-using jst_model_t = libjst::journaled_sequence_tree_model<base_sequence_t, variant_store_t>;
-using fwd_jst_t = libjst::journaled_sequence_tree_forward_<jst_model_t>;
+using jst_model_t = libjst::jst_base<base_sequence_t, variant_store_t>;
+using fwd_jst_t = libjst::jst_forward<jst_model_t>;
 
 }  // namespace jstmap

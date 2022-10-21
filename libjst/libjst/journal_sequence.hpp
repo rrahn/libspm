@@ -45,13 +45,25 @@ public:
         return size() == 0;
     }
 
-    iterator begin() const noexcept
+    iterator begin() const & noexcept
     {
         assert(_journal != nullptr);
         return iterator{*_journal, 0};
     }
 
-    iterator end() const noexcept
+    iterator begin() && noexcept
+    {
+        assert(_journal != nullptr);
+        return iterator{*_journal, 0};
+    }
+
+    iterator end() const & noexcept
+    {
+        assert(_journal != nullptr);
+        return iterator{*_journal, size()};
+    }
+
+    iterator end() && noexcept
     {
         assert(_journal != nullptr);
         return iterator{*_journal, size()};
@@ -253,3 +265,12 @@ private:
 };
 
 }  // namespace libjst
+
+namespace std::ranges {
+
+template <typename journal_t>
+inline constexpr bool enable_borrowed_range<libjst::journal_sequence<journal_t>> = true;
+
+} // namespace std::ranges
+
+

@@ -49,30 +49,30 @@ namespace libjst
             constexpr auto make_tree([[maybe_unused]] subscriber_t &subscriber)
             {
                 if constexpr (libjst::is_resumable_v<std::remove_cvref_t<pattern_t>>)
-                    return lazy_tree{libjst::root(_jst, libjst::window_size(_pattern)), subscriber};
+                    return lazy_tree{_jst, libjst::window_size(_pattern), subscriber};
                 else
-                    return lazy_tree{libjst::root(_jst, libjst::window_size(_pattern))};
+                    return lazy_tree{_jst, libjst::window_size(_pattern)};
             }
 
-            template <typename node_t>
-            constexpr auto label(node_t const & node) const
-            {
-                auto && seq = node->sequence();
-                auto it = seq.begin();
-                size_t head_position{};
+            // template <typename node_t>
+            // constexpr auto label(node_t const & node) const
+            // {
+            //     auto && seq = node.sequence();
+            //     auto it = seq.begin();
+            //     size_t head_position{};
 
-                if constexpr (!libjst::is_resumable_v<std::remove_cvref_t<pattern_t>>)
-                {
-                    head_position =  node.first_position() - std::min(libjst::window_size(_pattern),
-                                                                      node.first_position());
-                    assert(seq.size() >= head_position);
-                    assert(node.next_position() >= head_position);
-                    it += head_position;
-                }
-                size_t subrange_size = std::min(std::min(node.next_position(), node.last_position()), seq.size()) -
-                                       head_position;
-                return std::ranges::subrange{it, it + subrange_size, subrange_size}; // borrowed range
-            }
+            //     if constexpr (!libjst::is_resumable_v<std::remove_cvref_t<pattern_t>>)
+            //     {
+            //         head_position =  node.first_position() - std::min(libjst::window_size(_pattern),
+            //                                                           node.first_position());
+            //         assert(seq.size() >= head_position);
+            //         assert(node.next_position() >= head_position);
+            //         it += head_position;
+            //     }
+            //     size_t subrange_size = std::min(std::min(node.next_position(), node.last_position()), seq.size()) -
+            //                            head_position;
+            //     return std::ranges::subrange{it, it + subrange_size, subrange_size}; // borrowed range
+            // }
 
             constexpr friend void tag_invoke(std::tag_t<libjst::start>, stateless_pattern_operation & me) noexcept
             {
@@ -86,7 +86,7 @@ namespace libjst
                     auto jst_tree = me.make_tree(algorithm_stack);
 
                     for (auto && node : jst_tree) {
-                        std::invoke(algorithm_stack.top(), me.label(node), [&] (auto && it) {
+                        std::invoke(algorithm_stack.top(), node.sequence(), [&] (auto && it) {
                             libjst::set_next(me._publisher, result{node, it});
                         });
                     }

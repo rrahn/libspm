@@ -92,6 +92,9 @@ namespace libjst
     } // namespace _path
     using _path::path;
 
+    template <typename jst_t>
+    using jst_path_t = std::remove_cvref_t<std::invoke_result_t<_path::_cpo, jst_t>>;
+
     // ----------------------------------------------------------------------------
     // Concept defintions
     // ----------------------------------------------------------------------------

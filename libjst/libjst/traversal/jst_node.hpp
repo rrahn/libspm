@@ -57,27 +57,27 @@ namespace libjst
         jst_node & operator=(jst_node const &) = default;
         jst_node & operator=(jst_node &&) = default;
         explicit jst_node(jst_t const &jst, size_t const window_size) :
-            _journal{libjst::base_sequence(jst) | seqan3::views::type_reduce},
-            _store{libjst::variant_store(jst) | std::views::all},
-            _next_variant{std::ranges::begin(_store)},
-            _coverage{coverage_t(libjst::size(jst), true)},
-            _window_size{window_size - 1},
-            _base_size{std::ranges::size(libjst::base_sequence(jst))}
+            _journal{libjst::base_sequence(jst) | seqan3::views::type_reduce}
+            // _store{libjst::variant_store(jst) | std::views::all},
+            // _next_variant{std::ranges::begin(_store)},
+            // _coverage{coverage_t(libjst::size(jst), true)},
+            // _window_size{window_size - 1},
+            // _base_size{std::ranges::size(libjst::base_sequence(jst))}
         {
             assert(window_size > 0);
 
-            if (_next_variant != std::ranges::end(_store))
-            {
-                auto &&next_variant = *_next_variant;
-                _next = libjst::position(next_variant);
-                _last = _next + std::ranges::size(libjst::insertion(next_variant)) + _window_size;
-                //  _base_size + next_variant.insertion_size() - next_variant.deletion_size());
-            }
-            else
-            {
-                _next = _base_size;
-                _last = _next;
-            }
+            // if (_next_variant != std::ranges::end(_store))
+            // {
+            //     auto &&next_variant = *_next_variant;
+            //     _next = libjst::position(next_variant);
+            //     _last = _next + std::ranges::size(libjst::insertion(next_variant)) + _window_size;
+            //     //  _base_size + next_variant.insertion_size() - next_variant.deletion_size());
+            // }
+            // else
+            // {
+            //     _next = _base_size;
+            //     _last = _next;
+            // }
         }
 
         auto sequence() const noexcept
@@ -101,23 +101,23 @@ namespace libjst
 
         bool at_end() const noexcept
         {
-            return _next >= _last;
+            return true; //_next >= _last;
         }
 
         // could be put into its own strategy class.
         constexpr size_t first_position() const noexcept
         {
-            return _first;
+            return 0;//_first;
         }
 
         constexpr size_t next_position() const noexcept
         {
-            return _next;
+            return 0;//_next;
         }
 
         constexpr size_t last_position() const noexcept
         {
-            return _last;
+            return 0;//_last;
         }
 
         template <typename node_t>
@@ -133,97 +133,97 @@ namespace libjst
 
             std::optional<jst_node> branch_node{std::nullopt};
 
-            coverage_t child_coverage = parent._coverage & libjst::coverage(*parent._next_variant);
-            if (child_coverage.any())
-            {
-                jst_node child{};
-                child._next_variant = parent._next_variant;
-                child._store = parent._store;
-                child._coverage = std::move(child_coverage);
-                child._base_size = parent._base_size;  // size of journal sequence, because we always need to view the entire range.
-                child._window_size = parent._window_size;
-                child._first = parent._next;
-                child._next = parent._last;
-                child._last = parent._last;
-                child._journal = parent._journal;
-                child._kind = branch_kind::variant;
-                record_sequence_variant(child, *child._next_variant);
-                // find first branch candidate:
-                // First find first variant that is not an insertion including the current variant.
-                child._next_variant =
-                    std::ranges::find_if(++child._next_variant,
-                                         std::ranges::end(child._store),
-                                         [pivot = libjst::position(*parent._next_variant)](auto &&variant)
-                                         {
-                                             return !libjst::is_insertion(variant) ||
-                                                    libjst::position(variant) != pivot;
-                                         });
-                // second: if next variant is not already the next valid we need to search it.
-                auto last_position = [] (auto &&variant)
-                {
-                    return libjst::position(variant) + libjst::deletion(variant);
-                };
-                // Of course! We have to check again, if the variant is at end.
-                if (child._next_variant != std::ranges::end(child._store) &&
-                    last_position(*parent._next_variant) > libjst::position(*child._next_variant))
-                {
-                    child._next_variant =
-                        std::ranges::lower_bound(child._next_variant,
-                                                 std::ranges::end(child._store),
-                                                 last_position(*parent._next_variant),
-                                                 std::less<>{},
-                                                 [] (auto &&variant) { return libjst::position(variant); });
-                }
+            // coverage_t child_coverage = parent._coverage & libjst::coverage(*parent._next_variant);
+            // if (child_coverage.any())
+            // {
+            //     jst_node child{};
+            //     child._next_variant = parent._next_variant;
+            //     child._store = parent._store;
+            //     child._coverage = std::move(child_coverage);
+            //     child._base_size = parent._base_size;  // size of journal sequence, because we always need to view the entire range.
+            //     child._window_size = parent._window_size;
+            //     child._first = parent._next;
+            //     child._next = parent._last;
+            //     child._last = parent._last;
+            //     child._journal = parent._journal;
+            //     child._kind = branch_kind::variant;
+            //     record_sequence_variant(child, *child._next_variant);
+            //     // find first branch candidate:
+            //     // First find first variant that is not an insertion including the current variant.
+            //     child._next_variant =
+            //         std::ranges::find_if(++child._next_variant,
+            //                              std::ranges::end(child._store),
+            //                              [pivot = libjst::position(*parent._next_variant)](auto &&variant)
+            //                              {
+            //                                  return !libjst::is_insertion(variant) ||
+            //                                         libjst::position(variant) != pivot;
+            //                              });
+            //     // second: if next variant is not already the next valid we need to search it.
+            //     auto last_position = [] (auto &&variant)
+            //     {
+            //         return libjst::position(variant) + libjst::deletion(variant);
+            //     };
+            //     // Of course! We have to check again, if the variant is at end.
+            //     if (child._next_variant != std::ranges::end(child._store) &&
+            //         last_position(*parent._next_variant) > libjst::position(*child._next_variant))
+            //     {
+            //         child._next_variant =
+            //             std::ranges::lower_bound(child._next_variant,
+            //                                      std::ranges::end(child._store),
+            //                                      last_position(*parent._next_variant),
+            //                                      std::less<>{},
+            //                                      [] (auto &&variant) { return libjst::position(variant); });
+            //     }
 
-                if (child._next_variant != std::ranges::end(child._store))
-                {
-                    child._next = parent._next + std::ranges::size(libjst::insertion(*parent._next_variant)) +
-                                  libjst::position(*child._next_variant) - last_position(*parent._next_variant);
-                }
-                branch_node = std::move(child);
-            }
+            //     if (child._next_variant != std::ranges::end(child._store))
+            //     {
+            //         child._next = parent._next + std::ranges::size(libjst::insertion(*parent._next_variant)) +
+            //                       libjst::position(*child._next_variant) - last_position(*parent._next_variant);
+            //     }
+            //     branch_node = std::move(child);
+            // }
 
             // ------------------
             // create split node
 
             std::optional<jst_node> split_node{std::nullopt};
-            parent._first = parent._next;
-            auto const &prev_variant = *parent._next_variant;
-            ++parent._next_variant;
-            if (parent._kind == branch_kind::base)
-            { // update base branch node
-                parent._next = parent._base_size;
-                parent._last = parent._base_size;
-                // also wrong! should be the last node set for the base branch.
-                if (parent._next_variant != std::ranges::end(parent._store))
-                {
-                    parent._next = libjst::position(*parent._next_variant);
-                    parent._last = parent._next + std::ranges::size(libjst::insertion(*parent._next_variant)) +
-                                   parent._window_size;
-                    //    , parent._base_size +
-                    //                 (*parent._next_variant).event_handle()->insertion_size() -
-                    //                 (*parent._next_variant).event_handle()->deletion_size());
-                }
-                split_node = std::move(parent);
-            }
-            else
-            { // update variant branch node
-                parent._coverage.and_not(libjst::coverage(prev_variant));
-                if (parent._coverage.any())
-                { // is there at least one sequence covering the base branch at this site.
-                    if (parent._next_variant != std::ranges::end(parent._store))
-                    { // might end before.
-                        parent._next += libjst::position(*parent._next_variant) - libjst::position(prev_variant);
-                    }
-                    else
-                    {
-                        parent._next = parent._last; // set to last.
-                    }
-                    // assert(prev_variant.position().offset <= next_position);
-                    // parent._next = std::min(parent._next + next_position - prev_variant.position().offset, parent._last);
-                    split_node = std::move(parent);
-                }
-            }
+            // parent._first = parent._next;
+            // auto const &prev_variant = *parent._next_variant;
+            // ++parent._next_variant;
+            // if (parent._kind == branch_kind::base)
+            // { // update base branch node
+            //     parent._next = parent._base_size;
+            //     parent._last = parent._base_size;
+            //     // also wrong! should be the last node set for the base branch.
+            //     if (parent._next_variant != std::ranges::end(parent._store))
+            //     {
+            //         parent._next = libjst::position(*parent._next_variant);
+            //         parent._last = parent._next + std::ranges::size(libjst::insertion(*parent._next_variant)) +
+            //                        parent._window_size;
+            //         //    , parent._base_size +
+            //         //                 (*parent._next_variant).event_handle()->insertion_size() -
+            //         //                 (*parent._next_variant).event_handle()->deletion_size());
+            //     }
+            //     split_node = std::move(parent);
+            // }
+            // else
+            // { // update variant branch node
+            //     parent._coverage.and_not(libjst::coverage(prev_variant));
+            //     if (parent._coverage.any())
+            //     { // is there at least one sequence covering the base branch at this site.
+            //         if (parent._next_variant != std::ranges::end(parent._store))
+            //         { // might end before.
+            //             parent._next += libjst::position(*parent._next_variant) - libjst::position(prev_variant);
+            //         }
+            //         else
+            //         {
+            //             parent._next = parent._last; // set to last.
+            //         }
+            //         // assert(prev_variant.position().offset <= next_position);
+            //         // parent._next = std::min(parent._next + next_position - prev_variant.position().offset, parent._last);
+            //         split_node = std::move(parent);
+            //     }
+            // }
             return {std::move(branch_node), std::move(split_node)};
         }
 

@@ -33,6 +33,10 @@ namespace libjst
     class variant_proxy
     {
     private:
+
+        template <typename, typename>
+        friend class variant_proxy;
+
         _variant_t _variant;
         _coverage_t _coverage;
 

@@ -23,7 +23,6 @@
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
 #include <libjst/traversal/lazy_tree.hpp>
-#include <libjst/traversal/jst_node.hpp>
 
 template <typename alphabet_type>
 struct lazy_tree_test : public ::testing::Test
@@ -41,8 +40,7 @@ struct lazy_tree_test : public ::testing::Test
 
     using jst_t = libjst::jst_base<sequence_t, covered_store_t>;
     using fwd_jst_t = libjst::jst_forward<jst_t>;
-    using jst_node_t = libjst::jst_node<fwd_jst_t>;
-    using lazy_tree_t = libjst::lazy_tree<jst_node_t>;
+    using lazy_tree_t = libjst::lazy_tree<fwd_jst_t>;
 
     inline static const std::vector<alphabet_t> base_sequence{seqan3::test::generate_sequence<alphabet_t>(200)};
     inline static const std::vector<alphabet_t> insertion_sequence{seqan3::test::generate_sequence<alphabet_t>(10)};

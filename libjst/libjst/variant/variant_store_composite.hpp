@@ -52,6 +52,10 @@ namespace libjst
     class composite_proxy
     {
     private:
+
+        template <sequence_variant ..._variants_t>
+        friend class composite_proxy;
+
         template <typename u>
         using pure_t = std::decay_t<std::unwrap_reference_t<u>>;
 
