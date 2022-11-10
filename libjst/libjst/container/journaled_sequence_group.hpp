@@ -52,15 +52,13 @@ namespace libjst
         template <typename _source_t>
             requires (!std::same_as<std::remove_cvref_t<_source_t>, journaled_sequence_group> &&
                       std::ranges::viewable_range<_source_t>)
-        explicit journaled_sequence_group(_source_t &&source, variant_store_t variant_store)
-            noexcept(std::is_nothrow_constructible_v<std::views::all_t<_source_t>> &&
-                     std::is_nothrow_move_constructible_v<variant_store_t>) :
+        explicit journaled_sequence_group(_source_t &&source, variant_store_t variant_store) :
             _source{std::views::all((_source_t &&)source)},
             _variant_store{std::move(variant_store)}
         {
             _sequence_count = std::ranges::size(libjst::coverage(_variant_store[0]));
             for (auto && variant : _variant_store) {
-                if (end_position(variant) > std::ranges::size(_source) ||
+                if (position(variant) + deletion(variant) > std::ranges::size(_source) ||
                     std::ranges::size(libjst::coverage(variant)) != size())
                     throw std::runtime_error{"Invalid variant store."};
             }
