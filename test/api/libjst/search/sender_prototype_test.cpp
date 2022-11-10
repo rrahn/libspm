@@ -19,8 +19,8 @@
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
-#include <libjst/structure/jst_forward.hpp>
-#include <libjst/structure/jst_base.hpp>
+#include <libjst/container/jst_forward.hpp>
+#include <libjst/container/jst_base.hpp>
 #include <libjst/search/search_base.hpp>
 #include <libjst/traversal/concept_execution.hpp>
 #include <libjst/traversal/searcher_factory.hpp>

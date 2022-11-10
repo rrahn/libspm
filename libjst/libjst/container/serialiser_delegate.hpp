@@ -19,7 +19,7 @@
 #include <libcontrib/std/tag_invoke.hpp>
 #include <libcontrib/type_traits.hpp>
 
-#include <libjst/structure/concept_serialiser.hpp>
+#include <libjst/container/concept_serialiser.hpp>
 
 namespace libjst
 {

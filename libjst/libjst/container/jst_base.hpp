@@ -17,8 +17,8 @@
 
 #include <seqan3/range/concept.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
-#include <libjst/structure/concept_serialiser.hpp>
+#include <libjst/container/concept_jst.hpp>
+#include <libjst/container/concept_serialiser.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst

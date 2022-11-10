@@ -16,7 +16,7 @@
 
 #include <libjst/concept.hpp>
 // #include <libjst/set.hpp>
-#include <libjst/structure/jst_forward.hpp>
+#include <libjst/container/jst_forward.hpp>
 
 #include "../journal_sequence_tree_traversal_test_template.hpp"
 

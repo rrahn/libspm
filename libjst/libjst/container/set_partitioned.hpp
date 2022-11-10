@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include <libjst/structure/concept_jst.hpp>
-#include <libjst/structure/concept_serialiser.hpp>
+#include <libjst/container/concept_jst.hpp>
+#include <libjst/container/concept_serialiser.hpp>
 
 namespace libjst
 {

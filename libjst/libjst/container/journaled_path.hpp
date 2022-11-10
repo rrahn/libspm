@@ -19,7 +19,7 @@
 
 #include <seqan3/range/views/slice.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
+#include <libjst/container/concept_jst.hpp>
 #include <libjst/variant/variant_proxy_offset.hpp>
 #include <libjst/journal.hpp>
 

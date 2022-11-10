@@ -13,8 +13,8 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
-#include <libjst/structure/jst_base.hpp>
+#include <libjst/container/concept_jst.hpp>
+#include <libjst/container/jst_base.hpp>
 #include <libjst/utility/bit_vector.hpp>
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_generic.hpp>

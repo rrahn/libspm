@@ -15,7 +15,7 @@
 #include <ranges>
 #include <vector>
 
-#include <libjst/structure/concept_jst.hpp>
+#include <libjst/container/concept_jst.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libio

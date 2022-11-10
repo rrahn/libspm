@@ -15,7 +15,7 @@
 #include <iterator>
 #include <ranges>
 
-#include <libjst/structure/concept_jst.hpp>
+#include <libjst/container/concept_jst.hpp>
 #include <libjst/variant/variant_proxy_offset.hpp>
 #include <libjst/variant/variant_proxy_coverage_transform.hpp>
 

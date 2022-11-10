@@ -16,7 +16,7 @@
 #include <stack>
 #include <vector>
 
-#include <libjst/structure/concept_jst.hpp>
+#include <libjst/container/concept_jst.hpp>
 #include <libjst/traversal/stack_publisher.hpp>
 
 namespace libjst

@@ -17,16 +17,16 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
-#include <libjst/structure/jst_base.hpp>
+#include <libjst/container/concept_jst.hpp>
+#include <libjst/container/jst_base.hpp>
 #include <libjst/utility/bit_vector.hpp>
 #include <libjst/variant/variant_snp.hpp>
 #include <libjst/variant/variant_generic.hpp>
 #include <libjst/variant/variant_store_composite.hpp>
 #include <libjst/variant/variant_store_covered.hpp>
 
-#include <libjst/structure/serialiser_direct.hpp>
-#include <libjst/structure/serialiser_delegate.hpp>
+#include <libjst/container/serialiser_direct.hpp>
+#include <libjst/container/serialiser_delegate.hpp>
 
 namespace test {
 template <typename other_t>

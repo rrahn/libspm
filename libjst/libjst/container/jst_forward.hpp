@@ -19,10 +19,10 @@
 
 #include <seqan3/range/views/type_reduce.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
-#include <libjst/structure/concept_serialiser.hpp>
-#include <libjst/structure/journaled_path.hpp>
-#include <libjst/structure/serialiser_delegate.hpp>
+#include <libjst/container/concept_jst.hpp>
+#include <libjst/container/concept_serialiser.hpp>
+#include <libjst/container/journaled_path.hpp>
+#include <libjst/container/serialiser_delegate.hpp>
 #include <libjst/variant/variant_store_sorted.hpp>
 // #include <libjst/traversal/source_branch_node.hpp>
 // #include <libjst/traversal/node_label.hpp>

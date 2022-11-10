@@ -23,7 +23,7 @@ namespace libjst
         coverage_t _coverage{};
     protected:
 
-        using sequence_t = typename journal_t::mapped_type;
+        // using sequence_t = typename journal_t::mapped_type;
 
     public:
 

@@ -17,7 +17,7 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/type_traits.hpp>
 
-#include <libjst/structure/concept_jst.hpp>
+#include <libjst/container/concept_jst.hpp>
 #include <libjst/traversal/concept_execution.hpp>
 #include <libjst/traversal/lazy_tree.hpp>
 #include <libjst/concept.hpp>
