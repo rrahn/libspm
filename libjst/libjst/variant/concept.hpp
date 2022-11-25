@@ -19,6 +19,8 @@
 
 #include <libcontrib/std/tag_invoke.hpp>
 
+#include <libjst/variant/alternate_sequence_kind.hpp>
+
 namespace libjst
 {
     // ----------------------------------------------------------------------------
@@ -177,6 +179,112 @@ namespace libjst
 
     template <typename variant_t>
     using variant_coverage_t = std::remove_cvref_t<std::invoke_result_t<_variant_coverage::_cpo, variant_t>>;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::ref_span
+    // ----------------------------------------------------------------------------
+    namespace _ref_span {
+        inline constexpr struct _cpo  {
+            template <typename sequence_alternative_t>
+                requires std::tag_invocable<_cpo, sequence_alternative_t>
+            constexpr auto operator()(sequence_alternative_t &&alt) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, sequence_alternative_t>)
+                -> std::tag_invoke_result_t<_cpo, sequence_alternative_t>
+            {
+                return std::tag_invoke(_cpo{}, (sequence_alternative_t &&)alt);
+            }
+        } ref_span;
+    } // namespace _ref_span
+    using _ref_span::ref_span;
+
+    template <typename sequence_alternative_t>
+    using ref_span_t = std::remove_cvref_t<std::invoke_result_t<_ref_span::_cpo, sequence_alternative_t>>;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::alt_sequence
+    // ----------------------------------------------------------------------------
+    namespace _alt_sequence {
+        inline constexpr struct _cpo  {
+            template <typename sequence_alternative_t>
+                requires std::tag_invocable<_cpo, sequence_alternative_t>
+            constexpr auto operator()(sequence_alternative_t &&alt) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, sequence_alternative_t>)
+                -> std::tag_invoke_result_t<_cpo, sequence_alternative_t>
+            {
+                return std::tag_invoke(_cpo{}, (sequence_alternative_t &&)alt);
+            }
+        } alt_sequence;
+    } // namespace _alt_sequence
+    using _alt_sequence::alt_sequence;
+
+    template <typename sequence_alternative_t>
+    using alt_sequence_t = std::remove_cvref_t<std::invoke_result_t<_alt_sequence::_cpo, sequence_alternative_t>>;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::effective_size
+    // ----------------------------------------------------------------------------
+    namespace _effective_size {
+        inline constexpr struct _cpo  {
+            // If tag_invocable
+            template <typename variant_t>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr auto operator()(variant_t &&var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+                -> std::tag_invoke_result_t<_cpo, variant_t>
+            {
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
+            }
+
+            // If not tag_invocable
+            template <typename variant_t>
+                requires (!std::tag_invocable<_cpo, variant_t const &>)
+            constexpr auto operator()(variant_t const & var) const noexcept
+            {
+                if constexpr (std::tag_invocable<std::tag_t<libjst::ref_span>, variant_t const &> &&
+                              std::ranges::sized_range<std::tag_invoke_result_t<std::tag_t<libjst::alt_sequence>, variant_t const &>>) {
+                    return std::ranges::ssize(libjst::alt_sequence(var)) - libjst::ref_span(var);
+                } else {
+                    static_assert(std::same_as<variant_t, void>, "No valid default for libjst::effective_size(variant) found!");
+                }
+            }
+        } effective_size;
+    } // namespace _effective_size
+    using _effective_size::effective_size;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::alt_kind
+    // ----------------------------------------------------------------------------
+    namespace _alt_kind {
+        inline constexpr struct _cpo  {
+            // If tag_invocable
+            template <typename variant_t>
+                requires std::tag_invocable<_cpo, variant_t>
+            constexpr alternate_sequence_kind operator()(variant_t &&var) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, variant_t>)
+            {
+                return std::tag_invoke(_cpo{}, (variant_t &&)var);
+            }
+
+            // If not tag_invocable
+            template <typename variant_t>
+                requires (!std::tag_invocable<_cpo, variant_t const &>)
+            constexpr alternate_sequence_kind operator()(variant_t const & var) const noexcept
+            {
+                if constexpr (std::tag_invocable<std::tag_t<libjst::effective_size>, variant_t const &>)
+                {
+                    if (libjst::effective_size(var) < 0)
+                        return alternate_sequence_kind::deletion;
+                    else if (libjst::effective_size(var) == 0)
+                        return alternate_sequence_kind::replacement;
+                    else
+                        return alternate_sequence_kind::insertion;
+                } else {
+                    static_assert(std::same_as<variant_t, void>, "No valid default for kind(variant) found!");
+                }
+            }
+        } alt_kind;
+    } // namespace _alt_kind
+    using _alt_kind::alt_kind;
 
     // ----------------------------------------------------------------------------
     // Operation CPOs for variant stores
