@@ -46,10 +46,10 @@ public:
     {}
 
     template <typename other_variant_store_t>
-        requires (std::same_as<std::remove_cvref_t<variant_store_t>, std::remove_cvref_t<other_variant_store_t>> &&
+        requires (std::same_as<std::remove_cvref_t<other_variant_store_t>, std::remove_cvref_t<variant_store_t>> &&
                   is_const && !variant_store_iterator<other_variant_store_t>::is_const)
-    constexpr explicit variant_store_iterator(variant_store_iterator<other_variant_store_t> other) noexcept :
-        _variant_store{std::addressof(other._variant_store)},
+    constexpr variant_store_iterator(variant_store_iterator<other_variant_store_t> other) noexcept :
+        _variant_store{other._variant_store},
         _position{other._position}
     {}
 
