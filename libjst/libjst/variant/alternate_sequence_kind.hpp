@@ -22,7 +22,8 @@ namespace libjst
     enum class alternate_sequence_kind {
         insertion = 0,
         replacement = 1,
-        deletion = 2
+        deletion = 2,
+        unknown
     };
 
     template <typename char_t, typename char_traits_t = std::char_traits<char_t>>

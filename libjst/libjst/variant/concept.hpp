@@ -20,6 +20,7 @@
 #include <libcontrib/std/tag_invoke.hpp>
 
 #include <libjst/variant/alternate_sequence_kind.hpp>
+#include <libjst/variant/breakpoint.hpp>
 
 namespace libjst
 {
@@ -181,9 +182,9 @@ namespace libjst
     using variant_coverage_t = std::remove_cvref_t<std::invoke_result_t<_variant_coverage::_cpo, variant_t>>;
 
     // ----------------------------------------------------------------------------
-    // CPO libjst::ref_span
+    // CPO libjst::breakpoint_span
     // ----------------------------------------------------------------------------
-    namespace _ref_span {
+    namespace _breakpoint_span {
         inline constexpr struct _cpo  {
             template <typename sequence_alternative_t>
                 requires std::tag_invocable<_cpo, sequence_alternative_t>
@@ -193,12 +194,68 @@ namespace libjst
             {
                 return std::tag_invoke(_cpo{}, (sequence_alternative_t &&)alt);
             }
-        } ref_span;
-    } // namespace _ref_span
-    using _ref_span::ref_span;
+        } breakpoint_span;
+    } // namespace _breakpoint_span
+    using _breakpoint_span::breakpoint_span;
 
     template <typename sequence_alternative_t>
-    using ref_span_t = std::remove_cvref_t<std::invoke_result_t<_ref_span::_cpo, sequence_alternative_t>>;
+    using breakpoint_span_t = std::remove_cvref_t<std::invoke_result_t<_breakpoint_span::_cpo, sequence_alternative_t>>;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::left_breakpoint
+    // ----------------------------------------------------------------------------
+    namespace _left_breakpoint {
+        inline constexpr struct _cpo  {
+            template <typename sequence_variant_t>
+                requires std::tag_invocable<_cpo, sequence_variant_t>
+            constexpr auto operator()(sequence_variant_t &&variant) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, sequence_variant_t>)
+                -> std::tag_invoke_result_t<_cpo, sequence_variant_t>
+            {
+                return std::tag_invoke(_cpo{}, (sequence_variant_t &&)variant);
+            }
+        } left_breakpoint;
+    } // namespace _left_breakpoint
+    using _left_breakpoint::left_breakpoint;
+
+    template <typename sequence_variant_t>
+    using left_breakpoint_t =
+        std::remove_cvref_t<std::invoke_result_t<_left_breakpoint::_cpo, sequence_variant_t>>;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::right_breakpoint
+    // ----------------------------------------------------------------------------
+    namespace _right_breakpoint {
+        inline constexpr struct _cpo  {
+            template <typename sequence_variant_t>
+                requires std::tag_invocable<_cpo, sequence_variant_t>
+            constexpr auto operator()(sequence_variant_t &&variant) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, sequence_variant_t>)
+                -> std::tag_invoke_result_t<_cpo, sequence_variant_t>
+            {
+                return std::tag_invoke(_cpo{}, (sequence_variant_t &&)variant);
+            }
+        private:
+
+            template <typename sequence_variant_t>
+                requires std::tag_invocable<std::tag_t<libjst::left_breakpoint>, sequence_variant_t> &&
+                         std::tag_invocable<std::tag_t<libjst::breakpoint_span>, sequence_variant_t>
+            constexpr friend auto tag_invoke(_cpo, sequence_variant_t &&variant)
+                noexcept(std::is_nothrow_tag_invocable_v<std::tag_t<libjst::left_breakpoint>, sequence_variant_t> &&
+                         std::is_nothrow_tag_invocable_v<std::tag_t<libjst::breakpoint_span>, sequence_variant_t>)
+                -> breakpoint
+            {
+                return breakpoint{libjst::left_breakpoint(variant).value() + libjst::breakpoint_span(variant),
+                                  breakpoint_end::right};
+            }
+        } right_breakpoint;
+    } // namespace _right_breakpoint
+    using _right_breakpoint::right_breakpoint;
+
+    template <typename sequence_variant_t>
+    using variant_breakpoint_t = std::remove_cvref_t<
+                std::common_type_t<std::invoke_result_t<_left_breakpoint::_cpo, sequence_variant_t>,
+                                   std::invoke_result_t<_right_breakpoint::_cpo, sequence_variant_t>>>;
 
     // ----------------------------------------------------------------------------
     // CPO libjst::alt_sequence
@@ -235,17 +292,18 @@ namespace libjst
                 return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
 
-            // If not tag_invocable
+        private:
             template <typename variant_t>
-                requires (!std::tag_invocable<_cpo, variant_t const &>)
-            constexpr auto operator()(variant_t const & var) const noexcept
+                requires std::tag_invocable<std::tag_t<libjst::breakpoint_span>, variant_t> &&
+                         std::tag_invocable<std::tag_t<libjst::alt_sequence>, variant_t>
+            constexpr friend auto tag_invoke(_cpo, variant_t && var)
+                noexcept(std::is_nothrow_tag_invocable_v<std::tag_t<libjst::breakpoint_span>, variant_t> &&
+                         std::is_nothrow_tag_invocable_v<std::tag_t<libjst::alt_sequence>, variant_t>)
+                -> std::common_type_t<std::tag_invoke_result_t<std::tag_t<libjst::breakpoint_span>, variant_t>,
+                                      std::ranges::range_difference_t<
+                                            std::tag_invoke_result_t<std::tag_t<libjst::alt_sequence>, variant_t>>>
             {
-                if constexpr (std::tag_invocable<std::tag_t<libjst::ref_span>, variant_t const &> &&
-                              std::ranges::sized_range<std::tag_invoke_result_t<std::tag_t<libjst::alt_sequence>, variant_t const &>>) {
-                    return std::ranges::ssize(libjst::alt_sequence(var)) - libjst::ref_span(var);
-                } else {
-                    static_assert(std::same_as<variant_t, void>, "No valid default for libjst::effective_size(variant) found!");
-                }
+                return std::ranges::distance(libjst::alt_sequence(var)) - libjst::breakpoint_span(var);
             }
         } effective_size;
     } // namespace _effective_size
@@ -265,22 +323,19 @@ namespace libjst
                 return std::tag_invoke(_cpo{}, (variant_t &&)var);
             }
 
-            // If not tag_invocable
+        private:
             template <typename variant_t>
-                requires (!std::tag_invocable<_cpo, variant_t const &>)
-            constexpr alternate_sequence_kind operator()(variant_t const & var) const noexcept
+                requires std::tag_invocable<std::tag_t<libjst::effective_size>, variant_t>
+            constexpr friend auto tag_invoke(_cpo, variant_t && var)
+                noexcept(std::is_nothrow_tag_invocable_v<std::tag_t<libjst::effective_size>, variant_t>)
+                -> alternate_sequence_kind
             {
-                if constexpr (std::tag_invocable<std::tag_t<libjst::effective_size>, variant_t const &>)
-                {
-                    if (libjst::effective_size(var) < 0)
-                        return alternate_sequence_kind::deletion;
-                    else if (libjst::effective_size(var) == 0)
-                        return alternate_sequence_kind::replacement;
-                    else
-                        return alternate_sequence_kind::insertion;
-                } else {
-                    static_assert(std::same_as<variant_t, void>, "No valid default for kind(variant) found!");
-                }
+                if (libjst::effective_size(var) < 0)
+                    return alternate_sequence_kind::deletion;
+                else if (libjst::effective_size(var) == 0)
+                    return alternate_sequence_kind::replacement;
+                else
+                    return alternate_sequence_kind::insertion;
             }
         } alt_kind;
     } // namespace _alt_kind

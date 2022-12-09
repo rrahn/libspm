@@ -66,7 +66,7 @@ TYPED_TEST(single_base_replacement_test, value_concept)
     using value_t = std::ranges::range_value_t<store_t>;
 
     // EXPECT_TRUE(libjst::sequence_alternative<value_t>);
-    EXPECT_EQ(libjst::ref_span(value_t{this->value0}), 1ul);
+    EXPECT_EQ(libjst::breakpoint_span(value_t{this->value0}), 1ul);
     EXPECT_RANGE_EQ(libjst::alt_sequence(value_t{this->value0}), this->to_sequence('A'));
     EXPECT_EQ(libjst::effective_size(value_t{this->value0}), 0);
     EXPECT_EQ(libjst::alt_kind(value_t{this->value0}), libjst::alternate_sequence_kind::replacement);

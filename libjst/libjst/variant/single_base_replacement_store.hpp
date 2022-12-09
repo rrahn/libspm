@@ -117,7 +117,7 @@ namespace libjst
 
     private:
 
-        constexpr friend size_type tag_invoke(std::tag_t<libjst::ref_span>, element_type const &) noexcept {
+        constexpr friend size_type tag_invoke(std::tag_t<libjst::breakpoint_span>, element_type const &) noexcept {
             return 1;
         }
 

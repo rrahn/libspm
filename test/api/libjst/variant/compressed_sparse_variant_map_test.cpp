@@ -29,12 +29,12 @@ struct compressed_sparse_variant_map_test : public ::testing::Test
     using coverage_t = libjst::bit_vector<>;
 
     using map_type = libjst::compressed_sparse_variant_map<alt_store_type, coverage_t>;
-    using test_variant_type = std::tuple<int32_t, alt_value_type, coverage_t>;
+    using test_variant_type = std::tuple<libjst::breakpoint, alt_value_type, coverage_t>;
 
-    test_variant_type test_snvA{10, alt_value_type{seqan3::assign_char_to('A', alphabet_t{})}, coverage_t{1, 0, 0, 0}};
-    test_variant_type test_snvC{15, alt_value_type{seqan3::assign_char_to('C', alphabet_t{})}, coverage_t{0, 1, 0, 0}};
-    test_variant_type test_snvG{10, alt_value_type{seqan3::assign_char_to('G', alphabet_t{})}, coverage_t{0, 0, 1, 0}};
-    test_variant_type test_snvT{7,  alt_value_type{seqan3::assign_char_to('T', alphabet_t{})}, coverage_t{0, 0, 0, 1}};
+    test_variant_type test_snvA{libjst::breakpoint{10}, alt_value_type{seqan3::assign_char_to('A', alphabet_t{})}, coverage_t{1, 0, 0, 0}};
+    test_variant_type test_snvC{libjst::breakpoint{15}, alt_value_type{seqan3::assign_char_to('C', alphabet_t{})}, coverage_t{0, 1, 0, 0}};
+    test_variant_type test_snvG{libjst::breakpoint{10}, alt_value_type{seqan3::assign_char_to('G', alphabet_t{})}, coverage_t{0, 0, 1, 0}};
+    test_variant_type test_snvT{libjst::breakpoint{7},  alt_value_type{seqan3::assign_char_to('T', alphabet_t{})}, coverage_t{0, 0, 0, 1}};
 
     auto to_sequence(char const c) {
         return std::array{seqan3::assign_char_to(c, alphabet_t{})};

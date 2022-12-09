@@ -21,9 +21,11 @@
 #include <cereal/types/vector.hpp>
 
 #include <libcontrib/type_traits.hpp>
+#include <libcontrib/type_traits.hpp>
 #include <libcontrib/std/tag_invoke.hpp>
 
 #include <libjst/variant/concept.hpp>
+#include <libjst/variant/breakpoint.hpp>
 #include <libjst/variant/variant_store_iterator.hpp>
 
 namespace libjst
@@ -73,28 +75,25 @@ namespace libjst
             static constexpr proxy_type_category value = common_reference_category<category1, category2>();
         };
 
-        template <std::integral key_t, typename alternative_t, typename coverage_t, proxy_type_category category>
+        template <typename breakpoint_t, typename alternative_t, typename coverage_t, proxy_type_category category>
         class compressed_sparse_variant_map_proxy
         {
         private:
 
             static constexpr proxy_type_category category_v = category;
-
-            using ref_position_t = key_t;
-
-            template <std::integral t0, typename t1, typename t2, proxy_type_category>
+            template <typename t0, typename t1, typename t2, proxy_type_category>
             friend class compressed_sparse_variant_map_proxy;
 
-            ref_position_t _ref_position;
+            breakpoint_t _breakpoint;
             alternative_t _alternative;
             coverage_t _coverage;
 
         public:
 
-            compressed_sparse_variant_map_proxy(ref_position_t ref_position,
+            compressed_sparse_variant_map_proxy(breakpoint_t breakpoint,
                                                 alternative_t alternative,
                                                 coverage_t coverage) noexcept :
-                _ref_position{(ref_position_t &&) ref_position},
+                _breakpoint{(breakpoint_t &&) breakpoint},
                 _alternative{(alternative_t &&) alternative},
                 _coverage{(coverage_t &&) coverage}
             {}
@@ -112,7 +111,7 @@ namespace libjst
                           other_proxy_t::category_v == proxy_type_category::reference &&
                           category_v != proxy_type_category::reference)
             compressed_sparse_variant_map_proxy(other_proxy_t const & other) :
-                _ref_position(other._ref_position),
+                _breakpoint(other._breakpoint),
                 _alternative{other._alternative},
                 _coverage{other._coverage}
             {}
@@ -123,7 +122,7 @@ namespace libjst
                           other_proxy_t::category_v == proxy_type_category::const_reference &&
                           category_v == proxy_type_category::object)
             compressed_sparse_variant_map_proxy(other_proxy_t const & other) :
-                _ref_position(other._ref_position),
+                _breakpoint(other._breakpoint),
                 _alternative{other._alternative},
                 _coverage{other._coverage}
             {}
@@ -134,7 +133,7 @@ namespace libjst
                           other_proxy_t::category_v == proxy_type_category::object &&
                           category_v != proxy_type_category::object)
             compressed_sparse_variant_map_proxy(other_proxy_t & other) :
-                _ref_position(other._ref_position),
+                _breakpoint(other._breakpoint),
                 _alternative{other._alternative},
                 _coverage{other._coverage}
             {}
@@ -145,7 +144,7 @@ namespace libjst
                           other_proxy_t::category_v == proxy_type_category::object &&
                           category_v != proxy_type_category::object)
             compressed_sparse_variant_map_proxy(other_proxy_t const & other) :
-                _ref_position(other._ref_position),
+                _breakpoint(other._breakpoint),
                 _alternative{other._alternative},
                 _coverage{other._coverage}
             {}
@@ -166,7 +165,7 @@ namespace libjst
 
             template <typename other_alternative_t, typename other_coverage_t, proxy_type_category other_category>
             constexpr friend std::weak_ordering operator<=>(compressed_sparse_variant_map_proxy const & lhs,
-                                                            compressed_sparse_variant_map_proxy<key_t, other_alternative_t, other_coverage_t, other_category> const & rhs) noexcept {
+                                                            compressed_sparse_variant_map_proxy<breakpoint_t, other_alternative_t, other_coverage_t, other_category> const & rhs) noexcept {
                 if (auto cmp = libjst::position(lhs) <=> libjst::position(rhs); cmp == 0)
                     return libjst::alt_kind(lhs) <=> libjst::alt_kind(rhs);
                 else
@@ -181,9 +180,9 @@ namespace libjst
             template <typename this_t>
                 requires std::same_as<std::remove_cvref_t<this_t>, compressed_sparse_variant_map_proxy>
             constexpr friend auto tag_invoke(std::tag_t<libjst::position>, this_t &&me) noexcept
-                -> fwd_t<this_t, ref_position_t>
+                -> fwd_t<this_t, breakpoint_t>
             {
-                return (fwd_t<this_t, ref_position_t> &&)me._ref_position;
+                return (fwd_t<this_t, breakpoint_t> &&)me._breakpoint;
             }
 
             template <typename this_t>
@@ -213,7 +212,7 @@ namespace libjst
     class compressed_sparse_variant_map
     {
     private:
-        using internal_map_value_type = std::pair<int32_t, std::size_t>;
+        using internal_map_value_type = std::pair<breakpoint, std::size_t>;
         using ref_position_map_type = std::vector<internal_map_value_type>; // better exclude into separate class!
         using coverage_store_type = std::vector<variant_coverage_t>;
 
@@ -247,7 +246,7 @@ namespace libjst
         friend iterator;
         friend const_iterator;
 
-        ref_position_map_type _ref_position_map{};
+        ref_position_map_type _breakpoint_map{};
         alternate_store_t _alternatives{};
         coverage_store_type _coverages{};
 
@@ -267,13 +266,13 @@ namespace libjst
 
         constexpr reference operator[](difference_type const offset) noexcept {
             assert(static_cast<size_type>(offset) < size());
-            auto [key, index] = _ref_position_map[offset];
+            auto [key, index] = _breakpoint_map[offset];
             return reference{key, _alternatives[index], _coverages[index]};
         }
 
         constexpr const_reference operator[](difference_type const offset) const noexcept {
             assert(static_cast<size_type>(offset) < size());
-            auto [key, index] = _ref_position_map[offset];
+            auto [key, index] = _breakpoint_map[offset];
             return const_reference{key, _alternatives[index], _coverages[index]};
         }
 
@@ -288,7 +287,7 @@ namespace libjst
         // ----------------------------------------------------------------------------
 
         constexpr size_type size() const noexcept {
-            return std::ranges::size(_ref_position_map);
+            return std::ranges::size(_breakpoint_map);
         }
 
         // ----------------------------------------------------------------------------
@@ -348,13 +347,13 @@ namespace libjst
         template <seqan3::cereal_input_archive archive_t>
         void load(archive_t & iarchive)
         {
-            iarchive(_ref_position_map, _alternatives, _coverages);
+            iarchive(_breakpoint_map, _alternatives, _coverages);
         }
 
         template <seqan3::cereal_output_archive archive_t>
         void save(archive_t & oarchive) const
         {
-            oarchive(_ref_position_map, _alternatives, _coverages);
+            oarchive(_breakpoint_map, _alternatives, _coverages);
         }
 
     private:
@@ -362,27 +361,27 @@ namespace libjst
         constexpr iterator insert_impl(const_iterator hint, value_type variant) {
             auto const mapped_store_idx = size();
 
-            _ref_position_map.reserve(size() + 1);
+            _breakpoint_map.reserve(size() + 1);
             _coverages.reserve(size() + 1);
             _alternatives.push_back(std::move(static_cast<std::ranges::range_reference_t<alternate_store_t>>(variant)));
             //------------------------------------------------------------------ noexcept here after
             _coverages.push_back(libjst::coverage(std::move(variant)));
             auto map_it = find_insert_position_near_hint(hint, variant);
-            map_it = _ref_position_map.emplace(map_it, libjst::position(std::move(variant)), mapped_store_idx);
+            map_it = _breakpoint_map.emplace(map_it, libjst::position(std::move(variant)), mapped_store_idx);
 
-            assert(std::ranges::size(_ref_position_map) == size());
+            assert(std::ranges::size(_breakpoint_map) == size());
             assert(std::ranges::size(_coverages) == size());
             assert(std::ranges::size(_alternatives) == size());
 
-            return std::ranges::next(begin(), std::ranges::distance(std::ranges::begin(_ref_position_map), map_it));
+            return std::ranges::next(begin(), std::ranges::distance(std::ranges::begin(_breakpoint_map), map_it));
         }
 
         constexpr auto find_insert_position(value_type const & variant) const noexcept
         {
             key_type const key = libjst::position(variant);
-            auto it_key = std::ranges::lower_bound(_ref_position_map, key, _map_compare, _map_project);
+            auto it_key = std::ranges::lower_bound(_breakpoint_map, key, _map_compare, _map_project);
 
-            while (it_key != std::ranges::end(_ref_position_map) && _map_project(*it_key) == key) {
+            while (it_key != std::ranges::end(_breakpoint_map) && _map_project(*it_key) == key) {
                 if (libjst::alt_kind(variant) <= libjst::alt_kind(_alternatives[it_key->second]))
                     break;
                 ++it_key;
@@ -396,7 +395,7 @@ namespace libjst
                 is_lower_bound &= *std::ranges::prev(hint) < variant;
 
             if (is_lower_bound)
-                return std::ranges::next(std::ranges::begin(_ref_position_map), std::ranges::distance(begin(), hint));
+                return std::ranges::next(std::ranges::begin(_breakpoint_map), std::ranges::distance(begin(), hint));
 
             return find_insert_position(variant);
         }
@@ -405,24 +404,24 @@ namespace libjst
 
 namespace std
 {
-    template <integral key_t1, typename alternative_t1, typename coverage_t1, libjst::detail::proxy_type_category category1,
-              integral key_t2, typename alternative_t2, typename coverage_t2, libjst::detail::proxy_type_category category2,
+    template <typename breakpoint_t1, typename alternative_t1, typename coverage_t1, libjst::detail::proxy_type_category category1,
+              typename breakpoint_t2, typename alternative_t2, typename coverage_t2, libjst::detail::proxy_type_category category2,
               template<typename> typename qualifier_t1,
               template<typename> typename qualifier_t2>
         requires requires {
             typename libjst::detail::compressed_sparse_variant_map_proxy<
-                        common_type_t<key_t1, key_t2>,
+                        common_type_t<breakpoint_t1, breakpoint_t2>,
                         common_reference_t<qualifier_t1<alternative_t1>, qualifier_t2<alternative_t2>>,
                         common_reference_t<qualifier_t1<coverage_t1>, qualifier_t2<coverage_t2>>,
                         libjst::detail::common_category_selector<qualifier_t1, qualifier_t2>::template value<category1, category2>>;
         }
-    struct basic_common_reference<libjst::detail::compressed_sparse_variant_map_proxy<key_t1, alternative_t1, coverage_t1, category1>,
-                                  libjst::detail::compressed_sparse_variant_map_proxy<key_t2, alternative_t2, coverage_t2, category2>,
+    struct basic_common_reference<libjst::detail::compressed_sparse_variant_map_proxy<breakpoint_t1, alternative_t1, coverage_t1, category1>,
+                                  libjst::detail::compressed_sparse_variant_map_proxy<breakpoint_t2, alternative_t2, coverage_t2, category2>,
                                   qualifier_t1,
                                   qualifier_t2>
     {
         using type = libjst::detail::compressed_sparse_variant_map_proxy<
-                        common_type_t<key_t1, key_t2>,
+                        common_type_t<breakpoint_t1, breakpoint_t2>,
                         common_reference_t<qualifier_t1<alternative_t1>, qualifier_t2<alternative_t2>>,
                         common_reference_t<qualifier_t1<coverage_t1>, qualifier_t2<coverage_t2>>,
                         libjst::detail::common_category_selector<qualifier_t1, qualifier_t2>::template value<category1, category2>>;
