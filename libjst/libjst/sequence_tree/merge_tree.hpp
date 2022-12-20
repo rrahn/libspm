@@ -112,6 +112,8 @@ namespace libjst
             while (!(is_nil() || base_node_type::is_branching())) {
                 if (auto successor = base_node_type::next_ref(); successor) {
                     static_cast<base_node_type &>(*this) = std::move(*successor);
+                } else {
+                    break;
                 }
             }
         }
