@@ -76,6 +76,10 @@ namespace jst::contrib
     {
         return seqan_container_adapter<std::remove_reference_t<range_t>>{std::move(range)};
     }
+
+    template <std::ranges::view range_t>
+    using seqan_container_t = decltype(make_seqan_container(std::declval<range_t>()));
+
 }  // namespace jst::contrib
 
 namespace seqan
