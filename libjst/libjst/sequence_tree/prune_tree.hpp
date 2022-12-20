@@ -89,7 +89,7 @@ namespace libjst
         template <bool is_alt, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (auto new_cov = compute_child_coverage<is_alt>((**maybe_child).coverage()); new_cov.any()) {
+                if (auto new_cov = compute_child_coverage<is_alt>(*maybe_child); new_cov.any()) {
                     node_impl new_child{std::move(*maybe_child), std::move(new_cov)};
                     return new_child;
                 }
@@ -98,15 +98,20 @@ namespace libjst
         }
 
         template <bool is_alt>
-        constexpr coverage_type compute_child_coverage(coverage_type const & child_coverage) const {
+        constexpr coverage_type compute_child_coverage(base_node_type const & base_child) const {
             coverage_type new_coverage{coverage()};
             if constexpr (is_alt) {
-                new_coverage &= child_coverage;
+                new_coverage &= (*base_child).coverage();
             } else {
-                if (base_node_type::on_alternate_path() && base_node_type::is_branching())
-                    new_coverage.and_not(child_coverage);
+                update_alternate_ref_coverage(new_coverage);
             }
             return new_coverage;
+        }
+
+        constexpr void update_alternate_ref_coverage(coverage_type & old_coverage) const noexcept {
+            if (base_node_type::on_alternate_path() && base_node_type::is_branching()) {
+                old_coverage.and_not(libjst::coverage(*base_node_type::right_variant()));
+            }
         }
 
         constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
