@@ -18,8 +18,8 @@ add_libjst_test (journal_sequence_tree_partitioned_test.cpp)
 add_libjst_test (journal_sequence_tree_search_test.cpp)
 target_use_datasources (journal_sequence_tree_search_test FILES sim_refx5.jst)
 
-add_libjst_test (journal_test.cpp)
-add_libjst_test (journal_sequence_iterator_test.cpp)
+add_libjst2_test (journal_test.cpp)
+add_libjst2_test (journal_sequence_iterator_test.cpp)
 add_libjst_test (journal_decorator_test.cpp)
 add_libjst_test (journal_decorator_iterator_test.cpp)
 
