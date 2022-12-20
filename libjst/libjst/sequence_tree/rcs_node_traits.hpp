@@ -30,6 +30,7 @@ namespace libjst
         using variant_map_type = typename rcs_store_type::variant_map_type;
         using variant_iterator = std::ranges::iterator_t<variant_map_type const>;
         using variant_type = std::ranges::range_value_t<variant_map_type const>;
+        using coverage_type = libjst::variant_coverage_t<variant_type>;
         using breakpoint_type = libjst::variant_breakpoint_t<variant_type>;
     };
 }  // namespace libjst

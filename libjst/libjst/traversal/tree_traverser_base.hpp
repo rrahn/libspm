@@ -59,19 +59,20 @@ namespace libjst
         }
     public:
 
-        using value_type = node_type;
-        using reference = value_type const &;
+        using value_type = libjst::node_label_t<node_type>;
+        using reference = libjst::node_label_t<node_type>;
         using difference_type = std::ptrdiff_t;
-        using pointer = value_type *;
+        using pointer = std::conditional_t<std::is_lvalue_reference_v<reference>, value_type *, void>;
         using iterator_category = std::input_iterator_tag;
 
         iterator() = default;
 
         constexpr reference operator*() const noexcept {
-            return active_node();
+            return *active_node();
         }
 
-        constexpr pointer operator->() const noexcept {
+        constexpr auto operator->() const noexcept -> pointer
+            requires (!std::same_as<pointer, void>) {
             return std::addressof(*this);
         }
 

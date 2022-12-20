@@ -18,7 +18,7 @@
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
-#include "rcs_store_mock.hpp"
+#include "../mock/rcs_store_mock.hpp"
 
 namespace jst::test::labelled_tree {
 

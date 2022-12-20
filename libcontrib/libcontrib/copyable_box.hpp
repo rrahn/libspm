@@ -74,6 +74,7 @@ namespace jst::contrib
             using base_t::has_value;
             using base_t::emplace;
             using base_t::reset;
+            using base_t::value;
 
         private:
 
@@ -140,5 +141,11 @@ namespace jst::contrib
             return *this;
         }
         // all other operations are inherited?
+
+        template <typename ...args_t>
+            requires std::invocable<type, args_t...>
+        constexpr auto operator()(args_t && ...args) const noexcept -> std::invoke_result_t<type, args_t...> {
+            return std::invoke(base_t::value(), (args_t &&) args...);
+        }
     };
 }  // namespace jst::contrib

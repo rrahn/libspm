@@ -43,8 +43,33 @@ TEST(use_case_test, state_oblivious) {
 
     jst::tree::covered_sequence_variation_tree{rcs_store, initial_coverage};
 
-    // communication within trees via context
-    // how does tree access label?
+// Load pangenome and build volatile tree with specific properties.
+auto rcs_pg = load_pangenome("path");
+auto tree = volatile_tree(rcs_pg);
+auto with_labels = require_labels(tree);
+auto with_colours = require_labels(with_labels);
+auto observable_tree = require_notification(with_colours);
+
+// First, use simple search tree.
+auto search_tree = with_labels | max_depth(1) | trim(0);
+// ...
+// Second, use more expensive verification.
+auto stack_listener = make_stack_listener_for(...);
+auto verify_tree = observable_tree | reverse() | trim(5)
+                 | prune(0.0) | subscribe(stack_listener);
+
+
+
+auto coloured_tree = require_colours(labelled_tree);
+
+
+// Adapt tree layout using different algorithms.
+auto stack_listener = make_stack_listener_for(...);
+auto search_tree = observable_tree | trim(5) | prune(0.0) | subscribe(stack_listener);
+
+    auto mock_tree = libjst::volatile_tree{rcs_mock} | libjst::labelled();
+        using id_tree_t = id_tree<decltype(mock_tree)>;
+        return tree_adaptor(id_tree_t{std::move(mock_tree)});
 
     // tree adapter
     tree::transform(tree, fn_operation) {

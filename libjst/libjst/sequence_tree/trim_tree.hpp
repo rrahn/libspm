@@ -15,6 +15,7 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/copyable_box.hpp>
 
+#include <libjst/sequence_tree/concept.hpp>
 namespace libjst
 {
     template <typename base_tree_t>
@@ -36,7 +37,7 @@ namespace libjst
         constexpr trim_tree_impl() = default; //!< Default.
 
         template <typename wrapped_tree_t>
-        explicit constexpr trim_tree_impl(wrapped_tree_t && wrapee, std::size_t const max_branch_size) noexcept :
+        explicit constexpr trim_tree_impl(wrapped_tree_t && wrappee, std::size_t const max_branch_size) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee},
             _max_branch_size{max_branch_size}
         {}
@@ -81,7 +82,7 @@ namespace libjst
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             if (can_be_trimmed()) {
-                return visit(base_node_type::next_alt());
+                return visit<true>(base_node_type::next_alt());
             } else {
                 return std::nullopt;
             }
@@ -89,19 +90,23 @@ namespace libjst
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
             if (can_be_trimmed()) {
-                return visit(base_node_type::next_ref());
+                return visit<false>(base_node_type::next_ref());
             } else {
                 return std::nullopt;
             }
         }
 
+        constexpr libjst::node_label_t<base_node_type> operator*() const noexcept {
+            return *static_cast<base_node_type const &>(*this);
+        }
+
     protected:
 
-        constexpr breakpoint_type right_breakpoint() const {
-            breakpoint_type original_bp = base_node_type::right_breakpoint();
+        constexpr breakpoint right_breakpoint() const {
+            breakpoint original_bp = base_node_type::right_breakpoint();
             if (base_node_type::on_alternate_path()) {
-                assert(original_bp + _remaining_branch_size > 0);
-                return std::min<difference_type>(original_bp, original_bp + _remaining_branch_size);
+                assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
+                return std::min<difference_type>(original_bp, static_cast<difference_type>(original_bp) + _remaining_branch_size);
             } else {
                 return original_bp;
             }
@@ -112,13 +117,13 @@ namespace libjst
             return _remaining_branch_size > 0;
         }
 
-        template <typename maybe_child_t>
+        template <bool is_alt_node, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (!base_node_type::on_alternate_path() && maybe_child->is_alt_node()) {
+                if (is_alt_node && !base_node_type::on_alternate_path()) {
                     return branch_off_new(std::move(*maybe_child));
                 } else if (base_node_type::on_alternate_path()) {
-                    return branch_off_further(std::move(*maybe_child));
+                    return branch_off_further<is_alt_node>(std::move(*maybe_child));
                 } else { // nothing to spawn - remain in the reference branch.
                     return node_impl{std::move(*maybe_child), _max_branch_size, _remaining_branch_size};
                 }
@@ -127,22 +132,25 @@ namespace libjst
             }
         }
 
-        constexpr node_impl branch_off_new(base_node_type base_child) noexcept {
-            std::size_t const alt_size = std::ranges::ssize(libjst::alt_sequence(*base_child.left_variant()));
-            node_impl child{std::move(base_child), _max_branch_size + alt_size, _remaining_branch_size};
-            // child.switch_to_variant_branch();
-            return child;
+        constexpr node_impl branch_off_new(base_node_type base_child) const noexcept {
+            node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
+            new_child._max_branch_size += breakpoint_span<true>();
+            return new_child;
         }
 
-        constexpr node_impl branch_off_further(base_node_type base_child) noexcept {
-            return node_impl{std::move(base_child), _max_branch_size, _remaining_branch_size - child_node_size()};
+        template <bool is_alt_node>
+        constexpr node_impl branch_off_further(base_node_type base_child) const noexcept {
+            node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
+            new_child._remaining_branch_size -= new_child.breakpoint_span<is_alt_node>();
+            return new_child;
         }
 
-        constexpr difference_type child_node_size(base_node_type base_child) const noexcept {
-            if (base_child.is_ref_node()) {
-                return base_child.right_breakpoint() - base_child.left_breakpoint();
+        template <bool is_alt_node>
+        constexpr difference_type breakpoint_span() const noexcept {
+            if constexpr (is_alt_node) {
+                return std::ranges::ssize(libjst::alt_sequence(*base_node_type::left_variant()));
             } else {
-                return std::ranges::ssize(libjst::alt_sequence(*base_child.left_variant()));
+                return base_node_type::right_breakpoint().value() - base_node_type::left_breakpoint().value();
             }
         }
 
@@ -178,8 +186,8 @@ namespace libjst
         sink_impl() = default;
     };
 
-    namespace _trim {
-        inline constexpr struct _tree_adaptor
+    namespace _tree_adaptor {
+        inline constexpr struct _trim
         {
             template <typename labelled_tree_t, std::unsigned_integral branch_size_t>
             constexpr auto operator()(labelled_tree_t && tree, branch_size_t const branch_size) const
@@ -193,12 +201,12 @@ namespace libjst
             template <std::unsigned_integral branch_size_t>
             constexpr auto operator()(branch_size_t const branch_size) const
                 noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, branch_size_t>)
-                -> jst::contrib::closure_result_t<_tree_adaptor, branch_size_t>
+                -> jst::contrib::closure_result_t<_trim, branch_size_t>
             {
-                return jst::contrib::make_closure(_tree_adaptor{}, branch_size);
+                return jst::contrib::make_closure(_trim{}, branch_size);
             }
         } trim{};
-    } // namespace _trim
+    } // namespace _tree_adaptor
 
-    using _trim::_tree_adaptor::trim;
+    using _tree_adaptor::trim;
 }  // namespace libjst

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <libjst/sequence_tree/concept.hpp>
+#include <libjst/sequence_tree/empty_label.hpp>
 #include <libjst/sequence_tree/rcs_node_traits.hpp>
 #include <libjst/sequence_tree/rcs_store_node_base.hpp>
 #include <libjst/referentially_compressed_sequence_store/rooted_rcs_store.hpp>
@@ -73,10 +74,15 @@ namespace libjst
             return base_t::visit_next_ref();
         }
 
+        constexpr empty_label operator*() const noexcept {
+            return {};
+        }
+
     private:
 
-        constexpr friend bool operator==(node_impl const & lhs, node_impl const & rhs) noexcept {
-            return lhs.left_variant() == rhs.left_variant() && lhs.right_variant() == rhs.right_variant();
-        }
+        constexpr friend bool operator==(node_impl const & lhs, node_impl const & rhs) noexcept = default;
+        // {
+        //     return ;
+        // }
     };
 }  // namespace libjst

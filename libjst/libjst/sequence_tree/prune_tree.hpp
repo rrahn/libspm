@@ -37,15 +37,14 @@ namespace libjst
         constexpr prune_tree_impl() = default; //!< Default.
 
         template <typename wrapped_tree_t>
-        explicit constexpr prune_tree_impl(wrapped_tree_t && wrapee, std::size_t const max_branch_size) noexcept :
-            _wrappee{(wrapped_tree_t &&)wrappee},
-            _max_branch_size{max_branch_size}
+        explicit constexpr prune_tree_impl(wrapped_tree_t && wrappee) noexcept :
+            _wrappee{(wrapped_tree_t &&)wrappee}
         {}
         //!\}
 
         constexpr node_impl root() const noexcept {
             base_node_type base_root = libjst::root(*_wrappee);
-            auto base_coverage = base_root.coverage();
+            auto base_coverage = (*base_root).coverage();
             return node_impl{std::move(base_root), std::move(base_coverage)};
         }
 
@@ -66,7 +65,7 @@ namespace libjst
 
         explicit constexpr node_impl(base_node_type base_node, coverage_type coverage) noexcept :
             base_node_type{std::move(base_node)},
-            _coverage{std::move(coverage)}
+            _branch_coverage{std::move(coverage)}
         {}
 
     public:
@@ -82,7 +81,7 @@ namespace libjst
         }
 
         constexpr coverage_type const & coverage() const noexcept {
-            return _coverage;
+            return _branch_coverage;
         }
 
     private:
@@ -90,7 +89,7 @@ namespace libjst
         template <bool is_alt, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (auto new_cov = compute_child_coverage<is_alt>(maybe_child->coverage()); new_cov.any_of()) {
+                if (auto new_cov = compute_child_coverage<is_alt>((**maybe_child).coverage()); new_cov.any()) {
                     node_impl new_child{std::move(*maybe_child), std::move(new_cov)};
                     return new_child;
                 }
@@ -99,12 +98,12 @@ namespace libjst
         }
 
         template <bool is_alt>
-        constexpr coverage_type compute_child_coverage(coverage_type const & child_coverage) {
+        constexpr coverage_type compute_child_coverage(coverage_type const & child_coverage) const {
             coverage_type new_coverage{coverage()};
             if constexpr (is_alt) {
                 new_coverage &= child_coverage;
             } else {
-                if (base_node_type::on_alternate_path())
+                if (base_node_type::on_alternate_path() && base_node_type::is_branching())
                     new_coverage.and_not(child_coverage);
             }
             return new_coverage;
@@ -134,8 +133,8 @@ namespace libjst
         sink_impl() = default;
     };
 
-    namespace _prune {
-        inline constexpr struct _tree_adaptor
+    namespace _tree_adaptor {
+        inline constexpr struct _prune
         {
             template <typename covered_tree_t, typename ...args_t>
             constexpr auto operator()(covered_tree_t && tree, args_t &&... args) const
@@ -150,12 +149,12 @@ namespace libjst
             template <typename ...args_t>
             constexpr auto operator()(args_t &&... args) const
                 noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, args_t...>)
-                -> jst::contrib::closure_result_t<_tree_adaptor, args_t...>
+                -> jst::contrib::closure_result_t<_prune, args_t...>
             { // we need to store the type that needs to be called later!
-                return jst::contrib::make_closure(_tree_adaptor{}, (args_t &&)args...);
+                return jst::contrib::make_closure(_prune{}, (args_t &&)args...);
             }
         } prune{};
-    } // namespace _prune
+    } // namespace _tree_adaptor
 
-    using _prune::_tree_adaptor::prune;
+    using _tree_adaptor::prune;
 }  // namespace libjst

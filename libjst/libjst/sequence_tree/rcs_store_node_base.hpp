@@ -81,11 +81,15 @@ namespace libjst
         constexpr optional_node_type visit_next_ref() const noexcept {
             derived_t child{as_derived(*this)};
             if (node_descriptor::from_reference()) {
-                return visit_next_ref_impl(std::move(child));
+                if (node_descriptor::on_alternate_path() && right_variant() == sink()) {
+                    return std::nullopt;
+                } else {
+                    return visit_next_ref_impl(std::move(child));
+                }
             } else {
                 child.left_variant(right_variant());
                 child.right_variant(find_next_valid_right_variant());
-                child.set_next_variant(next_variant_after(right_variant()));
+                child.set_next_variant(next_variant_after(child.right_variant()));
                 child.set_reference();
                 child.set_first_breakpoint_id(node_descriptor_id::first_right);
                 if (position(*child.right_variant()).is_left_end()) {
@@ -187,6 +191,14 @@ namespace libjst
             return _right_variant;
         }
 
+        constexpr bool is_branching() const noexcept {
+            return right_variant() != sink() && node_descriptor::is_branching();
+        }
+
+        constexpr variant_iterator sink() const noexcept {
+            return std::ranges::end(rcs_store().variants());
+        }
+
     private:
 
         constexpr void set_next_variant(variant_iterator new_next) noexcept {
@@ -196,11 +208,6 @@ namespace libjst
         constexpr variant_iterator get_next_variant() const noexcept {
             return _next_variant;
         }
-
-        constexpr bool is_branching() const noexcept {
-            return right_variant() != sink() && node_descriptor::is_branching();
-        }
-
         // constexpr bool is_variant_link() const noexcept {
         //     return libjst::left_breakpoint(*left_variant()) != libjst::left_breakpoint(*right_variant());
         // }
@@ -371,10 +378,6 @@ namespace libjst
 
         // position states:
         // A -> pr(i) <= pl(j)
-
-        constexpr variant_iterator sink() const noexcept {
-            return std::ranges::end(rcs_store().variants());
-        }
 
         static constexpr rcs_store_node_base & as_base(derived_t & derived) noexcept {
             return static_cast<rcs_store_node_base &>(derived);

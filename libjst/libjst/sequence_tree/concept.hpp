@@ -80,6 +80,15 @@ namespace libjst
     using tree_sink_t = std::invoke_result_t<_sink::_cpo, tree_t>;
 
     // ----------------------------------------------------------------------------
+    // Label type of trees and tree nodes.
+    // ----------------------------------------------------------------------------
+    template <typename node_t>
+    using node_label_t = decltype(*std::declval<node_t>());
+
+    template <typename tree_t>
+    using tree_label_t = node_label_t<tree_node_t<tree_t>>;
+
+    // ----------------------------------------------------------------------------
     // Operation CPOs for sequence tree nodes
     // ----------------------------------------------------------------------------
 

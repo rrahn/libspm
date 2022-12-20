@@ -18,7 +18,9 @@
 
 namespace libjst
 {
-    template <typename base_tree_t, template <typename, typename> typename node_extension_t>
+    template <typename base_tree_t,
+              template <typename, typename, typename...> typename node_extension_t,
+              typename ...extension_args_t>
     class extendable_tree {
     private:
 
@@ -47,11 +49,14 @@ namespace libjst
         }
     };
 
-    template <typename base_tree_t, template <typename, typename> typename node_extension_t>
-    class extendable_tree<base_tree_t, node_extension_t>::node_impl : public base_node_type,
-                                                    public node_extension_t<node_impl, base_node_type> {
+    template <typename base_tree_t,
+              template <typename, typename, typename...> typename node_extension_t,
+              typename ...extension_args_t>
+    class extendable_tree<base_tree_t, node_extension_t, extension_args_t...>::node_impl :
+            public base_node_type,
+            public node_extension_t<node_impl, base_node_type, extension_args_t...> {
     private:
-        using extension_t = node_extension_t<node_impl, base_node_type>;
+        using extension_t = node_extension_t<node_impl, base_node_type, extension_args_t...>;
 
         friend extension_t;
         friend extendable_tree;
@@ -77,6 +82,10 @@ namespace libjst
             return visit(base_node_type::next_ref());
         }
 
+        constexpr auto operator*() const noexcept {
+            return extension_t::label(*static_cast<base_node_type const &>(*this));
+        }
+
     private:
 
         template <typename maybe_child_t>
@@ -94,8 +103,10 @@ namespace libjst
         }
     };
 
-    template <typename base_tree_t, template <typename, typename> typename node_extension_t>
-    class extendable_tree<base_tree_t, node_extension_t>::sink_impl {
+    template <typename base_tree_t,
+              template <typename, typename, typename...> typename node_extension_t,
+              typename ...extension_args_t>
+    class extendable_tree<base_tree_t, node_extension_t, extension_args_t...>::sink_impl {
     private:
         friend extendable_tree;
 

@@ -34,6 +34,9 @@ namespace libjst
 
         std::shared_ptr<coverage_type> _coverage{};
 
+        template <typename base_label_t>
+        class label_impl;
+
     private:
 
         node_coverage_extension() = default;
@@ -56,12 +59,39 @@ namespace libjst
 
     public:
 
-        constexpr coverage_type const & coverage() const noexcept {
+        template <typename base_label_t>
+        constexpr auto label(base_label_t && base_label) const noexcept {
+            coverage_type const * cov_ptr{};
             if (as_derived(*this).is_alt_node()) {
-                return libjst::coverage(*as_derived(*this).left_variant());
+                cov_ptr = std::addressof(libjst::coverage(*as_derived(*this).left_variant()));
             } else {
-                return *_coverage;
+                cov_ptr = _coverage.get();
             }
+            return label_impl<std::remove_cvref_t<base_label_t>>{(base_label_t &&) base_label, cov_ptr};
+        }
+    };
+
+    template <typename derived_t, typename extended_node_t>
+    template <typename base_label_t>
+    class node_coverage_extension<derived_t, extended_node_t>::label_impl : public base_label_t {
+    private:
+
+        [[no_unique_address]] coverage_type const * _coverage{};
+
+        friend node_coverage_extension;
+
+        constexpr explicit label_impl(base_label_t base_label, coverage_type const * coverage) :
+            base_label_t{std::move(base_label)},
+            _coverage{coverage}
+        {}
+
+    public:
+
+        label_impl() = default;
+
+        constexpr coverage_type const & coverage() const noexcept {
+            assert(_coverage != nullptr);
+            return *_coverage;
         }
     };
 

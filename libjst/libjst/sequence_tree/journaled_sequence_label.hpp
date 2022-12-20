@@ -39,8 +39,10 @@ namespace libjst
     public:
 
         using position_type = position_t;
-        using sequence_type = typename journal_type::journaled_sequence_type;
-        using sequence_slice_type = detail::subrange_t<sequence_type>;
+        using size_type = position_t;
+        using sequence_type = detail::subrange_t<typename journal_type::journaled_sequence_type>;
+
+        static constexpr size_type npos{std::numeric_limits<size_type>::max()};
 
         journaled_sequence_label() = default;
         journaled_sequence_label(source_t source) noexcept :
@@ -49,12 +51,19 @@ namespace libjst
             _right_position{static_cast<position_t>(std::ranges::size(_journal.sequence()))}
         {}
 
-        constexpr sequence_type path_sequence() const noexcept {
-            return _journal.sequence();
+        constexpr sequence_type sequence(size_type const first = 0, size_type const last = npos) const noexcept {
+            assert(first <= last);
+            auto jseq = _journal.sequence();
+            size_type max_end = std::min<size_type>(last, std::ranges::size(jseq));
+            return std::move(jseq) | seqan3::views::slice(to_alt_position(first), to_alt_position(max_end));
         }
 
-        constexpr sequence_slice_type node_sequence() const noexcept {
-            return path_sequence() | seqan3::views::slice(get_left_position(), get_right_position());
+        constexpr sequence_type node_sequence() const noexcept {
+            return sequence(get_left_position(), get_right_position());
+        }
+
+        constexpr sequence_type path_sequence() const noexcept {
+            return sequence();
         }
 
         constexpr position_type get_left_position() const noexcept {
