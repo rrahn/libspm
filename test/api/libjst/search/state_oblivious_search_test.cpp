@@ -64,11 +64,15 @@ struct naive_matcher {
     template <typename seq_t, typename callback_t>
     constexpr void operator()(seq_t && seq, callback_t && callback) const {
         seqan3::debug_stream << "Hystk: " << seq << "\n";
-        auto it = std::ranges::next(std::ranges::begin(seq), window_size(), std::ranges::end(seq));
+        if (std::ranges::size(seq) < window_size())
+            return;
+
+        auto it = std::ranges::next(std::ranges::begin(seq), window_size());
         for (; it != std::ranges::end(seq); ++it) {
-            if (auto [has_hit, pos] = find_impl(it); has_hit)
-                callback(pos);
+            check_from(it, callback);
         }
+
+        check_from(it, (callback_t &&) callback);
     }
 
     std::size_t window_size() const noexcept {
@@ -76,6 +80,12 @@ struct naive_matcher {
     }
 
 private:
+
+    template <typename iterator_t, typename callback_t>
+    constexpr void check_from(iterator_t it, callback_t && callback) const noexcept {
+        if (auto [has_hit, pos] = find_impl(it); has_hit)
+            std::invoke((callback_t &&) callback, pos);
+    }
 
     template <typename it_t>
     constexpr auto find_impl(it_t it) const noexcept {
@@ -152,4 +162,20 @@ INSTANTIATE_TEST_SUITE_P(single_snv_variant, polymorphic_sequence_searcher_test,
     .coverage_size{4},
     .needle{"aaOb"},
     .expected_occurrences{1}
+}));
+
+INSTANTIATE_TEST_SUITE_P(single_snv_variant_at_begin, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{0}, .insertion{"O"}, .deletion{1}, .coverage{1,1,0,0}}},
+    .coverage_size{4},
+    .needle{"Oaaa"},
+    .expected_occurrences{0}
+}));
+
+INSTANTIATE_TEST_SUITE_P(single_snv_variant_at_end, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{7}, .insertion{"O"}, .deletion{1}, .coverage{1,1,0,0}}},
+    .coverage_size{4},
+    .needle{"bbbO"},
+    .expected_occurrences{0}
 }));
