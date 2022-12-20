@@ -179,3 +179,39 @@ INSTANTIATE_TEST_SUITE_P(single_snv_variant_at_end, polymorphic_sequence_searche
     .needle{"bbbO"},
     .expected_occurrences{0}
 }));
+
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_on_different_subtrees, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,1,0,0}}},
+    .coverage_size{4},
+    .needle{"Iaab"},
+    .expected_occurrences{1}
+}));
+
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_on_same_subtree, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{1,0,0,0}}},
+    .coverage_size{4},
+    .needle{"IaaJ"},
+    .expected_occurrences{0}
+}));
+
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_behind_each_other, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{3}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{1,0,0,0}}},
+    .coverage_size{4},
+    .needle{"aIJb"},
+    .expected_occurrences{1}
+}));
+
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{3}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{0,0,1,1}}},
+    .coverage_size{4},
+    .needle{"aIbb"},
+    .expected_occurrences{1}
+}));
