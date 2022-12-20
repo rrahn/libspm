@@ -215,3 +215,12 @@ INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive, polymorphic_sequence
     .needle{"aIbb"},
     .expected_occurrences{1}
 }));
+
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive_at_same_position, polymorphic_sequence_searcher_test, testing::Values(fixture{
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{4}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{0,0,1,1}}},
+    .coverage_size{4},
+    .needle{"Jbbb"},
+    .expected_occurrences{3}
+}));
