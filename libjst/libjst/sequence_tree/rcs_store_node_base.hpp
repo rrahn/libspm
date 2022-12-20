@@ -81,7 +81,7 @@ namespace libjst
         constexpr optional_node_type visit_next_ref() const noexcept {
             derived_t child{as_derived(*this)};
             if (node_descriptor::from_reference()) {
-                if (node_descriptor::on_alternate_path() && right_variant() == sink()) {
+                if (is_leaf_of_alternate_subtree()) {
                     return std::nullopt;
                 } else {
                     return visit_next_ref_impl(std::move(child));
@@ -200,6 +200,12 @@ namespace libjst
         }
 
     private:
+
+        constexpr bool is_leaf_of_alternate_subtree() const noexcept {
+            return node_descriptor::on_alternate_path() &&
+                   right_variant() == sink() &&
+                   node_descriptor::get_second_breakpoint_id() != node_descriptor_id::second_first_right;
+        }
 
         constexpr void set_next_variant(variant_iterator new_next) noexcept {
             _next_variant = std::move(new_next);
