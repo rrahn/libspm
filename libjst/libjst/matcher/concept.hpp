@@ -105,7 +105,7 @@ namespace libjst
     // ----------------------------------------------------------------------------
 
     template <typename matcher_t>
-    concept window_matcher = std::semiregular<std::remove_cvref_t<matcher_t>> && requires (matcher_t && matcher)
+    concept window_matcher = std::copyable<std::remove_cvref_t<matcher_t>> && requires (matcher_t && matcher)
     {
         { libjst::window_size((matcher_t &&) matcher)} -> std::integral;
     };
