@@ -37,23 +37,20 @@ std::vector<search_match2> search_queries_horspool(rcs_store_t const & jst, bin_
 {
     assert(!seqan::empty(queries));
 
-    libjst::debug_rcs_store _jst{jst, {0, jst.source().size()}, {34, 36}};
-    libjst::polymorphic_sequence_searcher searcher{_jst};
+
     std::vector<search_match2> matches{};
     size_t query_id{};
     std::ranges::for_each(queries, [&] (auto const & query)
     {
         libjst::horspool_matcher matcher{query};
 
+        libjst::polymorphic_sequence_searcher searcher{jst};
         searcher(matcher, [&] (auto && finder, [[maybe_unused]] auto && jst_context) {
-            std::cout << ".";
             // auto && [node, finder] = hit; // how can we now check the availability of the position?
             matches.emplace_back(seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
-
         });
         ++query_id;
     });
-    std::cout << "\n";
     return matches;
 }
 
@@ -62,7 +59,6 @@ std::vector<search_match2> search_queries_shiftor(rcs_store_t const & jst, bin_t
     assert(!seqan::empty(queries));
 
     // libjst::debug_rcs_store _jst{jst, {0, jst.source().size()}, {0, jst.variants().size()}};
-    std::cout << "Total variants: " << jst.variants().size() << "\n";
 
     std::vector<search_match2> matches{};
     size_t query_id{};
@@ -71,10 +67,8 @@ std::vector<search_match2> search_queries_shiftor(rcs_store_t const & jst, bin_t
     {
         // auto const & query = queries[1];
         libjst::shiftor_matcher matcher{query};
-        seqan3::debug_stream << "Query " << query_id << ": " << query << "\n";
 
         auto callback = [&] (auto && finder, [[maybe_unused]] auto && jst_context) {
-            std::cout << ".";
             // auto && [node, finder] = hit; // how can we now check the availability of the position?
             matches.emplace_back(seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
 
@@ -83,11 +77,9 @@ std::vector<search_match2> search_queries_shiftor(rcs_store_t const & jst, bin_t
         libjst::polymorphic_sequence_searcher searcher{jst};
         searcher(matcher, callback);
 
-        seqan3::debug_stream << "finished\n";
         ++query_id;
     }
     //);
-    std::cout << "\n";
     return matches;
 }
 
