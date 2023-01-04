@@ -28,22 +28,22 @@ namespace libjst
 
         using sequence_type = typename polymorphic_sequence_t::source_type;
 
-        polymorphic_sequence_t const & _polymorphic_sequence;
+        std::reference_wrapper<polymorphic_sequence_t const> _polymorphic_sequence;
 
     public:
         polymorphic_sequence_searcher() = delete;
         constexpr explicit polymorphic_sequence_searcher(polymorphic_sequence_t const & polymorphic_sequence) :
-            _polymorphic_sequence{polymorphic_sequence}
+            _polymorphic_sequence{std::cref(polymorphic_sequence)}
         {}
 
         template <libjst::window_matcher pattern_t, typename callback_t>
             // requires libjst::online_matcher_for<pattern_t, sequence_type const &, callback_t>
         constexpr void operator()(pattern_t && pattern, callback_t && callback) const {
 
-            auto tree = libjst::volatile_tree{_polymorphic_sequence};
-            auto traverser = make_traverser<pattern_t>(_polymorphic_sequence);
+            auto tree = libjst::volatile_tree{_polymorphic_sequence.get()};
+            auto traverser = make_traverser<pattern_t>(_polymorphic_sequence.get());
 
-            traverser(std::move(tree), (pattern_t &&) pattern, (callback_t &&)callback);
+            traverser(tree, (pattern_t &&) pattern, (callback_t &&)callback);
         }
 
     private:

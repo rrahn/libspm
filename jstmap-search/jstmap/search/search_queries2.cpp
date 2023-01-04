@@ -13,12 +13,15 @@
 
 #include <seqan3/core/debug_stream.hpp>
 
-#include <libcontrib/seqan/horspool_pattern.hpp>
-#include <libcontrib/seqan/shiftor_pattern.hpp>
+#include <libjst/matcher/horspool_matcher.hpp>
+#include <libjst/matcher/shiftor_matcher.hpp>
 
-#include <libjst/search/concept.hpp>
-#include <libjst/search/search_base.hpp>
-#include <libjst/traversal/searcher_factory.hpp>
+#include <libjst/search/polymorphic_sequence_searcher.hpp>
+#include <libjst/referentially_compressed_sequence_store/debug_rcs_store.hpp>
+
+// #include <libjst/search/concept.hpp>
+// #include <libjst/search/search_base.hpp>
+// #include <libjst/traversal/searcher_factory.hpp>
 // #include <libjst/search/shift_or_search.hpp>
 // #include <libjst/search/horspool_search.hpp>
 // #include <libjst/search/myers_search.hpp>
@@ -30,19 +33,22 @@
 namespace jstmap
 {
 
-std::vector<search_match2> search_queries_horsppol(fwd_jst_t const & jst, bin_t const & queries, float const error_rate)
+std::vector<search_match2> search_queries_horspool(rcs_store_t const & jst, bin_t const & queries, float const error_rate)
 {
     assert(!seqan::empty(queries));
 
+    libjst::debug_rcs_store _jst{jst, {0, jst.source().size()}, {34, 36}};
+    libjst::polymorphic_sequence_searcher searcher{_jst};
     std::vector<search_match2> matches{};
     size_t query_id{};
     std::ranges::for_each(queries, [&] (auto const & query)
     {
-        jst::contrib::horspool_pattern pattern{query.base()};
-        libjst::search_base(jst, libjst::jst_searcher(pattern.search_operation()), [&] (auto const & hit) {
+        libjst::horspool_matcher matcher{query};
+
+        searcher(matcher, [&] (auto && finder, [[maybe_unused]] auto && jst_context) {
             std::cout << ".";
-            auto && [node, finder] = hit; // how can we now check the availability of the position?
-            matches.emplace_back(node, seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
+            // auto && [node, finder] = hit; // how can we now check the availability of the position?
+            matches.emplace_back(seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
 
         });
         ++query_id;
@@ -51,23 +57,36 @@ std::vector<search_match2> search_queries_horsppol(fwd_jst_t const & jst, bin_t 
     return matches;
 }
 
-std::vector<search_match2> search_queries_shiftor(fwd_jst_t const & jst, bin_t const & queries, float const error_rate)
+std::vector<search_match2> search_queries_shiftor(rcs_store_t const & jst, bin_t const & queries, float const error_rate)
 {
     assert(!seqan::empty(queries));
 
+    // libjst::debug_rcs_store _jst{jst, {0, jst.source().size()}, {0, jst.variants().size()}};
+    std::cout << "Total variants: " << jst.variants().size() << "\n";
+
     std::vector<search_match2> matches{};
     size_t query_id{};
-    std::ranges::for_each(queries, [&] (auto const & query)
+    // std::ranges::for_each(queries, [&] (auto const & query)
+    for (auto const & query : queries)
     {
-        jst::contrib::shiftor_pattern pattern{query.base()};
-        libjst::search_base(jst, libjst::jst_searcher(pattern.search_operation()), [&] (auto const & hit) {
-            std::cout << ".";
-            auto && [node, finder] = hit; // how can we now check the availability of the position?
-            matches.emplace_back(node, seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
+        // auto const & query = queries[1];
+        libjst::shiftor_matcher matcher{query};
+        seqan3::debug_stream << "Query " << query_id << ": " << query << "\n";
 
-        });
+        auto callback = [&] (auto && finder, [[maybe_unused]] auto && jst_context) {
+            std::cout << ".";
+            // auto && [node, finder] = hit; // how can we now check the availability of the position?
+            matches.emplace_back(seqan::beginPosition(finder), seqan::endPosition(finder), query_id, 0);
+
+        };
+
+        libjst::polymorphic_sequence_searcher searcher{jst};
+        searcher(matcher, callback);
+
+        seqan3::debug_stream << "finished\n";
         ++query_id;
-    });
+    }
+    //);
     std::cout << "\n";
     return matches;
 }

@@ -16,30 +16,32 @@
 
 #include <cereal/types/vector.hpp>
 
+#include <seqan3/io/sequence_file/input.hpp>
+
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/container/jst_forward.hpp>
-#include <libjst/container/jst_base.hpp>
+#include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
 #include <libjst/utility/bit_vector.hpp>
-#include <libjst/variant/variant_snp.hpp>
-#include <libjst/variant/variant_generic.hpp>
-#include <libjst/variant/variant_store_composite.hpp>
-#include <libjst/variant/variant_store_covered.hpp>
+#include <libjst/variant/single_base_replacement_store.hpp>
 
 namespace jstmap
 {
 
 using alphabet_t = jst::contrib::dna5;
-using snp_t = libjst::snp_variant<alphabet_t>;
-using indel_t = libjst::generic_variant<alphabet_t>;
 using coverage_t = libjst::bit_vector<>;
-using base_sequence_t = std::vector<alphabet_t>;
+using reference_t = std::vector<alphabet_t>;
+using sequence_collection_t = std::vector<reference_t>;
 
-using snp_store_t = libjst::variant_store_covered<std::vector<snp_t>, coverage_t>;
-using indel_store_t = libjst::variant_store_covered<std::vector<indel_t>, coverage_t>;
-using variant_store_t = libjst::variant_store_composite<snp_store_t, indel_store_t>;
+using snv_store_t = libjst::single_base_replacement_store<alphabet_t>;
+using rcs_store_t = libjst::rcs_store<reference_t, snv_store_t>;
 
-using jst_model_t = libjst::jst_base<base_sequence_t, variant_store_t>;
-using fwd_jst_t = libjst::jst_forward<jst_model_t>;
+using variant_store_t = snv_store_t;
+using variant_t = std::ranges::range_value_t<variant_store_t>;
+
+struct sequence_input_traits : public seqan3::sequence_file_input_default_traits_dna
+{
+    using sequence_alphabet = alphabet_t;
+    using sequence_legal_alphabet = jst::contrib::dna15; // conversion?
+};
 
 }  // namespace jstmap

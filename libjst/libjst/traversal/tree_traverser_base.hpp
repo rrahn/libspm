@@ -26,14 +26,14 @@ namespace libjst
 
         using tree_wrapper_t = jst::contrib::copyable_box<tree_t>;
 
-        tree_wrapper_t _tree{};
+        std::reference_wrapper<tree_t const> _tree;
         branch_type _branch{};
 
         class sentinel;
         class iterator;
 
     public:
-        explicit tree_traverser_base(tree_t const & tree) noexcept : _tree{tree}
+        explicit tree_traverser_base(tree_t const & tree) noexcept : _tree{std::cref(tree)}
         {}
 
         constexpr iterator begin() noexcept {
@@ -55,7 +55,7 @@ namespace libjst
 
         explicit iterator(tree_traverser_base & host) : _branch{std::addressof(host._branch)}
         {
-            visit_next(libjst::root(*host._tree));
+            visit_next(libjst::root(host._tree.get()));
         }
     public:
 
@@ -129,11 +129,11 @@ namespace libjst
     private:
         friend tree_traverser_base;
 
-        using sink_type = libjst::tree_sink_t<tree_t>;
+        using sink_type = libjst::tree_sink_t<tree_t const>;
 
         sink_type _sink{};
 
-        constexpr sentinel(tree_traverser_base & host) noexcept : _sink{libjst::sink(*host._tree)}
+        constexpr sentinel(tree_traverser_base const & host) noexcept : _sink{libjst::sink(host._tree.get())}
         {}
 
     public:

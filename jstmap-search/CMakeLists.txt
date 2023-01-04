@@ -12,7 +12,7 @@ add_library(jstmap_search_input_queries OBJECT jstmap/search/load_queries.cpp js
 target_link_libraries (jstmap_search_input_queries PUBLIC jstmap::search::base)
 
 ### Building the journaled sequence tree
-add_library(jstmap_search_search OBJECT jstmap/search/search_queries.cpp jstmap/search/search_queries2.cpp jstmap/search/search_queries.hpp)
+add_library(jstmap_search_search OBJECT jstmap/search/search_queries2.cpp jstmap/search/search_queries.hpp)
 target_link_libraries (jstmap_search_search PUBLIC jstmap::search::base libjst::libjst)
 
 ### Filtering the queries using the additional index
@@ -27,8 +27,10 @@ target_link_libraries (jstmap_search_output PUBLIC jstmap::search::base libjst::
 add_library (jstmap_search STATIC jstmap/search/search_main.cpp)
 target_link_libraries (jstmap_search PUBLIC jstmap_search_search
                                             jstmap_search_input_queries
-                                            jstmap_search_filter
-                                            jstmap_search_output)
+                                            jstmap::search::base
+                                            # jstmap_search_filter
+                                            # jstmap_search_output
+                                            )
 add_library (jstmap::search ALIAS jstmap_search)
 
 unset (HEADER_LIST)

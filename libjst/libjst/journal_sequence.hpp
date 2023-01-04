@@ -144,6 +144,7 @@ public:
      */
     iterator & operator++() noexcept
     {
+        assert(_sequence_it < std::ranges::end(journal_t::entry_value(*_dict_it)));
         ++_sequence_it; // now we may at the end of the segment
         if (++_position == _next_switch) [[unlikely]] { // we may or may not update the index
             ++_dict_it;

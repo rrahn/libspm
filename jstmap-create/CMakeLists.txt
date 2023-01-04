@@ -26,8 +26,7 @@ add_library(jstmap_serialise_jst OBJECT jstmap/create/serialise_jst.hpp)
 target_link_libraries (jstmap_serialise_jst PUBLIC jstmap::create::base libjst::libjst)
 
 ### Parsing the vcf file
-add_library(jstmap_create_vcf_parser OBJECT jstmap/create/vcf_parser.cpp
-                                            jstmap/create/vcf_parser2.cpp
+add_library(jstmap_create_vcf_parser OBJECT jstmap/create/vcf_parser2.cpp
                                             jstmap/create/stripped_vcf_record.cpp
                                             jstmap/create/vcf_parser.hpp
                                             jstmap/create/stripped_vcf_record.hpp)

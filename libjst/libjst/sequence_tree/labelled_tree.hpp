@@ -114,6 +114,7 @@ namespace libjst
 
         constexpr auto sequence(size_type const first = 0, size_type const last = label_strategy_type::npos) const noexcept {
             assert(_label_strategy != nullptr);
+            assert(first <= last);
             return _label_strategy->sequence(first, last);
         }
     };

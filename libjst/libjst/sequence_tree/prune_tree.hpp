@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <seqan3/core/debug_stream.hpp>
+
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/copyable_box.hpp>
 
@@ -27,7 +29,7 @@ namespace libjst
         class node_impl;
         class sink_impl;
 
-        wrappee_t _wrappee{};
+        base_tree_t _wrappee{};
         // add option for cheking coverage proportion aka. allele frequency
 
     public:
@@ -37,19 +39,21 @@ namespace libjst
         constexpr prune_tree_impl() = default; //!< Default.
 
         template <typename wrapped_tree_t>
+            requires (!std::same_as<std::remove_cvref_t<wrapped_tree_t>, prune_tree_impl> &&
+                      std::constructible_from<base_tree_t, wrapped_tree_t>)
         explicit constexpr prune_tree_impl(wrapped_tree_t && wrappee) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee}
         {}
         //!\}
 
         constexpr node_impl root() const noexcept {
-            base_node_type base_root = libjst::root(*_wrappee);
+            base_node_type base_root = libjst::root(_wrappee);
             auto base_coverage = (*base_root).coverage();
             return node_impl{std::move(base_root), std::move(base_coverage)};
         }
 
         constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(*_wrappee)};
+            return sink_impl{libjst::sink(_wrappee)};
         }
    };
 
@@ -63,14 +67,18 @@ namespace libjst
 
         coverage_type _branch_coverage{};
 
-        explicit constexpr node_impl(base_node_type base_node, coverage_type coverage) noexcept :
+        explicit constexpr node_impl(base_node_type && base_node, coverage_type coverage) noexcept :
             base_node_type{std::move(base_node)},
             _branch_coverage{std::move(coverage)}
         {}
 
     public:
 
-        explicit constexpr node_impl() = default;
+        node_impl() = default;
+        node_impl(node_impl const &) = default;
+        node_impl(node_impl &&) = default;
+        node_impl & operator=(node_impl const &) = default;
+        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return visit<true>(base_node_type::next_alt());
@@ -100,16 +108,20 @@ namespace libjst
         template <bool is_alt>
         constexpr coverage_type compute_child_coverage(base_node_type const & base_child) const {
             coverage_type new_coverage{coverage()};
+            // seqan3::debug_stream << "Old cov: " << new_coverage << "\n";
             if constexpr (is_alt) {
+                // seqan3::debug_stream << "Cld cov: " << (*base_child).coverage() << "\n";
                 new_coverage &= (*base_child).coverage();
             } else {
                 update_alternate_ref_coverage(new_coverage);
             }
+            // seqan3::debug_stream << "New cov: " << new_coverage << "\n";
             return new_coverage;
         }
 
         constexpr void update_alternate_ref_coverage(coverage_type & old_coverage) const noexcept {
             if (base_node_type::on_alternate_path() && base_node_type::is_branching()) {
+                // seqan3::debug_stream << "Alt cov:" << libjst::coverage(*base_node_type::right_variant()) << "\n";
                 old_coverage.and_not(libjst::coverage(*base_node_type::right_variant()));
             }
         }

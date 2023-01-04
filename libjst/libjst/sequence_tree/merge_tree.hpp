@@ -23,13 +23,13 @@ namespace libjst
     template <typename base_tree_t>
     class merge_tree_impl {
     private:
-        using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
+        // using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
 
         class node_impl;
         class sink_impl;
 
-        wrappee_t _wrappee{};
+        base_tree_t _wrappee{};
 
     public:
         /*!\name Constructors, destructor and assignment
@@ -38,17 +38,19 @@ namespace libjst
         constexpr merge_tree_impl() = default; //!< Default.
 
         template <typename wrapped_tree_t>
+            requires (!std::same_as<wrapped_tree_t, merge_tree_impl> &&
+                      std::constructible_from<base_tree_t, wrapped_tree_t>)
         explicit constexpr merge_tree_impl(wrapped_tree_t && wrappee) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee}
         {}
         //!\}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(*_wrappee)};
+            return node_impl{libjst::root(_wrappee)};
         }
 
         constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(*_wrappee)};
+            return sink_impl{libjst::sink(_wrappee)};
         }
    };
 
@@ -62,14 +64,19 @@ namespace libjst
 
         breakpoint _left_breakpoint{};
 
-        explicit constexpr node_impl(base_node_type base_node) noexcept :
-            base_node_type{std::move(base_node)},
-            _left_breakpoint{base_node_type::left_breakpoint()}
-        {}
+        explicit constexpr node_impl(base_node_type && base_node) noexcept :
+            base_node_type{std::move(base_node)}
+        {
+            _left_breakpoint = base_node_type::left_breakpoint();
+        }
 
     public:
 
-        explicit constexpr node_impl() = default;
+        constexpr node_impl() = default;
+        constexpr node_impl(node_impl const &) = default;
+        constexpr node_impl(node_impl &&) = default;
+        constexpr node_impl & operator=(node_impl const &) = default;
+        constexpr node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return visit(base_node_type::next_alt());
@@ -148,6 +155,7 @@ namespace libjst
         label_impl() = default;
 
         constexpr auto sequence() const noexcept {
+            assert(_left_breakpoint <= _right_breakpoint);
             return base_label_t::sequence(_left_breakpoint.value(), _right_breakpoint.value());
         }
     };

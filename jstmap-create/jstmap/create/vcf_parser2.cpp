@@ -24,15 +24,11 @@
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/create/vcf_parser.hpp>
 #include <jstmap/create/stripped_vcf_record.hpp>
-
-#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
-#include <libjst/journaled_sequence_tree/serialiser_direct.hpp>
-#include <libjst/journaled_sequence_tree/serialiser_delegate.hpp>
-#include <libjst/sequence_variant/variant_store_sorted.hpp>
+#include <jstmap/create/serialise_jst.hpp>
 
 namespace jstmap
 {
-raw_sequence_t load_base_sequence(std::filesystem::path const & reference_file, std::string_view contig_name)
+inline reference_t load_base_sequence(std::filesystem::path const & reference_file, std::string_view contig_name)
 {
     using namespace std::literals;
     seqan3::sequence_file_input<sequence_input_traits> record_contig_names{reference_file};
@@ -44,6 +40,14 @@ raw_sequence_t load_base_sequence(std::filesystem::path const & reference_file, 
     }
     throw std::runtime_error{"Could not find a contig with the name <"s + chr_id + ">!"s};
     return {};
+}
+
+inline reference_t reference_for_record(std::filesystem::path const & reference_file_path,
+                                        seqan::VcfFileIn const & vcf_file,
+                                        seqan::VcfRecord const & record) {
+    // Load reference sequence!
+    return load_base_sequence(reference_file_path,
+                              seqan::toCString(seqan::contigNames(seqan::context(vcf_file))[record.rID]));
 }
 
 void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
@@ -83,16 +87,29 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // we first build the composite variants!
-    // std::vector<stripped_vcf_record::intermediate_variant_t> intermediate_variant_store{};
-    variant_store_t intermediate_variant_store{};
-
     seqan::VcfRecord record{};
+    seqan::readRecord(record, vcf_file);
+    reference_t reference = reference_for_record(reference_file, vcf_file, record);
+    size_t haplotype_count = seqan::length(seqan::sampleNames(seqan::context(vcf_file))) * 2;
+    std::cout << "haplotype_count: " << haplotype_count << "\n";
+
+    log(verbosity_level::verbose,
+        logging_level::info,
+        "Loading reference sequence: ", duration(start), " s");
+
+    // ----------------------------------------------------------------------------
+    // Parsing vcf records
+    // ----------------------------------------------------------------------------
+
+    start = std::chrono::high_resolution_clock::now();
+    rcs_store_t rcs_store{std::move(reference), haplotype_count};
+    std::cout << "Size: " << rcs_store.size() << "\n";
+
     while (!seqan::atEnd(vcf_file))
     {
         seqan::readRecord(record, vcf_file);
         stripped_vcf_record tmp_record{record, seqan::context(vcf_file)};
-        tmp_record.alternatives(intermediate_variant_store);
+        tmp_record.alternatives(rcs_store);
         // std::ranges::copy(tmp_record.alternatives(), std::back_inserter(intermediate_variant_store));
     }
 
@@ -100,94 +117,77 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
         logging_level::info,
         "Time parsing vcf: ", duration(start), " s");
 
-    // ----------------------------------------------------------------------------
-    // Sort the variants.
+    // // ----------------------------------------------------------------------------
+    // // Sort the variants.  VCF is sorted by specification?
 
-    // different model representations -> so the forward_jst is over the reference and the sorted objects model
-    start = std::chrono::high_resolution_clock::now();
-    libjst::variant_store_sorted<variant_store_t> sorted_store{intermediate_variant_store};
-    log(verbosity_level::verbose,
-        logging_level::info,
-        "Time sorting jst: ", duration(start), " s");
+    // // different model representations -> so the forward_jst is over the reference and the sorted objects model
+    // start = std::chrono::high_resolution_clock::now();
+    // libjst::variant_store_sorted<variant_store_t> sorted_store{intermediate_variant_store};
+    // log(verbosity_level::verbose,
+    //     logging_level::info,
+    //     "Time sorting jst: ", duration(start), " s");
 
-    // ----------------------------------------------------------------------------
-    // Resolve ambiguities.
-    start = std::chrono::high_resolution_clock::now();
+    // // ----------------------------------------------------------------------------
+    // // Resolve ambiguities.
+    // start = std::chrono::high_resolution_clock::now();
 
-    auto first = std::ranges::begin(sorted_store);
-    auto last = std::ranges::end(sorted_store);
+    // auto first = std::ranges::begin(rcs_store);
+    // auto last = std::ranges::end(rcs_store);
 
-    auto resolve_coverage = [] (auto first, auto last, auto && cmp)
-    {
-        auto overlap_end = std::ranges::find_if(first, last, std::forward<decltype(cmp)>(cmp));
-        for (; first != overlap_end; ++first) {
-            for (auto it = std::ranges::next(first, 1, overlap_end); it != overlap_end; ++it) {
-                    (libjst::coverage(*it)).and_not(libjst::coverage(*first));
-            }
-        }
-        return first;
-    };
+    // auto resolve_coverage = [] (auto first, auto last, auto && cmp)
+    // {
+    //     auto overlap_end = std::ranges::find_if(first, last, std::forward<decltype(cmp)>(cmp));
+    //     for (; first != overlap_end; ++first) {
+    //         for (auto it = std::ranges::next(first, 1, overlap_end); it != overlap_end; ++it) {
+    //                 (libjst::coverage(*it)).and_not(libjst::coverage(*first));
+    //         }
+    //     }
+    //     return first;
+    // };
 
-    auto effective_size = [](auto const &variant) {
-        return std::ranges::size(libjst::insertion(variant)) - libjst::deletion(variant);
-    };
+    // auto effective_size = [](auto const &variant) {
+    //     return std::ranges::size(libjst::insertion(variant)) - libjst::deletion(variant);
+    // };
 
-    while (first != last) {
-        // find first adjacent position overlap
-        first = std::ranges::adjacent_find(first, last, [] (auto const & lhs, auto const & rhs) {
-            return libjst::position(lhs) == libjst::position(rhs);
-        });
+    // while (first != last) {
+    //     // find first adjacent position overlap
+    //     first = std::ranges::adjacent_find(first, last, [] (auto const & lhs, auto const & rhs) {
+    //         return libjst::position(lhs) == libjst::position(rhs);
+    //     });
 
-        // Resolve overlaps of insertions at current position overlap
-        first = resolve_coverage(first, last, [&](auto const & variant) {
-            return libjst::position(variant) != libjst::position(*first) || effective_size(variant) <= 0;
-        });
+    //     // Resolve overlaps of insertions at current position overlap
+    //     first = resolve_coverage(first, last, [&](auto const & variant) {
+    //         return libjst::position(variant) != libjst::position(*first) || effective_size(variant) <= 0;
+    //     });
 
-        // Resolve overlaps of remaining variants at current position overlap
-        first = resolve_coverage(first, last, [&](auto const & variant) {
-            return libjst::position(variant) != libjst::position(*first);
-        });
-    }
+    //     // Resolve overlaps of remaining variants at current position overlap
+    //     first = resolve_coverage(first, last, [&](auto const & variant) {
+    //         return libjst::position(variant) != libjst::position(*first);
+    //     });
+    // }
 
-    log(verbosity_level::verbose,
-        logging_level::info,
-        "Time resolving ambiguities in store: ", duration(start), " s");
+    // log(verbosity_level::verbose,
+    //     logging_level::info,
+    //     "Time resolving ambiguities in store: ", duration(start), " s");
 
     // ----------------------------------------------------------------------------
     // Generate jst model
     // ----------------------------------------------------------------------------
 
-    start = std::chrono::high_resolution_clock::now();
-    // Load reference sequence!
-    auto base_sequence = load_base_sequence(reference_file,
-                                            seqan::toCString(seqan::contigNames(seqan::context(vcf_file))[record.rID]));
+    // start = std::chrono::high_resolution_clock::now();
+    // fwd_jst_t fwd_jst{jst};
 
-    jst_model_t jst{base_sequence, std::move(intermediate_variant_store)};
-
-    log(verbosity_level::verbose,
-        logging_level::info,
-        "Time generating jst: ", duration(start), " s");
-
-    start = std::chrono::high_resolution_clock::now();
-    fwd_jst_t fwd_jst{jst};
-
-    log(verbosity_level::verbose,
-        logging_level::info,
-        "Time building forward layer: ", duration(start), " s");
+    // log(verbosity_level::verbose,
+    //     logging_level::info,
+    //     "Time building forward layer: ", duration(start), " s");
 
     // ----------------------------------------------------------------------------
-    // Serialise jst
+    // Serialise rcs_store
     // ----------------------------------------------------------------------------
 
     start = std::chrono::high_resolution_clock::now();
 
-    std::ofstream archive_stream{out_file_path, std::ios_base::out | std::ios_base::binary};
-    {
-        cereal::BinaryOutputArchive output_archive(archive_stream);
-        auto arch = output_archive | libjst::direct_serialiser(base_sequence)
-                                   | libjst::delegate_serialiser(jst);
-        libjst::save(fwd_jst, arch);
-    }
+    serialise(rcs_store, out_file_path);
 
     log(verbosity_level::verbose,
         logging_level::info,

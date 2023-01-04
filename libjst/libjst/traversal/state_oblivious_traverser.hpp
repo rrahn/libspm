@@ -28,7 +28,7 @@ namespace libjst
             if (libjst::window_size(pattern) == 0)
                 return;
 
-            auto search_tree = (tree_t &&)tree | libjst::labelled<libjst::sequence_label_kind::root_path>()
+            auto search_tree = tree | libjst::labelled<libjst::sequence_label_kind::root_path>()
                                                | libjst::coloured()
                                                | trim(libjst::window_size(pattern) - 1)
                                                | prune_unsupported()
@@ -36,7 +36,8 @@ namespace libjst
                                                | merge(); // make big nodes
 
             tree_traverser_base oblivious_path{search_tree};
-            for (auto const & label : oblivious_path) {
+            for (auto it = oblivious_path.begin(); it != oblivious_path.end(); ++it) {
+                auto && label = *it;
                 pattern(label.sequence(), [&] (auto && label_it) {
                     callback(std::move(label_it), label); // either cargo offers access to node context or not!
                 });

@@ -22,18 +22,15 @@
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/core/debug_stream.hpp>
 
-#include <jstmap/global/jstmap_jst_types.hpp>
+#include <jstmap/global/jstmap_types.hpp>
+#include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
-#include <jstmap/search/filter_queries.hpp>
+// #include <jstmap/search/filter_queries.hpp>
 #include <jstmap/search/search_main.hpp>
 #include <jstmap/search/search_queries.hpp>
 #include <jstmap/search/type_alias.hpp>
-#include <jstmap/search/write_results.hpp>
+// #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/options.hpp>
-
-#include <libjst/journaled_sequence_tree/serialiser_concept.hpp>
-#include <libjst/journaled_sequence_tree/serialiser_direct.hpp>
-#include <libjst/journaled_sequence_tree/serialiser_delegate.hpp>
 
 namespace jstmap
 {
@@ -95,18 +92,11 @@ int search_main(seqan3::argument_parser & search_parser)
 
         std::cout << "load the jst\n";
         start = std::chrono::high_resolution_clock::now();
-        // TODO replace for now!
-        raw_sequence_t reference{};
-        jst_model_t jst_model{reference, 0};
-        fwd_jst_t jst{jst_model};
-        // load the jst!
-        {
-            std::ifstream archive_stream{options.jst_input_file_path, std::ios_base::binary | std::ios_base::in};
-            cereal::BinaryInputArchive in_archive{archive_stream};
-            auto jst_archive = in_archive | libjst::direct_serialiser(reference)
-                                        | libjst::delegate_serialiser(jst_model);
-            libjst::load(jst, jst_archive);
-        }
+
+        rcs_store_t rcs_store = load_jst(options.jst_input_file_path);
+        // seqan3::debug_stream << "Reference: " << rcs_store.source() << "\n";
+        seqan3::debug_stream << "Size: " << rcs_store.size() << "\n";
+
         end = std::chrono::high_resolution_clock::now();
 
         std::cout << "Load JST time: "
@@ -129,7 +119,7 @@ int search_main(seqan3::argument_parser & search_parser)
         else
         {
             std::cout << "Filter the queries\n";
-            std::tie(bin_size, bins) = filter_queries(queries, options);
+            // std::tie(bin_size, bins) = filter_queries(queries, options);
         }
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Filter time: "
@@ -152,7 +142,6 @@ int search_main(seqan3::argument_parser & search_parser)
         std::vector<std::vector<search_match2>> bin_matches{};
         bin_matches.resize(1 /*pjst.bin_count()*/);
 
-        #pragma omp parallel for num_threads(options.thread_count) shared(bin_matches, jst, bins, options) schedule(dynamic)
         for (size_t bin_idx = 0; bin_idx < 1; ++bin_idx)
         { // parallel region
             auto const & bin_query_ids = bins[bin_idx];
@@ -169,7 +158,7 @@ int search_main(seqan3::argument_parser & search_parser)
                 seqan::appendValue(local_bin, queries[bin_query_ids[local_bin_idx]] | std::views::all);
             }
 
-            auto & jst_bin = jst; //pjst.bin_at(bin_idx);
+            auto const & jst_bin = rcs_store; //pjst.bin_at(bin_idx);
             // * search queries in bin_id -> matches[]
             // * push results into global queue
             // seqan::StringSet<raw_sequence_t> _queries{};

@@ -33,7 +33,7 @@ namespace jstmap
         set_field_genotype(record);
     }
 
-    void stripped_vcf_record::alternatives(variant_store_t & store) const
+    void stripped_vcf_record::alternatives(rcs_store_t & store) const
     {
         if (_alternative_count != _genotypes.size())
             throw std::logic_error{"Invalid number of coverages and alternative count."};
@@ -42,20 +42,22 @@ namespace jstmap
         {
             if (_alt[i][0] == '<') continue; // skip these alternatives for now
             if (_ref.size() == _alt[i].size() && _ref.size() == 1) { // SNP
-                store.emplace(snp_t{_pos, alphabet_t{_alt[i][0]}}, std::move(_genotypes[i]));
+                store.add(_pos, variant_t{alphabet_t{_alt[i][0]}}, std::move(_genotypes[i]));
+                // store.emplace(snp_t{_pos, }, std::move(_genotypes[i]));
             } else { // generic alternative: SNP, InDel, etc.
-                auto [fst_ref, fst_alt] = std::ranges::mismatch(_ref, _alt[i]); // first non equal ranges in the beginning
-                auto ref_suffix = _ref | std::views::drop(std::ranges::distance(std::ranges::begin(_ref), fst_ref))
-                                       | std::views::reverse;
-                auto alt_suffix = _alt[i] | std::views::drop(std::ranges::distance(std::ranges::begin(_alt[i]), fst_alt))
-                                          | std::views::reverse;
-                auto [lst_ref_rev, lst_alt_rev] = std::ranges::mismatch(ref_suffix, alt_suffix);
+                continue; // skip for now!
+                // auto [fst_ref, fst_alt] = std::ranges::mismatch(_ref, _alt[i]); // first non equal ranges in the beginning
+                // auto ref_suffix = _ref | std::views::drop(std::ranges::distance(std::ranges::begin(_ref), fst_ref))
+                //                        | std::views::reverse;
+                // auto alt_suffix = _alt[i] | std::views::drop(std::ranges::distance(std::ranges::begin(_alt[i]), fst_alt))
+                //                           | std::views::reverse;
+                // auto [lst_ref_rev, lst_alt_rev] = std::ranges::mismatch(ref_suffix, alt_suffix);
 
-                auto allele_view = std::ranges::subrange{fst_alt, lst_alt_rev.base()} | std::views::transform(
-                    [] (char c) { return alphabet_t{c}; });
-                std::vector<alphabet_t> allele{std::ranges::begin(allele_view), std::ranges::end(allele_view)};
-                libjst::variant_deletion_t<indel_t> deletion = std::ranges::distance(fst_ref, lst_ref_rev.base());
-                store.emplace(indel_t{_pos, std::move(allele), deletion}, std::move(_genotypes[i]));
+                // auto allele_view = std::ranges::subrange{fst_alt, lst_alt_rev.base()} | std::views::transform(
+                //     [] (char c) { return alphabet_t{c}; });
+                // std::vector<alphabet_t> allele{std::ranges::begin(allele_view), std::ranges::end(allele_view)};
+                // libjst::variant_deletion_t<indel_t> deletion = std::ranges::distance(fst_ref, lst_ref_rev.base());
+                // store.emplace(indel_t{_pos, std::move(allele), deletion}, std::move(_genotypes[i]));
             }
         }
     }

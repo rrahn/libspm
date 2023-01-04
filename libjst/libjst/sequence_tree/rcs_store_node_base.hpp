@@ -45,13 +45,15 @@ namespace libjst
     protected:
 
         rcs_store_node_base() = default;
-        constexpr rcs_store_node_base(rcs_store_type const & rcs_store,
+        constexpr rcs_store_node_base(rcs_store_type const * rcs_store,
                                       variant_iterator left_variant,
                                       variant_iterator right_variant) noexcept :
-            _rcs_store{std::addressof(rcs_store)},
+            _rcs_store{rcs_store},
             _left_variant{std::move(left_variant)},
             _right_variant{std::move(right_variant)}
         {
+            assert(_rcs_store != nullptr);
+
             node_descriptor::set_reference();
             // initial state?
             node_descriptor::set_first_breakpoint_id(node_descriptor_id::first_right);
@@ -87,12 +89,13 @@ namespace libjst
                     return visit_next_ref_impl(std::move(child));
                 }
             } else {
+                assert(left_variant() == right_variant());
                 child.left_variant(right_variant());
                 child.right_variant(find_next_valid_right_variant());
                 child.set_next_variant(next_variant_after(child.right_variant()));
                 child.set_reference();
                 child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                if (position(*child.right_variant()).is_left_end()) {
+                if (child.right_variant() != sink() && position(*child.right_variant()).is_left_end()) {
                     child.set_second_breakpoint_id(node_descriptor_id::second_left);
                 } else {
                     child.set_second_breakpoint_id(node_descriptor_id::second_right);
@@ -125,11 +128,19 @@ namespace libjst
             if (left_variant() == sink())
                 return std::ranges::size(rcs_store().source());
 
+            auto bounded_right_position = [&] (variant_iterator const it) {
+                if (it == sink()) {
+                    return breakpoint{static_cast<uint32_t>(std::ranges::size(rcs_store().source()))};
+                } else {
+                    return libjst::position(*it);
+                }
+            };
+
             // return (is_variant_link()) ? libjst::right_breakpoint(left_var) : libjst::left_breakpoint(left_var);
             using seqan3::operator&;
-            return ((node_descriptor::get_first_breakpoint_id() & node_descriptor_id::first_left) != node_descriptor_id::nil)
+            return ((node_descriptor::get_first_breakpoint_id() & node_descriptor_id::first_left) == node_descriptor_id::first_left)
                         ? libjst::left_breakpoint(*left_variant())
-                        : libjst::right_breakpoint(*left_variant());
+                        : std::min(libjst::right_breakpoint(*left_variant()), bounded_right_position(right_variant()));
         }
 
         /*!\brief Returns the breakpoint of the right end of the current node.
@@ -172,6 +183,7 @@ namespace libjst
         }
 
         constexpr rcs_store_t const & rcs_store() const noexcept {
+            assert(_rcs_store != nullptr);
             return *_rcs_store;
         }
 
@@ -292,16 +304,16 @@ namespace libjst
                         child.set_second_breakpoint_id(node_descriptor_id::second_right); // H
                     }
                     break;
-                } case node_state::C: {
-                        child.set_first_breakpoint_id(node_descriptor_id::first_right); // A,B
+                } case node_state::C: { // => {A,B}
+                        child.set_first_breakpoint_id(node_descriptor_id::first_right);
                         child.set_second_breakpoint_id(node_descriptor_id::second_left);
                         break;
-                } case node_state::D: {
-                        child.set_first_breakpoint_id(node_descriptor_id::first_right); // G
+                } case node_state::D: { // => {G}
+                        child.set_first_breakpoint_id(node_descriptor_id::first_right);
                         child.set_second_breakpoint_id(node_descriptor_id::second_right);
                         break;
                 } case node_state::G: {[[fallthrough]];
-                } case node_state::H: {
+                } case node_state::H: { // => {A,B} | {G}
                         child.set_first_breakpoint_id(node_descriptor_id::first_right);
                         if (child.right_variant() != child.sink() && libjst::position(*child.right_variant()).is_left_end()) {
                             child.set_second_breakpoint_id(node_descriptor_id::second_left); // A,B
@@ -309,9 +321,10 @@ namespace libjst
                             child.set_second_breakpoint_id(node_descriptor_id::second_right); // G
                         }
                         break;
-                } case node_state::A: { [[fallthrough]]; // either in A or in B -> same properties
-                } case node_state::E: { return child; //either in E or in F -> same properties
-                } default: /*no-op*/;
+                } //case node_state::A: { [[fallthrough]]; // either in A or in B -> same properties
+                //} case node_state::E: { return child; // either in E or in F -> same properties
+                //}
+                default: /*no-op*/;
             }
             return child;
         }

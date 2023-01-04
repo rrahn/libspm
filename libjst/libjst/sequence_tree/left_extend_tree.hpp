@@ -48,6 +48,7 @@ namespace libjst
         std::ptrdiff_t _left_extension{};
     public:
 
+        left_extend_factory() = default;
         template <std::integral extension_t>
         constexpr explicit left_extend_factory(extension_t const left_extension) noexcept :
             _left_extension{static_cast<std::ptrdiff_t>(left_extension)}

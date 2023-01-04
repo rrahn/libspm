@@ -20,7 +20,7 @@
 
 #include <libjst/utility/bit_vector.hpp>
 
-#include <jstmap/global/jstmap_jst_types.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
@@ -28,9 +28,8 @@ namespace jstmap
     {
     private:
         using alternative_t = std::string;
-        using coverage_t = libjst::bit_vector<>;
         using genotypes_t = std::vector<coverage_t>;
-        using position_t = libjst::variant_position_t<snp_t>;
+        using position_t = uint32_t;
 
         seqan::VcfIOContext<> const *_io_context{};
 
@@ -51,7 +50,7 @@ namespace jstmap
 
         std::string_view contig_name() const noexcept;
         genotypes_t const & field_genotype() const noexcept;
-        void alternatives(variant_store_t &) const;
+        void alternatives(rcs_store_t &) const;
 
     private:
         void set_field_chrom(seqan::VcfRecord &) noexcept;

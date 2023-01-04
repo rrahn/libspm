@@ -32,9 +32,5 @@ namespace libjst
         {}
         //!\}
 
-
-
-
-
     };
 }  // namespace libjst

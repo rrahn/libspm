@@ -32,22 +32,6 @@ using jst_t = libjst::journaled_sequence_tree<raw_sequence_t>;
 //!\brief The globally available partitioned journal sequence tree type.
 using partitioned_jst_t = libjst::journal_sequence_tree_partitioned<jst_t>;
 
-//!\brief An enum to select the verbosity level.
-enum class verbosity_level : uint8_t
-{
-    quite, //!< No logging output is emitted.
-    standard, //!< Logs regular information with no extra information on the output.
-    verbose //!< Extra verbose logging output for debugging purposes.
-};
-
-//!\brief An enum to select the logging level.
-enum class logging_level : uint8_t
-{
-    info, //!< An informative message during the execution.
-    warning, //!< A warning message for non-severe issues during the execution.
-    error //!< An error message for severe issues during the execution.
-};
-
 template <typename char_t, seqan3::arithmetic score_t = int8_t>
 class scoring_scheme : public seqan3::scoring_scheme_base<scoring_scheme<char_t, score_t>, char_t, score_t>
 {

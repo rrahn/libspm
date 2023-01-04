@@ -56,6 +56,10 @@ message(STATUS "seqan2_dirs: ${SEQAN_INCLUDE_DIRS}")
 # Dependency: OpenMP
 find_package(OpenMP REQUIRED)
 
+# Dependency: PThreads
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 ## APPLICATION
 
 add_subdirectory (libcontrib)

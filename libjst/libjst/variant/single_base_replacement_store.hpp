@@ -100,13 +100,27 @@ namespace libjst
         constexpr const_iterator begin() const noexcept { return const_iterator{_data.begin()}; }
         constexpr iterator end() noexcept { return iterator{_data.end()}; }
         constexpr const_iterator end() const noexcept { return const_iterator{_data.end()}; }
+
+        // ----------------------------------------------------------------------------
+        // Serialisation
+        // ----------------------------------------------------------------------------
+
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive) {
+            iarchive(_data);
+        }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const {
+            oarchive(_data);
+        }
     };
 
     template <seqan3::alphabet alphabet_t>
     class single_base_replacement_store<alphabet_t>::element_type {
     private:
-
-        alphabet_t _value{};
+        using value_type = std::array<alphabet_t, 1>;
+        value_type _value{};
     public:
 
         element_type() = default;
@@ -115,14 +129,29 @@ namespace libjst
             _value{std::move(value)}
         {}
 
+        // ----------------------------------------------------------------------------
+        // Serialisation
+        // ----------------------------------------------------------------------------
+
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive) {
+            iarchive(_value[0]);
+        }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const {
+            oarchive(_value[0]);
+        }
+
     private:
 
         constexpr friend size_type tag_invoke(std::tag_t<libjst::breakpoint_span>, element_type const &) noexcept {
             return 1;
         }
 
-        constexpr friend auto tag_invoke(std::tag_t<libjst::alt_sequence>, element_type const & me) noexcept {
-            return std::views::single(me._value);
+        constexpr friend value_type const & tag_invoke(std::tag_t<libjst::alt_sequence>,
+                                                       element_type const & me) noexcept {
+            return me._value;
         }
 
         constexpr friend size_type tag_invoke(std::tag_t<libjst::effective_size>, element_type const &) noexcept {

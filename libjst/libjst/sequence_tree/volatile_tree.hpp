@@ -36,12 +36,12 @@ namespace libjst
 
         constexpr node_impl root() const noexcept {
             auto first = std::ranges::begin(_rooted_rcs_store.variants());
-            return node_impl{_rooted_rcs_store, first, std::ranges::next(first)};
+            return node_impl{std::addressof(_rooted_rcs_store), first, std::ranges::next(first)};
         }
 
         constexpr node_impl sink() const noexcept {
             auto sent = std::ranges::end(_rooted_rcs_store.variants());
-            return node_impl{_rooted_rcs_store, sent, sent};
+            return node_impl{std::addressof(_rooted_rcs_store), sent, sent};
         }
     };
 
@@ -56,15 +56,21 @@ namespace libjst
 
     private:
         // constructor for the root/sink condition
-        explicit constexpr node_impl(rooted_rcs_store_type const & rcs_store,
+        explicit constexpr node_impl(rooted_rcs_store_type const * rcs_store,
                                      variant_iterator left,
                                      variant_iterator right) noexcept :
                 base_t{rcs_store, std::move(left), std::move(right)}
-        {}
+        {
+            assert(rcs_store != nullptr);
+        }
 
     public:
 
-        explicit constexpr node_impl() = default;
+        node_impl() = default;
+        node_impl(node_impl const &) = default;
+        node_impl(node_impl &&) = default;
+        node_impl & operator=(node_impl const &) = default;
+        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return base_t::visit_next_alt();

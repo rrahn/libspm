@@ -7,11 +7,11 @@
 
 #include <filesystem>
 
-#include <jstmap/global/jstmap_type_alias.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-std::vector<raw_sequence_t> load_queries(std::filesystem::path const &);
+sequence_collection_t load_queries(std::filesystem::path const &);
 
 } // namespace jstmap

@@ -12,8 +12,10 @@
 
 #pragma once
 
-#include <algorithms>
+#include <algorithm>
+
 #include <seqan3/range/concept.hpp>
+#include <seqan3/core/concept/cereal.hpp>
 
 #include <libjst/utility/bit_vector.hpp>
 #include <libjst/variant/alternate_sequence_kind.hpp>
@@ -35,13 +37,14 @@ namespace libjst
         using source_type = source_sequence_t;
 
         using key_type = typename variant_map_type::key_type;
+        using mapped_type = typename variant_map_type::mapped_type;
 
-        using size_type = decltype(std::ranges::size(std::devlcal<coverage_type const &>()));
+        using size_type = decltype(std::ranges::size(std::declval<coverage_type const &>()));
         using alternate_sequence_type = std::ranges::range_value_t<alternate_sequence_store_t>;
 
     private:
 
-        source_sequence_t _source{};
+        source_sequence_t _reference{};
         variant_map_type _variant_map{};
         size_type _row_count{};
 
@@ -52,7 +55,7 @@ namespace libjst
         constexpr rcs_store() = default; //!< Default.
         // Construct from dimensions?
         constexpr rcs_store(source_sequence_t source, size_type initial_row_count) :
-            _source{std::move(source)},
+            _reference{std::move(source)},
             _row_count{initial_row_count}
         {}
         //!\}
@@ -62,21 +65,19 @@ namespace libjst
         // we may add a variant using vertical information -> like a list of indices for the coverage?
         // we may add a variant for a single sequence.
         // initial interface: position, alternate_sequence, coverage<>
-        template <std::forward_range haplotypes_t>
-            requires std::integral<std::ranges::range_value_t<haplotypes_t>>
-        constexpr bool add(size_type const src_position,
-                           alternate_sequence_type alt_sequence,
-                           haplotypes_t && haplotypes) {
-            assert(src_position + libjst::breakpoint_span(alt_sequence) <= std::ranges::size(_source_sequence));
-            assert([&] { return std::ranges::all_of(haplotypes, [&] (auto const id) { return id < _row_count; }); }());
+        constexpr bool add(key_type const src_position,
+                           alternate_sequence_type variant,
+                           coverage_type coverage) {
+            assert(src_position.value() + libjst::breakpoint_span(variant) <= std::ranges::size(source()));
+            assert(std::ranges::size(coverage) == size());
 
             // TODO: coverage interface:
                 // .set(position [size/iterator]) -> rather same as select.
                 // .unset(position [size/iterator]) -> maybe first some other format before constructing select/ranl support?
                 // construction from list of ids.
-            coverage_t coverage{};
-            coverage.resize(_row_count, false);
-            std::ranges::for_each(haplotypes, [&] (auto const id) { coverage[id] = true; });
+            // coverage_t coverage{};
+            // coverage.resize(_row_count, false);
+            // std::ranges::for_each(haplotypes, [&] (auto const id) { coverage[id] = true; });
             // How to handle certain types of collisions? -> provide various sets of proxies -> or as a policy design.
             // default is hard fail in case variant is there and
             // how can we make sure that the same variant is not invalidated by some other variant?
@@ -92,7 +93,8 @@ namespace libjst
             //                                             else
             //                                                 return key.first < libjst::position(variant);
             //                                        });
-            _variant_map.emplace(src_position, std::move(alt_sequence), std::move(coverage));
+            mapped_type value{src_position, std::move(variant), std::move(coverage)};
+            _variant_map.insert(std::ranges::end(_variant_map), std::move(value));
             return true;
         }
 
@@ -100,12 +102,12 @@ namespace libjst
         // Accessor
         // ----------------------------------------------------------------------------
 
-        constexpr source_sequence_t const & source_sequence() const noexcept
+        constexpr source_sequence_t const & source() const noexcept
         {
-            return _source;
+            return _reference;
         }
 
-        constexpr variant_map_type const & sequence_variants() const noexcept
+        constexpr variant_map_type const & variants() const noexcept
         {
             return _variant_map;
         }
@@ -115,5 +117,20 @@ namespace libjst
             return _row_count;
         }
 
+        // ----------------------------------------------------------------------------
+        // Serialisation
+        // ----------------------------------------------------------------------------
+
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive)
+        {
+            iarchive(_reference, _variant_map, _row_count);
+        }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const
+        {
+            oarchive(_reference, _variant_map, _row_count);
+        }
     };
 }  // namespace libjst

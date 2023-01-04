@@ -31,21 +31,21 @@ namespace libjst
 
         using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
 
-        tree_box_t _wrappee{};
+        base_tree_t _wrappee{};
 
     public:
 
         template <typename wrappee_t>
             requires (!std::same_as<std::remove_cvref_t<wrappee_t>, extendable_tree> &&
-                      std::constructible_from<tree_box_t, wrappee_t>)
+                      std::constructible_from<base_tree_t, wrappee_t>)
         constexpr explicit extendable_tree(wrappee_t && wrappee) noexcept : _wrappee{(wrappee_t &&)wrappee}
         {}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(*_wrappee)};
+            return node_impl{libjst::root(_wrappee)};
         }
         constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(*_wrappee)};
+            return sink_impl{libjst::sink(_wrappee)};
         }
     };
 
@@ -61,18 +61,24 @@ namespace libjst
         friend extension_t;
         friend extendable_tree;
 
-        explicit constexpr node_impl(base_node_type base_node) noexcept :
+        explicit constexpr node_impl(base_node_type && base_node) noexcept :
             base_node_type{std::move(base_node)}
         {
             extension_t::initialise();
         }
 
-       explicit constexpr node_impl(base_node_type base_node, extension_t extension) noexcept :
+       explicit constexpr node_impl(base_node_type && base_node, extension_t extension) noexcept :
             base_node_type{std::move(base_node)},
             extension_t{std::move(extension)}
         {}
 
     public:
+
+        node_impl() = default;
+        node_impl(node_impl const &) = default;
+        node_impl(node_impl &&) = default;
+        node_impl & operator=(node_impl const &) = default;
+        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const {
             return visit(base_node_type::next_alt());

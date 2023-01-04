@@ -19,6 +19,7 @@
 #include <utility>
 
 #include <cereal/types/vector.hpp>
+#include <cereal/types/utility.hpp>
 
 #include <libcontrib/type_traits.hpp>
 #include <libcontrib/type_traits.hpp>
@@ -180,6 +181,14 @@ namespace libjst
             template <typename this_t>
                 requires std::same_as<std::remove_cvref_t<this_t>, compressed_sparse_variant_map_proxy>
             constexpr friend auto tag_invoke(std::tag_t<libjst::position>, this_t &&me) noexcept
+                -> fwd_t<this_t, breakpoint_t>
+            {
+                return (fwd_t<this_t, breakpoint_t> &&)me._breakpoint;
+            }
+
+            template <typename this_t>
+                requires std::same_as<std::remove_cvref_t<this_t>, compressed_sparse_variant_map_proxy>
+            constexpr friend auto tag_invoke(std::tag_t<libjst::left_breakpoint>, this_t &&me) noexcept
                 -> fwd_t<this_t, breakpoint_t>
             {
                 return (fwd_t<this_t, breakpoint_t> &&)me._breakpoint;

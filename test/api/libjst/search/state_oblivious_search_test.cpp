@@ -216,11 +216,36 @@ INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive, polymorphic_sequence
     .expected_occurrences{1}
 }));
 
-INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive_at_same_position, polymorphic_sequence_searcher_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(two_snv_variants_mutual_exclusive_at_same_position, polymorphic_sequence_searcher_test,
+testing::Values(fixture{
     .source{"aaaabbbb"},
     .variants{variant_t{.position{4}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
               variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{0,0,1,1}}},
     .coverage_size{4},
     .needle{"Jbbb"},
     .expected_occurrences{3}
+}));
+
+INSTANTIATE_TEST_SUITE_P(three_snv_variants_in_same_subtree, polymorphic_sequence_searcher_test,
+testing::Values(fixture{
+        //   01234567
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{3}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{0,1,1,0}},
+              variant_t{.position{5}, .insertion{"K"}, .deletion{1}, .coverage{0,1,0,1}}},
+    .coverage_size{4},
+    .needle{"aIJKb"},
+    .expected_occurrences{1}
+}));
+
+INSTANTIATE_TEST_SUITE_P(three_snv_variants_in_same_subtree_two_on_same_position, polymorphic_sequence_searcher_test,
+testing::Values(fixture{
+        //   01234567
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{3}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}},
+              variant_t{.position{5}, .insertion{"K"}, .deletion{1}, .coverage{0,1,0,1}}},
+    .coverage_size{4},
+    .needle{"aIbKb"},
+    .expected_occurrences{1}
 }));

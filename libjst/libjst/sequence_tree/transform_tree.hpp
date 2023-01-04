@@ -32,24 +32,24 @@ namespace libjst
         using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
         using transform_box_t = jst::contrib::copyable_box<fn_t>;
 
-        tree_box_t _wrappee{};
+        base_tree_t _wrappee{};
         transform_box_t _label_fn{};
 
     public:
 
         template <typename wrappee_t, typename label_transform_fn_t>
             requires (!std::same_as<std::remove_cvref_t<wrappee_t>, transform_tree_impl> &&
-                      std::constructible_from<tree_box_t, wrappee_t>)
+                      std::constructible_from<base_tree_t, wrappee_t>)
         constexpr explicit transform_tree_impl(wrappee_t && wrappee, label_transform_fn_t && fn) noexcept :
             _wrappee{(wrappee_t &&)wrappee},
             _label_fn{(label_transform_fn_t &&) fn}
         {}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(*_wrappee), _label_fn};
+            return node_impl{libjst::root(_wrappee), _label_fn};
         }
         constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(*_wrappee)};
+            return sink_impl{libjst::sink(_wrappee)};
         }
     };
 
@@ -61,12 +61,18 @@ namespace libjst
 
         transform_box_t _fn{};
 
-        explicit constexpr node_impl(base_node_type base_node, transform_box_t fn) noexcept :
+        explicit constexpr node_impl(base_node_type && base_node, transform_box_t fn) noexcept :
             base_node_type{std::move(base_node)},
             _fn{std::move(fn)}
         {}
 
     public:
+
+        node_impl() = default;
+        node_impl(node_impl const &) = default;
+        node_impl(node_impl &&) = default;
+        node_impl & operator=(node_impl const &) = default;
+        node_impl & operator=(node_impl &&) = default;
 
         constexpr auto operator*() const noexcept {
             return std::invoke(_fn, *static_cast<base_node_type const &>(*this));

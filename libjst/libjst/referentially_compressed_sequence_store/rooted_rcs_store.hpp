@@ -30,7 +30,7 @@ namespace libjst
 
         class rooted_variant_map;
 
-        rcs_store_t const & _wrappee;
+        std::reference_wrapper<rcs_store_t const> _wrappee;
         rooted_variant_map _rooted_variants{};
 
     public:
@@ -40,20 +40,20 @@ namespace libjst
 
         rooted_rcs_store() = delete;
         explicit rooted_rcs_store(rcs_store_t const & wrappee) :
-            _wrappee{wrappee},
-            _rooted_variants{_wrappee.variants(), _wrappee.size()}
+            _wrappee{std::cref(wrappee)},
+            _rooted_variants{_wrappee.get().variants(), _wrappee.get().size()}
         {}
 
         constexpr rcs_store_t const & base() const noexcept {
-            return _wrappee;
+            return _wrappee.get();
         }
 
-        constexpr auto size() const noexcept -> decltype(_wrappee.size()){
-            return _wrappee.size();
+        constexpr auto size() const noexcept -> decltype(_wrappee.get().size()){
+            return _wrappee.get().size();
         }
 
-        constexpr auto source() const noexcept -> decltype(_wrappee.source()){
-            return _wrappee.source();
+        constexpr auto source() const noexcept -> decltype(_wrappee.get().source()){
+            return _wrappee.get().source();
         }
 
         constexpr variant_map_type const & variants() const noexcept {
@@ -89,9 +89,10 @@ namespace libjst
             coverage_t root_cov{};
             root_cov.resize(coverage_size, true);
             libjst::coverage(_root) = std::move(root_cov);
-            libjst::left_breakpoint(_root) = 0;
-            libjst::alt_sequence(_root) = libjst::alt_sequence_t<value_type>{};
-            libjst::breakpoint_span(_root) = 0;
+            // libjst::coverage(_root) = std::move(root_cov);
+            // libjst::left_breakpoint(_root) = 0;
+            // libjst::alt_sequence(_root) = libjst::alt_sequence_t<value_type>{};
+            // libjst::breakpoint_span(_root) = 0;
         }
 
         iterator begin() noexcept {
@@ -150,7 +151,7 @@ namespace libjst
         {}
 
         constexpr reference operator*() const noexcept {
-            return is_root() ? *_root : *_it;
+            return is_root() ? static_cast<reference>(*_root) : *_it;
         }
 
         constexpr reference operator[](difference_type offset) const noexcept

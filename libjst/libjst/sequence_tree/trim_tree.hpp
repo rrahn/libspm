@@ -27,7 +27,7 @@ namespace libjst
         class node_impl;
         class sink_impl;
 
-        wrappee_t _wrappee{};
+        base_tree_t _wrappee{};
         std::size_t _max_branch_size{};
 
     public:
@@ -37,6 +37,8 @@ namespace libjst
         constexpr trim_tree_impl() = default; //!< Default.
 
         template <typename wrapped_tree_t>
+            requires (!std::same_as<std::remove_cvref_t<wrapped_tree_t>, trim_tree_impl> &&
+                      std::constructible_from<base_tree_t, wrapped_tree_t>)
         explicit constexpr trim_tree_impl(wrapped_tree_t && wrappee, std::size_t const max_branch_size) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee},
             _max_branch_size{max_branch_size}
@@ -44,11 +46,11 @@ namespace libjst
         //!\}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(*_wrappee), _max_branch_size};
+            return node_impl{libjst::root(_wrappee), _max_branch_size};
         }
 
         constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(*_wrappee)};
+            return sink_impl{libjst::sink(_wrappee)};
         }
    };
 
@@ -68,7 +70,7 @@ namespace libjst
             node_impl{std::move(base_node), max_branch_size, static_cast<difference_type>(max_branch_size)}
         {}
 
-        explicit constexpr node_impl(base_node_type base_node,
+        explicit constexpr node_impl(base_node_type && base_node,
                                      std::size_t max_branch_size,
                                      difference_type remaining_branch_size) noexcept :
             base_node_type{std::move(base_node)},
@@ -78,7 +80,11 @@ namespace libjst
 
     public:
 
-        explicit constexpr node_impl() = default;
+        node_impl() = default;
+        node_impl(node_impl const &) = default;
+        node_impl(node_impl &&) = default;
+        node_impl & operator=(node_impl const &) = default;
+        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             if (can_be_trimmed()) {
@@ -105,6 +111,13 @@ namespace libjst
         constexpr breakpoint right_breakpoint() const {
             breakpoint original_bp = base_node_type::right_breakpoint();
             if (base_node_type::on_alternate_path()) {
+                if (static_cast<difference_type>(original_bp) + _remaining_branch_size <= 0) {
+                    std::cout << "left_bp: " << static_cast<difference_type>(base_node_type::left_breakpoint()) << "\n";
+                    std::cout << "right_bp: " << static_cast<difference_type>(original_bp) << "\n";
+                    std::cout << "_remaining_branch_size: " << _remaining_branch_size << "\n";
+                    auto variant_id = std::ranges::distance(base_node_type::rcs_store().variants().begin(), base_node_type::left_variant()) - 1;
+                    std::cout << "variant_id: " << variant_id << "\n";
+                }
                 assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
                 return std::min<difference_type>(original_bp, static_cast<difference_type>(original_bp) + _remaining_branch_size);
             } else {
@@ -132,15 +145,26 @@ namespace libjst
             }
         }
 
+        // branches off the reference path
         constexpr node_impl branch_off_new(base_node_type base_child) const noexcept {
-            node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
-            new_child._max_branch_size += breakpoint_span<true>();
+            std::size_t child_branch_size =
+                _max_branch_size +  std::ranges::size(libjst::alt_sequence(*base_node_type::right_variant()));
+            node_impl new_child{std::move(base_child), child_branch_size, _remaining_branch_size};
+            // std::cout << "New Span: " << child_branch_size << "\n";
+            // auto var_id = std::ranges::distance(new_child.rcs_store().variants().begin(), new_child.left_variant());
+            // std::cout << "Subtree at: " << var_id << "\n";
+            // if (var_id == 19251)
+            //     std::cout << "Broken after this!\n";
             return new_child;
         }
 
         template <bool is_alt_node>
         constexpr node_impl branch_off_further(base_node_type base_child) const noexcept {
             node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
+            // std::cout << "Further Span: " << new_child.breakpoint_span<is_alt_node>() << "\n";
+            // if (new_child.breakpoint_span<is_alt_node>() > 1000) {
+            //     std::cout << "Stop\n";
+            // }
             new_child._remaining_branch_size -= new_child.breakpoint_span<is_alt_node>();
             return new_child;
         }

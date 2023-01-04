@@ -16,6 +16,8 @@
 #include <concepts>
 #include <string_view>
 
+#include <seqan3/core/concept/cereal.hpp>
+
 namespace libjst
 {
     enum struct breakpoint_end : bool {
@@ -64,6 +66,22 @@ namespace libjst
         constexpr operator int_t() const noexcept {
             return static_cast<int_t>(value());
         }
+
+        template <seqan3::cereal_output_archive output_archive_t>
+        uint32_t save_minimal(output_archive_t const &) const
+        {
+            uint32_t tmp = _end_marker;
+            tmp = (tmp << 31) | _value; // make space for the position.
+            return tmp;
+        }
+
+        template <seqan3::cereal_input_archive input_archive_t>
+        void load_minimal(input_archive_t const &, uint32_t const &tmp)
+        {
+            _value = tmp;
+            _end_marker = (tmp >> 31);
+        }
+
     private:
 
         constexpr friend bool operator==(breakpoint const & lhs, breakpoint const & rhs) noexcept {

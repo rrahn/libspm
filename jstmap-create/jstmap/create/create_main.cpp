@@ -18,10 +18,10 @@
 
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/create/create_main.hpp>
-#include <jstmap/create/journaled_sequence_tree_builder.hpp>
+// #include <jstmap/create/journaled_sequence_tree_builder.hpp>
 #include <jstmap/create/load_sequence.hpp>
 #include <jstmap/create/options.hpp>
-#include <jstmap/create/serialise_jst.hpp>
+// #include <jstmap/create/serialise_jst.hpp>
 #include <jstmap/create/vcf_parser.hpp>
 
 namespace jstmap
@@ -118,16 +118,16 @@ int create_main(seqan3::argument_parser & create_parser)
             //     serialise(jst, partitioned_jst, options.output_file);
             // });
         }
-        else // Construct from the sequence alignment.
-        {
-            log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
-            auto sequences = load_sequences(options.sequence_file);
-            log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
-            auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
+        // else // Construct from the sequence alignment.
+        // {
+        //     log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
+        //     auto sequences = load_sequences(options.sequence_file);
+        //     log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
+        //     auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
 
-            log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
-            serialise(jst, partitioned_jst, options.output_file);
-        }
+        //     log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
+        //     serialise(jst, partitioned_jst, options.output_file);
+        // }
     }
     catch (std::exception const & ex)
     {

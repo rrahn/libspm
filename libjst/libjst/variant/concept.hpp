@@ -245,7 +245,9 @@ namespace libjst
                          std::is_nothrow_tag_invocable_v<std::tag_t<libjst::breakpoint_span>, sequence_variant_t>)
                 -> breakpoint
             {
-                return breakpoint{libjst::left_breakpoint(variant).value() + libjst::breakpoint_span(variant),
+                using value_t = typename breakpoint::value_type;
+                return breakpoint{libjst::left_breakpoint(variant).value() +
+                                    static_cast<value_t>(libjst::breakpoint_span(variant)),
                                   breakpoint_end::right};
             }
         } right_breakpoint;

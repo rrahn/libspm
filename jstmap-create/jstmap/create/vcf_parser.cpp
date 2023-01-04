@@ -438,9 +438,9 @@ public:
      *
      * Scans all records stored in the contig file and returns the one that matches the given contig name.
      */
-    raw_sequence_t load_contig_with_name(std::string_view const contig_name)
+    reference_t load_contig_with_name(std::string_view const contig_name)
     {
-        raw_sequence_t contig{};
+        reference_t contig{};
 
         auto find_predicate = [=] (std::string_view const current_contig)
         {
@@ -465,7 +465,7 @@ public:
 };
 
 auto construct_jst_from_vcf(std::filesystem::path const & reference_file, std::filesystem::path const & vcf_file_path)
-    -> std::vector<jst_t>
+    -> std::vector<rcs_store_t>
 {
     // Get the application logger.
     auto & log = get_application_logger();
