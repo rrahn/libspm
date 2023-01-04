@@ -136,6 +136,33 @@ static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
 //     state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(pangenome_bytes);
 //     state.counters["#hits"] = hit_count;
 // }
+template <typename ...args_t>
+static void jst_search_benchmark_horspool(benchmark::State & state, args_t && ...args)
+{
+    auto [jst_file] = std::tuple{args...};
+
+    jstmap::rcs_store_t rcs_store = jstmap::load_jst(jst_file);
+
+    sequence_t query{sample_query(rcs_store.source(), state.range(0))};
+    jstmap::bin_t bin{};
+    seqan::appendValue(bin, query);
+
+    std::vector<jstmap::search_match2> matches{};
+    for (auto _ : state) {
+        matches = jstmap::search_queries_horspool(rcs_store, bin, 0.0);
+    }
+
+    size_t pangenome_bytes = std::ranges::size(rcs_store.source());
+    auto && store = rcs_store.variants();
+    pangenome_bytes = std::accumulate(store.begin(), store.end(), pangenome_bytes, [] (size_t bytes, auto const & variant)
+    {
+        return bytes + std::ranges::size(libjst::alt_sequence(variant));
+    });
+
+    state.counters["bytes"] = pangenome_bytes;
+    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(pangenome_bytes);
+    state.counters["#hits"] = matches.size();
+}
 
 template <typename ...args_t>
 static void jst_search_benchmark_shiftor(benchmark::State & state, args_t && ...args)
@@ -176,6 +203,9 @@ static void jst_search_benchmark_shiftor(benchmark::State & state, args_t && ...
 //                 //   "/home/rahn/workspace/jstmap/build/bench/Release/test1.jst")->Arg(16)->Arg(32)->Arg(64)->Arg(128)->Arg(256);
 //                 //   DATADIR"1KGP.chr22.vcf_new.jst")->Arg(64);
 //                 //   "/home/rahn/workspace/data/jstmap/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.jst")->Arg(64);
+BENCHMARK_CAPTURE(jst_search_benchmark_horspool,
+                  vcf_indel_test,
+                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(60);
 BENCHMARK_CAPTURE(jst_search_benchmark_shiftor,
                   vcf_indel_test,
                   "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(60);
