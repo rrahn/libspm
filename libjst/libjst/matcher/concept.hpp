@@ -63,6 +63,16 @@ namespace libjst
             {
                 return std::tag_invoke(_cpo{}, matcher);
             }
+        private:
+
+            template <typename matcher_t>
+                requires requires (matcher_t && matcher) { { ((matcher_t &&)matcher).capture() }; }
+            constexpr friend auto tag_invoke(_cpo, matcher_t && matcher)
+                noexcept(noexcept(std::declval<matcher_t &&>().capture()))
+                -> decltype(std::declval<matcher_t &&>().capture())
+            {
+                return ((matcher_t &&)matcher).capture();
+            }
         } capture;
     } // namespace _capture
     using _capture::capture;
@@ -77,6 +87,15 @@ namespace libjst
                 -> std::tag_invoke_result_t<_cpo, matcher_t &, state_t>
             {
                 return std::tag_invoke(_cpo{}, matcher, (state_t &&) state);
+            }
+        private:
+
+            template <typename matcher_t, typename state_t>
+                requires requires (matcher_t && m, state_t && s) { { ((matcher_t &&)m).restore((state_t &&) s) }; }
+            constexpr friend void tag_invoke(_cpo, matcher_t && matcher, state_t && state)
+                noexcept(noexcept(std::declval<matcher_t &&>().restore(std::declval<state_t &&>())))
+            {
+                ((matcher_t &&)matcher).restore((state_t &&)state);
             }
         } restore;
     } // namespace _restore

@@ -41,11 +41,6 @@ namespace libjst
         constexpr void operator()(haystack_t && haystack, callback_t && callback) /*const*/ noexcept {
             using compatible_haystack_t = jst::contrib::seqan_container_t<std::views::all_t<haystack_t>>;
 
-            if (std::ranges::empty(haystack)) {
-                std::cout << "empty haystack\n";
-                return;
-            }
-
             compatible_haystack_t seqan_haystack =
                 jst::contrib::make_seqan_container(std::views::all((haystack_t &&)haystack));
 
@@ -61,7 +56,7 @@ namespace libjst
         template <typename seqan_finder_t, typename seqan_pattern_t>
         constexpr bool find_impl(seqan_finder_t & finder, seqan_pattern_t && pattern) const noexcept {
             return std::apply([&] (auto && ...custom_args) {
-                return seqan::find(finder, pattern, (decltype(custom_args)) custom_args...);
+                return find(finder, pattern, (decltype(custom_args)) custom_args...);
             }, to_derived(this)->custom_find_arguments());
         }
 

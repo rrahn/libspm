@@ -16,6 +16,7 @@
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
+#include <libjst/traversal/state_capture_traverser.hpp>
 #include <libjst/traversal/state_oblivious_traverser.hpp>
 
 namespace libjst
@@ -54,7 +55,7 @@ namespace libjst
                 if constexpr (libjst::reducable_state<libjst::matcher_state_t<pattern_t>>) {
                     return state_oblivious_traverser{};
                 } else {
-                    return state_oblivious_traverser{};
+                    return state_capture_traverser{};
                 }
             } else {
                 return state_oblivious_traverser{};

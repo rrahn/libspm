@@ -32,12 +32,18 @@ namespace jst::contrib
         using iterator = std::ranges::iterator_t<std::remove_const_t<range_t>>;
         using const_iterator = std::ranges::iterator_t<std::remove_const_t<range_t> const>;
         using size_type = std::make_unsigned_t<std::iter_difference_t<iterator>>;
+        using difference_type = std::iter_difference_t<iterator>;
 
         seqan_container_adapter() = default;
         explicit seqan_container_adapter(range_t range) noexcept(std::is_nothrow_move_constructible_v<range_t>) :
             _range{std::move(range)}
         {
         }
+
+        seqan_container_adapter(seqan_container_adapter const &) = default;
+        seqan_container_adapter(seqan_container_adapter &&) = default;
+        seqan_container_adapter & operator=(seqan_container_adapter const &) = default;
+        seqan_container_adapter & operator=(seqan_container_adapter &&) = default;
 
         constexpr iterator begin() noexcept(noexcept(std::ranges::begin(_range)))
         {
@@ -79,6 +85,13 @@ namespace jst::contrib
 
     template <std::ranges::view range_t>
     using seqan_container_t = decltype(make_seqan_container(std::declval<range_t>()));
+
+    template <typename range_t>
+    inline void
+    assign(seqan_container_adapter<range_t> & me, seqan_container_adapter<range_t> const & source)
+    {
+        seqan::assign(me, source);
+    }
 
 }  // namespace jst::contrib
 
@@ -123,12 +136,12 @@ namespace seqan
     template <typename range_t>
     struct Position<jst::contrib::seqan_container_adapter<range_t>>
     {
-        using Type = typename detail::container_t<range_t>::size_type;
+        using Type = typename detail::container_t<range_t>::difference_type;
     };
     template <typename range_t>
     struct Position<jst::contrib::seqan_container_adapter<range_t> const>
     {
-        using Type = typename detail::container_t<range_t>::size_type;
+        using Type = typename detail::container_t<range_t>::difference_type;
     };
     template <typename range_t>
     struct Size<jst::contrib::seqan_container_adapter<range_t>>
@@ -169,4 +182,5 @@ namespace seqan
 
     template <typename range_t>
     SEQAN_CONCEPT_IMPL((jst::contrib::seqan_container_adapter<range_t> const), (StlContainerConcept));
+
 } // namespace seqan

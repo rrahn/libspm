@@ -22,14 +22,9 @@ namespace libjst
 {
 
     template <typename stack_t>
-    concept observable_stack = requires
-    (std::remove_reference_t<stack_t> & s)
-    {
-        typename std::remove_cvref_t<stack_t>::reference;
-
-        s.pop();
-        { s.top() } -> std::same_as<typename std::remove_cvref_t<stack_t>::reference>;
-        s.push(std::declval<typename std::remove_cvref_t<stack_t>::reference>());
+    concept observable_stack = requires (std::remove_reference_t<stack_t> & s) {
+        s.notify_pop();
+        s.notify_push();
     };
     /*!\brief A stack notification registry for observable search algorithms.
      *
@@ -106,14 +101,14 @@ namespace libjst
             subscriber_impl(subscriber_t &subscriber) noexcept : _subscriber{subscriber}
             {}
 
-            void notify_pop() noexcept(noexcept(_subscriber.pop())) override
+            void notify_pop() noexcept(noexcept(_subscriber.notify_pop())) override
             {
-                _subscriber.pop();
+                _subscriber.notify_pop();
             }
 
-            void notify_push() noexcept(noexcept(_subscriber.push(_subscriber.top()))) override
+            void notify_push() noexcept(noexcept(_subscriber.notify_push())) override
             {
-                _subscriber.push(_subscriber.top());
+                _subscriber.notify_push();
             }
 
             bool is_same_type(std::type_info const & other_type) const noexcept override

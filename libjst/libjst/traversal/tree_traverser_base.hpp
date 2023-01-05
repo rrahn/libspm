@@ -14,17 +14,15 @@
 
 #include <stack>
 
-#include <libcontrib/copyable_box.hpp>
-
+#include <libjst/traversal/stack_publisher.hpp>
 namespace libjst
 {
+    // Can we add subscription to the tree directly!?
     template <typename tree_t>
-    class tree_traverser_base {
+    class tree_traverser_base : public stack_publisher {
     private:
         using node_type = libjst::tree_node_t<tree_t>;
         using branch_type = std::stack<node_type>;
-
-        using tree_wrapper_t = jst::contrib::copyable_box<tree_t>;
 
         std::reference_wrapper<tree_t const> _tree;
         branch_type _branch{};
@@ -51,11 +49,11 @@ namespace libjst
 
         friend tree_traverser_base;
 
-        branch_type * _branch{};
+        tree_traverser_base * _host{};
 
-        explicit iterator(tree_traverser_base & host) : _branch{std::addressof(host._branch)}
+        explicit iterator(tree_traverser_base & host) : _host{std::addressof(host)}
         {
-            visit_next(libjst::root(host._tree.get()));
+            visit_next(libjst::root(_host->_tree.get()));
         }
     public:
 
@@ -96,31 +94,33 @@ namespace libjst
     private:
 
         constexpr friend bool operator==(iterator const & lhs, sentinel const & rhs) noexcept {
-            assert(lhs._branch != nullptr);
-            return lhs._branch->empty() || lhs.active_node() == rhs;
+            return lhs.branch().empty() || lhs.active_node() == rhs;
         }
 
         constexpr node_type const & active_node() const noexcept {
-            assert(_branch != nullptr);
-            assert(!_branch->empty());
-            return _branch->top();
+            assert(!branch().empty());
+            return branch().top();
         }
 
         constexpr node_type & active_node() noexcept {
-            assert(_branch != nullptr);
-            assert(!_branch->empty());
-            return _branch->top();
+            assert(!branch().empty());
+            return branch().top();
         }
 
         constexpr void visit_next(node_type && new_node) noexcept {
-            assert(_branch != nullptr);
-            _branch->push(std::move(new_node));
+            branch().push(std::move(new_node));
+            _host->notify_push();
         }
 
         constexpr void backtrack() noexcept {
-            assert(_branch != nullptr);
-            assert(!_branch->empty());
-            _branch->pop();
+            assert(!branch().empty());
+            branch().pop();
+            _host->notify_pop();
+        }
+
+        constexpr branch_type & branch() const noexcept {
+            assert(_host != nullptr);
+            return _host->_branch;
         }
     };
 
