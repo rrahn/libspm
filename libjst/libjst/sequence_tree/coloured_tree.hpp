@@ -63,7 +63,7 @@ namespace libjst
         constexpr auto label(base_label_t && base_label) const noexcept {
             coverage_type const * cov_ptr{};
             if (as_derived(*this).is_alt_node()) {
-                cov_ptr = std::addressof(libjst::coverage(*as_derived(*this).left_variant()));
+                cov_ptr = std::addressof(libjst::coverage(as_derived(*this).left_variant()));
             } else {
                 cov_ptr = _coverage.get();
             }

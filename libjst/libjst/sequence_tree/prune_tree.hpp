@@ -121,8 +121,8 @@ namespace libjst
 
         constexpr void update_alternate_ref_coverage(coverage_type & old_coverage) const noexcept {
             if (base_node_type::on_alternate_path() && base_node_type::is_branching()) {
-                // seqan3::debug_stream << "Alt cov:" << libjst::coverage(*base_node_type::right_variant()) << "\n";
-                old_coverage.and_not(libjst::coverage(*base_node_type::right_variant()));
+                // seqan3::debug_stream << "Alt cov:" << libjst::coverage(base_node_type::right_variant()) << "\n";
+                old_coverage.and_not(libjst::coverage(base_node_type::right_variant()));
             }
         }
 

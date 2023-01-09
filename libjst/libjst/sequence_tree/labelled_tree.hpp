@@ -54,7 +54,7 @@ namespace libjst
         constexpr node_label_extension notify(extended_node_t const & child_node) const {
             node_label_extension child_extension{*this}; // copy current extension into child.
             if (as_derived(child_node).is_alt_node()) {
-                child_extension._label_strategy.record_variant(*as_derived(child_node).left_variant());
+                child_extension._label_strategy.record_variant(as_derived(child_node).left_variant());
             } else {
                 // now we could be in a multibranch state!
                 // thus we need to set the correct left position when we go into state A!
