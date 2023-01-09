@@ -25,23 +25,32 @@ namespace libjst
     private:
 
         using rooted_rcs_store_type = rooted_rcs_store<rcs_store_t>;
+        using variants_type = typename rooted_rcs_store_type::variant_map_type;
+        using variant_type = std::ranges::range_value_t<variants_type>;
 
         class node_impl;
 
         rooted_rcs_store_type _rooted_rcs_store{};
+        variant_type _bound{};
+
     public:
 
-        volatile_tree(rcs_store_t const & rcs_store) noexcept : _rooted_rcs_store{rcs_store}
-        {}
+        volatile_tree(rcs_store_t const & rcs_store) noexcept :
+            _rooted_rcs_store{rcs_store},
+            _bound{*_rooted_rcs_store.variants().begin()}
+        {
+            using value_t = typename breakpoint::value_type;
+            libjst::position(_bound) = breakpoint{static_cast<value_t>(std::ranges::size(_rooted_rcs_store.source()))};
+        }
 
         constexpr node_impl root() const noexcept {
             auto first = std::ranges::begin(_rooted_rcs_store.variants());
-            return node_impl{std::addressof(_rooted_rcs_store), first, std::ranges::next(first)};
+            return node_impl{std::addressof(_rooted_rcs_store), first, std::ranges::next(first), _bound};
         }
 
         constexpr node_impl sink() const noexcept {
             auto sent = std::ranges::end(_rooted_rcs_store.variants());
-            return node_impl{std::addressof(_rooted_rcs_store), sent, sent};
+            return node_impl{std::addressof(_rooted_rcs_store), sent, sent, _bound};
         }
     };
 
@@ -53,13 +62,18 @@ namespace libjst
 
         using base_t = rcs_store_node_base<node_impl, rooted_rcs_store_type>;
         using variant_iterator = typename rcs_node_traits<base_t>::variant_iterator;
+        using variant_reference = std::iter_reference_t<variant_iterator>;
 
     private:
+
+        variant_type const * _bound{};
         // constructor for the root/sink condition
         explicit constexpr node_impl(rooted_rcs_store_type const * rcs_store,
                                      variant_iterator left,
-                                     variant_iterator right) noexcept :
-                base_t{rcs_store, std::move(left), std::move(right)}
+                                     variant_iterator right,
+                                     variant_type const & bound) noexcept :
+                base_t{rcs_store, std::move(left), std::move(right)},
+                _bound{std::addressof(bound)}
         {
             assert(rcs_store != nullptr);
         }
@@ -80,11 +94,26 @@ namespace libjst
             return base_t::visit_next_ref();
         }
 
+        constexpr variant_reference left_variant() const noexcept {
+            return to_variant(base_t::get_left());
+        }
+
+        constexpr variant_reference right_variant() const noexcept {
+            return to_variant(base_t::get_right());
+        }
+
         constexpr empty_label operator*() const noexcept {
             return {};
         }
 
     private:
+
+        constexpr variant_reference to_variant(variant_iterator const & it) const noexcept {
+            if (it == base_t::sink())
+                return *_bound;
+            else
+                return *it;
+        }
 
         constexpr friend bool operator==(node_impl const & lhs, node_impl const & rhs) noexcept = default;
         // {
