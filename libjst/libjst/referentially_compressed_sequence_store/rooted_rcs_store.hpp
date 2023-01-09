@@ -95,17 +95,11 @@ namespace libjst
             // libjst::breakpoint_span(_root) = 0;
         }
 
-        iterator begin() noexcept {
-            return iterator{std::ranges::begin(_wrappee), _root, -1};
-        }
 
         const_iterator begin() const noexcept {
             return const_iterator{std::ranges::begin(_wrappee), _root, -1};
         }
 
-        iterator end() noexcept {
-            return iterator{std::ranges::end(_wrappee), _root, std::ranges::ssize(_wrappee)};
-        }
 
         const_iterator end() const noexcept {
             return const_iterator{std::ranges::end(_wrappee), _root, std::ranges::ssize(_wrappee)};
