@@ -111,13 +111,6 @@ namespace libjst
         constexpr breakpoint right_breakpoint() const {
             breakpoint original_bp = base_node_type::right_breakpoint();
             if (base_node_type::on_alternate_path()) {
-                if (static_cast<difference_type>(original_bp) + _remaining_branch_size <= 0) {
-                    std::cout << "left_bp: " << static_cast<difference_type>(base_node_type::left_breakpoint()) << "\n";
-                    std::cout << "right_bp: " << static_cast<difference_type>(original_bp) << "\n";
-                    std::cout << "_remaining_branch_size: " << _remaining_branch_size << "\n";
-                    auto variant_id = std::ranges::distance(base_node_type::rcs_store().variants().begin(), base_node_type::left_variant()) - 1;
-                    std::cout << "variant_id: " << variant_id << "\n";
-                }
                 assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
                 return std::min<difference_type>(original_bp, static_cast<difference_type>(original_bp) + _remaining_branch_size);
             } else {
@@ -148,13 +141,8 @@ namespace libjst
         // branches off the reference path
         constexpr node_impl branch_off_new(base_node_type base_child) const noexcept {
             std::size_t child_branch_size =
-                _max_branch_size +  std::ranges::size(libjst::alt_sequence(*base_node_type::right_variant()));
+                _max_branch_size +  std::ranges::size(libjst::alt_sequence(base_node_type::right_variant()));
             node_impl new_child{std::move(base_child), child_branch_size, _remaining_branch_size};
-            // std::cout << "New Span: " << child_branch_size << "\n";
-            // auto var_id = std::ranges::distance(new_child.rcs_store().variants().begin(), new_child.left_variant());
-            // std::cout << "Subtree at: " << var_id << "\n";
-            // if (var_id == 19251)
-            //     std::cout << "Broken after this!\n";
             return new_child;
         }
 
@@ -172,7 +160,7 @@ namespace libjst
         template <bool is_alt_node>
         constexpr difference_type breakpoint_span() const noexcept {
             if constexpr (is_alt_node) {
-                return std::ranges::ssize(libjst::alt_sequence(*base_node_type::left_variant()));
+                return std::ranges::ssize(libjst::alt_sequence(base_node_type::left_variant()));
             } else {
                 return base_node_type::right_breakpoint().value() - base_node_type::left_breakpoint().value();
             }
