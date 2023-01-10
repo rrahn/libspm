@@ -222,6 +222,11 @@ namespace libjst
             return std::ranges::end(rcs_store().variants());
         }
 
+        constexpr bool is_nil() const noexcept {
+            return from_reference() && get_right() == sink() &&
+                  get_second_breakpoint_id() != node_descriptor_id::second_first_right;
+        }
+
     private:
 
         constexpr bool is_leaf_of_alternate_subtree() const noexcept {
