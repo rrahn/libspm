@@ -17,6 +17,7 @@
 #include <libjst/matcher/shiftor_matcher.hpp>
 #include <libjst/matcher/shiftor_matcher_restorable.hpp>
 #include <libjst/search/polymorphic_sequence_searcher.hpp>
+#include <libjst/search/polymorphic_sequence_searcher_multi_threaded.hpp>
 
 #include "benchmark_utility.hpp"
 
@@ -31,12 +32,32 @@ static void run(benchmark::State & state, matcher_t && matcher, rcs_store_t cons
 
     size_t hit_count{};
     for (auto _ : state) {
+        hit_count = 0;
         searcher(matcher, [&] (...) { ++hit_count; });
     }
 
     state.counters["bytes"] = total_bytes(rcs_store);
     state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(total_bytes(rcs_store));
     state.counters["#hits"] = hit_count;
+}
+
+template <typename matcher_t, typename rcs_store_t>
+static void run_parallel(benchmark::State & state,
+                         matcher_t && matcher,
+                         rcs_store_t const & rcs_store,
+                         uint32_t const thread_count) {
+
+    libjst::polymorphic_sequence_searcher_multi_threaded searcher{rcs_store, thread_count}; // how would we know?
+
+    std::atomic<size_t> hit_count{};
+    for (auto _ : state) {
+        hit_count = 0;
+        searcher(matcher, [&] (...) { ++hit_count; });
+    }
+
+    state.counters["bytes"] = total_bytes(rcs_store);
+    state.counters["bytes_per_second"] =  seqan3::test::bytes_per_second(total_bytes(rcs_store));
+    state.counters["#hits"] = hit_count.load();
 }
 
 template <typename ...args_t>
@@ -72,18 +93,18 @@ static void naive_search_benchmark(benchmark::State & state, args_t && ...args)
 }
 
 template <typename ...args_t>
-static void jst_search_benchmark_horspool(benchmark::State & state, args_t && ...args)
+static void online_search_horspool(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
     jstmap::rcs_store_t rcs_store = jstmap::load_jst(jst_file);
     sequence_t query{sample_query(rcs_store.source(), state.range(0))};
 
     libjst::horspool_matcher matcher{query};
-    run(state, matcher, rcs_store);
+    run_parallel(state, matcher, rcs_store, state.range(1));
 }
 
 template <typename ...args_t>
-static void jst_search_benchmark_shiftor(benchmark::State & state, args_t && ...args)
+static void online_search_shiftor(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
 
@@ -91,11 +112,11 @@ static void jst_search_benchmark_shiftor(benchmark::State & state, args_t && ...
     sequence_t query{sample_query(rcs_store.source(), state.range(0))};
 
     libjst::shiftor_matcher matcher{query};
-    run(state, matcher, rcs_store);
+    run_parallel(state, matcher, rcs_store, state.range(1));
 }
 
 template <typename ...args_t>
-static void jst_search_benchmark_restorable_shiftor(benchmark::State & state, args_t && ...args)
+static void online_search_restorable_shiftor(benchmark::State & state, args_t && ...args)
 {
     auto [jst_file] = std::tuple{args...};
 
@@ -103,21 +124,84 @@ static void jst_search_benchmark_restorable_shiftor(benchmark::State & state, ar
     sequence_t query{sample_query(rcs_store.source(), state.range(0))};
 
     libjst::restorable_shiftor_matcher matcher{query};
-    run(state, matcher, rcs_store);
+    run_parallel(state, matcher, rcs_store, state.range(1));
 }
 // Register the function as a benchmark
 
-BENCHMARK_CAPTURE(jst_search_benchmark_horspool,
+BENCHMARK_CAPTURE(online_search_horspool,
                   vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(30)->Arg(60)->Arg(120);
-BENCHMARK_CAPTURE(jst_search_benchmark_shiftor,
+                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")
+                    ->Args({30, 1})
+                    ->Args({30, 2})
+                    ->Args({30, 4})
+                    ->Args({30, 8})
+                    ->Args({30, 16})
+                    ->Args({30, 32})
+                    ->Args({60, 1})
+                    ->Args({60, 2})
+                    ->Args({60, 4})
+                    ->Args({60, 8})
+                    ->Args({60, 16})
+                    ->Args({60, 32})
+                    ->Args({120, 1})
+                    ->Args({120, 2})
+                    ->Args({120, 4})
+                    ->Args({120, 8})
+                    ->Args({120, 16})
+                    ->Args({120, 32})
+                    ->MeasureProcessCPUTime()
+                    ->UseRealTime()
+                    ;
+BENCHMARK_CAPTURE(online_search_shiftor,
                   vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(30)->Arg(60)->Arg(120);
-BENCHMARK_CAPTURE(jst_search_benchmark_restorable_shiftor,
+                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")
+                    ->Args({30, 1})
+                    ->Args({30, 2})
+                    ->Args({30, 4})
+                    ->Args({30, 8})
+                    ->Args({30, 16})
+                    ->Args({30, 32})
+                    ->Args({60, 1})
+                    ->Args({60, 2})
+                    ->Args({60, 4})
+                    ->Args({60, 8})
+                    ->Args({60, 16})
+                    ->Args({60, 32})
+                    ->Args({120, 1})
+                    ->Args({120, 2})
+                    ->Args({120, 4})
+                    ->Args({120, 8})
+                    ->Args({120, 16})
+                    ->Args({120, 32})
+                    ->MeasureProcessCPUTime()
+                    ->UseRealTime()
+                    ;
+BENCHMARK_CAPTURE(online_search_restorable_shiftor,
                   vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(30)->Arg(60)->Arg(120);
-BENCHMARK_CAPTURE(naive_search_benchmark,
-                  vcf_indel_test,
-                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(30)->Arg(60)->Arg(120);
+                  "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")
+                    ->Args({30, 1})
+                    ->Args({30, 2})
+                    ->Args({30, 4})
+                    ->Args({30, 8})
+                    ->Args({30, 16})
+                    ->Args({30, 32})
+                    ->Args({60, 1})
+                    ->Args({60, 2})
+                    ->Args({60, 4})
+                    ->Args({60, 8})
+                    ->Args({60, 16})
+                    ->Args({60, 32})
+                    ->Args({120, 1})
+                    ->Args({120, 2})
+                    ->Args({120, 4})
+                    ->Args({120, 8})
+                    ->Args({120, 16})
+                    ->Args({120, 32})
+                    ->MeasureProcessCPUTime()
+                    ->UseRealTime()
+                    ;
+// BENCHMARK_CAPTURE(naive_search_benchmark,
+//                   vcf_indel_test,
+//                   "/home/rahn/workspace/data/jstmap/new/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst")->Arg(30)->Arg(60)->Arg(120);
 
 BENCHMARK_MAIN();
