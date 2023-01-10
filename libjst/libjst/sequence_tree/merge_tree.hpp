@@ -16,6 +16,7 @@
 #include <libcontrib/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
+#include <libjst/sequence_tree/node_descriptor.hpp>
 #include <libjst/variant/breakpoint.hpp>
 
 namespace libjst
