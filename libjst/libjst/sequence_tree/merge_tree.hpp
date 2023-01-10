@@ -110,16 +110,8 @@ namespace libjst
             }
         }
 
-        // TODO! must be function of base class
-        constexpr bool is_nil() const noexcept {
-            return base_node_type::from_reference() &&
-                //    base_node_type::right_variant() == base_node_type::sink() && // should be the position now?
-                   libjst::position(base_node_type::right_variant()) == std::ranges::size(base_node_type::rcs_store().source()) &&
-                   base_node_type::get_second_breakpoint_id() != node_descriptor_id::second_first_right;
-        }
-
         constexpr void extend() {
-            while (!(is_nil() || base_node_type::is_branching())) {
+            while (!(base_node_type::is_nil() || base_node_type::is_branching())) {
                 if (auto successor = base_node_type::next_ref(); successor) {
                     static_cast<base_node_type &>(*this) = std::move(*successor);
                 } else {
