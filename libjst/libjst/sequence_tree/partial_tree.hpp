@@ -217,6 +217,12 @@ namespace libjst
                 return base_node_type::is_branching();
             }
         }
+
+        constexpr bool is_nil() const noexcept {
+            return base_node_type::is_nil() ||
+                   (!base_node_type::on_alternate_path() &&
+                    libjst::position(*_right_bound) < libjst::position(left_variant()));
+        }
     private:
 
         constexpr bool is_reference_leaf() const noexcept {
@@ -242,8 +248,7 @@ namespace libjst
         }
 
         constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
-            return  (!lhs.on_alternate_path() && libjst::position(*lhs._right_bound) < libjst::position(lhs.left_variant())) ||
-                    static_cast<base_node_type const &>(lhs) == rhs;
+            return  lhs.is_nil() || static_cast<base_node_type const &>(lhs) == rhs;
         }
     };
 
