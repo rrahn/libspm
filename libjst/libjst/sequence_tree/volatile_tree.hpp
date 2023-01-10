@@ -52,6 +52,10 @@ namespace libjst
             auto sent = std::ranges::end(_rooted_rcs_store.variants());
             return node_impl{std::addressof(_rooted_rcs_store), sent, sent, _bound};
         }
+
+        constexpr rooted_rcs_store_type const & data() const noexcept {
+            return _rooted_rcs_store;
+        }
     };
 
     template <typename rcs_store_t>
@@ -94,16 +98,17 @@ namespace libjst
             return base_t::visit_next_ref();
         }
 
+        constexpr empty_label operator*() const noexcept {
+            return {};
+        }
+
+    protected:
         constexpr variant_reference left_variant() const noexcept {
             return to_variant(base_t::get_left());
         }
 
         constexpr variant_reference right_variant() const noexcept {
             return to_variant(base_t::get_right());
-        }
-
-        constexpr empty_label operator*() const noexcept {
-            return {};
         }
 
     private:
