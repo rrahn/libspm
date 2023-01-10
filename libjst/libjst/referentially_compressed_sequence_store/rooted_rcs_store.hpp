@@ -30,7 +30,7 @@ namespace libjst
 
         class rooted_variant_map;
 
-        std::reference_wrapper<rcs_store_t const> _wrappee;
+        rcs_store_t const * _wrappee{};
         rooted_variant_map _rooted_variants{};
 
     public:
@@ -38,22 +38,22 @@ namespace libjst
         using variant_map_type = rooted_variant_map;
         using source_type = typename rcs_store_t::source_type;
 
-        rooted_rcs_store() = delete;
+        rooted_rcs_store() = default;
         explicit rooted_rcs_store(rcs_store_t const & wrappee) :
-            _wrappee{std::cref(wrappee)},
-            _rooted_variants{_wrappee.get().variants(), _wrappee.get().size()}
+            _wrappee{std::addressof(wrappee)},
+            _rooted_variants{_wrappee->variants(), _wrappee->size()}
         {}
 
         constexpr rcs_store_t const & base() const noexcept {
-            return _wrappee.get();
+            return *_wrappee;
         }
 
-        constexpr auto size() const noexcept -> decltype(_wrappee.get().size()){
-            return _wrappee.get().size();
+        constexpr auto size() const noexcept -> decltype(base().size()){
+            return base().size();
         }
 
-        constexpr auto source() const noexcept -> decltype(_wrappee.get().source()){
-            return _wrappee.get().source();
+        constexpr auto source() const noexcept -> decltype(base().source()){
+            return base().source();
         }
 
         constexpr variant_map_type const & variants() const noexcept {
@@ -75,14 +75,16 @@ namespace libjst
         class iterator_type;
 
         value_type _root{};
-        base_variant_map_type const & _wrappee{};
+        base_variant_map_type const * _wrappee{};
 
     public:
 
         using iterator = iterator_type<false>;
         using const_iterator = iterator_type<true>;
 
-        rooted_variant_map(base_variant_map_type const & wrappee, size_t const coverage_size) : _wrappee{wrappee}
+        rooted_variant_map() = default;
+        rooted_variant_map(base_variant_map_type const & wrappee, size_t const coverage_size) :
+            _wrappee{std::addressof(wrappee)}
         {
             using coverage_t = libjst::variant_coverage_t<value_type>;
 
@@ -95,20 +97,12 @@ namespace libjst
             // libjst::breakpoint_span(_root) = 0;
         }
 
-        iterator begin() noexcept {
-            return iterator{std::ranges::begin(_wrappee), _root, -1};
-        }
-
         const_iterator begin() const noexcept {
-            return const_iterator{std::ranges::begin(_wrappee), _root, -1};
-        }
-
-        iterator end() noexcept {
-            return iterator{std::ranges::end(_wrappee), _root, std::ranges::ssize(_wrappee)};
+            return const_iterator{std::ranges::begin(*_wrappee), _root, -1};
         }
 
         const_iterator end() const noexcept {
-            return const_iterator{std::ranges::end(_wrappee), _root, std::ranges::ssize(_wrappee)};
+            return const_iterator{std::ranges::end(*_wrappee), _root, std::ranges::ssize(*_wrappee)};
         }
     };
 

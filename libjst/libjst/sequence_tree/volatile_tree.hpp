@@ -35,6 +35,7 @@ namespace libjst
 
     public:
 
+        volatile_tree() = default;
         volatile_tree(rcs_store_t const & rcs_store) noexcept :
             _rooted_rcs_store{rcs_store},
             _bound{*_rooted_rcs_store.variants().begin()}
