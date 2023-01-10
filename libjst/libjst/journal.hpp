@@ -73,6 +73,9 @@ public:
         requires std::constructible_from<mapped_type, detail::subrange_t<insert_sequence_t>>
     iterator record_insertion(key_type const position, insert_sequence_t && sequence)
     {
+        if (std::ranges::empty(sequence))
+            return iterator{find_entry(position)};
+
         assert(position <= static_cast<key_type>(sequence_size()));
 
         dictionary_iterator insert_it{};
@@ -92,6 +95,9 @@ public:
 
     iterator record_deletion(key_type const position, size_t const count)
     {
+        if (count == 0)
+            return iterator{find_entry(position)};
+
         assert(check_valid_range(position, position + count));
 
         return iterator{record_deletion_impl(find_entry(position), position, count)};
@@ -101,6 +107,9 @@ public:
         requires std::constructible_from<mapped_type, detail::subrange_t<insert_sequence_t>>
     iterator record_substitution(key_type const position, insert_sequence_t && sequence)
     {
+        if (std::ranges::empty(sequence))
+            return iterator{find_entry(position)};
+
         assert(check_valid_range(position, position + std::ranges::size(sequence)));
 
         return iterator{record_substitution_impl(find_entry(position),
