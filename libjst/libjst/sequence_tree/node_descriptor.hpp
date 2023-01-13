@@ -16,133 +16,208 @@
 
 namespace libjst
 {
-
-    enum class node_descriptor_id {
-        nil = 0,
-        reference = 1,
-        alternate = 2,
-        on_alternate_path = 4,
-        // branching = 0,
-        // reference node categories
-        first_left = 8,
-        first_right = 16,
-        second_left = 32,
-        second_right = 64,
-        second_first_right = 128,
-        first_breakpoint_mask = first_left | first_right,
-        second_breakpoint_mask = second_left | second_right | second_first_right
+    enum class breakpoint_state : uint8_t {
+        nil              = 0b0000,
+        left_begin       = 0b1000,
+        left_end         = 0b0100,
+        right_begin      = 0b0010,
+        right_end        = 0b0001,
     };
 
-    enum class node_state {
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        final
+    enum class node_state : uint32_t {
+        nil = 0b00000,
+        last = 0b10000,
+/*A*/   branching_after_left_end        = static_cast<uint32_t>(breakpoint_state::left_end) |
+                                          static_cast<uint32_t>(breakpoint_state::right_begin),
+/*B*/   last_branching_after_left_end   = static_cast<uint32_t>(breakpoint_state::left_end) |
+                                          static_cast<uint32_t>(breakpoint_state::right_begin) | last,
+/*E*/   branching_after_left_begin      = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::right_begin),
+/*F*/   last_branching_after_left_begin = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::right_begin) | last,
+/*D*/   non_branching_left_only         = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::left_end),
+/*C*/   last_non_branching_left_only    = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::left_end) | last,
+/*H*/   non_branching_including_left    = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::right_end),
+/*G*/   non_branching_after_left        = static_cast<uint32_t>(breakpoint_state::left_end) |
+                                          static_cast<uint32_t>(breakpoint_state::right_end),
+        variant                         = static_cast<uint32_t>(breakpoint_state::left_begin) |
+                                          static_cast<uint32_t>(breakpoint_state::left_end) |
+                                          static_cast<uint32_t>(breakpoint_state::right_end),
     };
 
 } // namespace libjst
 
 namespace seqan3 {
+    template <>
+    constexpr bool add_enum_bitwise_operators<libjst::breakpoint_state> = true;
 
     template <>
-    constexpr bool add_enum_bitwise_operators<libjst::node_descriptor_id> = true;
+    constexpr bool add_enum_bitwise_operators<libjst::node_state> = true;
 } // namespace seqan3
 
 namespace libjst {
 
+    class breakpoint_descriptor {
+    private:
+        breakpoint_state _state{};
+    public:
+
+        constexpr breakpoint_descriptor() = default;
+        constexpr explicit breakpoint_descriptor(breakpoint_state state) noexcept : _state{state}
+        {}
+
+        constexpr breakpoint_descriptor& operator=(breakpoint_state state) noexcept {
+            _state = state;
+            return *this;
+        }
+
+        constexpr explicit operator breakpoint_state() const noexcept {
+            return _state;
+        }
+
+        constexpr bool from_left_begin() const noexcept {
+            using seqan3::operator&;
+            return (_state & breakpoint_state::left_begin) == breakpoint_state::left_begin;
+        }
+
+        constexpr bool from_left_end() const noexcept {
+            using seqan3::operator&;
+            return (_state & breakpoint_state::left_end) == breakpoint_state::left_end;
+        }
+
+        constexpr bool from_right_begin() const noexcept {
+            using seqan3::operator&;
+            return (_state & breakpoint_state::right_begin) == breakpoint_state::right_begin;
+        }
+
+        constexpr bool from_right_end() const noexcept {
+            using seqan3::operator&;
+            return (_state & breakpoint_state::right_end) == breakpoint_state::right_end;
+        }
+    private:
+
+        constexpr friend bool operator==(breakpoint_descriptor const &, breakpoint_descriptor const &) noexcept = default;
+    };
+
     class node_descriptor {
     private:
-        node_descriptor_id _value{};
-
-        static constexpr node_descriptor_id unset_branching_mask{[] {
-            using seqan3::operator|;
-            return node_descriptor_id::reference | node_descriptor_id::alternate | node_descriptor_id::on_alternate_path;
-        } ()};
+        breakpoint_descriptor _left_break{};
+        breakpoint_descriptor _right_break{};
+        bool _last{};
+        bool _on_alternate_path{};
 
     public:
 
         constexpr node_descriptor() = default;
-
-        constexpr bool from_reference() const noexcept {
-            using seqan3::operator&;
-            return (_value & node_descriptor_id::reference) == node_descriptor_id::reference;
+        constexpr explicit node_descriptor(node_state const from_state) noexcept {
+            activate_state(from_state);
         }
 
-        constexpr bool from_alternate() const noexcept {
-            using seqan3::operator&;
-            return (_value & node_descriptor_id::alternate) == node_descriptor_id::alternate;
+        constexpr node_descriptor & operator=(node_state const from_state) noexcept {
+            activate_state(from_state);
+            return *this;
+        }
+
+        constexpr void activate_state(node_state const from_state) noexcept {
+            set_left_break(from_state);
+            set_right_break(from_state);
+            set_last_state(from_state);
+        }
+
+        constexpr bool from_reference() const noexcept {
+            return !from_variant();
+        }
+
+        constexpr bool from_variant() const noexcept {
+            return _left_break.from_left_begin() && _left_break.from_left_end() && _right_break.from_right_end();
         }
 
         constexpr bool is_branching() const noexcept {
-            return get_second_breakpoint_id() == node_descriptor_id::second_left;
+            return _right_break.from_right_begin();
         }
 
         constexpr bool on_alternate_path() const noexcept {
-            using seqan3::operator&;
-            return (_value & node_descriptor_id::on_alternate_path) == node_descriptor_id::on_alternate_path;
+            return _on_alternate_path;
         }
 
-        constexpr void set_reference() noexcept {
+        // not sure what to do here! actually not needed.
+        constexpr void set_reference(breakpoint_state left_state,
+                                     breakpoint_state right_state,
+                                     bool last_state = false) noexcept {
+            _left_break = left_state;
+            _right_break = right_state;
+            _last = last_state;
+            assert(from_reference());
+        }
+
+        constexpr void set_variant() noexcept {
             using seqan3::operator|;
-            using seqan3::operator&;
-            _value = node_descriptor_id::reference | (_value & node_descriptor_id::on_alternate_path);
+            _left_break = breakpoint_state::left_begin | breakpoint_state::left_end | breakpoint_state::right_end;
+            _right_break = _left_break;
+            _on_alternate_path = true;
         }
 
-        constexpr void set_alternate() noexcept {
+        constexpr breakpoint_descriptor const & left_break() const noexcept {
+            return _left_break;
+        }
+
+        constexpr breakpoint_descriptor const & right_break() const noexcept {
+            return _right_break;
+        }
+
+        constexpr operator node_state() const noexcept {
             using seqan3::operator|;
-            _value = node_descriptor_id::alternate | node_descriptor_id::on_alternate_path;
-        }
-
-        // constexpr void set_branching() noexcept {
-        //     using seqan3::operator|=;
-        //     _value |= node_descriptor_id::branching;
-        // }
-
-        // constexpr void unset_branching() noexcept {
-        //     using seqan3::operator&=;
-        //     _value &= unset_branching_mask;
-        // }
-
-        constexpr node_descriptor_id get_first_breakpoint_id() const noexcept {
-            using seqan3::operator&;
-            return _value & node_descriptor_id::first_breakpoint_mask;
-        }
-
-        constexpr node_descriptor_id get_second_breakpoint_id() const noexcept {
-            using seqan3::operator&;
-            return _value & node_descriptor_id::second_breakpoint_mask;
-        }
-
-        constexpr void set_first_breakpoint_id(node_descriptor_id const bp_id) noexcept {
-            using seqan3::operator&=;
-            using seqan3::operator|=;
-            using seqan3::operator&;
-            using seqan3::operator~;
-
-            assert((bp_id & node_descriptor_id::first_breakpoint_mask) != node_descriptor_id::nil);
-            _value &= ~node_descriptor_id::first_breakpoint_mask;
-            _value |= bp_id;
-            // _value |= (bp_id & node_descriptor_id::first_breakpoint_mask);
-        }
-
-        constexpr void set_second_breakpoint_id(node_descriptor_id const bp_id) noexcept {
-            using seqan3::operator&=;
-            using seqan3::operator|=;
-            using seqan3::operator&;
-            using seqan3::operator~;
-
-            assert((bp_id & node_descriptor_id::second_breakpoint_mask) != node_descriptor_id::nil);
-            _value &= ~node_descriptor_id::second_breakpoint_mask;
-            _value |= bp_id;
+            return node_state{static_cast<uint32_t>(static_cast<breakpoint_state>(left_break()) |
+                                                    static_cast<breakpoint_state>(right_break()))} |
+                   ((_last) ? node_state::last : node_state::nil);
         }
 
     private:
+
+        constexpr void set_left_break(node_state const from_state) noexcept {
+            using seqan3::operator|;
+            switch (from_state) {
+                case node_state::branching_after_left_end: [[fallthrough]];
+                case node_state::last_branching_after_left_end: [[fallthrough]];
+                case node_state::non_branching_after_left: _left_break = breakpoint_state::left_end; break;
+                case node_state::branching_after_left_begin: [[fallthrough]];
+                case node_state::last_branching_after_left_begin: [[fallthrough]];
+                case node_state::non_branching_left_only: [[fallthrough]];
+                case node_state::last_non_branching_left_only: [[fallthrough]];
+                case node_state::non_branching_including_left: _left_break = breakpoint_state::left_begin; break;
+                case node_state::variant: set_variant(); break;
+                default: _left_break = breakpoint_state::nil;
+            }
+        }
+
+        constexpr void set_right_break(node_state const from_state) noexcept {
+            using seqan3::operator|;
+            switch (from_state) {
+                case node_state::branching_after_left_end: [[fallthrough]];
+                case node_state::last_branching_after_left_end: [[fallthrough]];
+                case node_state::branching_after_left_begin: [[fallthrough]];
+                case node_state::last_branching_after_left_begin: _right_break = breakpoint_state::right_begin; break;
+                case node_state::non_branching_left_only: [[fallthrough]];
+                case node_state::last_non_branching_left_only: _right_break = breakpoint_state::left_end; break;
+                case node_state::non_branching_after_left: [[fallthrough]];
+                case node_state::non_branching_including_left: _right_break = breakpoint_state::right_end; break;
+                case node_state::variant: set_variant(); break;
+                default: _right_break = breakpoint_state::nil;
+            }
+        }
+
+        constexpr void set_last_state(node_state const from_state) noexcept {
+            switch (from_state) {
+                case node_state::last_branching_after_left_end: [[fallthrough]];
+                case node_state::last_branching_after_left_begin: [[fallthrough]];
+                case node_state::last_non_branching_left_only: _last = true; break;
+                default: _last = false;
+            }
+        }
+
         constexpr friend bool operator==(node_descriptor const & lhs, node_descriptor const & rhs) noexcept = default;
     };
 }  // namespace libjst

@@ -108,15 +108,15 @@ public:
         derived_t const & me = as_derived(*this);
         using seqan3::operator&;
 
-        if ((as_derived(*this).get_second_breakpoint_id() & libjst::node_descriptor_id::second_first_right) != libjst::node_descriptor_id::nil) {
+        // if ((as_derived(*this).get_second_breakpoint_id() & libjst::node_descriptor_id::second_first_right) != libjst::node_descriptor_id::nil) {
             return to_id(0/*std::ranges::distance(me.rcs_store().variants().begin(), me.left_variant())*/,
                          0/*std::ranges::distance(me.rcs_store().variants().begin(), me.left_variant())*/,
                          me.is_alt_node());
-        } else {
-            return to_id(0/*std::ranges::distance(me.rcs_store().variants().begin(), me.left_variant())*/,
-                         0/*std::ranges::distance(me.rcs_store().variants().begin(), me.right_variant())*/,
-                         me.is_alt_node());
-        }
+        // } else {
+        //     return to_id(0/*std::ranges::distance(me.rcs_store().variants().begin(), me.left_variant())*/,
+        //                  0/*std::ranges::distance(me.rcs_store().variants().begin(), me.right_variant())*/,
+        //                  me.is_alt_node());
+        // }
     }
 };
 

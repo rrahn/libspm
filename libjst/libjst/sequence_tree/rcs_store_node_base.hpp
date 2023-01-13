@@ -53,17 +53,8 @@ namespace libjst
             _right_variant{std::move(right_variant)}
         {
             assert(_rcs_store != nullptr);
-
-            node_descriptor::set_reference();
-            // initial state?
-            node_descriptor::set_first_breakpoint_id(node_descriptor_id::first_right);
-            if (_right_variant != sink()) {
-                node_descriptor::set_second_breakpoint_id(node_descriptor_id::second_left);
-            } else {
-                node_descriptor::set_second_breakpoint_id(node_descriptor_id::second_right);
-            }
-
             set_next(next_variant_after(_right_variant));
+            initialise_reference_state_from(breakpoint_state::left_end);
         }
 
         // only from branching node!
@@ -71,9 +62,7 @@ namespace libjst
             if (is_ref_node() && is_branching()) {
                 derived_t child{as_derived(*this)};
                 child.set_left(get_right());
-                child.set_alternate();
-                child.set_first_breakpoint_id(node_descriptor_id::first_left);
-                child.set_second_breakpoint_id(node_descriptor_id::second_first_right);
+                child.activate_state(node_state::variant);
                 return child;
             } else {
                 return std::nullopt;
@@ -93,13 +82,7 @@ namespace libjst
                 child.set_left(get_right());
                 child.set_right(find_next_valid_right_variant());
                 child.set_next(next_variant_after(child.get_right()));
-                child.set_reference();
-                child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                if (child.get_right() != sink() && position(*child.get_right()).is_left_end()) {
-                    child.set_second_breakpoint_id(node_descriptor_id::second_left);
-                } else {
-                    child.set_second_breakpoint_id(node_descriptor_id::second_right);
-                }
+                child.initialise_reference_state_from(breakpoint_state::left_end);
             }
             return child;
         }
@@ -109,7 +92,7 @@ namespace libjst
         }
 
         constexpr bool is_alt_node() const noexcept {
-            return node_descriptor::from_alternate();
+            return node_descriptor::from_variant();
         }
 
         constexpr bool on_alternate_path() const noexcept {
@@ -136,9 +119,7 @@ namespace libjst
                 }
             };
 
-            // return (is_variant_link()) ? libjst::right_breakpoint(left_var) : libjst::left_breakpoint(left_var);
-            using seqan3::operator&;
-            return ((node_descriptor::get_first_breakpoint_id() & node_descriptor_id::first_left) == node_descriptor_id::first_left)
+            return (node_descriptor::left_break().from_left_begin())
                         ? libjst::left_breakpoint(*get_left())
                         : std::min(libjst::right_breakpoint(*get_left()), bounded_right_position(get_right()));
         }
@@ -170,16 +151,13 @@ namespace libjst
             };
 
             using seqan3::operator&;
-            if ((node_descriptor::get_second_breakpoint_id() & node_descriptor_id::second_first_right) != node_descriptor_id::nil) {
+            if (node_descriptor::right_break().from_left_end()) {
                 return bounded_right_breakpoint(get_left());
-            } else if ((node_descriptor::get_second_breakpoint_id() & node_descriptor_id::second_right) != node_descriptor_id::nil) {
+            } else if (node_descriptor::right_break().from_right_end()) {
                 return bounded_right_breakpoint(get_right());
             } else {
                 return bounded_left_breakpoint(get_right());
             }
-            // return (node_descriptor::get_second_breakpoint_id() == node_descriptor_id::first_right)
-            //             ? libjst::left_breakpoint(*left_variant())
-            //             : libjst::right_breakpoint(*left_variant());
         }
 
         constexpr rcs_store_t const & rcs_store() const noexcept {
@@ -215,7 +193,7 @@ namespace libjst
         }
 
         constexpr bool is_branching() const noexcept {
-            return get_right() != sink() && node_descriptor::is_branching();
+            return node_descriptor::is_branching();
         }
 
         constexpr variant_iterator sink() const noexcept {
@@ -223,8 +201,22 @@ namespace libjst
         }
 
         constexpr bool is_nil() const noexcept {
-            return from_reference() && get_right() == sink() &&
-                  get_second_breakpoint_id() != node_descriptor_id::second_first_right;
+            return from_reference() && get_right() == sink() && !node_descriptor::right_break().from_left_end();
+        }
+
+        constexpr void initialise_reference_state_from(breakpoint_state const left_state) noexcept {
+            breakpoint_state right_state{breakpoint_state::right_begin};
+            if (get_right() == sink() || libjst::position(*get_right()).is_right_end()) {
+                right_state = breakpoint_state::right_end;
+            }
+
+            bool is_last{false};
+            if (right_state == breakpoint_state::right_begin &&
+                std::ranges::distance(get_right(), get_next()) == 1) {
+                is_last = true;
+            }
+
+            node_descriptor::set_reference(left_state, right_state, is_last);
         }
 
     private:
@@ -232,53 +224,37 @@ namespace libjst
         constexpr bool is_leaf_of_alternate_subtree() const noexcept {
             return node_descriptor::on_alternate_path() &&
                    get_right() == sink() &&
-                   node_descriptor::get_second_breakpoint_id() != node_descriptor_id::second_first_right;
+                   !node_descriptor::right_break().from_left_end();
         }
 
         constexpr variant_iterator get_next() const noexcept {
             return _next_variant;
         }
-        // constexpr bool is_variant_link() const noexcept {
-        //     return libjst::left_breakpoint(*left_variant()) != libjst::left_breakpoint(*right_variant());
-        // }
-
-        // constexpr void toggle_branching_state() noexcept {
-        //     assert(node_descriptor::from_reference());
-        //     if (right_variant() != sink() && ) {
-        //         node_descriptor::set_branching();
-        //     } else {
-        //         node_descriptor::unset_branching();
-        //     }
-        // }
 
         constexpr variant_iterator find_next_valid_right_variant() const noexcept {
             variant_iterator next_right = get_right();
-            // if (is_ref_node()) {
-            //     next_right = std::ranges::next(next_right, static_cast<difference_type>(!node_descriptor::is_branching()), sink());
-            // } else {
-                assert(is_alt_node());
-                auto const min_ref_position = libjst::right_breakpoint(*next_right);
-                next_right = std::ranges::find_if_not(std::ranges::next(next_right), sink(), [&] (auto && var) {
-                    return libjst::left_breakpoint(var) < min_ref_position;
-                });
-                assert(next_right != get_right());
-            // }
+            assert(is_alt_node());
+            auto const min_ref_position = libjst::right_breakpoint(*next_right);
+            next_right = std::ranges::find_if_not(std::ranges::next(next_right), sink(), [&] (auto && var) {
+                return libjst::left_breakpoint(var) < min_ref_position;
+            });
+            assert(next_right != get_right());
             return next_right;
         }
 
         static constexpr derived_t visit_next_ref_impl(derived_t child) noexcept {
-            auto parent_node_state = get_ref_node_state(child);
+            node_state parent_node_state = static_cast<node_state>(child);
             // Move through the states.
             switch(parent_node_state) {
-                case node_state::A: [[fallthrough]];
-                case node_state::E:
+                case node_state::branching_after_left_end: [[fallthrough]];
+                case node_state::branching_after_left_begin:
                     child.set_left(child.get_right());
                     child.set_right(std::ranges::next(child.get_right()));
                     break;
-                case node_state::B: [[fallthrough]];
-                case node_state::F: [[fallthrough]];
-                case node_state::G: [[fallthrough]];
-                case node_state::H:
+                case node_state::last_branching_after_left_end: [[fallthrough]];
+                case node_state::last_branching_after_left_begin: [[fallthrough]];
+                case node_state::non_branching_after_left: [[fallthrough]];
+                case node_state::non_branching_including_left:
                     child.set_left(child.get_right());
                     child.set_right(child.get_next());
                     child.set_next(child.next_variant_after(child.get_next()));
@@ -305,103 +281,69 @@ namespace libjst
 
             // Update the breakpoint ids of the child node.
             switch(parent_node_state) {
-                  case node_state::B: { [[fallthrough]];
-                } case node_state::F: {
-                    child.set_first_breakpoint_id(node_descriptor_id::first_left);
-                    if (libjst::right_breakpoint(*child.get_left()) < bounded_left_breakpoint(child.get_right())) {
-                        child.set_second_breakpoint_id(node_descriptor_id::second_first_right); // C/D
-                    } else if (bounded_breakpoint(child.get_right()).is_left_end()) {
-                        child.set_second_breakpoint_id(node_descriptor_id::second_left); // E/F
-                    } else {
-                        child.set_second_breakpoint_id(node_descriptor_id::second_right); // H
+                  case node_state::last_branching_after_left_end: { [[fallthrough]];
+                } case node_state::last_branching_after_left_begin: {
+                    if (libjst::right_breakpoint(*child.get_left()) < bounded_left_breakpoint(child.get_right())) { // => {C/D}
+                        if (child.get_right() != child.sink() && libjst::position(*child.get_right()).is_left_end()) {
+                            child.activate_state(node_state::last_non_branching_left_only);
+                        } else {
+                            child.activate_state(node_state::non_branching_left_only);
+                        }
+                    } else if (bounded_breakpoint(child.get_right()).is_left_end()) { // => {E/F}
+                        if (child.right_before_next()) {
+                            child.activate_state(node_state::last_branching_after_left_begin);
+                        } else {
+                            child.activate_state(node_state::branching_after_left_begin);
+                        }
+                    } else { // => {H}
+                        child.activate_state(node_state::non_branching_including_left);
                     }
                     break;
-                } case node_state::C: { // => {A,B}
-                        child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                        child.set_second_breakpoint_id(node_descriptor_id::second_left);
-                        break;
-                } case node_state::D: { // => {G}
-                        child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                        child.set_second_breakpoint_id(node_descriptor_id::second_right);
-                        break;
-                } case node_state::G: {[[fallthrough]];
-                } case node_state::H: { // => {A,B} | {G}
-                        child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                        if (child.get_right() != child.sink() && libjst::position(*child.get_right()).is_left_end()) {
-                            child.set_second_breakpoint_id(node_descriptor_id::second_left); // A,B
+                } case node_state::last_non_branching_left_only: { // C => {A,B}
+                        if (child.right_before_next()) {
+                            child.activate_state(node_state::last_branching_after_left_end);
                         } else {
-                            child.set_second_breakpoint_id(node_descriptor_id::second_right); // G
+                            child.activate_state(node_state::branching_after_left_end);
                         }
                         break;
-                } //case node_state::A: { [[fallthrough]]; // either in A or in B -> same properties
-                //} case node_state::E: { return child; // either in E or in F -> same properties
-                //}
+                } case node_state::non_branching_left_only: { // D => {G}
+                        child.activate_state(node_state::non_branching_after_left);
+                        break;
+                } case node_state::non_branching_after_left: {[[fallthrough]];
+                } case node_state::non_branching_including_left: { // {G,H} => {A,B} | {G}
+                        if (child.get_right() != child.sink() && libjst::position(*child.get_right()).is_left_end()) {
+                            if (child.right_before_next()) { // => {B}
+                                child.activate_state(node_state::last_branching_after_left_end);
+                            } else { // => {A}
+                                child.activate_state(node_state::branching_after_left_end);
+                            }
+                        } else { // => {G}
+                            child.activate_state(node_state::non_branching_after_left);
+                        }
+                        break;
+                } case node_state::branching_after_left_end: { // A => {A/B}
+                            if (child.right_before_next()) { // => {B}
+                                child.activate_state(node_state::last_branching_after_left_end);
+                            } else { // => {A}
+                                child.activate_state(node_state::branching_after_left_end);
+                            }
+                            break;
+                } case node_state::branching_after_left_begin: { // E => {E/F}
+                            if (child.right_before_next()) { // => {F}
+                                child.activate_state(node_state::last_branching_after_left_begin);
+                            } else { // => {E}
+                                child.activate_state(node_state::branching_after_left_begin);
+                            }
+                            break;
+                }
                 default: /*no-op*/;
             }
             return child;
         }
 
-        static constexpr node_state get_ref_node_state(derived_t const & node) noexcept {
-            using seqan3::operator&;
-            using seqan3::operator|;
-            assert((node.get_first_breakpoint_id() & (node_descriptor_id::first_left | node_descriptor_id::first_right)) !=
-                   node_descriptor_id::nil);
-
-            if ((node.get_first_breakpoint_id() & node_descriptor_id::first_left) != node_descriptor_id::nil) {
-                if ((node.get_second_breakpoint_id() & node_descriptor_id::second_first_right) != node_descriptor_id::nil) {
-                    [[maybe_unused]] bool tmpB = node.get_right() == node.sink();
-                    [[maybe_unused]] bool tmpA = node.get_right() != node.sink();
-                    return (tmpA && libjst::position(*node.get_right()).is_left_end())
-                                ? node_state::C
-                                : node_state::D;
-                } else { // node.get_second_breakpoint_id() & node_descriptor_id::second_right -> true
-                    assert((node.get_second_breakpoint_id() & (node_descriptor_id::second_left | node_descriptor_id::second_right)) != node_descriptor_id::nil);
-                    if ((node.get_second_breakpoint_id() & node_descriptor_id::second_left) != node_descriptor_id::nil) {
-                        return (std::ranges::distance(node.get_right(), node.get_next()) > 1)
-                                ? node_state::E
-                                : node_state::F;
-                    } else {
-                        return node_state::H;
-                    }
-                }
-            } else { // node.get_first_breakpoint_id() & node_descriptor_id::first_right -> true
-                assert((node.get_first_breakpoint_id() & node_descriptor_id::first_right) != node_descriptor_id::nil);
-                if ((node.get_second_breakpoint_id() & node_descriptor_id::second_left) != node_descriptor_id::nil) {
-                    return (std::ranges::distance(node.get_right(), node.get_next()) > 1)
-                                ? node_state::A
-                                : node_state::B;
-                } else {
-                    return node_state::G;
-                }
-            }
+        constexpr bool right_before_next() const noexcept {
+            return std::ranges::distance(get_right(), get_next()) == 1;
         }
-
-        // States of parent node when calling next_ref()
-        // * node_descriptor::is_reference()
-        //      * node_descriptor::is_branching()
-        //          * A: (s-j) > 1, j = left end  => create branching ref child: ++j                         | i < j < s, j = left end -> {A,B}
-        //          * B: (s-j) == 1, j = left end => create non-branching ref child: i = j, j = s, s get nxt | i < j < s               -> {C, D}
-        //      * !node_descriptor::is_branching()
-        //          * i = left end
-        //              * C: i < j < s, j = left end  => create branching ref child:                               | i < j < s, j = left end -> {A, B}
-        //              * D: i < j < s, j = right end => create non-branching ref child: i = j, j = s, s get next  | i < j < s, i = right end -> {E, F}
-        //          * i = right end
-        //              * E: i < j < s, j = left end  => create branching ref child:                              | i < j < s, j = left end  -> {A, B}
-        //              * F: i < j < s, j = right end => create non-branching ref child: i = j, j = s, s get next | i < j < s, i = right end -> {E, F}
-        // * node_descriptor::is_alternate()
-        //   * G: i = j < s, i = j = left, => create ref child: i = j, j = first_after_right_end_of(i), s = get nxt(j) | i < j < s -> {A, B, E, F}
-
-        // label states:
-        // A -> lbl[pr(i), pl(j)]
-        // B -> lbl[pr(i), pl(j)]
-        // C -> lbl[pl(i), min(pr(i), pl(j))]
-        // D -> lbl[pl(i), min(pr(i), pr(j))]
-        // E -> lbl[pr(i), pl(j)]
-        // F -> lbl[pr(i), pr(j)]
-        // G -> lbl[pl(i), pr(j)]
-
-        // position states:
-        // A -> pr(i) <= pl(j)
 
         static constexpr rcs_store_node_base & as_base(derived_t & derived) noexcept {
             return static_cast<rcs_store_node_base &>(derived);
