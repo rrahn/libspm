@@ -16,6 +16,8 @@
 #include <libcontrib/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
+#include <libjst/sequence_tree/node_descriptor.hpp>
+#include <libjst/sequence_tree/rcs_node_traits.hpp>
 #include <libjst/variant/breakpoint.hpp>
 
 namespace libjst
@@ -145,9 +147,7 @@ namespace libjst
                 node_impl new_child{*this};
                 new_child._left_state = state::right_bound;
                 new_child._right_state = state::right_bound;
-                new_child.set_alternate();
-                new_child.set_first_breakpoint_id(node_descriptor_id::first_left);
-                new_child.set_second_breakpoint_id(node_descriptor_id::second_first_right);
+                new_child.activate_state(node_state::variant);
                 return new_child;
             } else if (_left_state == state::right_bound && _right_state == state::regular) {
                 return visit<true>(base_node_type::next_alt());
@@ -160,14 +160,7 @@ namespace libjst
             if (_left_state == state::right_bound && _right_state == state::right_bound) {
                 node_impl new_child{*this};
                 new_child._right_state = state::regular;
-                new_child.set_reference();
-                new_child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                new_child.set_first_breakpoint_id(node_descriptor_id::first_right);
-                if (new_child.get_right() != base_node_type::sink() && libjst::position(*new_child.get_right()).is_left_end()) {
-                    new_child.set_second_breakpoint_id(node_descriptor_id::second_left);
-                } else {
-                    new_child.set_second_breakpoint_id(node_descriptor_id::second_right);
-                }
+                new_child.initialise_reference_state_from(breakpoint_state::left_end);
                 return new_child;
             } else if (_left_state == state::right_bound && _right_state == state::regular) {
                 return visit<false>(base_node_type::next_ref());
