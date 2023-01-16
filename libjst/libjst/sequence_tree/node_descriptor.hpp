@@ -16,15 +16,6 @@
 
 namespace libjst
 {
-    enum class breakpoint_state : uint8_t {
-        nil              = 0b00000,
-        left_begin       = 0b10000,
-        left_end         = 0b01000,
-        right_begin      = 0b00100,
-        right_end        = 0b00010,
-        last             = 0b00001,
-    };
-
     enum class node_state : uint32_t {
         nil         = 0b00000,
         left_begin  = 0b10000,
@@ -47,55 +38,10 @@ namespace libjst
 
 namespace seqan3 {
     template <>
-    constexpr bool add_enum_bitwise_operators<libjst::breakpoint_state> = true;
-
-    template <>
     constexpr bool add_enum_bitwise_operators<libjst::node_state> = true;
 } // namespace seqan3
 
 namespace libjst {
-
-    class breakpoint_descriptor {
-    private:
-        breakpoint_state _state{};
-    public:
-
-        constexpr breakpoint_descriptor() = default;
-        constexpr explicit breakpoint_descriptor(breakpoint_state state) noexcept : _state{state}
-        {}
-
-        constexpr breakpoint_descriptor& operator=(breakpoint_state state) noexcept {
-            _state = state;
-            return *this;
-        }
-
-        constexpr explicit operator breakpoint_state() const noexcept {
-            return _state;
-        }
-
-        constexpr bool from_left_begin() const noexcept {
-            using seqan3::operator&;
-            return (_state & breakpoint_state::left_begin) == breakpoint_state::left_begin;
-        }
-
-        constexpr bool from_left_end() const noexcept {
-            using seqan3::operator&;
-            return (_state & breakpoint_state::left_end) == breakpoint_state::left_end;
-        }
-
-        constexpr bool from_right_begin() const noexcept {
-            using seqan3::operator&;
-            return (_state & breakpoint_state::right_begin) == breakpoint_state::right_begin;
-        }
-
-        constexpr bool from_right_end() const noexcept {
-            using seqan3::operator&;
-            return (_state & breakpoint_state::right_end) == breakpoint_state::right_end;
-        }
-    private:
-
-        constexpr friend bool operator==(breakpoint_descriptor const &, breakpoint_descriptor const &) noexcept = default;
-    };
 
     class node_descriptor {
     private:
@@ -131,9 +77,6 @@ namespace libjst {
         };
 
         node_state _state{};
-        breakpoint_descriptor _left_break{};
-        breakpoint_descriptor _right_break{};
-        bool _last{};
         bool _on_alternate_path{};
 
     public:
@@ -170,23 +113,6 @@ namespace libjst {
             return _on_alternate_path;
         }
 
-        // not sure what to do here! actually not needed.
-        constexpr void set_reference(breakpoint_state left_state,
-                                     breakpoint_state right_state,
-                                     bool last_state = false) noexcept {
-            _left_break = left_state;
-            _right_break = right_state;
-            _last = last_state;
-            assert(from_reference());
-        }
-
-        constexpr void set_variant() noexcept {
-            using seqan3::operator|;
-            _left_break = breakpoint_state::left_begin | breakpoint_state::left_end | breakpoint_state::right_end;
-            _right_break = _left_break;
-            _on_alternate_path = true;
-        }
-
         constexpr break_descriptor left_break() const noexcept {
             using seqan3::operator|;
             using seqan3::operator&;
@@ -215,47 +141,6 @@ namespace libjst {
         static constexpr bool is_active(node_state const state, node_state const query_state) noexcept {
             using seqan3::operator&;
             return (state & query_state) == query_state;
-        }
-
-        constexpr void set_left_break(node_state const from_state) noexcept {
-            using seqan3::operator|;
-            switch (from_state) {
-                case node_state::branching_after_left_end: [[fallthrough]];
-                case node_state::last_branching_after_left_end: [[fallthrough]];
-                case node_state::non_branching_after_left: _left_break = breakpoint_state::left_end; break;
-                case node_state::branching_after_left_begin: [[fallthrough]];
-                case node_state::last_branching_after_left_begin: [[fallthrough]];
-                case node_state::non_branching_left_only: [[fallthrough]];
-                case node_state::last_non_branching_left_only: [[fallthrough]];
-                case node_state::non_branching_including_left: _left_break = breakpoint_state::left_begin; break;
-                case node_state::variant: set_variant(); break;
-                default: _left_break = breakpoint_state::nil;
-            }
-        }
-
-        constexpr void set_right_break(node_state const from_state) noexcept {
-            using seqan3::operator|;
-            switch (from_state) {
-                case node_state::branching_after_left_end: [[fallthrough]];
-                case node_state::last_branching_after_left_end: [[fallthrough]];
-                case node_state::branching_after_left_begin: [[fallthrough]];
-                case node_state::last_branching_after_left_begin: _right_break = breakpoint_state::right_begin; break;
-                case node_state::non_branching_left_only: [[fallthrough]];
-                case node_state::last_non_branching_left_only: _right_break = breakpoint_state::left_end; break;
-                case node_state::non_branching_after_left: [[fallthrough]];
-                case node_state::non_branching_including_left: _right_break = breakpoint_state::right_end; break;
-                case node_state::variant: set_variant(); break;
-                default: _right_break = breakpoint_state::nil;
-            }
-        }
-
-        constexpr void set_last_state(node_state const from_state) noexcept {
-            switch (from_state) {
-                case node_state::last_branching_after_left_end: [[fallthrough]];
-                case node_state::last_branching_after_left_begin: [[fallthrough]];
-                case node_state::last_non_branching_left_only: _last = true; break;
-                default: _last = false;
-            }
         }
 
         constexpr friend bool operator==(node_descriptor const & lhs, node_descriptor const & rhs) noexcept = default;
