@@ -54,7 +54,7 @@ namespace libjst
         {
             assert(_rcs_store != nullptr);
             set_next(next_variant_after(_right_variant));
-            initialise_reference_state_from(breakpoint_state::left_end);
+            initialise_reference_state_from();
         }
 
         // only from branching node!
@@ -82,7 +82,7 @@ namespace libjst
                 child.set_left(get_right());
                 child.set_right(find_next_valid_right_variant());
                 child.set_next(next_variant_after(child.get_right()));
-                child.initialise_reference_state_from(breakpoint_state::left_end);
+                child.initialise_reference_state_from();
             }
             return child;
         }
@@ -204,19 +204,19 @@ namespace libjst
             return from_reference() && get_right() == sink() && !node_descriptor::right_break().from_left_end();
         }
 
-        constexpr void initialise_reference_state_from(breakpoint_state const left_state) noexcept {
-            breakpoint_state right_state{breakpoint_state::right_begin};
-            if (get_right() == sink() || libjst::position(*get_right()).is_right_end()) {
-                right_state = breakpoint_state::right_end;
-            }
+        constexpr void initialise_reference_state_from() noexcept {
+            bool const is_branching = (get_right() != sink()) && libjst::position(*get_right()).is_left_end();
+            bool const is_last = is_branching && right_before_next();
 
-            bool is_last{false};
-            if (right_state == breakpoint_state::right_begin &&
-                std::ranges::distance(get_right(), get_next()) == 1) {
-                is_last = true;
+            if (is_branching) {
+                if (is_last) {
+                    node_descriptor::activate_state(node_state::last_branching_after_left_end);
+                } else {
+                    node_descriptor::activate_state(node_state::branching_after_left_end);
+                }
+            } else {
+                node_descriptor::activate_state(node_state::non_branching_after_left);
             }
-
-            node_descriptor::set_reference(left_state, right_state, is_last);
         }
 
     private:
