@@ -17,35 +17,30 @@
 namespace libjst
 {
     enum class breakpoint_state : uint8_t {
-        nil              = 0b0000,
-        left_begin       = 0b1000,
-        left_end         = 0b0100,
-        right_begin      = 0b0010,
-        right_end        = 0b0001,
+        nil              = 0b00000,
+        left_begin       = 0b10000,
+        left_end         = 0b01000,
+        right_begin      = 0b00100,
+        right_end        = 0b00010,
+        last             = 0b00001,
     };
 
     enum class node_state : uint32_t {
-        nil = 0b00000,
-        last = 0b10000,
-/*A*/   branching_after_left_end        = static_cast<uint32_t>(breakpoint_state::left_end) |
-                                          static_cast<uint32_t>(breakpoint_state::right_begin),
-/*B*/   last_branching_after_left_end   = static_cast<uint32_t>(breakpoint_state::left_end) |
-                                          static_cast<uint32_t>(breakpoint_state::right_begin) | last,
-/*E*/   branching_after_left_begin      = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::right_begin),
-/*F*/   last_branching_after_left_begin = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::right_begin) | last,
-/*D*/   non_branching_left_only         = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::left_end),
-/*C*/   last_non_branching_left_only    = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::left_end) | last,
-/*H*/   non_branching_including_left    = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::right_end),
-/*G*/   non_branching_after_left        = static_cast<uint32_t>(breakpoint_state::left_end) |
-                                          static_cast<uint32_t>(breakpoint_state::right_end),
-        variant                         = static_cast<uint32_t>(breakpoint_state::left_begin) |
-                                          static_cast<uint32_t>(breakpoint_state::left_end) |
-                                          static_cast<uint32_t>(breakpoint_state::right_end),
+        nil         = 0b00000,
+        left_begin  = 0b10000,
+        left_end    = 0b01000,
+        right_begin = 0b00100,
+        right_end   = 0b00010,
+        last        = 0b00001,
+/*A*/   branching_after_left_end        = left_end   | right_begin,
+/*B*/   last_branching_after_left_end   = left_end   | right_begin | last,
+/*E*/   branching_after_left_begin      = left_begin | right_begin,
+/*F*/   last_branching_after_left_begin = left_begin | right_begin | last,
+/*D*/   non_branching_left_only         = left_begin | left_end,
+/*C*/   last_non_branching_left_only    = left_begin | left_end    | last,
+/*H*/   non_branching_including_left    = left_begin | right_end,
+/*G*/   non_branching_after_left        = left_end   | right_end,
+        variant                         = left_begin | left_end    | right_end,
     };
 
 } // namespace libjst
@@ -104,6 +99,38 @@ namespace libjst {
 
     class node_descriptor {
     private:
+
+        class break_descriptor {
+        private:
+
+            friend node_descriptor;
+
+            node_state _state;
+
+            constexpr explicit break_descriptor(node_state const state) noexcept : _state{state} {
+            }
+        public:
+
+            constexpr break_descriptor() = default;
+
+            constexpr bool from_left_begin() const noexcept {
+                return node_descriptor::is_active(_state, node_state::left_begin);
+            }
+
+            constexpr bool from_left_end() const noexcept {
+                return node_descriptor::is_active(_state, node_state::left_end);
+            }
+
+            constexpr bool from_right_begin() const noexcept {
+                return node_descriptor::is_active(_state, node_state::right_begin);
+            }
+
+            constexpr bool from_right_end() const noexcept {
+                return node_descriptor::is_active(_state, node_state::right_end);
+            }
+        };
+
+        node_state _state{};
         breakpoint_descriptor _left_break{};
         breakpoint_descriptor _right_break{};
         bool _last{};
@@ -112,19 +139,19 @@ namespace libjst {
     public:
 
         constexpr node_descriptor() = default;
-        constexpr explicit node_descriptor(node_state const from_state) noexcept {
-            activate_state(from_state);
+        constexpr explicit node_descriptor(node_state const state) noexcept {
+            activate_state(state);
         }
 
-        constexpr node_descriptor & operator=(node_state const from_state) noexcept {
-            activate_state(from_state);
+        constexpr node_descriptor & operator=(node_state const state) noexcept {
+            activate_state(state);
             return *this;
         }
 
-        constexpr void activate_state(node_state const from_state) noexcept {
-            set_left_break(from_state);
-            set_right_break(from_state);
-            set_last_state(from_state);
+        constexpr void activate_state(node_state const state) noexcept {
+            _state = state;
+            if (is_active(_state, node_state::variant))
+                _on_alternate_path = true;
         }
 
         constexpr bool from_reference() const noexcept {
@@ -132,11 +159,11 @@ namespace libjst {
         }
 
         constexpr bool from_variant() const noexcept {
-            return _left_break.from_left_begin() && _left_break.from_left_end() && _right_break.from_right_end();
+            return is_active(_state, node_state::variant);
         }
 
         constexpr bool is_branching() const noexcept {
-            return _right_break.from_right_begin();
+            return is_active(_state, node_state::right_begin);
         }
 
         constexpr bool on_alternate_path() const noexcept {
@@ -160,22 +187,35 @@ namespace libjst {
             _on_alternate_path = true;
         }
 
-        constexpr breakpoint_descriptor const & left_break() const noexcept {
-            return _left_break;
+        constexpr break_descriptor left_break() const noexcept {
+            using seqan3::operator|;
+            using seqan3::operator&;
+            return is_left_only() ? break_descriptor{node_state::left_begin}
+                                  : break_descriptor{_state & (node_state::left_begin | node_state::left_end)};
         }
 
-        constexpr breakpoint_descriptor const & right_break() const noexcept {
-            return _right_break;
+        constexpr break_descriptor right_break() const noexcept {
+            using seqan3::operator|;
+            using seqan3::operator&;
+            return is_left_only() ? break_descriptor{node_state::left_end}
+                                  : break_descriptor{_state & (node_state::right_begin | node_state::right_end)};
         }
 
         constexpr operator node_state() const noexcept {
-            using seqan3::operator|;
-            return node_state{static_cast<uint32_t>(static_cast<breakpoint_state>(left_break()) |
-                                                    static_cast<breakpoint_state>(right_break()))} |
-                   ((_last) ? node_state::last : node_state::nil);
+            return _state;
         }
 
     private:
+
+        constexpr bool is_left_only() const noexcept {
+            using seqan3::operator|;
+            return is_active(_state, node_state::left_begin | node_state::left_end);
+        }
+
+        static constexpr bool is_active(node_state const state, node_state const query_state) noexcept {
+            using seqan3::operator&;
+            return (state & query_state) == query_state;
+        }
 
         constexpr void set_left_break(node_state const from_state) noexcept {
             using seqan3::operator|;
