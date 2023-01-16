@@ -191,12 +191,12 @@ TEST_F(node_descriptor_test, state_variant) {
     EXPECT_FALSE(desc.is_branching());
 
     EXPECT_TRUE(desc.left_break().from_left_begin());
-    EXPECT_TRUE(desc.left_break().from_left_end());
+    EXPECT_FALSE(desc.left_break().from_left_end());
     EXPECT_FALSE(desc.left_break().from_right_begin());
-    EXPECT_TRUE(desc.left_break().from_right_end());
+    EXPECT_FALSE(desc.left_break().from_right_end());
 
-    EXPECT_TRUE(desc.right_break().from_left_begin());
+    EXPECT_FALSE(desc.right_break().from_left_begin());
     EXPECT_TRUE(desc.right_break().from_left_end());
     EXPECT_FALSE(desc.right_break().from_right_begin());
-    EXPECT_TRUE(desc.right_break().from_right_end());
+    EXPECT_FALSE(desc.right_break().from_right_end());
 }

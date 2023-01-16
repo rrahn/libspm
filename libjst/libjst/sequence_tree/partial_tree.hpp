@@ -160,7 +160,7 @@ namespace libjst
             if (_left_state == state::right_bound && _right_state == state::right_bound) {
                 node_impl new_child{*this};
                 new_child._right_state = state::regular;
-                new_child.initialise_reference_state_from(breakpoint_state::left_end);
+                new_child.initialise_reference_state_from();
                 return new_child;
             } else if (_left_state == state::right_bound && _right_state == state::regular) {
                 return visit<false>(base_node_type::next_ref());
