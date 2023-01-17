@@ -13,6 +13,8 @@
 #pragma once
 
 #include <libjst/sequence_tree/concept.hpp>
+#include <libjst/sequence_tree/coloured_tree.hpp>
+#include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/left_extend_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/prune_tree.hpp>
@@ -29,11 +31,11 @@ namespace libjst
                 return;
 
             auto search_tree = tree | libjst::labelled<libjst::sequence_label_kind::root_path>()
-                                               | libjst::coloured()
-                                               | trim(libjst::window_size(pattern) - 1)
-                                               | prune_unsupported()
-                                               | left_extend(libjst::window_size(pattern) - 1)
-                                               | merge(); // make big nodes
+                                    | libjst::coloured()
+                                    | trim(libjst::window_size(pattern) - 1)
+                                    | prune_unsupported()
+                                    | left_extend(libjst::window_size(pattern) - 1)
+                                    | merge(); // make big nodes
 
             tree_traverser_base oblivious_path{search_tree};
             for (auto it = oblivious_path.begin(); it != oblivious_path.end(); ++it) {
