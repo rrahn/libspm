@@ -11,7 +11,7 @@ target_link_libraries ("${target_name}" PUBLIC seqan3::seqan3
                                           jstmap::create
                                           # jstmap::index
                                           jstmap::search
-                                          # jstmap::simulate
+                                          jstmap::simulate
                                           # jstmap::view
                                           Threads::Threads
 )
