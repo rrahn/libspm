@@ -13,10 +13,11 @@
 #pragma once
 
 #include <seqan3/core/add_enum_bitwise_operators.hpp>
+#include <seqan3/core/concept/cereal.hpp>
 
 namespace libjst
 {
-    enum class node_state : uint32_t {
+    enum class node_state : uint8_t {
         nil         = 0b00000,
         left_begin  = 0b10000,
         left_end    = 0b01000,
@@ -129,6 +130,18 @@ namespace libjst {
 
         constexpr operator node_state() const noexcept {
             return _state;
+        }
+
+        template <seqan3::cereal_output_archive archive_t>
+        void save(archive_t & oarchive) const
+        {
+            oarchive(_state, _on_alternate_path);
+        }
+
+        template <seqan3::cereal_input_archive archive_t>
+        void load(archive_t & iarchive)
+        {
+            iarchive(_state, _on_alternate_path);
         }
 
     private:
