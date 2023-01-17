@@ -11,45 +11,20 @@
  */
 
 #include <algorithm>
+#include <chrono>
 
 #include <seqan3/argument_parser/argument_parser.hpp>
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/io/sequence_file/output.hpp>
 
-#include <jstmap/create/serialise_jst.hpp>
-#include <jstmap/global/jstmap_type_alias.hpp>
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/simulate/options.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
+#include <jstmap/simulate/read_sampler.hpp>
 
 namespace jstmap
 {
-
-auto sample_reads(jst_t const & jst, size_t const read_count, size_t const read_size)
-{
-    using jst::contrib::operator""_dna5;
-
-    auto enumerator = jst.context_enumerator(read_size);
-    size_t const sample_rate = std::ceil(jst.reference_at(0).size() / read_count);
-    size_t counter = 0;
-
-    std::vector<raw_sequence_t> sampled_reads{};
-
-    for (auto it = enumerator.begin(); it != enumerator.end(); ++it)
-    {
-        if (++counter % sample_rate == 0)
-        {
-            auto read = *it;
-            if (std::ranges::any_of(read, [] (auto symbol) { return symbol == 'N'_dna5; }))
-                continue;
-
-            sampled_reads.emplace_back(read.begin(), read.end());
-        }
-    }
-
-    return sampled_reads;
-}
 
 int simulate_main(seqan3::argument_parser & simulate_parser)
 {
@@ -97,18 +72,35 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     try
     {
         std::cout << "load the jst\n";
-        auto jst = load_jst(options.input_file);
+        auto rcs_store = load_jst(options.input_file);
         std::cout << "Sample reads\n";
-        auto sampled_reads = sample_reads(jst, options.read_count, options.read_size);
-        seqan3::sequence_file_output sout{options.output_file};
+        auto start = std::chrono::high_resolution_clock::now();
+
+        read_sampler sampler{rcs_store};
+        auto sampled_reads = sampler(options.read_count, options.read_size);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << "Sample time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
 
         std::cout << "Write out reads\n";
+        start = std::chrono::high_resolution_clock::now();
+
+        seqan3::sequence_file_output sout{options.output_file};
         size_t sample_idx{};
-        std::string sampled_read_id{"sample_read_"};
-        std::ranges::for_each(sampled_reads, [&] (raw_sequence_t const & sequence)
+        std::ranges::for_each(sampled_reads, [&] (auto const & sampled_read)
         {
-            sout.emplace_back(sequence, sampled_read_id + std::to_string(sample_idx++));
+            using namespace std::literals;
+            auto && [read_sequence, tree_position, label_offset] = sampled_read;
+            std::string id_buffer = "jstsim|"s + std::to_string(sample_idx++) + "|"s + std::to_string(label_offset);
+            sout.emplace_back(read_sequence, id_buffer);
         });
+
+        end = std::chrono::high_resolution_clock::now();
+        std::cout << "Write out time: "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+                  << " sec\n";
     }
     catch (std::exception const & ex)
     {
