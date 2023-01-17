@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory>
 
 #include <libcontrib/closure_adaptor.hpp>
