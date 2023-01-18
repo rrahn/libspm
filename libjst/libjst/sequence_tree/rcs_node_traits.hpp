@@ -32,5 +32,6 @@ namespace libjst
         using variant_type = std::ranges::range_value_t<variant_map_type const>;
         using coverage_type = libjst::variant_coverage_t<variant_type>;
         using breakpoint_type = libjst::variant_breakpoint_t<variant_type>;
+        using position_type = typename std::remove_cvref_t<breakpoint_type>::value_type;
     };
 }  // namespace libjst
