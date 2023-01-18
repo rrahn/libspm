@@ -1,12 +1,9 @@
 
 ### Base interface target for the global jstmap library.
 add_library (jstmap_index_base INTERFACE)
-target_include_directories (jstmap_index_base INTERFACE ../jstmap-index
-                                                         libjst::libjst
-                                                         seqan3::seqan3
-                                                         ${SEQAN_INCLUDE_DIRS})
+target_include_directories (jstmap_index_base INTERFACE ../jstmap-index)
 target_compile_features (jstmap_index_base INTERFACE cxx_std_17)
-target_link_libraries (jstmap_index_base INTERFACE libjst::libjst seqan3::seqan3 ${SEQAN_LIBRARIES} jstmap::global)
+target_link_libraries (jstmap_index_base INTERFACE libjst::libjst seqan3::seqan3 seqan2::seqan2 jstmap::global)
 
 ### Create object library for the index creation.
 add_library(jstmap_index_create OBJECT jstmap/index/create_index.cpp jstmap/index/create_index.hpp)

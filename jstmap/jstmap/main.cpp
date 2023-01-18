@@ -12,7 +12,7 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 
 #include <jstmap/create/create_main.hpp> // Pulls in the create sub-command.
-// #include <jstmap/index/index_main.hpp> // Pulls in the index sub-command.
+#include <jstmap/index/index_main.hpp> // Pulls in the index sub-command.
 #include <jstmap/search/search_main.hpp> // Pulls in the search sub-command.
 #include <jstmap/simulate/simulate_main.hpp> // Pulls in the search sub-command.
 // #include <jstmap/view/view_main.hpp> // Pulls in the view sub-command.
@@ -59,8 +59,8 @@ int main(int const argc, char * const argv[])
 
         if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::create))
             return jstmap::create_main(selected_parser);
-        // else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::index))
-        //     return jstmap::index_main(selected_parser);
+        else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::index))
+            return jstmap::index_main(selected_parser);
         else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::search))
             return jstmap::search_main(selected_parser);
         else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::simulate))
