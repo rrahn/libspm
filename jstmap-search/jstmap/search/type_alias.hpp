@@ -7,7 +7,12 @@
 
 #pragma once
 
+#include <ranges>
+
 #include <seqan/sequence.h>
+
+#include <libjst/sequence_tree/chunked_tree.hpp>
+#include <libjst/sequence_tree/volatile_tree.hpp>
 
 #include <jstmap/global/jstmap_types.hpp>
 
@@ -16,5 +21,16 @@ namespace jstmap
 
 using bin_sequence_t = std::views::all_t<reference_t const &>;
 using bin_t = seqan::StringSet<bin_sequence_t>;
+
+// Query types
+using query_index_type = std::size_t;
+using query_sequence_type = bin_sequence_t;
+using query_type = std::pair<query_index_type, query_sequence_type>;
+using bucket_type = std::vector<query_type>;
+
+// Haystack types
+using jst_type = libjst::volatile_tree<rcs_store_t>;
+using chunked_jst_type = decltype(std::declval<jst_type>() | libjst::chunk(1u));
+using haystack_type = std::ranges::range_reference_t<chunked_jst_type>;
 
 } // namespace jstmap

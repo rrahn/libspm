@@ -74,8 +74,8 @@ namespace jstmap
 // a) query -> produce results for multiple reference genomes -> dump all data
 //
 //
-void write_results([[maybe_unused]] std::vector<search_match> const & matches,
-                   [[maybe_unused]] std::vector<raw_sequence_t> const & queries,
+void write_results([[maybe_unused]] std::vector<search_match2> const & matches,
+                   [[maybe_unused]] std::vector<reference_t> const & queries,
                    [[maybe_unused]] search_options const & options)
 {
     // // ----------------------------------------------------------------------------

@@ -22,12 +22,17 @@
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/core/debug_stream.hpp>
 
+#include <libjst/sequence_tree/chunked_tree.hpp>
+#include <libjst/sequence_tree/volatile_tree.hpp>
+
 #include <jstmap/global/jstmap_types.hpp>
 #include <jstmap/global/load_jst.hpp>
+#include <jstmap/search/filter_queries.hpp>
 #include <jstmap/search/load_queries.hpp>
-// #include <jstmap/search/filter_queries.hpp>
+#include <jstmap/search/match.hpp>
+#include <jstmap/search/matching_operation.hpp>
 #include <jstmap/search/search_main.hpp>
-#include <jstmap/search/search_queries.hpp>
+// #include <jstmap/search/search_queries.hpp>
 #include <jstmap/search/type_alias.hpp>
 // #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/options.hpp>
@@ -108,18 +113,22 @@ int search_main(seqan3::argument_parser & search_parser)
         // Step 2:
         start = std::chrono::high_resolution_clock::now();
         size_t bin_size{std::numeric_limits<size_t>::max()};
-        std::vector<std::vector<size_t>> bins{};
+        std::vector<bucket_type> bucket_list{};
         // What if the ibf is not present?
         if (options.index_input_file_path.empty())
         {
-            bins.resize(1);
-            bins[0].resize(queries.size());
-            std::iota(bins[0].begin(), bins[0].end(), 0ull);
+            bucket_list.resize(1);
+            bucket_list[0].reserve(queries.size());
+            query_index_type idx{};
+            std::ranges::for_each(queries, [&] (auto const & query) {
+                bucket_list[0].emplace_back(idx++, query | std::views::all);
+                // seqan::appendValue(bucket_list[0], (decltype(query)&&)query | std::views::all);
+            });
         }
         else
         {
             std::cout << "Filter the queries\n";
-            // std::tie(bin_size, bins) = filter_queries(queries, options);
+            std::tie(bin_size, bucket_list) = filter_queries(queries, options);
         }
         end = std::chrono::high_resolution_clock::now();
         std::cout << "Filter time: "
@@ -139,53 +148,32 @@ int search_main(seqan3::argument_parser & search_parser)
             // range_agent{traverser_model, } we can construct this from the model directly.
 
         // We need to write more information including the reference sequences and the length of the reference sequences.
-        std::vector<std::vector<search_match2>> bin_matches{};
-        bin_matches.resize(1 /*pjst.bin_count()*/);
+        std::vector<std::vector<match>> query_matches{};
+        query_matches.resize(queries.size());
 
-        for (size_t bin_idx = 0; bin_idx < 1; ++bin_idx)
+        auto chunked_tree = libjst::volatile_tree{rcs_store} | libjst::chunk(bin_size);
+
+        for (size_t bucket_idx = 0; bucket_idx < bucket_list.size(); ++bucket_idx)
         { // parallel region
-            auto const & bin_query_ids = bins[bin_idx];
+            auto const & bucket = bucket_list[bucket_idx];
 
-            if (bin_query_ids.empty())
+            if (bucket.empty())
                 continue;
 
-            // Step1: generate the local sequence set.
-            bin_t local_bin{};
-            seqan::reserve(local_bin, bin_query_ids.size());
+            // Step 1: distribute search:
 
-            for (size_t local_bin_idx = 0; local_bin_idx < bin_query_ids.size(); ++local_bin_idx)
-            {
-                seqan::appendValue(local_bin, queries[bin_query_ids[local_bin_idx]] | std::views::all);
-            }
+            // Step 2: transform to haystack
+            auto haystack = chunked_tree[bucket_idx];
 
-            auto const & jst_bin = rcs_store; //pjst.bin_at(bin_idx);
-            // * search queries in bin_id -> matches[]
-            // * push results into global queue
-            // seqan::StringSet<raw_sequence_t> _queries{};
-            // seqan::appendValue(_queries, queries.front());
-            // seqan::reserve(_queries, queries.size());
+            // Step 3: select matching strategy
 
-            // for (unsigned i = 0; i < queries.size(); ++i)
-            //     seqan::appendValue(_queries, queries[i]);
-            // std::cout << "Searching bin = " << bin_idx << "\n";
-            bin_matches[bin_idx] = search_queries_shiftor(jst_bin, local_bin, options.error_rate);
+            auto op = matching_operation{};
+                // requires: options.error_count, bucket,
 
-            std::ranges::sort(bin_matches[bin_idx], std::less<void>{}); // sort by query_id and by error_count.
-            auto redundant_tail = std::ranges::unique(bin_matches[bin_idx],
-                                                      std::ranges::equal_to{},
-                                                      [] (auto const & match) { return match.query_id; });
-            bin_matches[bin_idx].erase(redundant_tail.begin(), redundant_tail.end());
-
-            // Overwrite the query id here with the global query_id.
-            std::ranges::for_each(bin_matches[bin_idx], [&] (search_match2 & match)
-            {
-                match.query_id = bins[bin_idx][match.query_id];
+            // Step 4: apply matching
+            op(std::move(haystack), bucket, [&] (auto match) {
+                query_matches[match.query_id()].push_back(std::move(match));
             });
-
-            // seqan3::debug_stream << "Report " << matches.size() << " matches:\n";
-            // for (auto const & match : matches)
-            //     seqan3::debug_stream << "\t- match with: " << match.error_count << " errors and sequence: "
-            //                          << match.sequence() << "\n";
 
         // }
 
@@ -215,41 +203,47 @@ int search_main(seqan3::argument_parser & search_parser)
         std::cout << "Search time: "
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
                   << " sec\n";
-
+        size_t total_occurrences{};
+        std::ranges::for_each(query_matches, [&] (auto const & matches) { total_occurrences += matches.size(); });
+        std::cout << "Total hits: " << total_occurrences << "\n";
         std::cout << "Reduce and filter matches\n";
         start = std::chrono::high_resolution_clock::now();
         // Filter globally for the best hits.
         // Ater reducing them to the same file sort, uniquify and then erase redundant matches.
 
-        // #TODO: readd again
-        std::vector<search_match2> total_matches{};
-        if (bins.size() == 1)
-        {
-            total_matches = std::move(bin_matches[0]);
-        }
-        else // Reduce all matches and uniquify all matches.
-        {
-            auto match_counts = bin_matches | std::views::transform([] (auto & bin) { return bin.size(); });
-            size_t total_match_count = std::accumulate(match_counts.begin(), match_counts.end(), 0);
-            total_matches.resize(total_match_count);
-            auto insert_it = total_matches.begin();
-            std::ranges::for_each(bin_matches, [&] (auto && bin)
-            {
-                insert_it = std::ranges::move(bin, insert_it).out;
-            });
+        // Step 5: postprocess matches
 
-            std::ranges::sort(total_matches, std::less<void>{}); // sort by query_id and by error_count.
-            auto redundant_tail = std::ranges::unique(total_matches,
-                                                      std::ranges::equal_to{},
-                                                      [] (auto const & match) { return match.query_id; });
-            total_matches.erase(redundant_tail.begin(), redundant_tail.end());
-        }
+        // #TODO: readd again
+        // std::vector<search_match2> total_matches{};
+        // if (bucket_list.size() == 1)
+        // {
+        //     total_matches = std::move(bin_matches[0]);
+        // }
+        // else // Reduce all matches and uniquify all matches.
+        // {
+        //     auto match_counts = bin_matches | std::views::transform([] (auto & bin) { return bin.size(); });
+        //     size_t total_match_count = std::accumulate(match_counts.begin(), match_counts.end(), 0);
+        //     total_matches.resize(total_match_count);
+        //     auto insert_it = total_matches.begin();
+        //     std::ranges::for_each(bin_matches, [&] (auto && bin)
+        //     {
+        //         insert_it = std::ranges::move(bin, insert_it).out;
+        //     });
+
+        //     std::ranges::sort(total_matches, std::less<void>{}); // sort by query_id and by error_count.
+        //     auto redundant_tail = std::ranges::unique(total_matches,
+        //                                               std::ranges::equal_to{},
+        //                                               [] (auto const & match) { return match.query_id; });
+        //     total_matches.erase(redundant_tail.begin(), redundant_tail.end());
+        // }
 
         end = std::chrono::high_resolution_clock::now();
-        std::cout << "Found " << total_matches.size() << " matches\n";
+        // std::cout << "Found " << total_matches.size() << " matches\n";
         std::cout << "Reduction time: "
                   << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
                   << " sec\n";
+
+        // Step 6: finalise
 
         // std::cout << "Write results\n";
         // start = std::chrono::high_resolution_clock::now();
@@ -259,6 +253,8 @@ int search_main(seqan3::argument_parser & search_parser)
         // std::cout << "Write results time: "
         //           << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
         //           << " sec\n";
+
+        // Step 7: write out
     }
     catch (std::exception const & ex)
     {
