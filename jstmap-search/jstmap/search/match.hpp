@@ -6,25 +6,30 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides functions to write the results.
+ * \brief Provides match.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
 #pragma once
 
-#include <vector>
-
-#include <libjst/context_position.hpp>
-
-#include <jstmap/search/search_queries.hpp>
-#include <jstmap/search/options.hpp>
 #include <jstmap/search/type_alias.hpp>
 
 namespace jstmap
 {
 
-void write_results(std::vector<search_match2> const &,
-                   std::vector<reference_t> const &,
-                   search_options const &);
+    class match {
+    private:
 
+        query_index_type _query_id{};
+
+    public:
+
+        match() = default;
+        constexpr explicit match(query_index_type const query_id) : _query_id{query_id}
+        {}
+
+        constexpr query_index_type query_id() const noexcept {
+            return _query_id;
+        }
+    };
 }  // namespace jstmap

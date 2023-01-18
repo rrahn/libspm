@@ -19,6 +19,9 @@
 namespace jstmap
 {
 
+using volatile_tree_t = decltype(libjst::volatile_tree(std::declval<rcs_store_t &>()));
+using chunked_tree_t = decltype(std::declval<volatile_tree_t>() | libjst::chunk(1u));
+using partial_tree_t = std::ranges::range_reference_t<chunked_tree_t>;
 // using jst_bin_t = typename partitioned_jst_t::traverser_model_t;
 
 // struct search_match
@@ -76,7 +79,7 @@ struct search_match2
 // std::vector<search_match> search_queries_(jst_bin_t const &, bin_t const &, float const);
 // std::vector<libjst::context_position> search_queries(partitioned_jst_t const &, std::vector<raw_sequence_t> const &);
 
-std::vector<search_match2> search_queries_horspool(rcs_store_t const &, bin_t const &, float const);
-std::vector<search_match2> search_queries_shiftor(rcs_store_t const &, bin_t const &, float const);
+std::vector<search_match2> search_queries_horspool(partial_tree_t const &, bin_t const &, float const);
+std::vector<search_match2> search_queries_shiftor(partial_tree_t const &, bin_t const &, float const);
 
 }  // namespace jstmap
