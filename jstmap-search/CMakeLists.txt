@@ -28,7 +28,7 @@ add_library (jstmap_search STATIC jstmap/search/search_main.cpp)
 target_link_libraries (jstmap_search PUBLIC jstmap_search_search
                                             jstmap_search_input_queries
                                             jstmap::search::base
-                                            # jstmap_search_filter
+                                            jstmap_search_filter
                                             # jstmap_search_output
                                             )
 add_library (jstmap::search ALIAS jstmap_search)
