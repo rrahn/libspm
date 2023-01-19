@@ -18,6 +18,7 @@
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/io/sequence_file/output.hpp>
 
+#include <jstmap/global/application_logger.hpp>
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/simulate/options.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
@@ -37,19 +38,31 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
                                           "The file containing the sampled reads.",
                                           seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
                                                                         {"fa", "fasta"}});
+
+    simulate_parser.add_flag(options.is_quite,
+                             'q',
+                             "quite",
+                             "Disables all logging.",
+                             seqan3::option_spec::standard);
+    simulate_parser.add_flag(options.is_verbose,
+                             'v',
+                             "verbose",
+                             "Enables expansive debug logging.",
+                             seqan3::option_spec::standard);
+
     simulate_parser.add_option(options.read_size,
                                's',
                                "read-size",
                                "The size of the reads.",
                                seqan3::option_spec::standard,
-                               seqan3::arithmetic_range_validator{10u, 500u});
+                               seqan3::arithmetic_range_validator{1u, 500u});
 
     simulate_parser.add_option(options.read_count,
                                'c',
                                "read-count",
                                "The number of reads to sample.",
                                seqan3::option_spec::standard,
-                               seqan3::arithmetic_range_validator{100u, std::numeric_limits<uint32_t>::max()});
+                               seqan3::arithmetic_range_validator{1u, std::numeric_limits<uint32_t>::max()});
 
     simulate_parser.add_option(options.error_rate,
                                'e',
@@ -61,30 +74,41 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     try
     {
         simulate_parser.parse();
+        if (options.is_quite) {
+            get_application_logger().set_verbosity(verbosity_level::quite);
+        } else if (options.is_verbose) {
+            get_application_logger().set_verbosity(verbosity_level::verbose);
+        }
+
+        log_debug("Input file:", options.input_file.string());
+        log_debug("Output file:", options.output_file.string());
+        log_debug("Read size:", options.read_size);
+        log_debug("Read count:", options.read_count);
+        log_debug("Error rate:", options.error_rate);
+
     }
     catch (seqan3::argument_parser_error const & ex)
     {
-        std::cerr << "ERROR: " << ex.what() << "\n";
+        log(logging_level::error, ex.what());
         return -1;
     }
 
     // Load the sequences.
+    auto global_start = std::chrono::high_resolution_clock::now();
     try
     {
-        std::cout << "load the jst\n";
+        log_info("Starting simulation");
+        log_debug("Load jst from file", options.input_file);
         auto rcs_store = load_jst(options.input_file);
-        std::cout << "Sample reads\n";
-        auto start = std::chrono::high_resolution_clock::now();
 
+        auto start = std::chrono::high_resolution_clock::now();
+        log_debug("Initiate read sampler");
         read_sampler sampler{rcs_store};
         auto sampled_reads = sampler(options.read_count, options.read_size);
 
         auto end = std::chrono::high_resolution_clock::now();
-        std::cout << "Sample time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
-
-        std::cout << "Write out reads\n";
+        log_debug("Sampling time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_debug("Save sampled reads");
         start = std::chrono::high_resolution_clock::now();
 
         seqan3::sequence_file_output sout{options.output_file};
@@ -98,15 +122,15 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         });
 
         end = std::chrono::high_resolution_clock::now();
-        std::cout << "Write out time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
+        log_debug("Saving time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
     }
     catch (std::exception const & ex)
     {
-        std::cerr << "ERROR: " << ex.what() << "\n";
+        log_err(ex.what());
         return -1;
     }
+    auto global_end = std::chrono::high_resolution_clock::now();
+    log_info("Fished simulation [", std::chrono::duration_cast<std::chrono::seconds>(global_end - global_start).count(), "s]");
 
     return 0;
 }
