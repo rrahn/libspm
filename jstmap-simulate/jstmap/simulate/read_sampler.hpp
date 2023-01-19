@@ -37,9 +37,10 @@ namespace jstmap
         }
 
     private:
-        sampled_read_list_type sample_reads(libjst::tree_stats const, size_t const, size_t const) const;
+        sampled_read_list_type sample_reads(libjst::tree_stats const &, size_t const, size_t const) const;
         libjst::tree_stats compute_tree_stats(size_t const) const;
-        std::vector<size_t> generate_sample_hints(size_t const, size_t const, std::mt19937 &) const;
+        std::vector<size_t> generate_sample_hints(size_t const, std::pair<size_t, size_t> const, std::mt19937 &) const;
+        std::pair<size_t, size_t> compute_sample_range(libjst::tree_stats const &, size_t const) const noexcept;
     };
 
 } // namespace jstmap

@@ -23,6 +23,7 @@
 #include <libjst/sequence_tree/volatile_tree.hpp>
 
 #include <jstmap/simulate/read_sampler.hpp>
+#include <jstmap/global/application_logger.hpp>
 
 namespace jstmap
 {
@@ -32,6 +33,8 @@ namespace jstmap
 
     libjst::tree_stats
     read_sampler::compute_tree_stats(size_t const size) const {
+        log_debug("Compute tree statistics");
+        log_debug("Variant count:", _rcs_store.variants().size());
         return libjst::volatile_tree(_rcs_store) | libjst::labelled<libjst::sequence_label_kind::root_path>()
                                                  | libjst::coloured()
                                                  | libjst::trim(size - 1)
@@ -41,14 +44,17 @@ namespace jstmap
     }
 
     sampled_read_list_type
-    read_sampler::sample_reads(libjst::tree_stats const stats,  size_t const count,  size_t const size) const {
+    read_sampler::sample_reads(libjst::tree_stats const & stats,  size_t const count,  size_t const size) const {
         assert(size > 0);
         assert(count > 0);
 
         std::mt19937 random_engine{42};
         size_t const window_size = size - 1;
-        size_t max_sample_size = stats.symbol_count;
-        std::vector<size_t> sample_hints = generate_sample_hints(count, max_sample_size, random_engine);
+        auto sample_range = compute_sample_range(stats, size);
+
+        log_debug("Window size:", window_size);
+        log_debug("Max sample range", sample_range);
+        std::vector<size_t> sample_hints = generate_sample_hints(count, sample_range, random_engine);
 
         sampled_read_list_type sampled_reads{};
         sampled_reads.reserve(sample_hints.size());
@@ -69,10 +75,15 @@ namespace jstmap
         while (tree_it != path.end()) {
             auto cargo = *tree_it;
             auto label = cargo.sequence();
+            log_debug("Last sample position:", last_hint);
+            log_debug("Remaining distance:", remaining);
+            log_debug("Label size:", std::ranges::ssize(label));
+            log_debug("Sample count:", std::ranges::distance(sample_hints.begin(), hint_it));
             remaining -= std::max<std::ptrdiff_t>(std::ranges::ssize(label) - window_size, 0);
             if (remaining <= 0) { // found label to sample from
                 std::ptrdiff_t label_offset = (std::ranges::ssize(label) + remaining) - size;
                 assert(label_offset >= 0);
+                log_debug("Label offset:", label_offset);
                 auto first = std::ranges::next(std::ranges::begin(label), label_offset, std::ranges::end(label));
 
                 sampled_reads.emplace_back(read_type{first, std::ranges::next(first, size, std::ranges::end(label))},
@@ -86,6 +97,7 @@ namespace jstmap
 
                 remaining = (*hint_it - last_hint) + (label_offset + size); // TODO: fix me!
             } else {
+                log_debug("================= Next node =================");
                 ++tree_it;
             }
         }
@@ -93,15 +105,36 @@ namespace jstmap
     }
 
     std::vector<size_t> read_sampler::generate_sample_hints(size_t const count,
-                                                            size_t const max_sample_size,
+                                                            std::pair<size_t, size_t> const max_sample_range,
                                                             std::mt19937 & random_engine) const {
 
-        std::uniform_int_distribution<size_t> sample_dist{0, max_sample_size};
+        auto [from, to] = max_sample_range;
+        std::uniform_int_distribution<size_t> sample_dist{from, to};
         std::vector<size_t> tmp{};
         tmp.resize(count);
         std::ranges::generate(tmp, [&] () { return sample_dist(random_engine); });
         std::ranges::sort(tmp);
         return tmp;
+    }
+
+    std::pair<size_t, size_t> read_sampler::compute_sample_range(libjst::tree_stats const & stats,
+                                                                 size_t const sample_size) const noexcept {
+        auto const & reference = _rcs_store.source();
+        auto first_it = std::ranges::find_if_not(reference, [] (auto const nucleotide) {
+            return seqan3::to_char(nucleotide) == 'N';
+        });
+
+        auto last_it = std::ranges::find_if_not(reference | std::views::reverse, [] (auto const nucleotide) {
+            return seqan3::to_char(nucleotide) == 'N';
+        }).base();
+
+        size_t left_overhead = std::ranges::distance(std::ranges::begin(reference), first_it);
+        size_t right_overhead = std::ranges::distance(last_it, std::ranges::end(reference));
+        log_debug("Left overhead:", left_overhead);
+        log_debug("Right overhead:", right_overhead);
+        assert(left_pstats.symbol_count > (left_overhead + right_overhead + sample_size));
+
+        return std::pair{left_overhead, stats.symbol_count - right_overhead - sample_size};
     }
 
     // read_type
