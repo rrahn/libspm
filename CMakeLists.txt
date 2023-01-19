@@ -23,10 +23,11 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # Messages
 string (ASCII 27 Esc)
-set (FontBold "${Esc}[1m")
-set (FontReset "${Esc}[m")
+set (FontBold "")
+set (FontReset "")
 
 # Dependency: SeqAn3.
+message (STATUS "Configure SeqAn3 dependency")
 find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
 
 # Dependency: SeqAn.
