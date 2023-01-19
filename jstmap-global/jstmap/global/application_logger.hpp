@@ -33,7 +33,8 @@ enum class logging_level : uint8_t
 {
     info, //!< An informative message during the execution.
     warning, //!< A warning message for non-severe issues during the execution.
-    error //!< An error message for severe issues during the execution.
+    error, //!< An error message for severe issues during the execution.
+    debug //!< A debug information only printed when verbose logging is enabled.
 };
 
 // TODO:
@@ -44,7 +45,7 @@ class application_logger
 {
 private:
 
-    bool _throw_on_error{true}; //!< Wether to throw or output a log message.
+    bool _throw_on_error{false}; //!< Wether to throw or output a log message.
     verbosity_level _verbosity_level{verbosity_level::standard}; //!< Level of printed information in non-throwing mode.
 
 public:
@@ -55,16 +56,18 @@ public:
         _verbosity_level{level}
     {}
 
+    constexpr void set_verbosity(verbosity_level new_level) noexcept {
+        _verbosity_level = new_level;
+    }
+
     //!\brief Logs the given message depending on the logger settings.
     template <typename ...message_args_t>
     constexpr void operator()(verbosity_level verbosity, logging_level log_level, message_args_t && ...message_args)
     {
         using namespace std::literals;
 
-        bool const will_throw = log_level == logging_level::error && _throw_on_error;
-        // Ignore this message if verbosity of message is not enabled by user.
-        if (!will_throw && (verbosity == verbosity_level::quite ||
-            static_cast<int>(verbosity) > static_cast<int>(_verbosity_level)))
+        if ((_verbosity_level == verbosity_level::quite) ||
+            (log_level == logging_level::debug && _verbosity_level != verbosity_level::verbose))
             return;
 
         std::string_view msg_level{};
@@ -74,16 +77,18 @@ public:
             case logging_level::info: msg_level = "[INFO] "sv; break;
             case logging_level::warning: msg_level = "[WARNING] "sv; break;
             case logging_level::error: msg_level = "[ERROR] "sv; break;
+            case logging_level::debug: msg_level = "[DEBUG] "sv; break;
             default: throw std::runtime_error{"[ERROR] Unknown logging level!"};
         };
 
         auto message = seqan3::detail::to_string(msg_level, std::forward<message_args_t>(message_args)...);
-
         // If throw_on_error is enabled and the message indicates an error.
-        if (will_throw)
-            throw std::runtime_error{message};
-        else
-            std::cerr << message << "\n";
+        std::cerr << message << "\n";
+    }
+
+    template <typename ...message_args_t>
+    constexpr void log(logging_level log_level, message_args_t && ...message_args) {
+        this->operator()(_verbosity_level, log_level, (message_args_t &&) message_args...);
     }
 };
 
@@ -102,6 +107,31 @@ application_logger * set_application_logger(application_logger * handle) noexcep
 
 //!\brief Returns the application wide logger.
 application_logger & get_application_logger() noexcept;
+
+template <typename ...message_args_t>
+constexpr void log(logging_level log_level, message_args_t && ...message_args) {
+    get_application_logger().log(log_level, (message_args_t &&) message_args...);
+}
+
+template <typename ...message_args_t>
+constexpr void log_info(message_args_t && ...message_args) {
+    get_application_logger().log(logging_level::info, (message_args_t &&) message_args...);
+}
+
+template <typename ...message_args_t>
+constexpr void log_debug(message_args_t && ...message_args) {
+    get_application_logger().log(logging_level::debug, (message_args_t &&) message_args...);
+}
+
+template <typename ...message_args_t>
+constexpr void log_warn(message_args_t && ...message_args) {
+    get_application_logger().log(logging_level::warning, (message_args_t &&) message_args...);
+}
+
+template <typename ...message_args_t>
+constexpr void log_err(message_args_t && ...message_args) {
+    get_application_logger().log(logging_level::error, (message_args_t &&) message_args...);
+}
 
 }  // namespace jstmap
 
