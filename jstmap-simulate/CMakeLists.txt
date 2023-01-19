@@ -4,7 +4,7 @@ file(GLOB HEADER_LIST CONFIGURE_DEPENDS "jstmap/simulate/*.hpp")
 ### Base interface target for the simulate subcommand.
 add_library (jstmap_simulate_base INTERFACE)
 target_include_directories (jstmap_simulate_base INTERFACE ../jstmap-simulate libjst::libjst seqan3::seqan3)
-target_compile_features (jstmap_simulate_base INTERFACE cxx_std_17)
+target_compile_features (jstmap_simulate_base INTERFACE cxx_std_20)
 target_link_libraries (jstmap_simulate_base INTERFACE libjst::libjst seqan3::seqan3 jstmap::global)
 add_library (jstmap::simulate::base ALIAS jstmap_simulate_base)
 
