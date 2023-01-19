@@ -4,7 +4,7 @@ target_include_directories (jstmap_global_base INTERFACE ../jstmap-global
                                                          libjst::libjst
                                                          seqan3::seqan3
                                                          ${SEQAN_INCLUDE_DIRS})
-target_compile_features (jstmap_global_base INTERFACE cxx_std_17)
+target_compile_features (jstmap_global_base INTERFACE cxx_std_20)
 target_link_libraries (jstmap_global_base INTERFACE libjst::libjst seqan3::seqan3 ${SEQAN_LIBRARIES})
 add_library (jstmap::global::base ALIAS jstmap_global_base)
 
