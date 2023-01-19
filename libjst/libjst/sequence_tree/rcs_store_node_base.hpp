@@ -205,7 +205,7 @@ namespace libjst
         }
 
         constexpr void initialise_reference_state_from() noexcept {
-            bool const is_branching = (get_right() != sink()) || libjst::position(*get_right()).is_left_end();
+            bool const is_branching = (get_right() != sink()) && libjst::position(*get_right()).is_left_end();
             bool const is_last = is_branching && right_before_next();
 
             if (is_branching) {
