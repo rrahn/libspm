@@ -13,6 +13,7 @@
 #pragma once
 
 #include <concepts>
+#include <iosfwd>
 
 #include <cereal/types/base_class.hpp>
 
@@ -125,5 +126,45 @@ namespace libjst
         constexpr void activate_reference_node() noexcept {
             _active_descriptor = 0;
         }
+
+    private:
+
+        constexpr friend bool operator==(seek_position const & lhs, seek_position const & rhs) noexcept = default;
+
+        constexpr friend std::strong_ordering operator<=>(seek_position const & lhs, seek_position const & rhs) noexcept {
+            if (auto cmp_var = (lhs.get_variant_index() <=> rhs.get_variant_index()); cmp_var == 0) {
+                if (auto cmp_descr = lhs.alternate_node_is_active() ^ rhs.alternate_node_is_active(); cmp_descr == 0) {
+                    return lhs.visit([&] <typename descriptor_t> (descriptor_t const & lhs_descriptor) {
+                        if constexpr (std::same_as<descriptor_t, node_descriptor>) {
+                            return lhs_descriptor <=> rhs._descriptor.ref;
+                        } else {
+                            return lhs_descriptor <=> rhs._descriptor.alt;
+                        }
+                    });
+                } else {
+                    return (!lhs.alternate_node_is_active()) ? std::strong_ordering::less : std::strong_ordering::greater;
+                }
+            } else {
+                return cmp_var;
+            }
+        }
     };
+
+    template <typename char_t, typename char_traits_t, typename seek_position_t>
+        requires std::same_as<std::remove_cvref_t<seek_position_t>, seek_position>
+    inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream,
+                                                                  seek_position_t && position)
+    {
+        stream << "<";
+        position.visit([&] <typename descriptor_t>(descriptor_t const & descriptor) {
+            if constexpr (std::same_as<descriptor_t, node_descriptor>) {
+                stream << "ref = ";
+            } else {
+                stream << "alt = ";
+            }
+            stream << descriptor;
+        });
+        stream << " variant_idx = " << position.get_variant_index() << ">";
+        return stream;
+    }
 }  // namespace libjst

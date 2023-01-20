@@ -12,6 +12,9 @@
 
 #pragma once
 
+#include <iosfwd>
+#include <string_view>
+
 #include <seqan3/core/add_enum_bitwise_operators.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 
@@ -158,4 +161,31 @@ namespace libjst {
 
         constexpr friend bool operator==(node_descriptor const & lhs, node_descriptor const & rhs) noexcept = default;
     };
+
+    template <typename char_t, typename char_traits_t, typename node_descriptor_t>
+        requires std::same_as<std::remove_cvref_t<node_descriptor_t>, node_descriptor>
+    inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream,
+                                                                  node_descriptor_t && descriptor)
+    {
+        using namespace std::literals;
+
+        auto to_msg = [] (node_descriptor_t const & descriptor) -> std::string_view {
+            switch (static_cast<node_state>(descriptor)) {
+                case node_state::branching_after_left_end: return "branching_after_left_end"sv;
+                case node_state::last_branching_after_left_end: return "last_branching_after_left_end"sv;
+                case node_state::branching_after_left_begin: return "branching_after_left_begin"sv;
+                case node_state::last_branching_after_left_begin: return "last_branching_after_left_begin"sv;
+                case node_state::non_branching_left_only: return "non_branching_left_only"sv;
+                case node_state::last_non_branching_left_only: return "last_non_branching_left_only"sv;
+                case node_state::non_branching_including_left: return "non_branching_including_left"sv;
+                case node_state::non_branching_after_left: return "non_branching_after_left"sv;
+                case node_state::variant: return "variant"sv;
+                default: return "unkown"sv;
+            };
+        };
+
+        stream << "<" << (descriptor.on_alternate_path() ? "alt"sv : "ref"sv)
+                      << " state = " << to_msg(descriptor) << ">";
+        return stream;
+    }
 }  // namespace libjst
