@@ -17,10 +17,10 @@
 
 namespace jstmap
 {
+
     using read_type = reference_t;
     using sampled_read_type = std::tuple<read_type, libjst::seek_position, std::ptrdiff_t>;
     using sampled_read_list_type = std::vector<sampled_read_type>;
-
     class read_sampler {
     private:
 
@@ -39,8 +39,9 @@ namespace jstmap
     private:
         sampled_read_list_type sample_reads(libjst::tree_stats const &, size_t const, size_t const) const;
         libjst::tree_stats compute_tree_stats(size_t const) const;
-        std::vector<size_t> generate_sample_hints(size_t const, std::pair<size_t, size_t> const, std::mt19937 &) const;
+        std::vector<size_t> generate_sample_positions(size_t const, std::pair<size_t, size_t> const, std::mt19937 &) const;
         std::pair<size_t, size_t> compute_sample_range(libjst::tree_stats const &, size_t const) const noexcept;
+        bool validate_sample(sampled_read_type const &) const noexcept;
     };
 
 } // namespace jstmap
