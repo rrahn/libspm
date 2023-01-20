@@ -55,14 +55,14 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
                                "read-size",
                                "The size of the reads.",
                                seqan3::option_spec::standard,
-                               seqan3::arithmetic_range_validator{10u, 500u});
+                               seqan3::arithmetic_range_validator{1u, 500u});
 
     simulate_parser.add_option(options.read_count,
                                'c',
                                "read-count",
                                "The number of reads to sample.",
                                seqan3::option_spec::standard,
-                               seqan3::arithmetic_range_validator{100u, std::numeric_limits<uint32_t>::max()});
+                               seqan3::arithmetic_range_validator{1u, std::numeric_limits<uint32_t>::max()});
 
     simulate_parser.add_option(options.error_rate,
                                'e',
@@ -85,6 +85,7 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         log_debug("Read size:", options.read_size);
         log_debug("Read count:", options.read_count);
         log_debug("Error rate:", options.error_rate);
+
     }
     catch (seqan3::argument_parser_error const & ex)
     {
@@ -96,7 +97,7 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
     auto global_start = std::chrono::high_resolution_clock::now();
     try
     {
-        log_info("Starting simulation.");
+        log_info("Starting simulation");
         log_debug("Load jst from file", options.input_file);
         auto rcs_store = load_jst(options.input_file);
 
@@ -129,7 +130,7 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         return -1;
     }
     auto global_end = std::chrono::high_resolution_clock::now();
-    log_info("Fished simulation. [", std::chrono::duration_cast<std::chrono::seconds>(global_end - global_start).count(), "s]");
+    log_info("Fished simulation [", std::chrono::duration_cast<std::chrono::seconds>(global_end - global_start).count(), "s]");
 
     return 0;
 }
