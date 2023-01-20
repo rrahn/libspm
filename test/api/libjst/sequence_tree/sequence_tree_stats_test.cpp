@@ -111,6 +111,16 @@ TEST_P(sequence_tree_stats, symbol_count) {
     EXPECT_EQ(actual_stats.symbol_count, GetParam().expected_stats.symbol_count);
 }
 
+TEST_P(sequence_tree_stats, max_subtree_depth) {
+    auto actual_stats = libjst::stats(make_tree());
+    EXPECT_EQ(actual_stats.max_subtree_depth, GetParam().expected_stats.max_subtree_depth);
+}
+
+TEST_P(sequence_tree_stats, subtree_depths) {
+    auto actual_stats = libjst::stats(make_tree());
+    EXPECT_RANGE_EQ(actual_stats.subtree_depths, GetParam().expected_stats.subtree_depths);
+}
+
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
@@ -123,7 +133,9 @@ INSTANTIATE_TEST_SUITE_P(no_variants, sequence_tree_stats, testing::Values(fixtu
     .expected_stats{.node_count = 1,
                     .subtree_count = 0,
                     .leaf_count = 1,
-                    .symbol_count = 8}
+                    .symbol_count = 8,
+                    .max_subtree_depth = 0,
+                    .subtree_depths{}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_first_base, sequence_tree_stats, testing::Values(fixture{
@@ -136,7 +148,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_first_base, sequence_tree_stats, testing
     .expected_stats{.node_count = 3,
                     .subtree_count = 1,
                     .leaf_count = 2,
-                    .symbol_count = 8 + 5}
+                    .symbol_count = 8 + 5,
+                    .max_subtree_depth = 1,
+                    .subtree_depths{1}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_last_base, sequence_tree_stats, testing::Values(fixture{
@@ -149,7 +163,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_last_base, sequence_tree_stats, testing:
     .expected_stats{.node_count = 3,
                     .subtree_count = 1,
                     .leaf_count = 2,
-                    .symbol_count = 8 + 1}
+                    .symbol_count = 8 + 1,
+                    .max_subtree_depth = 1,
+                    .subtree_depths{1}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_middle, sequence_tree_stats, testing::Values(fixture{
@@ -162,7 +178,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_middle, sequence_tree_stats, testing::Va
     .expected_stats{.node_count = 3,
                     .subtree_count = 1,
                     .leaf_count = 2,
-                    .symbol_count = 8 + 4}
+                    .symbol_count = 8 + 4,
+                    .max_subtree_depth = 1,
+                    .subtree_depths{1}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_non_overlapping, sequence_tree_stats, testing::Values(fixture{
@@ -175,7 +193,9 @@ INSTANTIATE_TEST_SUITE_P(two_variants_non_overlapping, sequence_tree_stats, test
     .expected_stats{.node_count = 5,
                     .subtree_count = 2,
                     .leaf_count = 3,
-                    .symbol_count = 8 + 5 + 2}
+                    .symbol_count = 8 + 5 + 2,
+                    .max_subtree_depth = 1,
+                    .subtree_depths{1, 1}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_overlapping, sequence_tree_stats, testing::Values(fixture{
@@ -188,7 +208,9 @@ INSTANTIATE_TEST_SUITE_P(two_variants_overlapping, sequence_tree_stats, testing:
     .expected_stats{.node_count = 7,
                     .subtree_count = 2,
                     .leaf_count = 4,
-                    .symbol_count = 8 + (5 + 2) + 4}
+                    .symbol_count = 8 + (5 + 2) + 4,
+                    .max_subtree_depth = 2,
+                    .subtree_depths{2, 1}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_overlapping_same_position, sequence_tree_stats, testing::Values(fixture{
@@ -201,5 +223,7 @@ INSTANTIATE_TEST_SUITE_P(two_variants_overlapping_same_position, sequence_tree_s
     .expected_stats{.node_count = 5,
                     .subtree_count = 2,
                     .leaf_count = 3,
-                    .symbol_count = 8 + 5 + 5}
+                    .symbol_count = 8 + 5 + 5,
+                    .max_subtree_depth = 1,
+                    .subtree_depths{1, 1}}
 }));
