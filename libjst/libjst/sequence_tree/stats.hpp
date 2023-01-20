@@ -25,6 +25,8 @@ namespace libjst
         size_t subtree_count{};
         size_t leaf_count{};
         size_t symbol_count{};
+        size_t max_subtree_depth{};
+        std::vector<size_t> subtree_depths{};
 
         constexpr void notify_push() {
         }
@@ -78,7 +80,7 @@ namespace libjst
 
         friend stats_tree_impl;
 
-        node_properties _properties{.subtree_depth = -1};
+        node_properties _properties{.subtree_depth = 0};
 
         explicit constexpr node_impl(base_node_type && base_node) noexcept : base_node_type{std::move(base_node)}
         {}
@@ -164,8 +166,12 @@ namespace libjst
     public:
         label_impl() = delete;
 
+        constexpr size_t subtree_depth() const noexcept {
+            return _properties.subtree_depth;
+        }
+
         constexpr bool is_subtree_root() const noexcept {
-            return _properties.subtree_depth == 0;
+            return _properties.subtree_depth == 1;
         }
     };
 
@@ -189,8 +195,16 @@ namespace libjst
                     stats.symbol_count += std::ranges::size(node_properties.sequence());
                     if (node_properties.is_subtree_root()) {
                         ++stats.subtree_count;
+                        stats.subtree_depths.push_back(1);
+                    } else if (node_properties.subtree_depth() > 0) {
+                        stats.subtree_depths.back() = std::max(stats.subtree_depths.back(),
+                                                               node_properties.subtree_depth());
                     }
                 }
+
+                std::ranges::for_each(stats.subtree_depths, [&] (size_t const & depth) {
+                    stats.max_subtree_depth = std::max(stats.max_subtree_depth, depth);
+                });
                 return stats;
             }
 
