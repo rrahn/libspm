@@ -143,8 +143,18 @@ namespace jst::contrib
         // all other operations are inherited?
 
         template <typename ...args_t>
-            requires std::invocable<type, args_t...>
-        constexpr auto operator()(args_t && ...args) const noexcept -> std::invoke_result_t<type, args_t...> {
+            requires std::invocable<type &, args_t...>
+        constexpr auto operator()(args_t && ...args)
+            noexcept(std::is_nothrow_invocable_v<type &, args_t...>)
+            -> std::invoke_result_t<type &, args_t...> {
+            return std::invoke(base_t::value(), (args_t &&) args...);
+        }
+
+        template <typename ...args_t>
+            requires std::invocable<type const &, args_t...>
+        constexpr auto operator()(args_t && ...args) const
+            noexcept(std::is_nothrow_invocable_v<type const &, args_t...>)
+            -> std::invoke_result_t<type const &, args_t...> {
             return std::invoke(base_t::value(), (args_t &&) args...);
         }
     };
