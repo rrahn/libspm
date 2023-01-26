@@ -35,8 +35,8 @@ inline reference_t load_base_sequence(std::filesystem::path const & reference_fi
 
     std::string chr_id = /*"chr"s + */std::string{contig_name};
     for (auto && record : record_contig_names) {
-        if (seqan3::get<seqan3::field::id>(record).starts_with(chr_id))
-            return seqan3::get<seqan3::field::seq>(record);
+        if (record.id().starts_with(chr_id))
+            return record.sequence();
     }
     throw std::runtime_error{"Could not find a contig with the name <"s + chr_id + ">!"s};
     return {};

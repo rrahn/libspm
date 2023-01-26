@@ -11,7 +11,7 @@
 #include <string>
 
 #include <seqan3/test/expect_range_eq.hpp>
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>

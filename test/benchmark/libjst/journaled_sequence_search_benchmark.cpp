@@ -8,7 +8,7 @@
 #include <benchmark/benchmark.h>
 
 #include <seqan3/alphabet/adaptation/char.hpp>
-#include <seqan3/range/container/aligned_allocator.hpp>
+#include <seqan3/utility/container/aligned_allocator.hpp>
 #include <seqan3/range/container/dynamic_bitset.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>

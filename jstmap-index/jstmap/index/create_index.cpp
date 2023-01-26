@@ -10,7 +10,7 @@
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
-#include <seqan3/range/views/kmer_hash.hpp>
+#include <seqan3/search/views/kmer_hash.hpp>
 
 #include <libjst/sequence_tree/chunked_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
