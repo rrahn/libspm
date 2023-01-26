@@ -13,6 +13,7 @@
 #pragma once
 
 #include <concepts>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -24,7 +25,7 @@
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/alphabet/nucleotide/dna15.hpp>
 #include <seqan3/core/concept/cereal.hpp>
-#include <seqan3/core/detail/debug_stream_alphabet.hpp>
+#include <seqan3/alphabet/detail/debug_stream_alphabet.hpp>
 #include <seqan3/utility/math.hpp>
 
 #include <libcontrib/std/tag_invoke.hpp>

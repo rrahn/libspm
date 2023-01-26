@@ -13,6 +13,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bit>
 #include <compare>
 #include <concepts>
 #include <initializer_list>
@@ -21,7 +22,6 @@
 #include <cereal/types/base_class.hpp>
 
 #include <seqan3/core/concept/cereal.hpp>
-#include <seqan3/std/bit>
 #include <seqan3/utility/detail/bits_of.hpp>
 
 namespace libjst

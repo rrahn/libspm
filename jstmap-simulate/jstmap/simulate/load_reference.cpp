@@ -13,7 +13,7 @@
 #include <stdexcept> // invalid_argument
 
 #include <seqan3/io/sequence_file/input.hpp>
-#include <seqan3/std/filesystem>
+#include <filesystem>
 
 #include <jstmap/simulate/load_reference.hpp>
 
@@ -27,7 +27,7 @@ raw_sequence_t load_reference(std::filesystem::path const & sequence_file)
     if (it == fin.end())
         throw std::invalid_argument("Input file is empty.");
 
-    return seqan3::get<seqan3::field::seq>(*it);
+    return std::move((*it).sequence());
 }
 
 } // namespace jstmap

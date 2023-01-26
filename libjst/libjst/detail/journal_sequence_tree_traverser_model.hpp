@@ -17,7 +17,7 @@
 
 #include <cereal/types/vector.hpp>
 
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/journal_decorator.hpp>
 

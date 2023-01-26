@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <concepts>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 
 namespace libjst::detail
 {

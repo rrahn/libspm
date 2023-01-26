@@ -14,7 +14,7 @@
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/core/detail/debug_stream_type.hpp>
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
 #include <libjst/search/horspool_search.hpp>

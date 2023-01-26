@@ -12,13 +12,14 @@
 
 #pragma once
 
+#include <span>
 #include <vector>
 
 #include <cereal/types/base_class.hpp>
 #include <cereal/types/vector.hpp>
 
 #include <seqan3/alphabet/concept.hpp>
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 
 #include <libjst/detail/delta_kind_base.hpp>
 

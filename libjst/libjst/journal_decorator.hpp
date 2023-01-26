@@ -13,13 +13,12 @@
 #pragma once
 
 #include <algorithm>
+#include <ranges>
 #include <set>
 #include <span>
 #include <type_traits>
 
-#include <seqan3/range/views/drop.hpp> // suffix
-#include <seqan3/range/views/take.hpp> // prefix
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/journal_entry.hpp>
 #include <libjst/utility/sorted_vector.hpp>
@@ -285,11 +284,11 @@ private:
 
         // Create local entries for insertion and right entry covering segment suffix of split entry.
         journal_entry_type split_entry_right{insert_position,
-                                             affected_entry.segment() | seqan3::views::drop(split_position)};
+                                             affected_entry.segment() | std::views::drop(split_position)};
         journal_entry_type insert_entry{insert_position, std::move(segment)};
 
         // Update the entries in the dictionary!
-        affected_entry.segment() = affected_entry.segment() | seqan3::views::take(split_position);
+        affected_entry.segment() = affected_entry.segment() | std::views::take(split_position);
         // we need to insert two at once:
         if (!split_entry_right.segment().empty()) [[likely]] {
             return dictionary_iterator{_dictionary._elements.insert(++hint.base(), {std::move(insert_entry), std::move(split_entry_right)})};

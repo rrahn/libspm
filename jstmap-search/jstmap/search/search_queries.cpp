@@ -187,8 +187,8 @@ std::vector<search_match> search_queries_(jst_bin_t const & jst_bin,
         size_t const suffix_begin_position = query_position + fragment_size;
         assert(suffix_begin_position <= std::ranges::size(queries[query_idx]));
 
-        auto query_prefix = queries[query_idx] | seqan3::views::take(query_position) | std::views::reverse;
-        auto query_suffix = queries[query_idx] | seqan3::views::drop(suffix_begin_position);
+        auto query_prefix = queries[query_idx] | std::views::take(query_position) | std::views::reverse;
+        auto query_suffix = queries[query_idx] | std::views::drop(suffix_begin_position);
 
         // ----------------------------------------------------------------------------
         // Verify query suffix

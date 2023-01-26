@@ -23,7 +23,7 @@ sequence_collection_t load_queries(std::filesystem::path const & query_input_fil
 
     std::ranges::for_each(query_input_file, [&] (auto const & sequence_record)
     {
-        queries.emplace_back(seqan3::get<seqan3::field::seq>(sequence_record));
+        queries.emplace_back(sequence_record.sequence());
     });
 
     return queries;

@@ -15,9 +15,7 @@
 #include <concepts>
 #include <ranges>
 
-#include <seqan3/range/views/drop.hpp>
-#include <seqan3/range/views/slice.hpp>
-#include <seqan3/range/views/take.hpp>
+#include <seqan3/utility/views/type_reduce.hpp>
 
 #include <libjst/journal_sequence.hpp>
 
@@ -25,7 +23,9 @@ namespace libjst::detail
 {
 
 template <std::ranges::viewable_range sequence_t>
-using subrange_t = decltype(std::declval<sequence_t>() | seqan3::views::slice(0, 1));
+using subrange_t = decltype(std::declval<sequence_t>() | std::views::drop(0)
+                                                       | std::views::take(0)
+                                                       | seqan3::views::type_reduce);
 
 } // namespace libjst::detail
 
@@ -241,11 +241,13 @@ private:
         // Create local entries for insertion and right entry covering suffix of split entry.
         key_type const split_position = insert_position - entry_first(affected_entry);
         journal_entry_type split_entry_right{insert_position,
-                                             entry_value(affected_entry) | seqan3::views::drop(split_position)};
+                                             entry_value(affected_entry) | std::views::drop(split_position)
+                                                                         | seqan3::views::type_reduce};
         journal_entry_type insert_entry{insert_position, std::move(segment)};
 
         // Update dictionary
-        entry_value(affected_entry) = entry_value(affected_entry) | seqan3::views::take(split_position);
+        entry_value(affected_entry) = entry_value(affected_entry) | std::views::take(split_position)
+                                                                  | seqan3::views::type_reduce;
         if (!entry_value(split_entry_right).empty()) [[likely]] {
             return _dictionary.insert(++hint, {std::move(insert_entry), std::move(split_entry_right)});
         } else {
@@ -265,8 +267,10 @@ private:
             assert(prefix_last < suffix_first);
             assert(suffix_first < entry_last(entry_left));
 
-            mapped_type suffix = entry_value(entry_left) | seqan3::views::drop(suffix_first);
-            entry_value(entry_left) = entry_value(entry_left) | seqan3::views::take(prefix_last);
+            mapped_type suffix = entry_value(entry_left) | std::views::drop(suffix_first)
+                                                         | seqan3::views::type_reduce;
+            entry_value(entry_left) = entry_value(entry_left) | std::views::take(prefix_last)
+                                                              | seqan3::views::type_reduce;
             assert(!entry_value(entry_left).empty());
             assert(!suffix.empty());
             return _dictionary.emplace(++entry_left_it, last, std::move(suffix));
@@ -280,8 +284,10 @@ private:
             bool erase_right = last == entry_last(*entry_right_it);
 
             key_type suffix_first = last - entry_first(*entry_right_it);
-            mapped_type suffix_right = entry_value(*entry_right_it) | seqan3::views::drop(suffix_first);
-            entry_value(entry_left) = entry_value(entry_left) | seqan3::views::take(prefix_last);
+            mapped_type suffix_right = entry_value(*entry_right_it) | std::views::drop(suffix_first)
+                                                                    | seqan3::views::type_reduce;
+            entry_value(entry_left) = entry_value(entry_left) | std::views::take(prefix_last)
+                                                              | seqan3::views::type_reduce;
 
             // 3. erase inner entries
             entry_right_it = _dictionary.erase(entry_left_it + keep_prefix_left, entry_right_it + erase_right);
@@ -311,7 +317,8 @@ private:
 
     template <typename insert_sequence_t>
     constexpr mapped_type to_mapped(insert_sequence_t && sequence) noexcept {
-        return std::forward<insert_sequence_t>(sequence) | seqan3::views::take(std::ranges::size(sequence));
+        return std::forward<insert_sequence_t>(sequence) | std::views::take(std::ranges::size(sequence))
+                                                         | seqan3::views::type_reduce;
     }
 
     template <typename entry_t>

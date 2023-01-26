@@ -14,7 +14,7 @@
 
 #include <concepts>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 
 #include <libjst/search/state_manager_concept.hpp>
 #include <libjst/search/state_manager_single.hpp>

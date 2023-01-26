@@ -17,10 +17,10 @@
 #include <cereal/types/variant.hpp>
 
 #include <seqan3/alphabet/concept.hpp>
-#include <seqan3/core/detail/debug_stream_type.hpp>
+#include <seqan3/alphabet/views/to_char.hpp>
+#include <seqan3/core/debug_stream/debug_stream_type.hpp>
 #include <seqan3/core/detail/template_inspection.hpp>
-#include <seqan3/range/views/to.hpp>
-#include <seqan3/range/views/to_char.hpp>
+#include <seqan3/utility/range/to.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/detail/delta_kind_deletion.hpp>
@@ -272,7 +272,7 @@ inline std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream
            {
                 auto to_string = [] <std::ranges::input_range range_t> (range_t && range) -> std::string
                 {
-                    return range | seqan3::views::to_char | seqan3::views::to<std::string>;
+                    return range | seqan3::views::to_char | seqan3::ranges::to<std::string>;
                 };
 
                 return seqan3::detail::multi_invocable

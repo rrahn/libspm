@@ -15,7 +15,7 @@
 #include <concepts>
 #include <type_traits>
 
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/traversal/sequence_strategy_abstract.hpp>
 #include <libjst/variant/concept.hpp>

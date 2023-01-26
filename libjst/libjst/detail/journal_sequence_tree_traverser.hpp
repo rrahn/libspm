@@ -15,7 +15,7 @@
 #include <ranges>
 
 #include <seqan3/core/debug_stream.hpp>
-#include <seqan3/range/views/zip.hpp>
+#include <seqan3/utility/views/zip.hpp>
 
 #include <libjst/context_position.hpp>
 #include <libjst/detail/branch_stack.hpp>
