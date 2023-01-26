@@ -18,14 +18,76 @@
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/io/sequence_file/output.hpp>
 
+#include <libcontrib/execute/for_each_stream.hpp>
+#include <libcontrib/execute/make_sender.hpp>
+#include <libcontrib/execute/make_stream.hpp>
+#include <libcontrib/execute/run.hpp>
+#include <libcontrib/execute/then.hpp>
+#include <libcontrib/execute/transform_stream.hpp>
+
+#include <jstmap/global/all_matches.hpp>
 #include <jstmap/global/application_logger.hpp>
+#include <jstmap/global/bam_writer.hpp>
 #include <jstmap/global/load_jst.hpp>
+#include <jstmap/global/search_query.hpp>
 #include <jstmap/simulate/options.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
 #include <jstmap/simulate/read_sampler.hpp>
 
 namespace jstmap
 {
+template <typename fn_t>
+struct debug_fn {
+
+    fn_t _fn;
+
+    debug_fn(fn_t fn) : _fn{fn}
+    {
+        std::cout << "Initialise debug fn\n";
+    }
+
+    debug_fn(debug_fn const & other) : _fn{other._fn}
+    {
+        std::cout << "Copy debug fn\n";
+    }
+
+    debug_fn(debug_fn && other) : _fn{std::move(other._fn)}
+    {
+        std::cout << "Move debug fn\n";
+    }
+
+    debug_fn & operator=(debug_fn const & other)
+    {
+        std::cout << "Copy assign debug fn\n";
+        _fn = other._fn;
+        return *this;
+    }
+
+    debug_fn & operator=(debug_fn && other) noexcept
+    {
+        std::cout << "Move assign debug fn\n";
+        _fn = std::move(other._fn);
+        return *this;
+    }
+
+    template <typename ...args_t>
+    auto operator()(args_t && ...args) & -> std::invoke_result_t<fn_t &, args_t...>
+    {
+        return std::invoke(_fn, (args_t&&)args...);
+    }
+
+    template <typename ...args_t>
+    auto operator()(args_t && ...args) const & -> std::invoke_result_t<fn_t const &, args_t...>
+    {
+        return std::invoke(_fn, (args_t&&)args...);
+    }
+
+    template <typename ...args_t>
+    auto operator()(args_t && ...args) && -> std::invoke_result_t<fn_t, args_t...>
+    {
+        return std::invoke(std::move(_fn), (args_t&&)args...);
+    }
+};
 
 int simulate_main(seqan3::argument_parser & simulate_parser)
 {
@@ -101,36 +163,63 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         log_debug("Load jst from file", options.input_file);
         auto rcs_store = load_jst(options.input_file);
 
+        log_debug("Initiate simulation");
+        // read_sampler sampler{rcs_store};
+
+
+        auto simulation = execute::make_sender([] (auto const & data) { return read_sampler{data}; }, rcs_store)
+                        | execute::then([&] (auto && sampler) {
+                            auto start = std::chrono::high_resolution_clock::now();
+                            auto sampled_reads = sampler(options.read_count, options.read_size);
+                            auto end = std::chrono::high_resolution_clock::now();
+                            log_debug("Sampling time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+                            return sampled_reads;
+                        })
+                        | execute::then([] (auto && sampled_reads) {
+                            std::size_t sample_idx{};
+                            return execute::make_stream(std::move(sampled_reads))
+                                    | execute::transform_stream([sample_idx] (auto && sample_record) mutable -> all_matches {
+                                        using namespace std::literals;
+                                        auto && [read, match_position] = sample_record;
+                                        std::string id_buffer = "jstsim|"s + std::to_string(sample_idx++);
+                                        sequence_record_t record{};
+                                        record.id() = std::move(id_buffer);
+                                        record.sequence() = std::move(read);
+                                        all_matches matches{search_query{sample_idx, std::move(record)}};
+                                        matches.record_match(std::move(match_position));
+                                        return matches;
+                                    });
+                        })
+                        | execute::then([&] (auto && stream) {
+
+                            log_debug("Save sampled reads");
+
+                            auto start = std::chrono::high_resolution_clock::now();
+                            seqan3::sequence_file_output sout{options.output_file};
+                            bam_writer writer{rcs_store, options.output_file.replace_extension(".sam")};
+                            execute::run(execute::for_each_stream((decltype(stream) &&)stream, [&] (all_matches && matches) {
+                                sout.push_back(matches.query().value());
+                                writer.write_matches(matches);
+                            }));
+
+                            auto end = std::chrono::high_resolution_clock::now();
+                            log_debug("Saving time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+                        });
+
+        log_debug("Run simulation");
         auto start = std::chrono::high_resolution_clock::now();
-        log_debug("Initiate read sampler");
-        read_sampler sampler{rcs_store};
-        auto sampled_reads = sampler(options.read_count, options.read_size);
+
+        execute::run(simulation);
 
         auto end = std::chrono::high_resolution_clock::now();
-        log_debug("Sampling time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
-        log_debug("Save sampled reads");
-        start = std::chrono::high_resolution_clock::now();
-
-        seqan3::sequence_file_output sout{options.output_file};
-        size_t sample_idx{};
-        std::ranges::for_each(sampled_reads, [&] (auto const & sampled_read)
-        {
-            using namespace std::literals;
-            auto && [read_sequence, tree_position, label_offset] = sampled_read;
-            std::string id_buffer = "jstsim|"s + std::to_string(sample_idx++) + "|"s + std::to_string(label_offset);
-            sout.emplace_back(read_sequence, id_buffer);
-        });
-
-        end = std::chrono::high_resolution_clock::now();
-        log_debug("Saving time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Simulation time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Simulation finished successful");
     }
     catch (std::exception const & ex)
     {
         log_err(ex.what());
         return -1;
     }
-    auto global_end = std::chrono::high_resolution_clock::now();
-    log_info("Fished simulation [", std::chrono::duration_cast<std::chrono::seconds>(global_end - global_start).count(), "s]");
 
     return 0;
 }

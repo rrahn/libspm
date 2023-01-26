@@ -44,4 +44,7 @@ struct sequence_input_traits : public seqan3::sequence_file_input_default_traits
     using sequence_legal_alphabet = jst::contrib::dna15; // conversion?
 };
 
+using sequence_file_t = seqan3::sequence_file_input<sequence_input_traits>;
+using sequence_record_t = std::ranges::range_value_t<sequence_file_t>;
+
 }  // namespace jstmap

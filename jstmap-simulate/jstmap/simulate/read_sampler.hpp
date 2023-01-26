@@ -14,12 +14,13 @@
 #include <libjst/sequence_tree/stats.hpp>
 
 #include <jstmap/global/jstmap_types.hpp>
+#include <jstmap/global/match_position.hpp>
 
 namespace jstmap
 {
 
     using read_type = reference_t;
-    using sampled_read_type = std::tuple<read_type, libjst::seek_position, std::ptrdiff_t>;
+    using sampled_read_type = std::tuple<read_type, match_position>;
     using sampled_read_list_type = std::vector<sampled_read_type>;
     class read_sampler {
     private:
