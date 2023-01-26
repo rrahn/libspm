@@ -12,6 +12,11 @@ add_library (jstmap::global::base ALIAS jstmap_global_base)
 add_library(jstmap_global_logging OBJECT jstmap/global/application_logger.cpp jstmap/global/application_logger.hpp)
 target_link_libraries (jstmap_global_logging PUBLIC jstmap::global::base)
 
+### Create object library for bam writer.
+add_library(jstmap_global_bam_writer OBJECT jstmap/global/bam_writer.cpp jstmap/global/bam_writer.hpp)
+target_link_libraries (jstmap_global_bam_writer PUBLIC jstmap::global::base jstmap_global_logging)
+add_library (jstmap::global::bam_writer ALIAS jstmap_global_bam_writer)
+
 ### Create object library for loading a jst.
 add_library(jstmap_global_load_jst STATIC jstmap/global/load_jst.cpp jstmap/global/load_jst.hpp)
 target_link_libraries (jstmap_global_load_jst PUBLIC jstmap::global::base jstmap_global_logging)
