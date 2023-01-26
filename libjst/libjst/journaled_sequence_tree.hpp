@@ -15,11 +15,11 @@
 #include <list>
 #include <set>
 
-#include <seqan3/std/algorithm>
-#include <seqan3/std/filesystem>
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
-#include <seqan3/std/iterator>
-#include <seqan3/std/ranges>
+#include <iterator>
+#include <ranges>
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/list.hpp>
@@ -27,8 +27,8 @@
 #include <seqan3/alphabet/concept.hpp>
 #include <seqan3/alphabet/gap/gapped.hpp>
 #include <seqan3/core/concept/cereal.hpp>
-#include <seqan3/range/concept.hpp>
-#include <seqan3/range/views/convert.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
+#include <seqan3/utility/views/convert.hpp>
 
 #include <libjst/detail/delta_event_shared.hpp>
 #include <libjst/detail/journal_sequence_tree_event_branch.hpp>
@@ -591,7 +591,7 @@ private:
                                    {
                                         return c.template convert_to<alphabet_t>();
                                    }),
-                          std::cpp20::back_inserter(pure_target_sequence));
+                          std::back_inserter(pure_target_sequence));
 
         // The target sequence and the journal decorator must be equal.
         return std::ranges::equal(sequence_at(idx), pure_target_sequence);

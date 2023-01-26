@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <seqan3/range/container/aligned_allocator.hpp>
+#include <seqan3/utility/container/aligned_allocator.hpp>
 #include <seqan3/utility/simd/algorithm.hpp>
 #include <seqan3/utility/simd/simd.hpp>
 #include <seqan3/utility/simd/simd_traits.hpp>

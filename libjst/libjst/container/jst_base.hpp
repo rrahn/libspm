@@ -15,7 +15,7 @@
 #include <functional>
 #include <ranges>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 
 #include <libjst/container/concept_jst.hpp>
 #include <libjst/container/concept_serialiser.hpp>

@@ -5,7 +5,7 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-#include <seqan3/std/filesystem>
+#include <filesystem>
 #include <vector>
 
 #include <jstmap/global/jstmap_types.hpp>

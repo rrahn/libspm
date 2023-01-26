@@ -8,8 +8,7 @@
 #include <omp.h>
 
 #include <seqan3/search/dream_index/interleaved_bloom_filter.hpp>
-#include <seqan3/range/views/kmer_hash.hpp>
-#include <seqan3/range/views/to.hpp>
+#include <seqan3/search/views/kmer_hash.hpp>
 
 #include <jstmap/search/filter_queries.hpp>
 
@@ -64,8 +63,8 @@ filter_queries(std::vector<reference_t> const & queries, search_options const & 
         size_t const kmer_threshold = query_size + 1 - (error_count + 1) * kmer_size;
 
         // Counting:
-        std::vector hashes = query_seq | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size})
-                                       | seqan3::views::to<std::vector<uint64_t>>;
+        auto hashed_seq = query_seq | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size});
+        std::vector hashes(std::ranges::begin(hashed_seq), std::ranges::end(hashed_seq));
         auto & bin_counts = counting_agent.bulk_count(hashes);
 
         // Bin assignment:

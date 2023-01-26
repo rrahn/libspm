@@ -16,7 +16,7 @@
 #include <exception>
 #include <type_traits>
 
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/journal.hpp>
 #include <libjst/variant/concept.hpp>

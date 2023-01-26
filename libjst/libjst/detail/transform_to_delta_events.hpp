@@ -16,7 +16,7 @@
 #include <ranges>
 
 #include <seqan3/alphabet/concept.hpp>
-#include <seqan3/range/views/zip.hpp>
+#include <seqan3/utility/views/zip.hpp>
 
 #include <libjst/detail/delta_event.hpp>
 

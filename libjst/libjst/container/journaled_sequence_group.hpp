@@ -15,7 +15,7 @@
 #include <ranges>
 #include <type_traits>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 
 #include <libjst/variant/concept.hpp>
 

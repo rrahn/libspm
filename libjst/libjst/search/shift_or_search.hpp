@@ -15,7 +15,7 @@
 #include <concepts>
 #include <ranges>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 #include <seqan3/range/views/to_rank.hpp>
 #include <seqan3/core/debug_stream.hpp>
 

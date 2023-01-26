@@ -16,7 +16,7 @@
 #include <ranges>
 #include <type_traits>
 
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 namespace libjst
 {

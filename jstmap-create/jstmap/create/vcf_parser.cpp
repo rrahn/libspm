@@ -290,8 +290,8 @@ private:
             size_t const alt_prefix_offset = std::ranges::distance(alternative.begin(), alt_it);
 
             auto [ref_it_rev, alt_it_rev] =
-                std::ranges::mismatch(reference_segment | seqan3::views::drop(ref_prefix_offset) | std::views::reverse,
-                                      alternative | seqan3::views::drop(alt_prefix_offset) | std::views::reverse);
+                std::ranges::mismatch(reference_segment | std::views::drop(ref_prefix_offset) | std::views::reverse,
+                                      alternative | std::views::drop(alt_prefix_offset) | std::views::reverse);
             // base returns the iterator to the actual end.
             assert(ref_it <= ref_it_rev.base());
             assert(alt_it <= alt_it_rev.base());
@@ -308,7 +308,7 @@ private:
                 size_t const variant_size = std::ranges::distance(alt_it, alt_it_rev.base());
                 auto variant = alternative.subspan(alt_prefix_offset, variant_size)
                              | seqan3::views::char_to<jst::contrib::dna5>
-                             | seqan3::views::to<std::vector>;
+                             | seqan3::ranges::to<std::vector>;
 
                 if (alternative.size() == reference_segment.size()) // Substitution.
                 {

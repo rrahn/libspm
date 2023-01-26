@@ -17,7 +17,7 @@
 #include <memory>
 #include <ranges>
 
-#include <seqan3/range/views/slice.hpp>
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libjst/container/concept_jst.hpp>
 #include <libjst/variant/variant_proxy_offset.hpp>

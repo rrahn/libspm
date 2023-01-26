@@ -5,7 +5,7 @@
 // shipped with this file and also available at: https://github.com/rrahn/just_map/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
-#include <seqan3/std/algorithm>
+#include <algorithm>
 
 #include <jstmap/create/load_sequence.hpp>
 
@@ -19,7 +19,7 @@ sequence_collection_t load_sequences(std::filesystem::path const & sequence_file
     seqan3::sequence_file_input<sequence_input_traits> fin{sequence_file.c_str()};
     std::ranges::for_each(fin, [&] (auto const & sequence_record)
     {
-        sequences.push_back(seqan3::get<seqan3::field::seq>(sequence_record));
+        sequences.push_back(sequence_record.sequence());
     });
 
     return sequences;

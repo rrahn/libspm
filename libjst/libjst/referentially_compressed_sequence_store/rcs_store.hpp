@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-#include <seqan3/range/concept.hpp>
+#include <seqan3/alphabet/range/sequence.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 
 #include <libjst/utility/bit_vector.hpp>

@@ -16,7 +16,7 @@
 #include <numeric>
 #include <ranges>
 
-#include <seqan3/range/views/zip.hpp>
+#include <seqan3/utility/views/zip.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/context_position.hpp>
