@@ -98,8 +98,8 @@ namespace jstmap
                 auto read_begin = std::ranges::next(std::ranges::begin(label), sample_begin);
                 auto read_end = std::ranges::next(std::ranges::begin(label), sample_end);
                 sampled_reads.emplace_back(read_type{read_begin, read_end},
-                                           cargo.position(),
-                                           sample_end_offset);
+                                           match_position{.tree_position = cargo.position(),
+                                                          .label_offset = sample_end_offset});
                 validate_sample(sampled_reads.back());
                 // assert();
 
@@ -149,7 +149,7 @@ namespace jstmap
     }
 
     bool read_sampler::validate_sample(sampled_read_type const & sample) const noexcept {
-        auto && [read, seek_pos, offset] = sample;
+        auto && [read, match_position] = sample;
         size_t sample_size = std::ranges::size(read);
         size_t window_size = sample_size - 1;
         auto validation_tree = libjst::volatile_tree(_rcs_store) | libjst::labelled<libjst::sequence_label_kind::root_path>()
@@ -160,10 +160,10 @@ namespace jstmap
                                                                  | libjst::merge()
                                                                  | libjst::seek();
 
-        auto node = validation_tree.seek(seek_pos);
+        auto node = validation_tree.seek(match_position.tree_position);
         auto cargo = *node;
         auto label = cargo.sequence();
-        size_t end_position = std::ranges::size(label) - offset;
+        size_t end_position = std::ranges::size(label) - match_position.label_offset;
         size_t begin_position = end_position - sample_size;
         auto label_begin = std::ranges::next(std::ranges::begin(label), begin_position);
         auto label_end = std::ranges::next(std::ranges::begin(label), end_position);
