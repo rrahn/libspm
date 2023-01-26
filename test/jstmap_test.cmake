@@ -69,8 +69,8 @@ target_link_libraries (jstmap_test INTERFACE "pthread" "seqan3::seqan3")
 add_library (jstmap::test ALIAS jstmap_test)
 
 add_library (jstmap_test_unit INTERFACE)
-target_include_directories (jstmap_test_unit INTERFACE "gtest" "gtest_main" "jstmap::test")
-target_link_libraries (jstmap_test_unit INTERFACE "gtest" "gtest_main" "jstmap::test")
+target_include_directories (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_main" "jstmap::test")
+target_link_libraries (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_main" "jstmap::test")
 add_library (jstmap::test::unit ALIAS jstmap_test_unit)
 
 add_library (jstmap_test_performance INTERFACE)
