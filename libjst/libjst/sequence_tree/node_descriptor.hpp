@@ -184,8 +184,9 @@ namespace libjst {
             };
         };
 
-        stream << "<" << (descriptor.on_alternate_path() ? "alt"sv : "ref"sv)
-                      << " state = " << to_msg(descriptor) << ">";
+        stream << "<path = " << (descriptor.on_alternate_path() ? "alt"sv : "ref"sv)
+                             << " state = " << to_msg(descriptor)
+               << ">";
         return stream;
     }
 }  // namespace libjst
