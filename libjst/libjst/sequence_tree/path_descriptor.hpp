@@ -15,6 +15,7 @@
 #include <array>
 #include <bit>
 #include <bitset>
+#include <cassert>
 #include <cstdint>
 #include <iosfwd>
 #include <iterator>
@@ -49,6 +50,8 @@ namespace libjst
         data_type _data{};
 
     public:
+
+        using value_type = word_t;
 
         constexpr extended_word() = default;
         constexpr explicit extended_word(word_t init_value) : _data{init_value, 0, 0, 0}
@@ -97,6 +100,10 @@ namespace libjst
         void load(archive_t &iarchive) noexcept
         {
             iarchive(_data);
+        }
+
+        word_t const* data() const noexcept {
+            return _data.data();
         }
     private:
 
@@ -213,6 +220,8 @@ namespace libjst
 
     public:
 
+        using underlying_type = data_type;
+
         constexpr alternate_path_descriptor() = default;
 
         constexpr void next() noexcept {
@@ -254,6 +263,10 @@ namespace libjst
         void load(archive_t &iarchive) noexcept
         {
             iarchive(get_word());
+        }
+
+        typename data_type::value_type const* data() const noexcept {
+            return get_word().data();
         }
 
     private:
