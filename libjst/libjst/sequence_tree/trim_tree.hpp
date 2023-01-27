@@ -212,7 +212,7 @@ namespace libjst
 
             template <std::unsigned_integral branch_size_t>
             constexpr auto operator()(branch_size_t const branch_size) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, branch_size_t>)
+                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _trim, branch_size_t>)
                 -> jst::contrib::closure_result_t<_trim, branch_size_t>
             {
                 return jst::contrib::make_closure(_trim{}, branch_size);
