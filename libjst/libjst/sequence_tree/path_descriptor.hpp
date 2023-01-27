@@ -294,7 +294,7 @@ namespace libjst
         stream << "[";
         if (descriptor.size() != 0) {
             auto it = descriptor.begin();
-            for (auto it = descriptor.begin(); it != descriptor.end() - 1; ++it) {
+            for (auto it = descriptor.begin(); it != std::ranges::prev(descriptor.end(), 1, descriptor.begin()); ++it) {
                 stream << *it << ", ";
             }
             stream << *it;
