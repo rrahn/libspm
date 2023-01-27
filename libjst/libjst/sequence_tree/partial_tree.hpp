@@ -67,6 +67,10 @@ namespace libjst
         constexpr sink_impl sink() const noexcept {
             return sink_impl{libjst::sink(_wrappee)};
         }
+
+        constexpr base_tree_t const & base() const noexcept {
+            return _wrappee;
+        }
    };
 
     template <typename wrapped_tree_t, std::integral offset_t, std::integral count_t>
