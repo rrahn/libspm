@@ -30,8 +30,12 @@ namespace jstmap
             _query{std::move(query)}
         {}
 
-        search_query_type const & query() const noexcept {
+        search_query_type const & query() const & noexcept {
             return _query;
+        }
+
+        search_query_type query() && noexcept {
+            return std::move(_query);
         }
 
         match_list_type const & matches() const noexcept {
