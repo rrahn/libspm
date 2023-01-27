@@ -23,6 +23,10 @@ target_link_libraries (jstmap_search_filter PUBLIC jstmap::search::base libjst::
 add_library(jstmap_search_output OBJECT jstmap/search/write_results.cpp jstmap/search/write_results.hpp)
 target_link_libraries (jstmap_search_output PUBLIC jstmap::search::base libjst::libjst)
 
+### Filtering the queries using the additional index
+add_library(jstmap_search_match_aligner OBJECT jstmap/search/match_aligner.cpp jstmap/search/match_aligner.hpp)
+target_link_libraries (jstmap_search_match_aligner PUBLIC jstmap::search::base libjst::libjst)
+
 ### Create static library for index subcommand
 add_library (jstmap_search STATIC jstmap/search/search_main.cpp)
 target_link_libraries (jstmap_search PUBLIC jstmap_search_search
