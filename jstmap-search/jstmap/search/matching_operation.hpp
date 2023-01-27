@@ -14,8 +14,10 @@
 
 #include <libjst/matcher/horspool_matcher.hpp>
 #include <libjst/traversal/state_oblivious_traverser.hpp>
+#include <libjst/sequence_tree/seekable_tree.hpp>
 
-#include <jstmap/search/match.hpp>
+#include <jstmap/global/all_matches.hpp>
+#include <jstmap/global/all_matches.hpp>
 #include <jstmap/search/type_alias.hpp>
 
 namespace jstmap
@@ -31,13 +33,31 @@ namespace jstmap
         template <typename callback_t>
         constexpr void operator()(haystack_type && haystack, bucket_type const & bucket, callback_t && callback) const {
 
-            std::ranges::for_each(bucket, [&] (auto const & query) {
-                auto && [idx, sequence] = query;
-                libjst::horspool_matcher matcher{sequence};
-                libjst::state_oblivious_traverser traverser{};
-                traverser(haystack, matcher, [&] ([[maybe_unused]] auto const & finder, [[maybe_unused]] auto const & jst_context) {
-                    callback(match{idx});
-                });
+            std::ranges::for_each(bucket, [&] (search_query const & query) {
+                libjst::horspool_matcher matcher{query.value().sequence()};
+
+                if (libjst::window_size(matcher) == 0)
+                    return;
+
+                auto search_tree = haystack | libjst::labelled<libjst::sequence_label_kind::root_path>()
+                                            | libjst::coloured()
+                                            | libjst::trim(libjst::window_size(matcher) - 1)
+                                            | libjst::prune_unsupported()
+                                            | libjst::left_extend(libjst::window_size(matcher) - 1)
+                                            | libjst::merge() // make big nodes
+                                            | libjst::seek();
+
+                libjst::tree_traverser_base oblivious_path{search_tree};
+                for (auto it = oblivious_path.begin(); it != oblivious_path.end(); ++it) {
+                    auto && cargo = *it;
+                    matcher(cargo.sequence(), [&] ([[maybe_unused]] auto && label_finder) {
+                        callback(query, match_position{.tree_position{cargo.position()},
+                                                       .label_offset{std::ranges::ssize(cargo.sequence()) - seqan::endPosition(label_finder)}});
+                        // callback(match{.query_id{idx},
+                        //                .position{.tree_position{cargo.position()},
+                        //                          .label_offset{seqan::position(label_finder)}}});
+                    });
+                }
             });
         }
     };

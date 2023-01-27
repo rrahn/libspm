@@ -31,8 +31,13 @@ namespace jstmap
         key_type key() const noexcept {
             return _key;
         }
-        value_type const & value() const noexcept {
+
+        value_type const & value() const & noexcept {
             return _value;
+        }
+
+        value_type value() && noexcept {
+            return std::move(_value);
         }
     private:
 
