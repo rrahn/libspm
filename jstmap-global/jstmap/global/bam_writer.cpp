@@ -13,11 +13,22 @@
 #include <iostream>
 #include <string>
 
+#include <seqan3/utility/detail/multi_invocable.hpp>
+
+#include <libjst/sequence_tree/path_descriptor.hpp>
+#include <libjst/sequence_tree/node_descriptor.hpp>
+
 #include <jstmap/global/bam_writer.hpp>
 #include <jstmap/global/search_query.hpp>
 
-namespace jstmap
-{
+namespace seqan3 {
+    template <> struct sam_tag_type<"ad"_tag> { using type = std::vector<std::byte>; };
+    template <> struct sam_tag_type<"rd"_tag> { using type = std::vector<std::byte>; };
+    template <> struct sam_tag_type<"lo"_tag> { using type = int32_t; };
+} // namespace seqan3
+
+namespace jstmap {
+
 
     bam_writer::bam_writer(rcs_store_t const & rcs_store, std::filesystem::path file_name)
         noexcept(std::is_nothrow_move_constructible_v<std::filesystem::path>)
@@ -35,17 +46,47 @@ namespace jstmap
         return output_file_type{std::move(file_name), std::move(reference_names), std::move(reference_lengths)};
     }
 
-    void bam_writer::write_matches(all_matches const & query_matches)
+    void bam_writer::write_matches(search_matches const & query_matches)
     {
         using namespace std::literals;
         size_t cnt{};
-        for (match_position const & pos : query_matches.matches()) {
-            _output_file.emplace_back(query_matches.query().value().id(),        /*QNAME*/
-                                      _output_file.header().ref_ids()[0],        /*RNAME*/
-                                      pos.tree_position.get_variant_index(),     /*POS*/
-                                      query_matches.query().value().sequence()   /*SEQ*/
+        for (auto const & match : query_matches.matches()) {
+            _output_file.emplace_back(query_matches.query().value().id(),                   /*QNAME*/
+                                      _output_file.header().ref_ids()[0],                   /*RNAME*/
+                                      match.position().tree_position.get_variant_index(),   /*POS*/
+                                      match.get_cigar(),                                    /*CIGAR*/
+                                      query_matches.query().value().sequence(),             /*SEQ*/
+                                      encode_position(match.position())                     /*OPTIONAL TAGS*/
                                     );
         }
+    }
+
+    seqan3::sam_tag_dictionary bam_writer::encode_position(match_position const & position) const noexcept {
+        using namespace seqan3::literals;
+
+        seqan3::sam_tag_dictionary dict{};
+
+        // conversion to byte value?
+        position.tree_position.visit(seqan3::detail::multi_invocable {
+            [&](libjst::alternate_path_descriptor descriptor) {
+                size_t max_byte_count = (descriptor.size() + 7) / 8;
+
+                std::vector<std::byte> tmp(max_byte_count, std::byte{});
+                std::memcpy(tmp.data(), descriptor.data(), tmp.size());
+                dict.get<"ad"_tag>() = std::move(tmp);
+            },
+            [&](libjst::node_descriptor descriptor) {
+                using data_t = std::underlying_type_t<libjst::node_state>;
+                static constexpr size_t max_byte_count = sizeof(data_t);
+
+                std::vector<std::byte> tmp(max_byte_count, std::byte{});
+                data_t _data = static_cast<data_t>(static_cast<libjst::node_state>(descriptor));
+                std::memcpy(tmp.data(), &_data, tmp.size());
+                dict.get<"rd"_tag>() = std::move(tmp);
+            }
+        });
+        dict.get<"lo"_tag>() = position.label_offset;
+        return dict;
     }
 
     void bam_writer::write_program_info() noexcept

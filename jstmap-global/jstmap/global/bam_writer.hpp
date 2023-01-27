@@ -18,8 +18,9 @@
 
 #include <seqan3/core/debug_stream.hpp> // TODO: fix this!
 #include <seqan3/io/sam_file/output.hpp>
+#include <seqan3/io/sam_file/sam_tag_dictionary.hpp>
 
-#include <jstmap/global/all_matches.hpp>
+#include <jstmap/global/search_matches.hpp>
 #include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
@@ -30,7 +31,9 @@ namespace jstmap
         using field_ids_type = seqan3::fields<seqan3::field::id,            /*QNAME*/
                                               seqan3::field::ref_id,        /*RNAME*/
                                               seqan3::field::ref_offset,    /*POS*/
-                                              seqan3::field::seq            /*SEQ*/
+                                              seqan3::field::cigar,         /*CIGAR*/
+                                              seqan3::field::seq,           /*SEQ*/
+                                              seqan3::field::tags           /*OPTIONAL TAGS*/
                                             >;
 
         using valid_format_type = seqan3::type_list<seqan3::format_bam, seqan3::format_sam>;
@@ -45,10 +48,11 @@ namespace jstmap
         explicit bam_writer(rcs_store_t const &, std::filesystem::path)
             noexcept(std::is_nothrow_move_constructible_v<std::filesystem::path>);
 
-        void write_matches(all_matches const &);
+        void write_matches(search_matches const &);
 
     private:
         output_file_type create_output_file(std::filesystem::path);
+        seqan3::sam_tag_dictionary encode_position(match_position const &) const noexcept;
         void write_program_info() noexcept;
     };
 }  // namespace jstmap
