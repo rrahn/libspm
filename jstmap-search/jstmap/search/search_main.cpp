@@ -21,15 +21,20 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 #include <seqan3/core/debug_stream.hpp>
+#include <seqan3/utility/range/to.hpp>
 
 #include <libjst/sequence_tree/chunked_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
 
+#include <jstmap/global/all_matches.hpp>
+#include <jstmap/global/application_logger.hpp>
+#include <jstmap/global/bam_writer.hpp>
 #include <jstmap/global/jstmap_types.hpp>
 #include <jstmap/global/load_jst.hpp>
+#include <jstmap/global/search_matches.hpp>
 #include <jstmap/search/filter_queries.hpp>
+#include <jstmap/search/match_aligner.hpp>
 #include <jstmap/search/load_queries.hpp>
-#include <jstmap/search/match.hpp>
 #include <jstmap/search/matching_operation.hpp>
 #include <jstmap/search/search_main.hpp>
 // #include <jstmap/search/search_queries.hpp>
@@ -54,6 +59,18 @@ int search_main(seqan3::argument_parser & search_parser)
                                        "The alignment map output file.",
                                        seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
                                                                      {"sam", "bam"}});
+
+    search_parser.add_flag(options.is_quite,
+                           'q',
+                           "quite",
+                           "Disables all logging.",
+                           seqan3::option_spec::standard);
+    search_parser.add_flag(options.is_verbose,
+                           'v',
+                           "verbose",
+                           "Enables expansive debug logging.",
+                           seqan3::option_spec::standard);
+
     search_parser.add_option(options.index_input_file_path,
                              'i',
                              "index",
@@ -76,64 +93,78 @@ int search_main(seqan3::argument_parser & search_parser)
     try
     {
         search_parser.parse();
+        if (options.is_quite) {
+            get_application_logger().set_verbosity(verbosity_level::quite);
+        } else if (options.is_verbose) {
+            get_application_logger().set_verbosity(verbosity_level::verbose);
+        }
+
+        log_debug("References file:", options.jst_input_file_path.string());
+        log_debug("Query file:", options.query_input_file_path.string());
+        log_debug("Output file:", options.map_output_file_path.string());
+        log_debug("Index file:", options.index_input_file_path.string());
+        log_debug("Error rate:", options.error_rate);
+        log_debug("Thread count:", options.thread_count);
     }
     catch (seqan3::argument_parser_error const & ex)
     {
-        std::cerr << "ERROR: " << ex.what() << "\n";
+        log_err(ex.what());
         return -1;
     }
 
     // Load the queries and the jst.
+    auto global_start = std::chrono::high_resolution_clock::now();
     try
     {
-        std::cout << "load the queries\n";
+        log_info("Start mapping");
+        log_debug("Load reads");
         auto start = std::chrono::high_resolution_clock::now();
-        std::vector const queries = load_queries(options.query_input_file_path);
+        std::vector query_records = load_queries(options.query_input_file_path);
+        size_t query_idx{};
+        auto queries = query_records
+                     | std::views::transform([&] (sequence_record_t & record) {
+                        return search_query{query_idx++, std::move(record)};
+                     })
+                     | seqan3::ranges::to<std::vector>();
         auto end = std::chrono::high_resolution_clock::now();
+        log_debug("Read count", queries.size());
+        log_debug("Loading time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
-        std::cout << "Load queries time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
-
-        std::cout << "load the jst\n";
+        log_debug("Load reference database");
         start = std::chrono::high_resolution_clock::now();
-
         rcs_store_t rcs_store = load_jst(options.jst_input_file_path);
-        // seqan3::debug_stream << "Reference: " << rcs_store.source() << "\n";
-        seqan3::debug_stream << "Size: " << rcs_store.size() << "\n";
-
         end = std::chrono::high_resolution_clock::now();
-
-        std::cout << "Load JST time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
+        log_debug("Loading time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
         // Now we want to handle the bins as well.
-        // Step 1: prepare bins: seqan::StringSet<std::views::all_t<raw_sequence_t &>>
-        // Step 2:
+
         start = std::chrono::high_resolution_clock::now();
         size_t bin_size{std::numeric_limits<size_t>::max()};
         std::vector<bucket_type> bucket_list{};
         // What if the ibf is not present?
         if (options.index_input_file_path.empty())
         {
+            log_debug("No prefilter enabled");
             bucket_list.resize(1);
-            bucket_list[0].reserve(queries.size());
-            query_index_type idx{};
-            std::ranges::for_each(queries, [&] (auto const & query) {
-                bucket_list[0].emplace_back(idx++, query | std::views::all);
-                // seqan::appendValue(bucket_list[0], (decltype(query)&&)query | std::views::all);
-            });
+            bucket_list[0] = queries;
         }
         else
         {
-            std::cout << "Filter the queries\n";
+            log_debug("Applying IBF prefilter");
             std::tie(bin_size, bucket_list) = filter_queries(queries, options);
+            log_debug("Bin size:", bin_size);
+            log_debug("Bucket count:", bucket_list.size());
+            // auto bucket_sizes = bucket_list | std::views::transform([](auto const & bucket) {
+            //     return std::ranges::size(bucket);
+            // });
+            // auto non_empty_buckets = bucket_sizes | std::views::filter([](size_t const s) { return s > 0;});
+            // log_debug("Non-empty bucket count:", std::ranges::distance(non_empty_buckets.begin(), non_empty_buckets.end()));
+            // size_t candidates = std::accumulate(bucket_sizes.begin(), bucket_sizes.end(), 0);
+            // log_debug("Candidate count:", candidates);
+            // log_debug("Bucket sizes:", bucket_sizes);
         }
         end = std::chrono::high_resolution_clock::now();
-        std::cout << "Filter time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
+        log_debug("Filter time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
         // #TODO: add later
         // std::cout << "bin_size = " << bin_size << "\n";
@@ -148,10 +179,14 @@ int search_main(seqan3::argument_parser & search_parser)
             // range_agent{traverser_model, } we can construct this from the model directly.
 
         // We need to write more information including the reference sequences and the length of the reference sequences.
-        std::vector<std::vector<match>> query_matches{};
-        query_matches.resize(queries.size());
 
-        auto chunked_tree = libjst::volatile_tree{rcs_store} | libjst::chunk(bin_size);
+        start = std::chrono::high_resolution_clock::now();
+        auto query_matches = queries
+                           | std::views::transform([] (search_query & query) {
+                                return all_matches{std::move(query)};
+                           })
+                           | seqan3::ranges::to<std::vector>();
+        auto chunked_tree = libjst::make_volatile(rcs_store) | libjst::chunk(bin_size);
 
         for (size_t bucket_idx = 0; bucket_idx < bucket_list.size(); ++bucket_idx)
         { // parallel region
@@ -171,8 +206,9 @@ int search_main(seqan3::argument_parser & search_parser)
                 // requires: options.error_count, bucket,
 
             // Step 4: apply matching
-            op(std::move(haystack), bucket, [&] (auto match) {
-                query_matches[match.query_id()].push_back(std::move(match));
+            op(std::move(haystack), bucket, [&] (search_query const & query, match_position position) {
+                log_debug("Record match for query ", query.key(), " at ", position);
+                query_matches[query.key()].record_match(std::move(position));
             });
 
         // }
@@ -200,68 +236,45 @@ int search_main(seqan3::argument_parser & search_parser)
         }
 
         end = std::chrono::high_resolution_clock::now();
-        std::cout << "Search time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
-        size_t total_occurrences{};
-        std::ranges::for_each(query_matches, [&] (auto const & matches) { total_occurrences += matches.size(); });
-        std::cout << "Total hits: " << total_occurrences << "\n";
-        std::cout << "Reduce and filter matches\n";
+        log_debug("Matching time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+
+        // Step 5: postprocess matches
         start = std::chrono::high_resolution_clock::now();
+
+        std::vector<search_matches> aligned_matches_list{};
+        aligned_matches_list.reserve(query_matches.size());
+
+        std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
+            search_matches aligned_matches{std::move(query_match).query()};
+            match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
+
+            for (match_position pos : query_match.matches()) {
+                aligned_matches.record_match(aligner(std::move(pos)));
+            }
+            aligned_matches_list.push_back(std::move(aligned_matches));
+        });
+
+        end = std::chrono::high_resolution_clock::now();
+        log_debug("Aligning time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
         // Filter globally for the best hits.
         // Ater reducing them to the same file sort, uniquify and then erase redundant matches.
 
-        // Step 5: postprocess matches
-
-        // #TODO: readd again
-        // std::vector<search_match2> total_matches{};
-        // if (bucket_list.size() == 1)
-        // {
-        //     total_matches = std::move(bin_matches[0]);
-        // }
-        // else // Reduce all matches and uniquify all matches.
-        // {
-        //     auto match_counts = bin_matches | std::views::transform([] (auto & bin) { return bin.size(); });
-        //     size_t total_match_count = std::accumulate(match_counts.begin(), match_counts.end(), 0);
-        //     total_matches.resize(total_match_count);
-        //     auto insert_it = total_matches.begin();
-        //     std::ranges::for_each(bin_matches, [&] (auto && bin)
-        //     {
-        //         insert_it = std::ranges::move(bin, insert_it).out;
-        //     });
-
-        //     std::ranges::sort(total_matches, std::less<void>{}); // sort by query_id and by error_count.
-        //     auto redundant_tail = std::ranges::unique(total_matches,
-        //                                               std::ranges::equal_to{},
-        //                                               [] (auto const & match) { return match.query_id; });
-        //     total_matches.erase(redundant_tail.begin(), redundant_tail.end());
-        // }
-
-        end = std::chrono::high_resolution_clock::now();
-        // std::cout << "Found " << total_matches.size() << " matches\n";
-        std::cout << "Reduction time: "
-                  << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-                  << " sec\n";
-
         // Step 6: finalise
-
-        // std::cout << "Write results\n";
-        // start = std::chrono::high_resolution_clock::now();
-        // write_results(total_matches, queries, options); // needs synchronised output_buffer
-
-        // end = std::chrono::high_resolution_clock::now();
-        // std::cout << "Write results time: "
-        //           << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-        //           << " sec\n";
-
-        // Step 7: write out
+        start = std::chrono::high_resolution_clock::now();
+        bam_writer writer{rcs_store, options.map_output_file_path};
+        std::ranges::for_each(aligned_matches_list, [&] (search_matches const & matches) {
+            writer.write_matches(matches);
+        });
+        end = std::chrono::high_resolution_clock::now();
+        log_debug("Writing time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
     }
     catch (std::exception const & ex)
     {
-        std::cerr << "ERROR: " << ex.what() << "\n";
+        log_err(ex.what());
         return -1;
     }
-
+    auto global_end = std::chrono::high_resolution_clock::now();
+    log_info("Finished mapping [", std::chrono::duration_cast<std::chrono::seconds>(global_end - global_start).count() ,"s]");
     return 0;
 }
 

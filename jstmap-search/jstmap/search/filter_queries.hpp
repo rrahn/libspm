@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include <jstmap/global/search_query.hpp>
 #include <jstmap/search/options.hpp>
 #include <jstmap/search/type_alias.hpp>
 
@@ -16,6 +17,6 @@ namespace jstmap
 {
 
 std::pair<size_t, std::vector<bucket_type>>
-filter_queries(std::vector<reference_t> const &, search_options const &);
+filter_queries(std::vector<search_query> const &, search_options const &);
 
 } // namespace jstmap

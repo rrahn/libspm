@@ -10,6 +10,7 @@
 #include <seqan3/search/dream_index/interleaved_bloom_filter.hpp>
 #include <seqan3/search/views/kmer_hash.hpp>
 
+#include <jstmap/global/application_logger.hpp>
 #include <jstmap/search/filter_queries.hpp>
 
 namespace jstmap
@@ -32,10 +33,13 @@ std::tuple<size_t, uint8_t, seqan3::interleaved_bloom_filter<>> load_index(std::
 }
 
 std::pair<size_t, std::vector<bucket_type>>
-filter_queries(std::vector<reference_t> const & queries, search_options const & options)
+filter_queries(std::vector<search_query> const & queries, search_options const & options)
 {
     using bucket_list_t = std::vector<bucket_type>;
     auto [bin_size, kmer_size, ibf] = load_index(options.index_input_file_path);
+    log_debug("IBF:bin_size", bin_size);
+    log_debug("IBF:kmer_size", kmer_size);
+    log_debug("IBF:bin_count", ibf.bin_count());
 
     bucket_list_t read_bucket_list{};
     read_bucket_list.resize(ibf.bin_count());
@@ -53,24 +57,27 @@ filter_queries(std::vector<reference_t> const & queries, search_options const & 
     thread_local_buffer.resize(options.thread_count, read_bucket_list);
 
     #pragma omp parallel for num_threads(options.thread_count) shared(thread_local_buffer, queries) firstprivate(counting_agent, kmer_size) schedule(dynamic)
-    for (query_index_type query_idx = 0; query_idx < queries.size(); ++query_idx)
+    for (size_t query_idx = 0; query_idx < queries.size(); ++query_idx)
     {
+        log_debug("IBF:counting query", query_idx);
         // kmer-lemma:
         size_t const thread_id = omp_get_thread_num();
-        auto query_seq = queries[query_idx] | std::views::all;
-        size_t const query_size = std::ranges::size(query_seq);
+        search_query query = queries[query_idx];
+        size_t const query_size = std::ranges::size(query.value().sequence());
         size_t const error_count = std::ceil(query_size * options.error_rate);
-        size_t const kmer_threshold = query_size + 1 - (error_count + 1) * kmer_size;
+        size_t const kmer_threshold = query_size - kmer_size + 1 - (error_count * kmer_size);
+        log_debug("IBF:kmer_threshold", kmer_threshold);
 
         // Counting:
-        auto hashed_seq = query_seq | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size});
+        auto hashed_seq = query.value().sequence() | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size});
         std::vector hashes(std::ranges::begin(hashed_seq), std::ranges::end(hashed_seq));
         auto & bin_counts = counting_agent.bulk_count(hashes);
+        log_debug("IBF:bin_counts", bin_counts);
 
         // Bin assignment:
         for (size_t bin_idx = 0; bin_idx < bin_counts.size(); ++bin_idx)
             if (bin_counts[bin_idx] >= kmer_threshold)
-                thread_local_buffer[thread_id][bin_idx].emplace_back(query_idx, query_seq);
+                thread_local_buffer[thread_id][bin_idx].push_back(query);
     }
 
     // Reduce the local buffer and move them to the final bin vector.
@@ -79,7 +86,7 @@ filter_queries(std::vector<reference_t> const & queries, search_options const & 
         std::ranges::for_each(local_bucket_list, [&] (auto const & source_bucket) {
             bucket_type & target_bucket = read_bucket_list[bucket_idx];
             target_bucket.reserve(target_bucket.size() + source_bucket.size());
-            std::ranges::copy(source_bucket, std::back_inserter(target_bucket));
+            std::ranges::move(source_bucket, std::back_inserter(target_bucket));
             ++bucket_idx;
         });
     });
