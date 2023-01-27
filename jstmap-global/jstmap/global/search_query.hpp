@@ -24,14 +24,14 @@ namespace jstmap
         using value_type = sequence_record_t;
 
         search_query() = default;
-        search_query(key_type const key, value_type value)
+        explicit search_query(key_type const key, value_type value)
             noexcept(std::is_nothrow_move_constructible_v<value_type>) : _key{key}, _value{std::move(value)}
         {}
 
         key_type key() const noexcept {
             return _key;
         }
-        value_type value() const noexcept {
+        value_type const & value() const noexcept {
             return _value;
         }
     private:
