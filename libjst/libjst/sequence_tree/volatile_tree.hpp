@@ -126,4 +126,29 @@ namespace libjst
         //     return ;
         // }
     };
+
+    namespace _tree_factory {
+        inline constexpr struct _make_volatile
+        {
+            template <typename rcs_store_t>
+            constexpr auto operator()(rcs_store_t const & rcs_store) const
+                noexcept(std::is_nothrow_constructible_v<volatile_tree<rcs_store_t>>)
+                -> volatile_tree<rcs_store_t>
+            {
+                return volatile_tree<rcs_store_t>{rcs_store};
+            }
+
+            template <typename ...args_t>
+                requires (sizeof...(args_t) == 0)
+            constexpr auto operator()(args_t &&... args) const
+                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _make_volatile, args_t...>)
+                -> jst::contrib::closure_result_t<_make_volatile, args_t...>
+            {
+                return jst::contrib::make_closure(_make_volatile{}, (args_t&&) args...);
+            }
+        } make_volatile{};
+    } // namespace _tree_factory
+
+    using _tree_factory::make_volatile;
+
 }  // namespace libjst
