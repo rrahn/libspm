@@ -25,11 +25,13 @@
 #include <libcontrib/execute/then.hpp>
 #include <libcontrib/execute/transform_stream.hpp>
 
+#include <jstmap/global/search_matches.hpp>
 #include <jstmap/global/all_matches.hpp>
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/global/bam_writer.hpp>
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/global/search_query.hpp>
+#include <jstmap/search/match_aligner.hpp>
 #include <jstmap/simulate/options.hpp>
 #include <jstmap/simulate/simulate_main.hpp>
 #include <jstmap/simulate/read_sampler.hpp>
@@ -166,7 +168,6 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
         log_debug("Initiate simulation");
         // read_sampler sampler{rcs_store};
 
-
         auto simulation = execute::make_sender([] (auto const & data) { return read_sampler{data}; }, rcs_store)
                         | execute::then([&] (auto && sampler) {
                             auto start = std::chrono::high_resolution_clock::now();
@@ -190,6 +191,18 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
                                         return matches;
                                     });
                         })
+                        | execute::then([&] (auto && matched_search_query_stream) {
+                            return execute::transform_stream(matched_search_query_stream, [&] (auto && sample) {
+                                // transfer ownership!
+                                search_matches aligned_matches{std::move(sample).query()};
+                                match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
+
+                                for (match_position pos : sample.matches()) {
+                                    aligned_matches.record_match(aligner(std::move(pos)));
+                                }
+                                return aligned_matches;
+                            });
+                        })
                         | execute::then([&] (auto && stream) {
 
                             log_debug("Save sampled reads");
@@ -197,7 +210,7 @@ int simulate_main(seqan3::argument_parser & simulate_parser)
                             auto start = std::chrono::high_resolution_clock::now();
                             seqan3::sequence_file_output sout{options.output_file};
                             bam_writer writer{rcs_store, options.output_file.replace_extension(".sam")};
-                            execute::run(execute::for_each_stream((decltype(stream) &&)stream, [&] (all_matches && matches) {
+                            execute::run(execute::for_each_stream((decltype(stream) &&)stream, [&] (search_matches && matches) {
                                 sout.push_back(matches.query().value());
                                 writer.write_matches(matches);
                             }));

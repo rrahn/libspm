@@ -33,6 +33,7 @@ target_link_libraries (jstmap_simulate PUBLIC jstmap_simulate_input
                                             #   jstmap_simulate_build
                                             #   jstmap_create_builder
                                               jstmap_simulate_sampler
+                                              jstmap_search_match_aligner
                                               jstmap::global::bam_writer)
 add_library (jstmap::simulate ALIAS jstmap_simulate)
 
