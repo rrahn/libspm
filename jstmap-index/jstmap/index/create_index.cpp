@@ -31,7 +31,7 @@ namespace jstmap
 seqan3::interleaved_bloom_filter<> create_index(rcs_store_t const & rcs_store, index_options const & options)
 {
     // now here we need to change the classes.
-    auto forest = libjst::volatile_tree{rcs_store} | libjst::chunk(options.bin_size);
+    auto forest = libjst::volatile_tree{rcs_store} | libjst::chunk(options.bin_size, options.bin_overlap);
 
     size_t const bin_count = std::ranges::size(forest);
     size_t ibf_size = 2ull * 1024ull * 1024ull * 1024ull; // 2GiBi
@@ -53,8 +53,9 @@ seqan3::interleaved_bloom_filter<> create_index(rcs_store_t const & rcs_store, i
 
         libjst::tree_traverser_base kmer_path{kmer_tree};
         for (auto it = kmer_path.begin(); it != kmer_path.end(); ++it) {
-            auto && label = *it;
-            for (uint64_t hash_value : label.sequence() | seqan3::views::kmer_hash(seqan3::ungapped{options.kmer_size}))
+            auto label = *it;
+            auto hash_seq = label.sequence() | seqan3::views::kmer_hash(seqan3::ungapped{options.kmer_size});
+            for (uint64_t hash_value : hash_seq)
                 ibf.emplace(hash_value, seqan3::bin_index{bin_id});
         }
     }
