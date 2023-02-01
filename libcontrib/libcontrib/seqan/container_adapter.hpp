@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <optional>
 #include <ranges>
 #include <type_traits>
 
@@ -23,7 +24,7 @@ namespace jst::contrib
     class seqan_container_adapter
     {
     private:
-        range_t _range;
+        std::optional<range_t> _range{std::nullopt};
 
     public:
         using value_type = std::ranges::range_value_t<range_t>;
@@ -45,34 +46,34 @@ namespace jst::contrib
         seqan_container_adapter & operator=(seqan_container_adapter const &) = default;
         seqan_container_adapter & operator=(seqan_container_adapter &&) = default;
 
-        constexpr iterator begin() noexcept(noexcept(std::ranges::begin(_range)))
+        constexpr iterator begin() noexcept(noexcept(std::ranges::begin(*_range)))
         {
-            return std::ranges::begin(_range);
+            return std::ranges::begin(*_range);
         }
 
-        constexpr const_iterator begin() const noexcept(noexcept(std::ranges::begin(_range)))
+        constexpr const_iterator begin() const noexcept(noexcept(std::ranges::begin(*_range)))
         {
-            return std::ranges::begin(_range);
+            return std::ranges::begin(*_range);
         }
 
-        constexpr iterator end() noexcept(noexcept(std::ranges::end(_range)))
+        constexpr iterator end() noexcept(noexcept(std::ranges::end(*_range)))
         {
-            return std::ranges::end(_range);
+            return std::ranges::end(*_range);
         }
 
-        constexpr const_iterator end() const noexcept(noexcept(std::ranges::end(_range)))
+        constexpr const_iterator end() const noexcept(noexcept(std::ranges::end(*_range)))
         {
-            return std::ranges::end(_range);
+            return std::ranges::end(*_range);
         }
 
-        constexpr size_type size() const noexcept(noexcept(std::ranges::distance(_range)))
+        constexpr size_type size() const noexcept(noexcept(std::ranges::distance(*_range)))
         {
-            return std::ranges::distance(_range);
+            return std::ranges::distance(*_range);
         }
 
-        constexpr bool empty() const noexcept(noexcept(std::ranges::empty(_range)))
+        constexpr bool empty() const noexcept(noexcept(std::ranges::empty(*_range)))
         {
-            return std::ranges::empty(_range);
+            return std::ranges::empty(*_range);
         }
     };
 
