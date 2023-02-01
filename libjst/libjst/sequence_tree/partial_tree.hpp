@@ -124,7 +124,7 @@ namespace libjst
                 _left_state = state::left_bound;
 
             // initialise right state
-            if (libjst::position(base_node_type::right_variant()) <= libjst::position(*_right_bound))
+            if (libjst::position(base_node_type::right_variant()) < libjst::position(*_right_bound))
                 _right_state = state::regular;
             else
                 _right_state = state::right_bound;
@@ -147,48 +147,21 @@ namespace libjst
         constexpr node_impl() = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            if (is_reference_leaf()) { // special case
-                node_impl new_child{*this};
-                new_child._left_state = state::right_bound;
-                new_child._right_state = state::right_bound;
-                new_child.activate_state(node_state::variant);
-                return new_child;
-            } else if (_left_state == state::right_bound && _right_state == state::regular) {
-                return visit<true>(base_node_type::next_alt());
-            } else {
-                return visit<true>(base_node_type::next_alt());
-            }
+            return visit<true>(base_node_type::next_alt());
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            if (_left_state == state::right_bound && _right_state == state::right_bound) {
-                node_impl new_child{*this};
-                new_child._right_state = state::regular;
-                new_child.initialise_reference_state_from();
-                return new_child;
-            } else if (_left_state == state::right_bound && _right_state == state::regular) {
-                return visit<false>(base_node_type::next_ref());
-            } else {
-                return visit<false>(base_node_type::next_ref());
-            }
+            return visit<false>(base_node_type::next_ref());
         }
 
     protected:
 
         constexpr breakpoint left_breakpoint() const noexcept {
-            switch (_left_state) {
-                case state::left_bound: return libjst::position(*_left_bound);
-                case state::right_bound: return libjst::position(*_right_bound);
-                default: return base_node_type::left_breakpoint();
-            }
+            return select_breakpoint(_left_state, base_node_type::left_breakpoint());
         }
 
         constexpr breakpoint right_breakpoint() const noexcept {
-            switch (_right_state) {
-                case state::left_bound: return libjst::position(*_left_bound);
-                case state::right_bound: return libjst::position(*_right_bound);
-                default: return base_node_type::right_breakpoint();
-            }
+            return select_breakpoint(_right_state, base_node_type::right_breakpoint());
         }
 
         constexpr variant_reference left_variant() const noexcept {
@@ -208,44 +181,40 @@ namespace libjst
         }
 
         constexpr bool is_branching() const noexcept {
-            if (is_reference_leaf()) {
-                return true;
-            } else {
-                return base_node_type::is_branching();
-            }
+            return !reached_right_bound() && base_node_type::is_branching();
         }
 
         constexpr bool is_nil() const noexcept {
-            return base_node_type::is_nil() ||
-                   (!base_node_type::on_alternate_path() &&
-                    libjst::position(*_right_bound) < libjst::position(left_variant()));
+            return base_node_type::is_nil() || reached_right_bound();
         }
     private:
 
-        constexpr bool is_reference_leaf() const noexcept {
-            return !base_node_type::on_alternate_path() && _right_state == state::right_bound;
+        constexpr bool reached_right_bound() const noexcept {
+            bool not_alternate = !base_node_type::on_alternate_path();
+            bool over_right_bound = libjst::position(*_right_bound) <= base_node_type::right_breakpoint();
+            return not_alternate && over_right_bound;
+        }
+
+        constexpr breakpoint select_breakpoint(state bound_state, breakpoint alt_breakpoint) const noexcept {
+            switch (bound_state) {
+                case state::left_bound: return libjst::position(*_left_bound);
+                case state::right_bound: return libjst::position(*_right_bound);
+                default: return alt_breakpoint;
+            }
         }
 
         template <bool is_alt>
         constexpr std::optional<node_impl> visit(auto maybe_child) const {
             if (maybe_child) {
-                if constexpr (is_alt) { // handle creation of new alternate path!
-                    return node_impl{std::move(*maybe_child), _left_bound, _right_bound, state::regular, state::regular};
-                } else {
-                    state new_right_state{state::regular};
-                    if (!base_node_type::on_alternate_path()) {
-                        if (libjst::position(*_right_bound) < libjst::position(*base_node_type::get_right()))
-                            new_right_state = state::right_bound;
-                    }
-                    return node_impl{std::move(*maybe_child), _left_bound, _right_bound, state::regular, new_right_state};
-                }
+                state child_right_state = (is_alt) ? state::regular : _right_state;
+                return node_impl{std::move(*maybe_child), _left_bound, _right_bound, state::regular, child_right_state};
             } else {
                 return std::nullopt;
             }
         }
 
         constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
-            return  lhs.is_nil() || static_cast<base_node_type const &>(lhs) == rhs;
+            return lhs.reached_right_bound() || static_cast<base_node_type const &>(lhs) == rhs;
         }
     };
 
