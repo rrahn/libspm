@@ -37,9 +37,9 @@ filter_queries(std::vector<search_query> const & queries, search_options const &
 {
     using bucket_list_t = std::vector<bucket_type>;
     auto [bin_size, kmer_size, ibf] = load_index(options.index_input_file_path);
-    log_debug("IBF:bin_size", bin_size);
-    log_debug("IBF:kmer_size", kmer_size);
-    log_debug("IBF:bin_count", ibf.bin_count());
+    log_debug("IBF bin_size:", bin_size);
+    log_debug("IBF kmer_size:", kmer_size);
+    log_debug("IBF bin_count:", ibf.bin_count());
 
     bucket_list_t read_bucket_list{};
     read_bucket_list.resize(ibf.bin_count());
@@ -59,25 +59,27 @@ filter_queries(std::vector<search_query> const & queries, search_options const &
     #pragma omp parallel for num_threads(options.thread_count) shared(thread_local_buffer, queries) firstprivate(counting_agent, kmer_size) schedule(dynamic)
     for (size_t query_idx = 0; query_idx < queries.size(); ++query_idx)
     {
-        log_debug("IBF:counting query", query_idx);
+        log_debug("IBF counting query:", query_idx);
         // kmer-lemma:
         size_t const thread_id = omp_get_thread_num();
         search_query query = queries[query_idx];
         size_t const query_size = std::ranges::size(query.value().sequence());
         size_t const error_count = std::ceil(query_size * options.error_rate);
         size_t const kmer_threshold = query_size - kmer_size + 1 - (error_count * kmer_size);
-        log_debug("IBF:kmer_threshold", kmer_threshold);
+        log_debug("IBF kmer_threshold:", kmer_threshold);
 
         // Counting:
         auto hashed_seq = query.value().sequence() | seqan3::views::kmer_hash(seqan3::ungapped{kmer_size});
         std::vector hashes(std::ranges::begin(hashed_seq), std::ranges::end(hashed_seq));
         auto & bin_counts = counting_agent.bulk_count(hashes);
-        log_debug("IBF:bin_counts", bin_counts);
+        // log_debug("IBF:bin_counts", bin_counts);
 
         // Bin assignment:
         for (size_t bin_idx = 0; bin_idx < bin_counts.size(); ++bin_idx)
-            if (bin_counts[bin_idx] >= kmer_threshold)
+            if (bin_counts[bin_idx] >= kmer_threshold) {
+                log_debug("Found bin:", bin_idx);
                 thread_local_buffer[thread_id][bin_idx].push_back(query);
+            }
     }
 
     // Reduce the local buffer and move them to the final bin vector.

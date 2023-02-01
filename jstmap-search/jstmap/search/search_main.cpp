@@ -186,7 +186,7 @@ int search_main(seqan3::argument_parser & search_parser)
                                 return all_matches{std::move(query)};
                            })
                            | seqan3::ranges::to<std::vector>();
-        auto chunked_tree = libjst::make_volatile(rcs_store) | libjst::chunk(bin_size);
+
 
         for (size_t bucket_idx = 0; bucket_idx < bucket_list.size(); ++bucket_idx)
         { // parallel region
@@ -196,8 +196,14 @@ int search_main(seqan3::argument_parser & search_parser)
                 continue;
 
             // Step 1: distribute search:
+            log_debug("Local search in bucket:", bucket_idx);
 
             // Step 2: transform to haystack
+            auto largest_query_it = std::ranges::max_element(bucket, std::ranges::less{}, [] (search_query const & query) {
+                return std::ranges::size(query.value().sequence());
+            });
+            size_t const max_window_size = std::ranges::size((*largest_query_it).value().sequence()) - 1;
+            auto chunked_tree = libjst::make_volatile(rcs_store) | libjst::chunk(bin_size, max_window_size);
             auto haystack = chunked_tree[bucket_idx];
 
             // Step 3: select matching strategy
