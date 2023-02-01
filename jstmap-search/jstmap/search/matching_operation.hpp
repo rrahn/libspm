@@ -16,8 +16,6 @@
 #include <libjst/traversal/state_oblivious_traverser.hpp>
 #include <libjst/sequence_tree/seekable_tree.hpp>
 
-#include <jstmap/global/all_matches.hpp>
-#include <jstmap/global/all_matches.hpp>
 #include <jstmap/search/type_alias.hpp>
 
 namespace jstmap
@@ -53,9 +51,6 @@ namespace jstmap
                     matcher(cargo.sequence(), [&] ([[maybe_unused]] auto && label_finder) {
                         callback(query, match_position{.tree_position{cargo.position()},
                                                        .label_offset{std::ranges::ssize(cargo.sequence()) - seqan::endPosition(label_finder)}});
-                        // callback(match{.query_id{idx},
-                        //                .position{.tree_position{cargo.position()},
-                        //                          .label_offset{seqan::position(label_finder)}}});
                     });
                 }
             });
