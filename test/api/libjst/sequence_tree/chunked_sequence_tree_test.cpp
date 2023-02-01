@@ -37,6 +37,7 @@ struct fixture {
     std::vector<variant_t> variants{};
     std::size_t coverage_size{};
     uint32_t chunk_size{};
+    uint32_t overlap_size{};
     uint32_t window_size{};
     std::vector<std::vector<source_t>> expected_labels{};
 
@@ -87,7 +88,7 @@ struct partial_sequence_tree_test : public jst::test::partial_sequence_tree::tes
 
     auto make_forest() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::chunk(GetParam().chunk_size)
+        return libjst::volatile_tree{rcs_mock} | libjst::chunk(GetParam().chunk_size, GetParam().overlap_size)
                                                | std::views::transform([&](auto && partial_tree) {
                                                     using partial_tree_t = decltype(partial_tree);
                                                     return ((partial_tree_t &&)partial_tree)
