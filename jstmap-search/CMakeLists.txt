@@ -12,8 +12,8 @@ add_library(jstmap_search_input_queries OBJECT jstmap/search/load_queries.cpp js
 target_link_libraries (jstmap_search_input_queries PUBLIC jstmap::search::base)
 
 ### Building the journaled sequence tree
-add_library(jstmap_search_search OBJECT jstmap/search/search_queries2.cpp jstmap/search/search_queries.hpp)
-target_link_libraries (jstmap_search_search PUBLIC jstmap::search::base libjst::libjst)
+# add_library(jstmap_search_search OBJECT jstmap/search/search_queries2.cpp jstmap/search/search_queries.hpp)
+# target_link_libraries (jstmap_search_search PUBLIC jstmap::search::base libjst::libjst)
 
 ### Filtering the queries using the additional index
 add_library(jstmap_search_filter OBJECT jstmap/search/filter_queries.cpp jstmap/search/filter_queries.hpp)
@@ -29,7 +29,7 @@ target_link_libraries (jstmap_search_match_aligner PUBLIC jstmap::search::base l
 
 ### Create static library for index subcommand
 add_library (jstmap_search STATIC jstmap/search/search_main.cpp)
-target_link_libraries (jstmap_search PUBLIC jstmap_search_search
+target_link_libraries (jstmap_search PUBLIC #jstmap_search_search
                                             jstmap_search_input_queries
                                             jstmap::search::base
                                             jstmap_search_filter
