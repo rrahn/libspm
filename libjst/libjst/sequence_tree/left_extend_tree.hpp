@@ -15,49 +15,146 @@
 #include <libcontrib/closure_adaptor.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
-#include <libjst/sequence_tree/transform_tree.hpp>
+#include <libjst/sequence_tree/left_extend_tree.hpp>
 
 namespace libjst
 {
 
-    template <typename base_label_t>
-    class left_extended_sequence_label : public base_label_t {
+    template <typename base_tree_t>
+    class left_extend_tree_impl {
     private:
 
-        std::ptrdiff_t _left_extension{};
+        using base_node_type = libjst::tree_node_t<base_tree_t>;
+        using base_label_type = libjst::tree_label_t<base_tree_t>;
+
+        class node_impl;
+        class sink_impl;
+        class label_impl;
+
+        base_tree_t _wrappee{};
+        size_t _offset{};
+
     public:
 
-        using typename base_label_t::size_type;
-
-        left_extended_sequence_label() = default;
-        constexpr explicit left_extended_sequence_label(base_label_t base_label,
-                                                        std::ptrdiff_t left_extension) noexcept :
-            base_label_t{std::move(base_label)},
-            _left_extension{left_extension}
+        template <typename wrappee_t, std::integral offset_t>
+            requires (!std::same_as<std::remove_cvref_t<wrappee_t>, left_extend_tree_impl> &&
+                      std::constructible_from<base_tree_t, wrappee_t>)
+        constexpr explicit left_extend_tree_impl(wrappee_t && wrappee, offset_t offset) noexcept :
+            _wrappee{(wrappee_t &&)wrappee},
+            _offset{std::move(offset)}
         {}
 
-        constexpr auto sequence(size_type left_pos = 0, size_type right_pos = base_label_t::npos) const {
-            left_pos = std::max<std::ptrdiff_t>(0, left_pos - _left_extension);
-            return base_label_t::sequence(left_pos, right_pos);
+        constexpr node_impl root() const noexcept {
+            return node_impl{libjst::root(_wrappee), _offset};
+        }
+        constexpr sink_impl sink() const noexcept {
+            return sink_impl{libjst::sink(_wrappee)};
         }
     };
 
-    class left_extend_factory {
+    template <typename base_tree_t>
+    class left_extend_tree_impl<base_tree_t>::node_impl : public base_node_type {
     private:
 
-        std::ptrdiff_t _left_extension{};
-    public:
+        friend left_extend_tree_impl;
 
-        left_extend_factory() = default;
-        template <std::integral extension_t>
-        constexpr explicit left_extend_factory(extension_t const left_extension) noexcept :
-            _left_extension{static_cast<std::ptrdiff_t>(left_extension)}
+        size_t _offset{};
+        size_t _min_position{};
+
+        explicit constexpr node_impl(base_node_type && base_node, size_t offset) noexcept :
+            base_node_type{std::move(base_node)},
+            _offset{std::move(offset)},
+            _min_position{base_node_type::left_breakpoint().value()}
         {}
 
-        template <typename base_label_t>
-        constexpr auto operator()(base_label_t && base_label) const noexcept {
-            using wrapped_label_t = left_extended_sequence_label<std::remove_cvref_t<base_label_t>>;
-            return wrapped_label_t{(base_label_t &&) base_label, _left_extension};
+        explicit constexpr node_impl(base_node_type && base_node, size_t offset, size_t min_position) noexcept :
+            base_node_type{std::move(base_node)},
+            _offset{offset},
+            _min_position{min_position}
+        {}
+
+    public:
+
+        node_impl() = default;
+
+        constexpr auto operator*() const noexcept {
+            base_node_type::left_breakpoint();
+            return label_impl{*static_cast<base_node_type const &>(*this), _offset, _min_position};
+        }
+
+        constexpr std::optional<node_impl> next_alt() const noexcept {
+            return visit(base_node_type::next_alt());
+        }
+
+        constexpr std::optional<node_impl> next_ref() const noexcept {
+            return visit(base_node_type::next_ref());
+        }
+
+    private:
+
+        constexpr std::optional<node_impl> visit(auto maybe_child) const {
+            if (maybe_child) {
+                return node_impl{std::move(*maybe_child), _offset, _min_position};
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
+            return static_cast<base_node_type const &>(lhs) == rhs;
+        }
+    };
+
+    template <typename base_tree_t>
+    class left_extend_tree_impl<base_tree_t>::sink_impl {
+    private:
+        friend left_extend_tree_impl;
+
+        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
+        base_sink_type _base_sink{};
+
+        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
+        {}
+
+    private:
+
+        sink_impl() = default;
+
+        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
+            return lhs._base_sink == rhs;
+        }
+    };
+
+    template <typename base_tree_t>
+    class left_extend_tree_impl<base_tree_t>::label_impl : public base_label_type {
+    private:
+
+        friend left_extend_tree_impl;
+
+        size_t _left_extension{};
+        size_t _min_position{};
+
+        constexpr explicit label_impl(base_label_type base_label, size_t left_extension, size_t min_position) noexcept :
+            base_label_type{std::move(base_label)},
+            _left_extension{left_extension},
+            _min_position{min_position}
+        {}
+
+    public:
+
+        using typename base_label_type::size_type;
+
+        label_impl() = default;
+
+        constexpr auto sequence(size_type left_pos, size_type right_pos = base_label_type::npos) const {
+            assert(left_pos >= _min_position);
+            assert(left_pos <= right_pos);
+            left_pos = std::max<std::ptrdiff_t>(_min_position, left_pos - _left_extension);
+            return base_label_type::sequence(left_pos, right_pos);
+        }
+
+        constexpr auto sequence() const {
+            return sequence(_min_position);
         }
     };
 
@@ -66,13 +163,10 @@ namespace libjst
         {
             template <typename labelled_tree_t, std::integral left_extension_t>
             constexpr auto operator()(labelled_tree_t && tree, left_extension_t left_extension) const
-                -> decltype(transform((labelled_tree_t &&) tree, left_extend_factory{left_extension}))
-                // noexcept(std::is_nothrow_constructible_v<
-                //             transform_tree<std::remove_reference_t<labelled_tree_t>>, left_extension_t>)
-                // -> transform_tree<std::remove_reference_t<labelled_tree_t>>
+                -> left_extend_tree_impl<labelled_tree_t>
             {
                 assert(left_extension >= 0);
-                return transform((labelled_tree_t &&) tree, left_extend_factory{left_extension});
+                return left_extend_tree_impl<labelled_tree_t>{(labelled_tree_t &&) tree, std::move(left_extension)};
             }
 
             template <std::integral left_extension_t>
