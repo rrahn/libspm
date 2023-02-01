@@ -25,7 +25,7 @@ namespace libjst
         requires std::common_reference_with<
             std::ranges::range_value_t<typename rcs_store_t::variant_map_type> &,
             std::ranges::range_reference_t<typename rcs_store_t::variant_map_type>>
-    class debug_rcs_store
+    class debug_rcsdb
     {
     private:
         using base_variant_map_type = typename rcs_store_t::variant_map_type;
@@ -43,10 +43,10 @@ namespace libjst
         using variant_map_type = sliced_variant_map_t;
         using source_type = sliced_source_type;
 
-        debug_rcs_store() = delete;
-        explicit debug_rcs_store(rcs_store_t const & wrappee,
-                                 std::pair<size_t, size_t> source_slice,
-                                 std::pair<size_t, size_t> variants_slice) :
+        debug_rcsdb() = delete;
+        explicit debug_rcsdb(rcs_store_t const & wrappee,
+                             std::pair<size_t, size_t> source_slice,
+                             std::pair<size_t, size_t> variants_slice) :
             _wrappee{wrappee},
             _sliced_source{_wrappee.source() | seqan3::views::slice(source_slice.first, source_slice.second)},
             _sliced_variants{_wrappee.variants() | seqan3::views::slice(variants_slice.first, variants_slice.second)}
@@ -85,6 +85,6 @@ namespace libjst
     };
 
     template <typename rcs_store_t>
-    debug_rcs_store(rcs_store_t const &, size_t const, size_t const) -> debug_rcs_store<rcs_store_t>;
+    debug_rcsdb(rcs_store_t const &, size_t const, size_t const) -> debug_rcsdb<rcs_store_t>;
 
 }  // namespace libjst
