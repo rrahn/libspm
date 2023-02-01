@@ -155,17 +155,17 @@ INSTANTIATE_TEST_SUITE_P(no_variant_left_and_right_bound, partial_sequence_tree_
     .bin_offset{2},
     .bin_size{4},
     .window_size{4},
-    .expected_labels{"aabb", "bb"}
+    .expected_labels{"aabb"}
 }));
 
-INSTANTIATE_TEST_SUITE_P(no_variant_left_and_right_bound_full_overlap, partial_sequence_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(no_variant_left_and_right_bound_single, partial_sequence_tree_test, testing::Values(fixture{
     .source{"aaaabbbb"},
     .variants{},
     .coverage_size{4},
     .bin_offset{2},
     .bin_size{1},
     .window_size{4},
-    .expected_labels{"a", "abbb"}
+    .expected_labels{"a"}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_unbound, partial_sequence_tree_test, testing::Values(fixture{
@@ -217,26 +217,24 @@ INSTANTIATE_TEST_SUITE_P(two_variants_right_bound, partial_sequence_tree_test, t
                        "Iaab",
                             "J",
                             "b",
-                       "aaab",
-                            "Jbb",
-                            "bbb",}
+                       "aaab"}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_left_and_right_bound_inclusive, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
     .source{"aaaabbbb"},
     .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
-              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+              variant_t{.position{4}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
     .coverage_size{4},
     .bin_offset{1},
     .bin_size{4},
     .window_size{4},
-    .expected_labels{"Iaab",
-                          "J",
-                          "b",
-                     "aaab",
-                          "Jbb",
-                          "bbb",}
+    .expected_labels{"Iaa",
+                        "Jb",
+                        "bb",
+                     "aaa",
+                        "Jbbb",
+                        "b"}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_left_and_right_bound_exclusive, partial_sequence_tree_test, testing::Values(fixture{
@@ -246,11 +244,8 @@ INSTANTIATE_TEST_SUITE_P(two_variants_left_and_right_bound_exclusive, partial_se
               variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
     .coverage_size{4},
     .bin_offset{2},
-    .bin_size{1},
+    .bin_size{3},
     .window_size{4},
-    .expected_labels{"a",
-                       "ab",
-                          "Jb",
-                          "bb"}
+    .expected_labels{"aab"}
 }));
 

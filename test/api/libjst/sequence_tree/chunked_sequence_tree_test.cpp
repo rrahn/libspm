@@ -147,7 +147,7 @@ INSTANTIATE_TEST_SUITE_P(no_variant_two_chunks, partial_sequence_tree_test, test
     .coverage_size{4},
     .chunk_size{4},
     .window_size{4},
-    .expected_labels{{"aaaa", "bbbb"}, {"bbbb"}}
+    .expected_labels{{"aaaa"}, {"bbbb"}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_three_chunks, partial_sequence_tree_test, testing::Values(fixture{
@@ -156,8 +156,8 @@ INSTANTIATE_TEST_SUITE_P(no_variant_three_chunks, partial_sequence_tree_test, te
     .coverage_size{4},
     .chunk_size{3},
     .window_size{4},
-    .expected_labels{{"aaa", "abbb"},
-                     {"abb", "bb"},
+    .expected_labels{{"aaa"},
+                     {"abb"},
                      {"bb"}}
 }));
 
@@ -190,10 +190,7 @@ INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks, partial_sequence_tree_test, te
                         "Iaab",
                              "J",
                              "b",
-                        "aaa",
-                            "b",
-                              "Jbb",
-                              "bbb"
+                        "aaa"
                      },
                      {
                         "b",
@@ -214,18 +211,38 @@ INSTANTIATE_TEST_SUITE_P(two_variants_three_chunks, partial_sequence_tree_test, 
                         "Iaab",
                              "J",
                              "b",
-                        "aa",
-                           "ab",
-                              "Jb",
-                              "bb"
+                        "aa"
                      },
                      {
                       "ab",
                          "Jbb",
-                         "b",
-                           "bb"
+                         "b"
                      },
                      {
                         "bb"
+                     }}
+}));
+
+INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks_overlap, partial_sequence_tree_test, testing::Values(fixture{
+         //  01234567
+    .source{"aaaabbbb"},
+    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
+              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+    .coverage_size{4},
+    .chunk_size{4},
+    .overlap_size{2},
+    .window_size{4},
+    .expected_labels{{"a",
+                        "Iaab",
+                             "J",
+                             "b",
+                        "aaab",
+                             "Jbb",
+                             "b"
+                     },
+                     {
+                        "b",
+                          "Jbb",
+                          "bbb"
                      }}
 }));
