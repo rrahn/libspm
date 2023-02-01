@@ -129,7 +129,9 @@ namespace libjst
 
     private:
 
-        constexpr friend bool operator==(seek_position const & lhs, seek_position const & rhs) noexcept = default;
+        constexpr friend bool operator==(seek_position const & lhs, seek_position const & rhs) noexcept {
+            return lhs <=> rhs == 0;
+        };
 
         constexpr friend std::strong_ordering operator<=>(seek_position const & lhs, seek_position const & rhs) noexcept {
             if (auto cmp_var = (lhs.get_variant_index() <=> rhs.get_variant_index()); cmp_var == 0) {
