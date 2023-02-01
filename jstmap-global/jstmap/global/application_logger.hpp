@@ -62,7 +62,7 @@ public:
 
     //!\brief Logs the given message depending on the logger settings.
     template <typename ...message_args_t>
-    constexpr void operator()(verbosity_level verbosity, logging_level log_level, message_args_t && ...message_args)
+    constexpr void operator()(verbosity_level, logging_level log_level, message_args_t && ...message_args)
     {
         using namespace std::literals;
 
