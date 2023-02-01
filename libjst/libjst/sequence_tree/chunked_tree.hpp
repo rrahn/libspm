@@ -38,17 +38,19 @@ namespace libjst
 
         maybe_wrapped_t _wrappee;
         size_t _chunk_size{};
+        size_t _overlap_size{};
 
     public:
 
         constexpr chunked_tree_impl() = default;
 
-        template <typename wrappee_t, std::unsigned_integral chunk_size_t>
+        template <typename wrappee_t, std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t>
             requires (!std::same_as<std::remove_cvref_t<wrappee_t>, chunked_tree_impl> &&
                       std::constructible_from<maybe_wrapped_t, wrappee_t>)
-        explicit constexpr chunked_tree_impl(wrappee_t && wrappee, chunk_size_t chunk_size) noexcept :
+        explicit constexpr chunked_tree_impl(wrappee_t && wrappee, chunk_size_t chunk_size, overlap_size_t overlap_size) noexcept :
             _wrappee{(wrappee_t &&)wrappee},
-            _chunk_size{static_cast<size_t>(chunk_size)}
+            _chunk_size{static_cast<size_t>(chunk_size)},
+            _overlap_size{static_cast<size_t>(overlap_size)}
         {}
 
         chunked_tree_impl(chunked_tree_impl const &) = default;
@@ -78,7 +80,7 @@ namespace libjst
         }
 
         constexpr size_t max_chunk_count() const noexcept {
-            return std::ceil(std::ranges::size(_wrappee.data().source())/_chunk_size);
+            return std::ceil(std::ranges::size(base().data().source())/_chunk_size);
         }
     };
 
@@ -107,7 +109,7 @@ namespace libjst
         iterator() = default;
 
         constexpr reference operator*() const noexcept {
-            return chunk_type{_host->base(), chunk_offset(), _host->_chunk_size};
+            return chunk_type{_host->base(), chunk_offset(), _host->_chunk_size + _host->_overlap_size};
         }
 
         constexpr reference operator[](difference_type const step) const noexcept {
@@ -179,21 +181,22 @@ namespace libjst
     namespace _tree_adaptor {
         inline constexpr struct _chunk
         {
-            template <typename wrapped_tree_t, std::unsigned_integral chunk_size_t>
-            constexpr auto operator()(wrapped_tree_t && tree, chunk_size_t const chunk_size) const
+            template <typename wrapped_tree_t, std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>
+                requires requires { typename tree_node_t<wrapped_tree_t>; }
+            constexpr auto operator()(wrapped_tree_t && tree, chunk_size_t const chunk_size, overlap_size_t const overlap_size = 0) const
                 noexcept(std::is_nothrow_constructible_v<chunked_tree_impl<wrapped_tree_t>>)
                 -> chunked_tree_impl<wrapped_tree_t>
             {
                 using adapted_tree_t = chunked_tree_impl<wrapped_tree_t>;
-                return adapted_tree_t{(wrapped_tree_t &&)tree, chunk_size};
+                return adapted_tree_t{(wrapped_tree_t &&)tree, chunk_size, overlap_size};
             }
 
-            template <std::unsigned_integral chunk_size_t>
-            constexpr auto operator()(chunk_size_t const chunk_size) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, chunk_size_t>)
-                -> jst::contrib::closure_result_t<_chunk, chunk_size_t>
+            template <std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>
+            constexpr auto operator()(chunk_size_t const chunk_size, overlap_size_t const overlap_size = 0) const
+                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, chunk_size_t, overlap_size_t>)
+                -> jst::contrib::closure_result_t<_chunk, chunk_size_t, overlap_size_t>
             { // we need to store the type that needs to be called later!
-                return jst::contrib::make_closure(_chunk{}, chunk_size);
+                return jst::contrib::make_closure(_chunk{}, chunk_size, overlap_size);
             }
         } chunk{};
     } // namespace _tree_adaptor
