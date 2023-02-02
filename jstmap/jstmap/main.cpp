@@ -15,6 +15,7 @@
 #include <jstmap/index/index_main.hpp> // Pulls in the index sub-command.
 #include <jstmap/search/search_main.hpp> // Pulls in the search sub-command.
 #include <jstmap/simulate/simulate_main.hpp> // Pulls in the search sub-command.
+#include <jstmap/linear/linear_main.hpp> // Pulls in the linear sub-command.
 // #include <jstmap/view/view_main.hpp> // Pulls in the view sub-command.
 
 namespace jstmap
@@ -25,6 +26,7 @@ struct tool_names
     inline static const std::string base{"jstmap"};
     inline static const std::string create{"create"};
     inline static const std::string index{"index"};
+    inline static const std::string linear{"linear"};
     inline static const std::string search{"search"};
     inline static const std::string simulate{"simulate"};
     inline static const std::string view{"view"};
@@ -43,6 +45,7 @@ int main(int const argc, char * const argv[])
     seqan3::argument_parser jstmap_parser{jstmap::tool_names::base, argc, argv, seqan3::update_notifications::off,
                                           {jstmap::tool_names::create,
                                            jstmap::tool_names::index,
+                                           jstmap::tool_names::linear,
                                            jstmap::tool_names::search,
                                            jstmap::tool_names::simulate,
                                            jstmap::tool_names::view}};
@@ -65,6 +68,8 @@ int main(int const argc, char * const argv[])
             return jstmap::search_main(selected_parser);
         else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::simulate))
             return jstmap::simulate_main(selected_parser);
+        else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::linear))
+            return jstmap::linear_main(selected_parser);
         // else if (selected_parser.info.app_name == jstmap::tool_names::subparser_name_for(jstmap::tool_names::view))
         //     return jstmap::view_main(selected_parser);
         else

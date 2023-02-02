@@ -7,6 +7,7 @@ target_link_libraries ("${target_name}" PUBLIC seqan3::seqan3
                                                jstmap::global
                                                jstmap::create
                                                jstmap::index
+                                               jstmap::linear
                                                jstmap::search
                                                jstmap::simulate
                                                # jstmap::view
