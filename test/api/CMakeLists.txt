@@ -9,9 +9,19 @@ macro (add_app_test test_filename test_alternative target_dependencies)
     seqan3_test_component (test_name "${source_file}" TEST_NAME)
 
     include_directories (${SEQAN_INCLUDE_DIRS})
+
     # Create the test target.
+    set (base_lib_dependency "")
+    if (${CMAKE_BUILD_TYPE} STREQUAL "Asan")
+        set (base_lib_dependency "jstmap::test::asan")
+    elseif (${CMAKE_BUILD_TYPE} STREQUAL "Tsan")
+        set (base_lib_dependency "jstmap::test::tsan")
+    else ()
+        set (base_lib_dependency "jstmap::test::unit")
+    endif ()
+
     add_executable (${target} ${test_filename})
-    target_link_libraries (${target} "jstmap::test::unit" "${target_dependencies}")
+    target_link_libraries (${target} "${base_lib_dependency}" "${target_dependencies}")
 
     # Add the test to its general target (cli or api).
     if (${test_alternative} STREQUAL "CLI_TEST")
@@ -32,12 +42,12 @@ endmacro ()
 
 # A macro that adds an api test.
 macro (add_api_test test_filename target_dependencies)
-    add_app_test (${test_filename} API_TEST "${target_dependencies}")
+    add_app_test (${test_filename} API_TEST ${target_dependencies})
 endmacro ()
 
 # A macro that adds a cli test.
 macro (add_cli_test test_filename target_dependencies)
-    add_app_test (${test_filename} CLI_TEST "${target_dependencies}")
+    add_app_test (${test_filename} CLI_TEST ${target_dependencies})
 endmacro ()
 
 seqan3_require_ccache ()
