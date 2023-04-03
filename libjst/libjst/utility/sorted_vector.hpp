@@ -18,6 +18,12 @@
 #include <ranges>
 #include <vector>
 
+#include <cereal/types/vector.hpp>
+
+#include <seqan3/core/concept/cereal.hpp>
+
+#include <libjst/utility/stable_random_access_iterator.hpp>
+
 namespace libjst
 {
 
@@ -37,8 +43,8 @@ class sorted_vector
 public:
 
     using value_type = std::ranges::range_value_t<container_t>;
-    using iterator = bi_iterator<false>;
-    using const_iterator = bi_iterator<true>;
+    using iterator = stable_random_access_iterator<container_t>;
+    using const_iterator = stable_random_access_iterator<container_t const>;
     using size_type = size_t;
     using key_compare = compare_t;
 
@@ -54,22 +60,22 @@ public:
      */
     constexpr iterator begin() noexcept
     {
-        return iterator{_elements.begin()};
+        return iterator{std::addressof(_elements), 0};
     }
 
     constexpr const_iterator begin() const noexcept
     {
-        return const_iterator{_elements.begin()};
+        return const_iterator{std::addressof(_elements), 0};
     }
 
     constexpr iterator end() noexcept
     {
-        return iterator{_elements.end()};
+        return iterator{std::addressof(_elements), std::ranges::ssize(_elements)};
     }
 
     constexpr const_iterator end() const noexcept
     {
-        return const_iterator{_elements.end()};
+        return const_iterator{std::addressof(_elements), std::ranges::ssize(_elements)};
     }
     //!\}
 
@@ -282,6 +288,22 @@ public:
     std::strong_ordering operator<=>(sorted_vector const & other) const = default;
     //!\}
 
+    // ----------------------------------------------------------------------------
+    // Serialisation
+    // ----------------------------------------------------------------------------
+
+    template <seqan3::cereal_input_archive archive_t>
+    void load(archive_t & iarchive)
+    {
+        iarchive(_elements);
+    }
+
+    template <seqan3::cereal_output_archive archive_t>
+    void save(archive_t & oarchive) const
+    {
+        oarchive(_elements);
+    }
+
 private:
 
     template <typename comparable_key_t>
@@ -311,7 +333,7 @@ private:
         if (_elements.empty())
         {
             _elements.push_back(std::forward<value_t>(value));
-            return iterator{_elements.begin()};
+            return begin();
         }
 
         compare_t compare{};
@@ -323,45 +345,63 @@ private:
                     ? hint_base
                     : std::ranges::upper_bound(_elements, value, compare);
 
-        return iterator{_elements.insert(hint_base, std::forward<value_t>(value))};
+        auto insert_it = _elements.insert(hint_base, std::forward<value_t>(value));
+        auto insert_pos = std::ranges::distance(_elements.begin(), insert_it);
+        return iterator{std::addressof(_elements), insert_pos};
     }
 
     template <typename comparable_key_t>
     std::pair<iterator, iterator> equal_range_impl(comparable_key_t const & key)
     {
         auto rng = std::ranges::equal_range(_elements, key, compare_t{});
-        return {iterator{rng.begin()}, iterator{rng.end()}};
+        auto begin_pos = std::ranges::distance(_elements.begin(), rng.begin());
+        auto end_pos = std::ranges::distance(_elements.begin(), rng.end());
+        return {iterator{std::addressof(_elements), begin_pos},
+                iterator{std::addressof(_elements), end_pos}};
     }
 
     template <typename comparable_key_t>
     std::pair<const_iterator, const_iterator> equal_range_impl(comparable_key_t const & key) const
     {
         auto rng = std::ranges::equal_range(_elements, key, compare_t{});
-        return {const_iterator{rng.begin()}, const_iterator{rng.end()}};
+        auto begin_pos = std::ranges::distance(_elements.begin(), rng.begin());
+        auto end_pos = std::ranges::distance(_elements.begin(), rng.end());
+        return {const_iterator{std::addressof(_elements), begin_pos},
+                const_iterator{std::addressof(_elements), end_pos}};
     }
 
     template <typename comparable_key_t>
     iterator lower_bound_impl(comparable_key_t const & key)
     {
-        return iterator{std::ranges::lower_bound(_elements, key, compare_t{})};
+        auto pos = std::ranges::distance(_elements.begin(), std::ranges::lower_bound(_elements, key, compare_t{}));
+        return iterator{std::addressof(_elements), pos};
     }
 
     template <typename comparable_key_t>
     const_iterator lower_bound_impl(comparable_key_t const & key) const
     {
-        return const_iterator{std::ranges::lower_bound(_elements, key, compare_t{})};
+        auto pos = std::ranges::distance(_elements.begin(), std::ranges::lower_bound(_elements, key, compare_t{}));
+        return const_iterator{std::addressof(_elements), pos};
     }
 
     template <typename comparable_key_t>
     iterator upper_bound_impl(comparable_key_t const & key)
     {
-        return (_elements.size() == 1) ? begin() : iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
+        if (_elements.size() == 1) {
+            return begin();
+        }
+        auto pos = std::ranges::distance(_elements.begin(), std::ranges::upper_bound(_elements, key, compare_t{}));
+        return iterator{std::addressof(_elements), pos};
     }
 
     template <typename comparable_key_t>
     const_iterator upper_bound_impl(comparable_key_t const & key) const
     {
-        return (_elements.size() == 1) ? begin() : const_iterator{std::ranges::upper_bound(_elements, key, compare_t{})};
+        if (_elements.size() == 1) {
+            return begin();
+        }
+        auto pos = std::ranges::distance(_elements.begin(), std::ranges::upper_bound(_elements, key, compare_t{}));
+        return const_iterator{std::addressof(_elements), pos};
     }
 };
 
@@ -370,53 +410,58 @@ template <bool is_const>
 class sorted_vector<key_t, compare_t>::bi_iterator
 {
 private:
-    using maybe_const_container_type = std::conditional_t<is_const, container_t const, container_t>;
-    using iterator_type = std::ranges::iterator_t<maybe_const_container_type>;
+    using data_type = std::conditional_t<is_const, container_t const, container_t>;
+    using data_iterator = std::ranges::iterator_t<data_type>;
+    using offset_type = std::ranges::range_difference_t<data_type>;
+
+    friend sorted_vector;
 
     template <bool>
     friend class bi_iterator;
 
-    iterator_type _iter;
+    data_type * _container{};
+    offset_type _index{};
+
+    constexpr explicit bi_iterator(data_type * container, offset_type index) noexcept :
+        _container{container},
+        _index{index}
+    {}
+
 public:
 
-    using value_type = std::ranges::range_value_t<maybe_const_container_type>;
-    using reference = std::ranges::range_reference_t<maybe_const_container_type>;
-    using difference_type = std::ranges::range_difference_t<maybe_const_container_type>;
+    using value_type = std::ranges::range_value_t<data_type>;
+    using reference = std::ranges::range_reference_t<data_type>;
+    using difference_type = std::ranges::range_difference_t<data_type>;
     using pointer = std::conditional_t<is_const, typename container_t::const_pointer, typename container_t::pointer>;
     using iterator_category = std::random_access_iterator_tag;
 
     constexpr bi_iterator() = default;
-    constexpr explicit bi_iterator(iterator_type iter) noexcept : _iter{std::move(iter)}
+
+    constexpr bi_iterator(bi_iterator<!is_const> iter) noexcept requires is_const :
+        _container{iter._container},
+        _index{iter._index}
     {}
 
-    constexpr bi_iterator(bi_iterator<!is_const> iter) noexcept
-        requires is_const
-        : _iter{std::move(iter._iter)}
-    {}
-
-    iterator_type base() const &
+    data_iterator base() const
     {
-        return _iter;
-    }
-
-    iterator_type base() &&
-    {
-        return std::move(_iter);
+        return std::ranges::next(_container->begin(), _index);
     }
 
     constexpr reference operator*() const noexcept
     {
-        return *_iter;
+        assert(_container != nullptr);
+        return _container->operator[](_index);
     }
 
     constexpr pointer operator->() const noexcept
     {
-        return _iter.operator->();
+        assert(_container != nullptr);
+        return std::addressof(*this);
     }
 
     constexpr bi_iterator & operator++() noexcept
     {
-        ++_iter;
+        ++_index;
         return *this;
     }
 
@@ -429,7 +474,7 @@ public:
 
     constexpr bi_iterator & operator+=(difference_type const offset) noexcept
     {
-        _iter += offset;
+        _index += offset;
         return *this;
     }
 
@@ -446,7 +491,7 @@ public:
 
     constexpr bi_iterator & operator--() noexcept
     {
-        --_iter;
+        --_index;
         return *this;
     }
 
@@ -459,7 +504,7 @@ public:
 
     constexpr bi_iterator & operator-=(difference_type const offset) noexcept
     {
-        _iter -= offset;
+        _index -= offset;
         return *this;
     }
 
@@ -472,19 +517,19 @@ public:
     template <bool other_const>
     constexpr difference_type operator-(bi_iterator<other_const> const & rhs) const noexcept
     {
-        return _iter - rhs._iter;
+        return _index - rhs._index;
     }
 
     template <bool other_const>
     constexpr bool operator==(bi_iterator<other_const> const & rhs) const noexcept
     {
-        return _iter == rhs._iter;
+        return _index == rhs._index;
     }
 
     template <bool other_const>
     constexpr std::strong_ordering operator<=>(bi_iterator<other_const> const & rhs) const noexcept
     {
-        return _iter <=> rhs._iter;
+        return _index <=> rhs._index;
     }
 };
 

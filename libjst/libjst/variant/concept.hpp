@@ -24,6 +24,13 @@
 
 namespace libjst
 {
+
+    // TODO: Remove me after adaption of breakpoint naming!
+    enum struct breakpoint_end : bool {
+        right = 0,
+        left = 1
+    };
+
     // ----------------------------------------------------------------------------
     // Operation CPOs for variants
     // ----------------------------------------------------------------------------
@@ -182,6 +189,67 @@ namespace libjst
     using variant_coverage_t = std::remove_cvref_t<std::invoke_result_t<_variant_coverage::_cpo, variant_t>>;
 
     // ----------------------------------------------------------------------------
+    // CPO libjst::get_breakpoint
+    // ----------------------------------------------------------------------------
+
+    // New version with updated name!
+    namespace _get_breakpoint {
+        inline constexpr struct _cpo  {
+            template <typename breakpoint_t>
+                requires std::tag_invocable<_cpo, breakpoint_t>
+            constexpr auto operator()(breakpoint_t &&bp) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, breakpoint_t>)
+                -> std::tag_invoke_result_t<_cpo, breakpoint_t>
+            {
+                return std::tag_invoke(_cpo{}, (breakpoint_t &&)bp);
+            }
+        } get_breakpoint;
+    } // namespace _get_breakpoint
+    using _get_breakpoint::get_breakpoint;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::low_breakend
+    // ----------------------------------------------------------------------------
+
+    // New version with updated name!
+    namespace _low_breakend {
+        inline constexpr struct _cpo  {
+            template <typename breakpoint_t>
+                requires std::tag_invocable<_cpo, breakpoint_t>
+            constexpr auto operator()(breakpoint_t &&bp) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, breakpoint_t>)
+                -> std::tag_invoke_result_t<_cpo, breakpoint_t>
+            {
+                return std::tag_invoke(_cpo{}, (breakpoint_t &&)bp);
+            }
+        } low_breakend;
+    } // namespace _low_breakend
+    using _low_breakend::low_breakend;
+
+    // ----------------------------------------------------------------------------
+    // CPO libjst::high_breakend
+    // ----------------------------------------------------------------------------
+
+    namespace _high_breakend {
+        inline constexpr struct _cpo  {
+            template <typename breakpoint_t>
+                requires std::tag_invocable<_cpo, breakpoint_t>
+            constexpr auto operator()(breakpoint_t &&bp) const
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, breakpoint_t>)
+                -> std::tag_invoke_result_t<_cpo, breakpoint_t>
+            {
+                return std::tag_invoke(_cpo{}, (breakpoint_t &&)bp);
+            }
+        } high_breakend;
+    } // namespace _high_breakend
+    using _high_breakend::high_breakend;
+
+    template <typename breakpoint_t>
+    using breakend_t = std::remove_cvref_t<
+                std::common_type_t<std::invoke_result_t<_low_breakend::_cpo, breakpoint_t>,
+                                   std::invoke_result_t<_high_breakend::_cpo, breakpoint_t>>>;
+
+    // ----------------------------------------------------------------------------
     // CPO libjst::breakpoint_span
     // ----------------------------------------------------------------------------
     namespace _breakpoint_span {
@@ -193,6 +261,21 @@ namespace libjst
                 -> std::tag_invoke_result_t<_cpo, sequence_alternative_t>
             {
                 return std::tag_invoke(_cpo{}, (sequence_alternative_t &&)alt);
+            }
+
+        private:
+
+            template <typename breakpoint_t>
+                requires std::tag_invocable<std::tag_t<libjst::low_breakend>, breakpoint_t> &&
+                         std::tag_invocable<std::tag_t<libjst::high_breakend>, breakpoint_t>
+            constexpr friend auto tag_invoke(_cpo, breakpoint_t const & bp)
+                noexcept(std::is_nothrow_tag_invocable_v<std::tag_t<libjst::low_breakend>, breakpoint_t const &> &&
+                         std::is_nothrow_tag_invocable_v<std::tag_t<libjst::high_breakend>, breakpoint_t const &>)
+                -> std::common_type_t<std::tag_invoke_result_t<std::tag_t<libjst::high_breakend>, breakpoint_t const &>,
+                                      std::tag_invoke_result_t<std::tag_t<libjst::low_breakend>, breakpoint_t const &>>
+            {
+                assert(libjst::low_breakend(bp) <= libjst::high_breakend(bp));
+                return libjst::high_breakend(bp) - libjst::low_breakend(bp);
             }
         } breakpoint_span;
     } // namespace _breakpoint_span
@@ -243,12 +326,13 @@ namespace libjst
             constexpr friend auto tag_invoke(_cpo, sequence_variant_t &&variant)
                 noexcept(std::is_nothrow_tag_invocable_v<std::tag_t<libjst::left_breakpoint>, sequence_variant_t> &&
                          std::is_nothrow_tag_invocable_v<std::tag_t<libjst::breakpoint_span>, sequence_variant_t>)
-                -> breakpoint
+                -> std::tag_invoke_result_t<std::tag_t<libjst::left_breakpoint>, sequence_variant_t>
             {
-                using value_t = typename breakpoint::value_type;
-                return breakpoint{libjst::left_breakpoint(variant).value() +
+                using breakpoint_t = std::tag_invoke_result_t<std::tag_t<libjst::left_breakpoint>, sequence_variant_t>;
+                using value_t = typename breakpoint_t::value_type;
+                return breakpoint_t{libjst::left_breakpoint(variant).value() +
                                     static_cast<value_t>(libjst::breakpoint_span(variant)),
-                                  breakpoint_end::right};
+                                    breakpoint_end::right};
             }
         } right_breakpoint;
     } // namespace _right_breakpoint
@@ -258,6 +342,7 @@ namespace libjst
     using variant_breakpoint_t = std::remove_cvref_t<
                 std::common_type_t<std::invoke_result_t<_left_breakpoint::_cpo, sequence_variant_t>,
                                    std::invoke_result_t<_right_breakpoint::_cpo, sequence_variant_t>>>;
+
 
     // ----------------------------------------------------------------------------
     // CPO libjst::alt_sequence

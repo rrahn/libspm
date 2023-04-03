@@ -1,0 +1,5 @@
+add_libjst2_test (contiguous_multimap_test.cpp)
+add_libjst2_test (delta_sequence_variant_test.cpp)
+add_libjst2_test (generic_delta_test.cpp)
+add_libjst2_test (packed_breakend_key_test.cpp)
+add_libjst2_test (compressed_multisequence_test.cpp)

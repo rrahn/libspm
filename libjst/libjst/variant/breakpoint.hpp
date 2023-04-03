@@ -18,33 +18,61 @@
 
 #include <seqan3/core/concept/cereal.hpp>
 
+#include <libcontrib/type_traits.hpp>
+
+#include <libjst/variant/concept.hpp>
+
 namespace libjst
 {
-    enum struct breakpoint_end : bool {
-        right = 0,
-        left = 1
-    };
-
     class breakpoint {
     private:
 
         uint32_t _value      :31;
         uint32_t _end_marker :1;
 
+        uint32_t _low{};
+        uint32_t _high{};
+
     public:
 
         using value_type = uint32_t;
 
-        constexpr breakpoint() noexcept : breakpoint{0u}
+        constexpr breakpoint() noexcept : breakpoint{0u, breakpoint_end::left}
         {}
+        constexpr breakpoint(breakpoint const & other) noexcept :
+            _value{other._value},
+            _end_marker{other._end_marker},
+            _low{other._low},
+            _high{other._high}
+        {}
+        constexpr breakpoint(breakpoint && other) noexcept : breakpoint{std::as_const(other)}
+        {}
+        constexpr breakpoint& operator=(breakpoint other) noexcept
+        {
+            _value = other._value;
+            _end_marker = other._end_marker;
+            _low = other._low;
+            _high = other._high;
+            return *this;
+        }
+        ~breakpoint() = default;
 
-        constexpr breakpoint(uint32_t const value) noexcept : breakpoint{value, breakpoint_end::left}
-        {}
+        // explicit constexpr breakpoint(uint32_t const value) noexcept : breakpoint{value, breakpoint_end::left}
+        // {}
 
         constexpr breakpoint(uint32_t const value, breakpoint_end const end_marker) noexcept :
             _value{value},
             _end_marker{static_cast<uint32_t>(end_marker)} // end marker == left => true => 1 > 0, so natural orering is right before left.
         {}
+
+        constexpr breakpoint(value_type const low, std::size_t const count) noexcept :
+            _value{low},
+            _end_marker{1},
+            _low{low},
+            _high{low + static_cast<value_type>(count)}
+        {
+            assert(static_cast<std::size_t>(low) + count <= std::numeric_limits<value_type>::max());
+        }
 
         constexpr uint32_t value() const noexcept {
             return _value;
@@ -63,7 +91,7 @@ namespace libjst
         }
 
         template <std::integral int_t>
-        constexpr operator int_t() const noexcept {
+        explicit constexpr operator int_t() const noexcept {
             return static_cast<int_t>(value());
         }
 
@@ -84,6 +112,22 @@ namespace libjst
 
     private:
 
+        template <typename me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, breakpoint>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::low_breakend>, me_t && me) noexcept
+            -> jst::contrib::member_type_t<me_t, value_type>
+        {
+            return static_cast<jst::contrib::member_type_t<me_t, value_type>>(me._low);
+        }
+
+        template <typename me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, breakpoint>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::high_breakend>, me_t && me) noexcept
+            -> jst::contrib::member_type_t<me_t, value_type>
+        {
+            return static_cast<jst::contrib::member_type_t<me_t, value_type>>(me._high);
+        }
+
         constexpr friend bool operator==(breakpoint const & lhs, breakpoint const & rhs) noexcept {
             return lhs <=> rhs == 0;
         }
@@ -101,7 +145,6 @@ namespace libjst
         requires std::same_as<std::remove_cvref_t<breakpoint_t>, breakpoint>
     inline stream_t & operator<<(stream_t & stream, breakpoint_t && bp) {
         using namespace std::literals;
-        auto end_marker_string = [&] { return (bp.is_left_end()) ? "left end"sv : "right end"sv; };
-        return stream << end_marker_string() << ": " << bp.value();
+        return stream << "[" << libjst::low_breakend(bp) << ".." << libjst::high_breakend(bp) << ")";
     }
 }  // namespace libjst
