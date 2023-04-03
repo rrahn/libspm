@@ -78,6 +78,18 @@ target_include_directories (jstmap_test_performance INTERFACE "gbenchmark" "jstm
 target_link_libraries (jstmap_test_performance INTERFACE "gbenchmark" "jstmap::test" )
 add_library (jstmap::test::performance ALIAS jstmap_test_performance)
 
+add_library (jstmap_test_asan INTERFACE)
+target_compile_options(jstmap_test_asan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_options(jstmap_test_asan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_libraries (jstmap_test_asan INTERFACE "jstmap::test::unit")
+add_library (jstmap::test::asan ALIAS jstmap_test_asan)
+
+add_library (jstmap_test_tsan INTERFACE)
+target_compile_options(jstmap_test_tsan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_options(jstmap_test_tsan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_libraries (jstmap_test_tsan INTERFACE "jstmap::test::unit")
+add_library (jstmap::test::tsan ALIAS jstmap_test_tsan)
+
 # ----------------------------------------------------------------------------
 # Commonly used macros for the different test modules.
 # ----------------------------------------------------------------------------
