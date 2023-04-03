@@ -39,8 +39,16 @@ namespace seqan
         constexpr alphabet_adaptor() = default;
 
         template <typename char_t>
-            requires requires { seqan3::assign_char_to(char_t{}, alphabet_t{}); }
+            requires std::same_as<seqan3::alphabet_char_t<alphabet_t>, char_t> &&
+                     requires { seqan3::assign_char_to(char_t{}, alphabet_t{}); }
         constexpr explicit alphabet_adaptor(char_t c) : _symbol{seqan3::assign_char_to(c, alphabet_t{})}
+        {}
+
+        template <std::unsigned_integral rank_t>
+            requires (!std::same_as<seqan3::alphabet_char_t<alphabet_t>, rank_t>) &&
+                     std::convertible_to<rank_t, seqan3::alphabet_rank_t<alphabet_t>> &&
+                     requires { seqan3::assign_rank_to(static_cast<seqan3::alphabet_rank_t<alphabet_t>>(rank_t{}), alphabet_t{}); }
+        constexpr explicit alphabet_adaptor(rank_t r) : _symbol{seqan3::assign_rank_to(static_cast<seqan3::alphabet_rank_t<alphabet_t>>(r), alphabet_t{})}
         {}
 
         constexpr bool operator==(alphabet_adaptor const &) const noexcept = default;
