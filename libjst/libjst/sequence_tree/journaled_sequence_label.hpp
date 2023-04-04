@@ -95,7 +95,7 @@ namespace libjst
 
         template <typename variant_t>
         constexpr void record_variant_impl(variant_t && variant) {
-            position_type const alt_position = to_alt_position(libjst::left_breakpoint(variant));
+            position_type const alt_position = to_alt_position(libjst::left_breakpoint(variant).value());
             switch (libjst::alt_kind(variant)) {
                 case alternate_sequence_kind::replacement: {
                     _journal.record_substitution(alt_position, libjst::alt_sequence(variant));
@@ -119,7 +119,7 @@ namespace libjst
 
         template <typename variant_t>
         constexpr void update_label_positions(variant_t && variant) noexcept {
-            position_type const alt_position = to_alt_position(libjst::left_breakpoint(variant));
+            position_type const alt_position = to_alt_position(libjst::left_breakpoint(variant).value());
             reset_positions(alt_position, alt_position + std::ranges::size(libjst::alt_sequence(variant)));
             _offset += libjst::effective_size(variant);
         }
