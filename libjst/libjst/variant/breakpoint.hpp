@@ -57,8 +57,8 @@ namespace libjst
         }
         ~breakpoint() = default;
 
-        // explicit constexpr breakpoint(uint32_t const value) noexcept : breakpoint{value, breakpoint_end::left}
-        // {}
+        constexpr breakpoint(uint32_t const value) noexcept : breakpoint{value, breakpoint_end::left}
+        {}
 
         constexpr breakpoint(uint32_t const value, breakpoint_end const end_marker) noexcept :
             _value{value},

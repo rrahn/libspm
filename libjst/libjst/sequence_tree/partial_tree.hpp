@@ -197,8 +197,8 @@ namespace libjst
 
         constexpr breakpoint select_breakpoint(state bound_state, breakpoint alt_breakpoint) const noexcept {
             switch (bound_state) {
-                case state::left_bound: return libjst::position(*_left_bound);
-                case state::right_bound: return libjst::position(*_right_bound);
+                case state::left_bound: return breakpoint{(uint32_t)libjst::position(*_left_bound), breakpoint_end::left};
+                case state::right_bound: return breakpoint{(uint32_t)libjst::position(*_right_bound), breakpoint_end::left};
                 default: return alt_breakpoint;
             }
         }
