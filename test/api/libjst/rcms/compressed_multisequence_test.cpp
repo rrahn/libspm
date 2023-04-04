@@ -39,10 +39,11 @@ TEST_F(compressed_multisequence_test, range_concept) {
 
 TEST_F(compressed_multisequence_test, construct) {
     source_type src{"AAAAAAAAAAAAAAA"_dna4};
-    test_type multisequence{src, coverage_domain_type{}};
+    coverage_domain_type domain{0, 10};
+    test_type multisequence{src, domain};
 
     EXPECT_EQ(multisequence.source(), source_type{"AAAAAAAAAAAAAAA"_dna4});
-    EXPECT_TRUE(multisequence.coverage_domain() == coverage_domain_type{});
+    EXPECT_TRUE(multisequence.coverage_domain() == domain);
 }
 
 TEST_F(compressed_multisequence_test, insert_snv) {
@@ -93,14 +94,28 @@ TEST_F(compressed_multisequence_test, insert_deletion) {
 TEST_F(compressed_multisequence_test, iterate) {
     source_type src{"AAAAAAAAAAAAAAA"_dna4};
     using value_type = std::ranges::range_value_t<test_type>;
+    coverage_domain_type domain{0, 10};
+    coverage_type full_coverage{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, domain};
 
     { // empty
-        test_type rcms{src, coverage_domain_type{0, 10}};
-        EXPECT_TRUE(rcms.begin() == rcms.end());
+        test_type rcms{src, domain};
+        auto it = rcms.begin();
+        EXPECT_EQ(libjst::low_breakend(*it), 0);
+        EXPECT_EQ(libjst::high_breakend(*it), 0);
+        EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+        EXPECT_EQ(libjst::coverage(*it), full_coverage);
+
+        ++it;
+        EXPECT_EQ(libjst::low_breakend(*it), std::ranges::size(src));
+        EXPECT_EQ(libjst::high_breakend(*it), std::ranges::size(src));
+        EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+        EXPECT_EQ(libjst::coverage(*it), full_coverage);
+        ++it;
+        EXPECT_TRUE(it == rcms.end());
     }
 
     { // multiple variants
-        test_type rcms{src, coverage_domain_type{0, 10}};
+        test_type rcms{src, domain};
         coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
         rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
         rcms.insert(value_type{libjst::breakpoint{5, 6}, "T"_dna4, test_coverage});
@@ -108,6 +123,12 @@ TEST_F(compressed_multisequence_test, iterate) {
         rcms.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
 
         auto it = rcms.begin();
+        EXPECT_EQ(libjst::low_breakend(*it), 0);
+        EXPECT_EQ(libjst::high_breakend(*it), 0);
+        EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+        EXPECT_EQ(libjst::coverage(*it), full_coverage);
+
+        ++it;
         EXPECT_EQ(libjst::low_breakend(*it), 1);
         EXPECT_EQ(libjst::high_breakend(*it), 2);
         EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), "T"_dna4));
@@ -132,6 +153,11 @@ TEST_F(compressed_multisequence_test, iterate) {
         EXPECT_EQ(libjst::coverage(*it), test_coverage);
 
         ++it;
+        EXPECT_EQ(libjst::low_breakend(*it), std::ranges::size(src));
+        EXPECT_EQ(libjst::high_breakend(*it), std::ranges::size(src));
+        EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+        EXPECT_EQ(libjst::coverage(*it), full_coverage);
+        ++it;
         EXPECT_TRUE(it == rcms.end());
     }
 }
@@ -154,7 +180,7 @@ TEST_F(compressed_multisequence_test, empty) {
     EXPECT_TRUE(std::ranges::empty(rcms));
 
     rcms = test_type{src, coverage_domain_type{0, 10}};
-    EXPECT_TRUE(std::ranges::empty(rcms));
+    EXPECT_FALSE(std::ranges::empty(rcms));
 
     coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
     rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
@@ -170,20 +196,23 @@ TEST_F(compressed_multisequence_test, size) {
     EXPECT_EQ(rcms.size(), 0u);
 
     rcms = test_type{src, coverage_domain_type{0, 10}};
-    EXPECT_EQ(rcms.size(), 0u);
+    EXPECT_EQ(rcms.size(), 2u);
 
     coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
     rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
-    EXPECT_EQ(rcms.size(), 1u);
+    EXPECT_EQ(rcms.size(), 3u);
     rcms.insert(value_type{libjst::breakpoint{5, 6}, "T"_dna4, test_coverage});
     rcms.insert(value_type{libjst::breakpoint{1, 2}, "T"_dna4, test_coverage});
     rcms.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
-    EXPECT_EQ(rcms.size(), 4u);
+    EXPECT_EQ(rcms.size(), 6u);
 }
 
 TEST_F(compressed_multisequence_test, serialise) {
-    source_type src{"AAAAAAAAAAAAAAA"_dna4};
     using value_type = std::ranges::range_value_t<test_type>;
+
+    source_type src{"AAAAAAAAAAAAAAA"_dna4};
+    coverage_domain_type domain{0, 10};
+    coverage_type full_coverage{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, domain};
 
     test_type rcms_out{src, coverage_domain_type{0, 10}};
     coverage_type test_coverage{{0, 1, 2}, rcms_out.coverage_domain()};
@@ -205,6 +234,13 @@ TEST_F(compressed_multisequence_test, serialise) {
     }
 
     auto it = rcms_in.begin();
+
+    EXPECT_EQ(libjst::low_breakend(*it), 0);
+    EXPECT_EQ(libjst::high_breakend(*it), 0);
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+    EXPECT_EQ(libjst::coverage(*it), full_coverage);
+
+    ++it;
     EXPECT_EQ(libjst::low_breakend(*it), 1);
     EXPECT_EQ(libjst::high_breakend(*it), 2);
     EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), "T"_dna4));
@@ -227,6 +263,12 @@ TEST_F(compressed_multisequence_test, serialise) {
     EXPECT_EQ(libjst::high_breakend(*it), 10);
     EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), "T"_dna4));
     EXPECT_EQ(libjst::coverage(*it), test_coverage);
+
+    ++it;
+    EXPECT_EQ(libjst::low_breakend(*it), std::ranges::size(src));
+    EXPECT_EQ(libjst::high_breakend(*it), std::ranges::size(src));
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), ""_dna4));
+    EXPECT_EQ(libjst::coverage(*it), full_coverage);
 
     ++it;
     EXPECT_TRUE(it == rcms_in.end());

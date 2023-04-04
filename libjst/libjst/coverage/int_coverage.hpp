@@ -45,7 +45,21 @@ namespace libjst
             _domain{std::move(domain)}
         {}
 
-        explicit constexpr int_coverage(std::initializer_list<value_type> init_list, coverage_domain_t domain) :
+        template <typename elem_range_t>
+            requires (!std::same_as<std::remove_cvref_t<elem_range_t>, int_coverage>) &&
+                     (!std::same_as<std::remove_cvref_t<elem_range_t>, std::initializer_list<value_type>>) &&
+                      std::integral<std::ranges::range_value_t<elem_range_t>>
+        explicit constexpr int_coverage(elem_range_t && from_list, coverage_domain_t domain) :
+            int_coverage{std::move(domain)}
+        {
+            std::ranges::for_each(init_list, [&] (value_type elem) {
+            if (!get_domain().is_member(elem))
+                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+                _data.emplace_hint(_data.end(), std::move(elem));
+            });
+        }
+
+        explicit constexpr int_coverage(std::initializer_list<value_type> from_list, coverage_domain_t domain) :
             int_coverage{std::move(domain)}
         {
             std::ranges::for_each(init_list, [&] (value_type elem) {

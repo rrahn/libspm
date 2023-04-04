@@ -64,7 +64,6 @@ namespace libjst
         using indel_type = indel_variant<deletion_type, insertion_type>;
 
         using indel_map_type = std::unordered_map<indel_key_type, indel_type, indel_key_hash>;
-
         using coverage_domain_type = libjst::coverage_domain_t<coverage_t>;
 
         template <bool>
@@ -88,7 +87,13 @@ namespace libjst
         explicit compressed_multisequence(source_t source, coverage_domain_type coverage_domain) :
             _source{std::move(source)},
             _coverage_domain{std::move(coverage_domain)}
-        {}
+        {
+            using position_t = libjst::breakend_t<value_type>;
+            position_t source_size = std::ranges::size(_source);
+            coverage_t def_coverage{std::views::iota(_coverage_domain.min(), _coverage_domain.max()), _coverage_domain};
+            _breakend_map.emplace(breakend_key_type{indel_breakend_kind::nil, 0}, def_coverage);
+            _breakend_map.emplace(breakend_key_type{indel_breakend_kind::nil, source_size}, def_coverage);
+        }
 
         iterator insert(value_type value) { // low_breakend, alt_sequence, coverage
             if (libjst::get_domain(libjst::coverage(value)) != _coverage_domain)
@@ -402,10 +407,11 @@ namespace libjst
             position_t const position = key.position();
             return key.visit(seqan3::detail::multi_invocable{
                 [&] (indel_breakend_kind indel_kind) {
-                    if (indel_kind == indel_breakend_kind::insertion_low) {
-                        return breakpoint{position, 0};
-                    } else {
+                    if (indel_kind == indel_breakend_kind::deletion_low ||
+                        indel_kind == indel_breakend_kind::deletion_high) {
                         return get_deletion_breakpoint(indel_kind);
+                    } else {
+                        return breakpoint{position, 0};
                     }
                 },
                 [&] (auto const &) { return breakpoint{position, 1}; }
@@ -415,13 +421,17 @@ namespace libjst
         constexpr sequence_reference extract_alt_sequence() const noexcept {
             // what can we have:
             return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
-                [&] (indel_breakend_kind) {
+                [&] (indel_breakend_kind breakend_kind) {
                     indel_key_type indel_key{_breakend_reference.first, _breakend_reference.second.front()};
-                    assert(_indel_map.contains(indel_key));
-                    return _indel_map.find(indel_key)->second.visit(seqan3::detail::multi_invocable{
-                        [] (insertion_type const & insertion) { return sequence_reference{insertion.value()}; },
-                        [] (deletion_type const &) { return sequence_reference{}; }
-                    });
+                    if (breakend_kind != indel_breakend_kind::nil) {
+                        assert(_indel_map.contains(indel_key));
+                        return _indel_map.find(indel_key)->second.visit(seqan3::detail::multi_invocable{
+                            [] (insertion_type const & insertion) { return sequence_reference{insertion.value()}; },
+                            [] (deletion_type const &) { return sequence_reference{}; }
+                        });
+                    } else {
+                        return sequence_reference{};
+                    }
                 },
                 [&] (...) {
                     using snv_value_t = std::ranges::range_value_t<sequence_reference>;
