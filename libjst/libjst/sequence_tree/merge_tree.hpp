@@ -57,18 +57,21 @@ namespace libjst
 
     template <typename base_tree_t>
     class merge_tree_impl<base_tree_t>::node_impl : public base_node_type {
+    protected:
+        using typename base_node_type::position_type;
     private:
 
         friend merge_tree_impl;
 
         class label_impl;
 
-        breakpoint _left_breakpoint{};
+
+        position_type _low_breakend{};
 
         explicit constexpr node_impl(base_node_type && base_node) noexcept :
             base_node_type{std::move(base_node)}
         {
-            _left_breakpoint = base_node_type::left_breakpoint();
+            _low_breakend = base_node_type::low_breakend();
         }
 
     public:
@@ -89,14 +92,14 @@ namespace libjst
 
         constexpr auto operator*() const noexcept {
             return label_impl{*static_cast<base_node_type const &>(*this),
-                              left_breakpoint(),
-                              base_node_type::right_breakpoint()};
+                              low_breakend(),
+                              base_node_type::high_breakend()};
         }
 
     protected:
 
-        constexpr breakpoint left_breakpoint() const noexcept {
-            return _left_breakpoint;
+        constexpr position_type low_breakend() const noexcept {
+            return _low_breakend;
         }
     private:
 
@@ -133,16 +136,16 @@ namespace libjst
 
         friend node_impl;
 
-        breakpoint _left_breakpoint{};
-        breakpoint _right_breakpoint{};
+        breakpoint _low_breakend{};
+        breakpoint _high_breakend{};
 
         template <typename base_label_t>
         explicit constexpr label_impl(base_label_t base_label,
-                                      breakpoint left_breakpoint,
-                                      breakpoint right_breakpoint) noexcept :
+                                      breakpoint low_breakend,
+                                      breakpoint high_breakend) noexcept :
             base_label_t{std::move(base_label)},
-            _left_breakpoint{left_breakpoint},
-            _right_breakpoint{right_breakpoint}
+            _low_breakend{low_breakend},
+            _high_breakend{high_breakend}
         {}
 
     public:
@@ -150,8 +153,8 @@ namespace libjst
         label_impl() = default;
 
         constexpr auto sequence() const noexcept {
-            assert(_left_breakpoint <= _right_breakpoint);
-            return base_label_t::sequence(_left_breakpoint.value(), _right_breakpoint.value());
+            assert(_low_breakend <= _high_breakend);
+            return base_label_t::sequence(_low_breakend.value(), _high_breakend.value());
         }
     };
 

@@ -78,6 +78,9 @@ namespace libjst
 
     template <typename base_tree_t>
     class partial_tree<base_tree_t>::node_impl : public base_node_type {
+    protected:
+        using typename base_node_type::position_type;
+
     private:
 
         using variant_iterator = typename rcs_node_traits<base_node_type>::variant_iterator;
@@ -156,12 +159,12 @@ namespace libjst
 
     protected:
 
-        constexpr breakpoint left_breakpoint() const noexcept {
-            return select_breakpoint(_left_state, base_node_type::left_breakpoint());
+        constexpr position_type low_breakend() const noexcept {
+            return select_breakend(_left_state, base_node_type::low_breakend());
         }
 
-        constexpr breakpoint right_breakpoint() const noexcept {
-            return select_breakpoint(_right_state, base_node_type::right_breakpoint());
+        constexpr position_type high_breakend() const noexcept {
+            return select_breakend(_right_state, base_node_type::high_breakend());
         }
 
         constexpr variant_reference left_variant() const noexcept {
@@ -191,14 +194,14 @@ namespace libjst
 
         constexpr bool reached_right_bound() const noexcept {
             bool not_alternate = !base_node_type::on_alternate_path();
-            bool over_right_bound = libjst::position(*_right_bound) <= base_node_type::right_breakpoint();
+            bool over_right_bound = libjst::position(*_right_bound).value() <= base_node_type::high_breakend();
             return not_alternate && over_right_bound;
         }
 
-        constexpr breakpoint select_breakpoint(state bound_state, breakpoint alt_breakpoint) const noexcept {
+        constexpr position_type select_breakend(state bound_state, position_type alt_breakpoint) const noexcept {
             switch (bound_state) {
-                case state::left_bound: return breakpoint{(uint32_t)libjst::position(*_left_bound), breakpoint_end::left};
-                case state::right_bound: return breakpoint{(uint32_t)libjst::position(*_right_bound), breakpoint_end::left};
+                case state::left_bound: return libjst::position(*_left_bound).value();
+                case state::right_bound: return libjst::position(*_right_bound).value();
                 default: return alt_breakpoint;
             }
         }

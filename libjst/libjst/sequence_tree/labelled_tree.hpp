@@ -48,8 +48,8 @@ namespace libjst
 
         constexpr void initialise() {
             _label_strategy = label_strategy_type(as_derived(*this).rcs_store().source());
-            _label_strategy.reset_positions(as_derived(*this).left_breakpoint().value(),
-                                            as_derived(*this).right_breakpoint().value());
+            _label_strategy.reset_positions(as_derived(*this).low_breakend(),
+                                            as_derived(*this).high_breakend());
         };
 
         constexpr node_label_extension notify(extended_node_t const & child_node) const {
@@ -60,8 +60,8 @@ namespace libjst
                 // now we could be in a multibranch state!
                 // thus we need to set the correct left position when we go into state A!
 
-                auto right_bp = as_derived(child_node).right_breakpoint().value();
-                auto left_bp = as_derived(child_node).left_breakpoint().value();
+                auto right_bp = as_derived(child_node).high_breakend();
+                auto left_bp = as_derived(child_node).low_breakend();
                 child_extension._label_strategy.reset_positions(std::min(left_bp, right_bp), right_bp);
             }
             return child_extension;
