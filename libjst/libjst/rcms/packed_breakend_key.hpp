@@ -20,9 +20,10 @@
 namespace libjst
 {
     enum class indel_breakend_kind {
-        deletion_high = 0b100,
-        insertion_low = 0b101,
-        deletion_low = 0b110
+        nil = 0b100,
+        deletion_high = 0b101,
+        insertion_low = 0b110,
+        deletion_low = 0b111
     };
 
     template <typename position_t = uint32_t>

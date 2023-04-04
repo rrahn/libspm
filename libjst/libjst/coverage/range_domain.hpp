@@ -35,12 +35,20 @@ namespace libjst
             _max{std::max(min, max)}
         {}
 
+        constexpr value_type min() const noexcept {
+            return  _min;
+        }
+
+        constexpr value_type max() const noexcept {
+            return _max;
+        }
+
         constexpr size_t size() const noexcept {
-            return _max - _min;
+            return max() - min();
         }
 
         constexpr bool is_member(value_t elem) const noexcept {
-            return elem == std::clamp(elem, _min, _max);
+            return elem == std::clamp(elem, min(), max());
         }
 
         // ----------------------------------------------------------------------------
