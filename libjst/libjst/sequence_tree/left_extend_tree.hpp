@@ -64,7 +64,7 @@ namespace libjst
         explicit constexpr node_impl(base_node_type && base_node, size_t offset) noexcept :
             base_node_type{std::move(base_node)},
             _offset{std::move(offset)},
-            _min_position{base_node_type::left_breakpoint().value()}
+            _min_position{base_node_type::low_breakend()}
         {}
 
         explicit constexpr node_impl(base_node_type && base_node, size_t offset, size_t min_position) noexcept :
@@ -78,7 +78,6 @@ namespace libjst
         node_impl() = default;
 
         constexpr auto operator*() const noexcept {
-            base_node_type::left_breakpoint();
             return label_impl{*static_cast<base_node_type const &>(*this), _offset, _min_position};
         }
 

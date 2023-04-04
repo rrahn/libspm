@@ -56,6 +56,8 @@ namespace libjst
 
     template <typename base_tree_t>
     class trim_tree_impl<base_tree_t>::node_impl : public base_node_type {
+    public:
+        using typename base_node_type::position_type;
     private:
 
         friend trim_tree_impl;
@@ -108,15 +110,13 @@ namespace libjst
 
     protected:
 
-        constexpr breakpoint right_breakpoint() const {
-            breakpoint original_bp = base_node_type::right_breakpoint();
+        constexpr position_type high_breakend() const {
+            position_type original_bp = base_node_type::high_breakend();
             if (base_node_type::on_alternate_path()) {
                 assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
-                return breakpoint{(uint32_t)std::min<difference_type>(
-                                    static_cast<difference_type>(original_bp),
-                                    static_cast<difference_type>(original_bp) + _remaining_branch_size),
-                                    breakpoint_end::left
-                                };
+                return static_cast<position_type>(
+                        std::min<difference_type>(static_cast<difference_type>(original_bp),
+                                                  static_cast<difference_type>(original_bp) + _remaining_branch_size));
             } else {
                 return original_bp;
             }
@@ -153,20 +153,20 @@ namespace libjst
         template <bool is_alt_node>
         constexpr node_impl branch_off_further(base_node_type base_child) const noexcept {
             node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
-            // std::cout << "Further Span: " << new_child.breakpoint_span<is_alt_node>() << "\n";
-            // if (new_child.breakpoint_span<is_alt_node>() > 1000) {
+            // std::cout << "Further Span: " << new_child.breakend_span<is_alt_node>() << "\n";
+            // if (new_child.breakend_span<is_alt_node>() > 1000) {
             //     std::cout << "Stop\n";
             // }
-            new_child._remaining_branch_size -= new_child.breakpoint_span<is_alt_node>();
+            new_child._remaining_branch_size -= new_child.breakend_span<is_alt_node>();
             return new_child;
         }
 
         template <bool is_alt_node>
-        constexpr difference_type breakpoint_span() const noexcept {
+        constexpr difference_type breakend_span() const noexcept {
             if constexpr (is_alt_node) {
                 return std::ranges::ssize(libjst::alt_sequence(base_node_type::left_variant()));
             } else {
-                return base_node_type::right_breakpoint().value() - base_node_type::left_breakpoint().value();
+                return base_node_type::high_breakend() - base_node_type::low_breakend();
             }
         }
 

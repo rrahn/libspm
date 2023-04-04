@@ -35,6 +35,7 @@ namespace libjst
         using variant_type = std::iter_value_t<variant_iterator>;
         using breakpoint_type = libjst::variant_breakpoint_t<variant_type>;
         using optional_node_type = std::optional<derived_t>;
+        using position_type = typename libjst::variant_position_t<variant_type>::value_type;
 
     private:
         rcs_store_type const * _rcs_store{};
@@ -107,21 +108,21 @@ namespace libjst
          *
          * \returns Source position of the left end of the current node.
          */
-        constexpr breakpoint_type left_breakpoint() const {
+        constexpr position_type low_breakend() const {
             if (get_left() == sink())
                 return std::ranges::size(rcs_store().source());
 
-            auto bounded_right_position = [&] (variant_iterator const it) {
+            auto bounded_right_position = [&] (variant_iterator const it) -> position_type {
                 if (it == sink()) {
-                    return breakpoint{static_cast<uint32_t>(std::ranges::size(rcs_store().source()))};
+                    return std::ranges::size(rcs_store().source());
                 } else {
-                    return libjst::position(*it);
+                    return libjst::position(*it).value();
                 }
             };
 
             return (node_descriptor::left_break().from_left_begin())
-                        ? libjst::left_breakpoint(*get_left())
-                        : std::min(libjst::right_breakpoint(*get_left()), bounded_right_position(get_right()));
+                        ? libjst::left_breakpoint(*get_left()).value()
+                        : std::min<position_type>(libjst::right_breakpoint(*get_left()).value(), bounded_right_position(get_right()));
         }
 
         /*!\brief Returns the breakpoint of the right end of the current node.
@@ -132,21 +133,21 @@ namespace libjst
          *
          * \returns Source position of the right end of the current node.
          */
-        constexpr breakpoint_type right_breakpoint() const {
+        constexpr position_type high_breakend() const {
 
-            auto bounded_right_breakpoint = [&] (variant_iterator const it) {
+            auto bounded_right_breakpoint = [&] (variant_iterator const it) -> position_type {
                 if (it == sink()) {
-                    return breakpoint{static_cast<uint32_t>(std::ranges::size(rcs_store().source()))};
+                    return std::ranges::size(rcs_store().source());
                 } else {
-                    return libjst::right_breakpoint(*it);
+                    return libjst::right_breakpoint(*it).value();
                 }
             };
 
-            auto bounded_left_breakpoint = [&] (variant_iterator const it) {
+            auto bounded_left_breakpoint = [&] (variant_iterator const it) -> position_type {
                 if (it == sink()) {
-                    return breakpoint{static_cast<uint32_t>(std::ranges::size(rcs_store().source()))};
+                    return std::ranges::size(rcs_store().source());
                 } else {
-                    return libjst::left_breakpoint(*it);
+                    return libjst::left_breakpoint(*it).value();
                 }
             };
 
