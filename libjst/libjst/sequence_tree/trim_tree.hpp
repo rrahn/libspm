@@ -112,7 +112,11 @@ namespace libjst
             breakpoint original_bp = base_node_type::right_breakpoint();
             if (base_node_type::on_alternate_path()) {
                 assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
-                return std::min<difference_type>(original_bp, static_cast<difference_type>(original_bp) + _remaining_branch_size);
+                return breakpoint{(uint32_t)std::min<difference_type>(
+                                    static_cast<difference_type>(original_bp),
+                                    static_cast<difference_type>(original_bp) + _remaining_branch_size),
+                                    breakpoint_end::left
+                                };
             } else {
                 return original_bp;
             }

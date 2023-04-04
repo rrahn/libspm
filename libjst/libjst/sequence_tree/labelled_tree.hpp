@@ -48,7 +48,8 @@ namespace libjst
 
         constexpr void initialise() {
             _label_strategy = label_strategy_type(as_derived(*this).rcs_store().source());
-            _label_strategy.reset_positions(as_derived(*this).left_breakpoint(), as_derived(*this).right_breakpoint());
+            _label_strategy.reset_positions(as_derived(*this).left_breakpoint().value(),
+                                            as_derived(*this).right_breakpoint().value());
         };
 
         constexpr node_label_extension notify(extended_node_t const & child_node) const {

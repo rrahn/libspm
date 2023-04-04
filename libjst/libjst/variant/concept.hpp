@@ -20,13 +20,13 @@
 #include <libcontrib/std/tag_invoke.hpp>
 
 #include <libjst/variant/alternate_sequence_kind.hpp>
-#include <libjst/variant/breakpoint.hpp>
 
 namespace libjst
 {
+    // TODO remove me!
+    struct breakpoint;
 
-    // TODO: Remove me after adaption of breakpoint naming!
-    enum struct breakpoint_end : bool {
+    enum struct breakpoint_end : uint8_t {
         right = 0,
         left = 1
     };
