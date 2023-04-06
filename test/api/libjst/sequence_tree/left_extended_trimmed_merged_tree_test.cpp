@@ -19,12 +19,15 @@
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree2.hpp>
+#include <libjst/sequence_tree/left_extend_tree.hpp>
+#include <libjst/sequence_tree/merge_tree.hpp>
+#include <libjst/sequence_tree/trim_tree.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
 #include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
-namespace jst::test::labelled_tree {
+namespace jst::test::left_ext_trimmed_merged {
 
 using source_t = std::vector<jst::contrib::dna4>;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
@@ -32,6 +35,8 @@ using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<u
 struct fixture {
     source_t source{};
     uint32_t coverage_size{4};
+    uint32_t extend_size{};
+    uint32_t trim_size{};
     std::vector<variant_t> variants{};
     std::vector<source_t> expected_labels{};
 
@@ -68,21 +73,24 @@ struct test : public ::testing::TestWithParam<fixture> {
     }
 };
 
-} // namespace jst::test::labelled_tree
+} // namespace jst::test::left_ext_trimmed_merged
 
 using namespace std::literals;
 
-using fixture = jst::test::labelled_tree::fixture;
-using variant_t = jst::test::labelled_tree::variant_t;
-struct labelled_tree_test : public jst::test::labelled_tree::test
+using fixture = jst::test::left_ext_trimmed_merged::fixture;
+using variant_t = jst::test::left_ext_trimmed_merged::variant_t;
+struct left_ext_trimmed_merged_test : public jst::test::left_ext_trimmed_merged::test
 {
-    using typename jst::test::labelled_tree::test::rcs_store_t;
-    using jst::test::labelled_tree::test::get_mock;
-    using jst::test::labelled_tree::test::GetParam;
+    using typename jst::test::left_ext_trimmed_merged::test::rcs_store_t;
+    using jst::test::left_ext_trimmed_merged::test::get_mock;
+    using jst::test::left_ext_trimmed_merged::test::GetParam;
 
     auto make_tree() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::labelled();
+        return libjst::volatile_tree{rcs_mock} | libjst::labelled()
+                                               | libjst::trim(GetParam().trim_size)
+                                               | libjst::left_extend(GetParam().extend_size)
+                                               | libjst::merge();
     }
 };
 
@@ -90,7 +98,7 @@ struct labelled_tree_test : public jst::test::labelled_tree::test
 // Test case definitions
 // ----------------------------------------------------------------------------
 
-TEST_P(labelled_tree_test, root_sink) {
+TEST_P(left_ext_trimmed_merged_test, root_sink) {
     auto tree = make_tree();
 
     using tree_t = decltype(tree);
@@ -140,67 +148,81 @@ TEST_P(labelled_tree_test, root_sink) {
 // ----------------------------------------------------------------------------
 using jst::contrib::operator""_dna4;
 
-INSTANTIATE_TEST_SUITE_P(no_variant, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(no_variant, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{2},
+    .trim_size{3},
     .variants{},
     .expected_labels{"AAAAGGGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv0, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv0, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{2},
+    .trim_size{3},
     .variants{
         variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "C"_dna4, "AAAGGGG"_dna4, "AAAAGGGG"_dna4}
+    .expected_labels{""_dna4, "CAAA"_dna4, "AAAAGGGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv7, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv7, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{2},
+    .trim_size{3},
     .variants{
         variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAAGGG"_dna4, "C"_dna4, ""_dna4, "G"_dna4}
+    .expected_labels{"AAAAGGG"_dna4, "GGC"_dna4, "GGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{2},
+    .trim_size{3},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4, "GGGG"_dna4}
+    .expected_labels{"AAAA"_dna4, "AACGGG"_dna4, "AAGGGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv6, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv6, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{2},
+    .trim_size{3},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "G"_dna4, "T"_dna4, "G"_dna4,
-                                                      "GG"_dna4,
-                                  "GG"_dna4, "T"_dna4, "G"_dna4,
-                                             "GG"_dna4}
+    .expected_labels{"AAAA"_dna4, "AACG"_dna4, "CGTG"_dna4,
+                                               "CGGG"_dna4,
+                                  "AAGG"_dna4, "GGTG"_dna4,
+                                               "GGGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv5, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv5, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{3},
+    .trim_size{2},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, ""_dna4, "T"_dna4, "GG"_dna4,
-                                                      "GGG"_dna4,
-                                  "G"_dna4, "T"_dna4, "GG"_dna4,
-                                             "GGG"_dna4}
+    .expected_labels{"AAAA"_dna4, "AAAC"_dna4, "AACTG"_dna4,
+                                               "AACGG"_dna4,
+                                  "AAAG"_dna4, "AAGTGG"_dna4,
+                                               "AAGGGG"_dna4}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv4, left_ext_trimmed_merged_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
+    .extend_size{3},
+    .trim_size{2},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4,
-                                  ""_dna4, "T"_dna4, "GGG"_dna4,
-                                  "GGGG"_dna4}
+    .expected_labels{"AAAA"_dna4, "AAACGG"_dna4,
+                                  "AAA"_dna4, "AAATGG"_dna4,
+                                  "AAAGGGG"_dna4}
 }));

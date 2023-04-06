@@ -33,7 +33,7 @@ using variant_t = jst::test::variant<libjst::breakpoint, source_t, int, libjst::
 struct fixture {
     source_t source{};
     std::vector<variant_t> variants{};
-    std::size_t coverage_size{};
+    uint32_t coverage_size{};
     uint32_t window_size{};
     libjst::tree_stats expected_stats{};
 
@@ -54,7 +54,6 @@ struct test : public ::testing::TestWithParam<fixture> {
     void SetUp() override {
         _mock = rcs_store_t{GetParam().source, GetParam().coverage_size};
         std::ranges::for_each(GetParam().variants, [&] (auto var) {
-            assert(std::ranges::size(libjst::coverage(var)) == _mock.size());
             _mock.insert(std::move(var));
         });
     }

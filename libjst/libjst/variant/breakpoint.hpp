@@ -128,6 +128,14 @@ namespace libjst
             return static_cast<jst::contrib::member_type_t<me_t, value_type>>(me._high);
         }
 
+        template <typename me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, me_t>
+        constexpr friend auto tag_invoke(std::tag_t<libjst::breakpoint_span>, me_t && me) noexcept
+            -> value_type
+        {
+            return libjst::high_breakend(me) - libjst::low_breakend(me);
+        }
+
         constexpr friend bool operator==(breakpoint const & lhs, breakpoint const & rhs) noexcept {
             return lhs <=> rhs == 0;
         }

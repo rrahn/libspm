@@ -18,6 +18,9 @@
 
 namespace libjst
 {
+    struct nil_node_t{};
+    inline constexpr nil_node_t nil_node{};
+
     // ----------------------------------------------------------------------------
     // Operation CPOs for sequence trees
     // ----------------------------------------------------------------------------

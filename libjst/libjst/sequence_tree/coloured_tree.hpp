@@ -33,7 +33,8 @@ namespace libjst
         using variant_type = typename rcs_node_traits<extended_node_t>::variant_type;
         using coverage_type = libjst::variant_coverage_t<variant_type>;
 
-        std::shared_ptr<coverage_type> _coverage{};
+        // std::shared_ptr<coverage_type> _coverage{};
+        coverage_type const * _coverage{};
 
         template <typename base_label_t>
         class label_impl;
@@ -42,8 +43,10 @@ namespace libjst
 
         node_coverage_extension() = default;
 
-        constexpr void initialise() {
-            _coverage = std::make_shared<coverage_type>(as_derived(*this).rcs_store().size(), true);
+        constexpr void initialise() { // TODO: replace automatic coverage generation.
+            // what is the automatic coverage size?
+            // _coverage = std::make_shared<coverage_type>(as_derived(*this).rcs_store().size(), true);
+            _coverage = std::addressof(libjst::coverage(as_derived(*this).left_variant()));
         };
 
         constexpr node_coverage_extension notify(extended_node_t const &) const {
@@ -62,11 +65,9 @@ namespace libjst
 
         template <typename base_label_t>
         constexpr auto label(base_label_t && base_label) const noexcept {
-            coverage_type const * cov_ptr{};
+            coverage_type const * cov_ptr{_coverage};
             if (as_derived(*this).is_alt_node()) {
-                cov_ptr = std::addressof(libjst::coverage(as_derived(*this).left_variant()));
-            } else {
-                cov_ptr = _coverage.get();
+                cov_ptr = std::addressof(libjst::coverage(as_derived(*this).left_variant())); //TODO
             }
             return label_impl<std::remove_cvref_t<base_label_t>>{(base_label_t &&) base_label, cov_ptr};
         }
@@ -114,7 +115,7 @@ namespace libjst
 
             template <typename ...args_t>
             constexpr auto operator()(args_t &&... args) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, args_t...>)
+                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _coloured, args_t...>)
                 -> jst::contrib::closure_result_t<_coloured, args_t...>
             { // we need to store the type that needs to be called later!
                 return jst::contrib::make_closure(_coloured{}, (args_t &&)args...);

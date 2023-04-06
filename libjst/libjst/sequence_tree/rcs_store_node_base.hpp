@@ -18,7 +18,7 @@
 
 #include <libjst/variant/concept.hpp>
 #include <libjst/sequence_tree/node_descriptor.hpp>
-
+// #include <libjst/sequence_tree/breakpoint_node.hpp>
 namespace libjst
 {
     template <typename derived_t, typename rcs_store_t>
@@ -35,6 +35,7 @@ namespace libjst
         using variant_type = std::iter_value_t<variant_iterator>;
         using breakpoint_type = libjst::variant_breakpoint_t<variant_type>;
         using optional_node_type = std::optional<derived_t>;
+        // using base_node_type = breakpoint_node<variant_iterator>;
         using position_type = typename libjst::variant_position_t<variant_type>::value_type;
 
     private:
@@ -42,6 +43,8 @@ namespace libjst
         variant_iterator _left_variant{};
         variant_iterator _right_variant{};
         variant_iterator _next_variant{};
+
+        // base_node_type _base{};
 
     protected:
 
@@ -198,7 +201,7 @@ namespace libjst
         }
 
         constexpr variant_iterator sink() const noexcept {
-            return std::ranges::end(rcs_store().variants());
+            return std::ranges::prev(std::ranges::end(rcs_store().variants()));
         }
 
         constexpr bool is_nil() const noexcept {
@@ -236,6 +239,7 @@ namespace libjst
             variant_iterator next_right = get_right();
             assert(is_alt_node());
             auto const min_ref_position = libjst::right_breakpoint(*next_right);
+            // TODO: Do we need the ordering here?
             next_right = std::ranges::find_if_not(std::ranges::next(next_right), sink(), [&] (auto && var) {
                 return libjst::left_breakpoint(var) < min_ref_position;
             });
@@ -363,8 +367,11 @@ namespace libjst
         }
 
         constexpr friend bool operator==(rcs_store_node_base const & lhs, rcs_store_node_base const & rhs) noexcept {
-            return static_cast<node_descriptor const &>(lhs) == static_cast<node_descriptor const &>(rhs) &&
-                   std::tie(lhs._left_variant, lhs._right_variant) == std::tie(rhs._left_variant, rhs._right_variant);
+            [[maybe_unused]] bool s1 = static_cast<node_descriptor const &>(lhs) == static_cast<node_descriptor const &>(rhs);
+            [[maybe_unused]] bool s2 = lhs._left_variant == rhs._left_variant;
+            [[maybe_unused]] bool s3 = lhs._right_variant == rhs._right_variant;
+            return  s1 && s2 && s3;
+                //    std::tie(lhs._left_variant, lhs._right_variant) == std::tie(rhs._left_variant, rhs._right_variant);
         }
     };
 }  // namespace libjst

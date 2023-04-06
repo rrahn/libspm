@@ -36,6 +36,7 @@ namespace libjst
 /*H*/   non_branching_including_left    = left_begin | right_end,
 /*G*/   non_branching_after_left        = left_end   | right_end,
         variant                         = left_begin | left_end    | right_end,
+        reference                       = nil,
     };
 
 } // namespace libjst
@@ -115,6 +116,10 @@ namespace libjst {
 
         constexpr bool on_alternate_path() const noexcept {
             return _on_alternate_path;
+        }
+
+        constexpr void toggle_alternate_path() noexcept {
+            _on_alternate_path = true;
         }
 
         constexpr break_descriptor left_break() const noexcept {

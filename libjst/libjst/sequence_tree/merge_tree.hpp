@@ -13,7 +13,6 @@
 #pragma once
 
 #include <libcontrib/closure_adaptor.hpp>
-#include <libcontrib/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/node_descriptor.hpp>
@@ -24,11 +23,12 @@ namespace libjst
     template <typename base_tree_t>
     class merge_tree_impl {
     private:
-        // using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
+        using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
 
         class node_impl;
-        class sink_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
 
@@ -47,65 +47,64 @@ namespace libjst
         //!\}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(_wrappee)};
+            base_node_type base_root = libjst::root(_wrappee);
+            auto root_low = base_root.low_boundary();
+            return node_impl{std::move(base_root), std::move(root_low)};
         }
 
-        constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(_wrappee)};
+        constexpr sink_type sink() const noexcept {
+            return libjst::sink(_wrappee);
+        }
+
+        constexpr auto const & data() const noexcept {
+            return _wrappee.data();
         }
    };
 
     template <typename base_tree_t>
     class merge_tree_impl<base_tree_t>::node_impl : public base_node_type {
-    protected:
-        using typename base_node_type::position_type;
+    public:
+
+        using low_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().low_boundary())>;
+
     private:
 
         friend merge_tree_impl;
 
-        class label_impl;
+        low_position_type _low_boundary{};
 
-
-        position_type _low_breakend{};
-
-        explicit constexpr node_impl(base_node_type && base_node) noexcept :
-            base_node_type{std::move(base_node)}
-        {
-            _low_breakend = base_node_type::low_breakend();
-        }
+        explicit constexpr node_impl(base_node_type && base_node, low_position_type cached_low) noexcept :
+            base_node_type{std::move(base_node)},
+            _low_boundary{std::move(cached_low)}
+        {}
 
     public:
 
         constexpr node_impl() = default;
-        constexpr node_impl(node_impl const &) = default;
-        constexpr node_impl(node_impl &&) = default;
-        constexpr node_impl & operator=(node_impl const &) = default;
-        constexpr node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            return visit(base_node_type::next_alt());
+            return visit_next<true>(base_node_type::next_alt());
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            return visit(base_node_type::next_ref());
+            return visit_next<false>(base_node_type::next_ref());
         }
 
-        constexpr auto operator*() const noexcept {
-            return label_impl{*static_cast<base_node_type const &>(*this),
-                              low_breakend(),
-                              base_node_type::high_breakend()};
+        constexpr low_position_type const & low_boundary() const {
+            return _low_boundary;
         }
 
-    protected:
-
-        constexpr position_type low_breakend() const noexcept {
-            return _low_breakend;
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{this};
         }
+
     private:
 
-        constexpr std::optional<node_impl> visit(auto maybe_child) const {
+        template <bool is_alt_child>
+        constexpr std::optional<node_impl> visit_next(auto maybe_child) const {
             if (maybe_child) {
-                node_impl new_child{std::move(*maybe_child)};
+                low_position_type cached_low = maybe_child->low_boundary();
+                node_impl new_child{std::move(*maybe_child), std::move(cached_low)};
                 new_child.extend();
                 return new_child;
             } else {
@@ -114,67 +113,47 @@ namespace libjst
         }
 
         constexpr void extend() {
-            while (!(base_node_type::is_nil() || base_node_type::is_branching())) {
+            while (!base_node_type::high_boundary().is_low_end()) {
                 if (auto successor = base_node_type::next_ref(); successor) {
                     static_cast<base_node_type &>(*this) = std::move(*successor);
+
                 } else {
                     break;
                 }
             }
         }
 
-        constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
+        constexpr friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept
+        {
             return static_cast<base_node_type const &>(lhs) == rhs;
         }
     };
 
     template <typename base_tree_t>
-    class merge_tree_impl<base_tree_t>::node_impl::label_impl : public libjst::tree_label_t<base_tree_t> {
+    class merge_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
     private:
+        using position_type = typename base_node_type::position_type;
 
-        using base_label_t = libjst::tree_label_t<base_tree_t>;
-
-        friend node_impl;
-
-        breakpoint _low_breakend{};
-        breakpoint _high_breakend{};
-
-        template <typename base_label_t>
-        explicit constexpr label_impl(base_label_t base_label,
-                                      breakpoint low_breakend,
-                                      breakpoint high_breakend) noexcept :
-            base_label_t{std::move(base_label)},
-            _low_breakend{low_breakend},
-            _high_breakend{high_breakend}
-        {}
-
-    public:
-
-        label_impl() = default;
-
-        constexpr auto sequence() const noexcept {
-            assert(_low_breakend <= _high_breakend);
-            return base_label_t::sequence(_low_breakend.value(), _high_breakend.value());
-        }
-    };
-
-    template <typename base_tree_t>
-    class merge_tree_impl<base_tree_t>::sink_impl {
-    private:
         friend merge_tree_impl;
 
-        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
-        base_sink_type _base_sink{};
+        node_impl const * _node{};
 
-        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
+        explicit constexpr cargo_impl(node_impl const * node) noexcept :
+            base_cargo_type{*static_cast<base_node_type const &>(*node)},
+            _node{node}
         {}
 
-        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
-            return lhs._base_sink == rhs;
-        }
-
     public:
-        sink_impl() = default;
+
+        cargo_impl() = default;
+
+        constexpr auto sequence() const noexcept {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
+                                             libjst::position(_node->high_boundary()));
+        }
+    protected:
+        using base_cargo_type::sequence;
     };
 
     namespace _tree_adaptor {

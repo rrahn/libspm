@@ -12,11 +12,13 @@
 
 #pragma once
 
+#include <libcontrib/closure_adaptor.hpp>
+
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/empty_label.hpp>
+#include <libjst/sequence_tree/breakpoint_node.hpp>
 #include <libjst/sequence_tree/rcs_node_traits.hpp>
 #include <libjst/sequence_tree/rcs_store_node_base.hpp>
-#include <libjst/referentially_compressed_sequence_store/rooted_rcs_store.hpp>
 
 namespace libjst
 {
@@ -24,34 +26,36 @@ namespace libjst
     class volatile_tree {
     private:
 
-        using rooted_rcs_store_type = rooted_rcs_store<rcs_store_t>;
+        using rooted_rcs_store_type = rcs_store_t;
         using variants_type = typename rooted_rcs_store_type::variant_map_type;
         using variant_type = std::ranges::range_value_t<variants_type>;
+        using breakend_iterator = std::ranges::iterator_t<variants_type const &>;
+        using node_type = breakpoint_node<breakend_iterator>;
+        using position_type = typename node_type::position_type;
 
         class node_impl;
 
-        rooted_rcs_store_type _rooted_rcs_store{};
-        variant_type _bound{};
+        rooted_rcs_store_type const & _rooted_rcs_store{};
+        position_type _low_nil{};
+        position_type _high_nil{};
 
     public:
 
-        volatile_tree() = default;
+        volatile_tree() = delete;
         volatile_tree(rcs_store_t const & rcs_store) noexcept :
-            _rooted_rcs_store{rcs_store},
-            _bound{*_rooted_rcs_store.variants().begin()}
+            _rooted_rcs_store{rcs_store}
         {
-            using value_t = typename breakpoint::value_type;
-            libjst::position(_bound) = breakpoint{static_cast<value_t>(std::ranges::size(_rooted_rcs_store.source()))};
+            _low_nil = position_type{std::ranges::begin(data().variants()), breakpoint_end::low};
+            _high_nil = position_type{std::ranges::prev(std::ranges::end(data().variants())), breakpoint_end::high};
         }
 
         constexpr node_impl root() const noexcept {
-            auto first = std::ranges::begin(_rooted_rcs_store.variants());
-            return node_impl{std::addressof(_rooted_rcs_store), first, std::ranges::next(first), _bound};
+            node_type root_base{_low_nil, _low_nil};
+            return node_impl{root_base.next_ref(), _high_nil};
         }
 
-        constexpr node_impl sink() const noexcept {
-            auto sent = std::ranges::end(_rooted_rcs_store.variants());
-            return node_impl{std::addressof(_rooted_rcs_store), sent, sent, _bound};
+        constexpr nil_node_t sink() const noexcept {
+            return nil_node;
         }
 
         constexpr rooted_rcs_store_type const & data() const noexcept {
@@ -60,71 +64,53 @@ namespace libjst
     };
 
     template <typename rcs_store_t>
-    class volatile_tree<rcs_store_t>::node_impl : public rcs_store_node_base<node_impl, rooted_rcs_store_type>  {
+    class volatile_tree<rcs_store_t>::node_impl : public node_type {
     private:
 
         friend volatile_tree;
 
-        using base_t = rcs_store_node_base<node_impl, rooted_rcs_store_type>;
-        using variant_iterator = typename rcs_node_traits<base_t>::variant_iterator;
-        using variant_reference = std::iter_reference_t<variant_iterator>;
+        using base_t = node_type;
 
     private:
 
-        variant_type const * _bound{};
-        // constructor for the root/sink condition
-        explicit constexpr node_impl(rooted_rcs_store_type const * rcs_store,
-                                     variant_iterator left,
-                                     variant_iterator right,
-                                     variant_type const & bound) noexcept :
-                base_t{rcs_store, std::move(left), std::move(right)},
-                _bound{std::addressof(bound)}
+        position_type _nil{};
+
+        explicit constexpr node_impl(base_t && base_node, position_type nil) noexcept :
+                base_t{std::move(base_node)},
+                _nil{std::move(nil)}
         {
-            assert(rcs_store != nullptr);
         }
 
     public:
 
         node_impl() = default;
-        node_impl(node_impl const &) = default;
-        node_impl(node_impl &&) = default;
-        node_impl & operator=(node_impl const &) = default;
-        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            return base_t::visit_next_alt();
+            if (auto child = base_t::next_alt(); child.has_value())
+                return node_impl{std::move(*child), _nil};
+            return std::nullopt;
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            return base_t::visit_next_ref();
+            if (is_leaf()) // never reaching this?
+                return std::nullopt;
+            return node_impl{base_t::next_ref(), _nil};
         }
 
         constexpr empty_label operator*() const noexcept {
             return {};
         }
 
-    protected:
-        constexpr variant_reference left_variant() const noexcept {
-            return to_variant(base_t::get_left());
-        }
-
-        constexpr variant_reference right_variant() const noexcept {
-            return to_variant(base_t::get_right());
-        }
-
     private:
 
-        constexpr variant_reference to_variant(variant_iterator const & it) const noexcept {
-            if (it == base_t::sink())
-                return *_bound;
-            else
-                return *it;
+        constexpr bool is_leaf() const noexcept {
+            return base_t::high_boundary() == _nil;
         }
 
-        constexpr friend bool operator==(node_impl const & lhs, node_impl const & rhs) noexcept = default;
-        // {
-        //     return ;
-        // }
+        constexpr friend bool operator==(node_impl const & lhs, nil_node_t const &) noexcept
+        {
+            return lhs.is_leaf();
+        }
     };
 
     namespace _tree_factory {
