@@ -45,9 +45,13 @@ namespace libjst
     template <typename source_t, typename coverage_t>
     class compressed_multisequence { // TODO: breakend multimap
 
+        using value_t = std::ranges::range_value_t<source_t>;
+        static constexpr std::array<value_t, 4> _snv_table{{value_t{0}, value_t{1}, value_t{2}, value_t{3}}};
+
         // so what is the value type?
         // how can we change the different implementations for static and dynamic?
-        using breakend_key_type = packed_breakend_key<uint32_t>;
+        using position_type = uint32_t;
+        using breakend_key_type = packed_breakend_key<position_type>;
         using breakend_map_type = contiguous_multimap<breakend_key_type, coverage_t>;
 
         using coverage_value_type = std::ranges::range_value_t<coverage_t>;
@@ -266,7 +270,7 @@ namespace libjst
     public:
 
         using value_type = generic_delta<source_t, coverage_t>;
-        using reference = delta_proxy<std::iter_reference_t<breakend_iterator>>;
+        using reference = delta_proxy<breakend_iterator>;
         using difference_type = std::iter_difference_t<breakend_iterator>;
         using pointer = void;
         using iterator_category = std::random_access_iterator_tag;
@@ -345,12 +349,12 @@ namespace libjst
     };
 
     template <typename source_t, typename coverage_t>
-    template <typename breakend_reference_t>
+    template <typename breakend_iterator>
     class compressed_multisequence<source_t, coverage_t>::delta_proxy {
 
         friend compressed_multisequence;
 
-        // using value_type = std::iter_value_t<host_iterator>;
+        using breakend_reference_t = std::iter_reference_t<breakend_iterator>;
         using reference = breakend_reference_t;
         using sequence_reference = delta_sequence_variant<source_t>;
 
@@ -370,14 +374,79 @@ namespace libjst
             return value_type{libjst::breakpoint(*this), libjst::alt_sequence(*this), libjst::coverage(*this)};
         }
 
+        constexpr breakpoint_end get_breakpoint_end() const noexcept {
+            return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
+                [] (indel_breakend_kind code) {
+                    switch (code) {
+                        case indel_breakend_kind::deletion_low: [[fallthrough]];
+                        case indel_breakend_kind::insertion_low: return breakpoint_end::low;
+                        default: return breakpoint_end::high;
+                    }
+                },
+                [] (...) {
+                    return breakpoint_end::low;
+                }
+            });
+        }
+
+        constexpr std::optional<iterator_impl<true>> jump_to_mate() const noexcept {
+            using mate_iterator = iterator_impl<true>;
+            using optional_mate = std::optional<mate_iterator>;
+            return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
+                [&] (indel_breakend_kind code) {
+                    switch (code) {
+                        case indel_breakend_kind::deletion_low: [[fallthrough]];
+                        case indel_breakend_kind::deletion_high: {
+                            indel_key_type key{_breakend_reference.first, _breakend_reference.second.front()};
+                            return _indel_map.find(key)->second.visit(seqan3::detail::multi_invocable{
+                                [&] (deletion_type const & deletion) -> optional_mate {
+                                    return iterator_impl<true>{deletion.value(), std::addressof(_indel_map)};
+                                },
+                                [] (insertion_type const &) -> optional_mate { return std::nullopt; }
+                            });
+                        }
+                        default: return optional_mate{std::nullopt};
+                    }
+                },
+                [] (...) {
+                    return std::nullopt;
+                }
+            });
+        }
+
+// return-statement with no value, in function returning
+// std::__detail::__variant::__visit_result_t<
+//     seqan3::detail::multi_invocable<
+//         libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::
+//             delta_proxy<
+//                 libjst::contiguous_multimap<
+//                     libjst::packed_breakend_key<unsigned int>,
+//                     libjst::bit_coverage<unsigned int> >::iterator_impl<true> >::
+//             get_breakend_mate(libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::indel_key_type) const::
+//                 <lambda(const libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::deletion_type&)>,
+//                     libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::
+//                         delta_proxy<libjst::contiguous_multimap<libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int> >::iterator_impl<true> >::
+//             get_breakend_mate(libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::indel_key_type) const::
+//                 <lambda(const libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::insertion_type&)> >,
+//                     const std::variant<libjst::deletion_element<libjst::contiguous_multimap<libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int> >::iterator_impl<false> >,
+//                                        libjst::insertion_element<std::vector<seqan::alphabet_adaptor<seqan3::dna4>, std::allocator<seqan::alphabet_adaptor<seqan3::dna4> > > > >&>
+
+// aka libjst::contiguous_multimap_proxy<const libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int>&>
+
     private:
 
         constexpr breakend_reference_t get_breakend_mate(indel_key_type key) const noexcept {
+            using optional_it_t = std::optional<breakend_iterator>;
             assert(_indel_map.contains(key));
-            return _indel_map.find(key)->second.visit(seqan3::detail::multi_invocable{
-                [] (deletion_type const & deletion) { return *deletion.value(); },
-                [&] (insertion_type const &) { return _breakend_reference; }
+            optional_it_t mate = _indel_map.find(key)->second.visit(seqan3::detail::multi_invocable{
+                [] (deletion_type const & deletion) -> optional_it_t { return deletion.value(); },
+                [&] (insertion_type const &) -> optional_it_t { return std::nullopt; }
             });
+            if (mate.has_value()) {
+                return *(mate.value());
+            } else {
+                return _breakend_reference;
+            }
         }
 
         constexpr breakpoint get_deletion_breakpoint(indel_breakend_kind const deletion_kind) const noexcept {
@@ -434,19 +503,18 @@ namespace libjst
                     }
                 },
                 [&] (...) {
-                    using snv_value_t = std::ranges::range_value_t<sequence_reference>;
-                    return sequence_reference{static_cast<snv_value_t>(_breakend_reference.first.snv_value())};
+                    return sequence_reference{_snv_table[(int)_breakend_reference.first.snv_value()]};
                 }
             });
         }
 
         template <typename cpo_t>
-            requires std::tag_invocable<cpo_t, breakpoint>
+            requires std::tag_invocable<cpo_t, breakpoint &&>
         friend constexpr auto tag_invoke(cpo_t cpo, delta_proxy me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, breakpoint>)
-            -> std::tag_invoke_result_t<cpo_t, breakpoint>
+            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, breakpoint &&>)
+            -> std::tag_invoke_result_t<cpo_t, breakpoint &&>
         {
-            return std::tag_invoke(cpo, libjst::get_breakpoint(me));
+            return cpo(libjst::get_breakpoint(me));
         }
 
         friend constexpr breakpoint tag_invoke(std::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
@@ -462,6 +530,32 @@ namespace libjst
         friend constexpr coverage_t const & tag_invoke(std::tag_t<libjst::coverage>, delta_proxy me) noexcept
         {
             return me._breakend_reference.second;
+        }
+
+        friend constexpr position_type tag_invoke(std::tag_t<libjst::position>, delta_proxy me) noexcept
+        {
+            return me._breakend_reference.first.position();
+        }
+
+        friend constexpr alternate_sequence_kind tag_invoke(std::tag_t<libjst::alt_kind>, delta_proxy me) noexcept
+        {
+            return me._breakend_reference.first.visit(seqan3::detail::multi_invocable{
+                [&] (indel_breakend_kind indel_kind) {
+                    switch (indel_kind) {
+                        case indel_breakend_kind::insertion_low: return alternate_sequence_kind::insertion;
+                        case indel_breakend_kind::deletion_low: [[fallthrough]];
+                        case indel_breakend_kind::deletion_high: return alternate_sequence_kind::deletion;
+                        default: return alternate_sequence_kind::unknown;
+                    }
+                },
+                [] (...) { return alternate_sequence_kind::replacement; }
+            });
+        }
+
+        friend constexpr std::ptrdiff_t tag_invoke(std::tag_t<libjst::effective_size>, delta_proxy me) noexcept
+        {
+            return std::ranges::ssize(libjst::alt_sequence(me)) -
+                   static_cast<std::ptrdiff_t>(libjst::breakpoint_span(libjst::get_breakpoint(me)));
         }
     };
 

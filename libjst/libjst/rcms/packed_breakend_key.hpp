@@ -47,7 +47,9 @@ namespace libjst
             _position{position}
         {}
 
-        constexpr packed_breakend_key(uint8_t snv_value, underlying_type position) noexcept :
+        template <typename char_t>
+            requires std::convertible_to<char_t, underlying_type> && (sizeof(char_t) == 1)
+        constexpr packed_breakend_key(char_t snv_value, underlying_type position) noexcept :
             _code{static_cast<underlying_type>(snv_value) & snv_mask},
             _position{position}
         {}

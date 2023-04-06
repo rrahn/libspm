@@ -114,6 +114,10 @@ namespace libjst
             return _domain;
         }
 
+        constexpr bool any() const noexcept {
+            return !_data.empty();
+        }
+
         constexpr iterator begin() const noexcept {
             return _data.begin();
         }

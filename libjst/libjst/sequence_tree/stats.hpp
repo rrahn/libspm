@@ -183,7 +183,7 @@ namespace libjst
             {
                 tree_stats stats{.node_count = 0,
                                  .subtree_count = 0,
-                                 .leaf_count = 1,
+                                 .leaf_count = 0,
                                  .symbol_count = 0};
                 stats_tree_impl<tree_t> stats_tree{(tree_t &&)tree};
 

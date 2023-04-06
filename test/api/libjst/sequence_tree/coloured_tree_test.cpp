@@ -18,7 +18,7 @@
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
-#include <libjst/sequence_tree/labelled_tree2.hpp>
+#include <libjst/sequence_tree/coloured_tree2.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
 #include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
 
@@ -33,7 +33,7 @@ struct fixture {
     source_t source{};
     uint32_t coverage_size{4};
     std::vector<variant_t> variants{};
-    std::vector<source_t> expected_labels{};
+    std::vector<std::vector<uint32_t>> expected_coverages{};
 
     template <typename stream_t, typename this_t>
         requires std::same_as<std::remove_cvref_t<this_t>, fixture>
@@ -74,7 +74,7 @@ using namespace std::literals;
 
 using fixture = jst::test::labelled_tree::fixture;
 using variant_t = jst::test::labelled_tree::variant_t;
-struct labelled_tree_test : public jst::test::labelled_tree::test
+struct coloured_tree_test : public jst::test::labelled_tree::test
 {
     using typename jst::test::labelled_tree::test::rcs_store_t;
     using jst::test::labelled_tree::test::get_mock;
@@ -82,7 +82,7 @@ struct labelled_tree_test : public jst::test::labelled_tree::test
 
     auto make_tree() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::labelled();
+        return libjst::volatile_tree{rcs_mock} | libjst::coloured();
     }
 };
 
@@ -90,7 +90,7 @@ struct labelled_tree_test : public jst::test::labelled_tree::test
 // Test case definitions
 // ----------------------------------------------------------------------------
 
-TEST_P(labelled_tree_test, root_sink) {
+TEST_P(coloured_tree_test, root_sink) {
     auto tree = make_tree();
 
     using tree_t = decltype(tree);
@@ -98,26 +98,36 @@ TEST_P(labelled_tree_test, root_sink) {
     using node_t = libjst::tree_node_t<tree_t>;
     using cargo_t = libjst::tree_label_t<tree_t>;
 
-    auto to_string = [] (auto seq) -> std::string {
-        std::string str;
-        for (char c : seq)
-            str.push_back(c);
-        return str;
+    auto to_ints = [] (auto cov) -> std::vector<uint32_t> {
+        std::vector<uint32_t> ints{};
+        for (uint32_t i = 0; i < cov.size(); ++i) {
+            if (cov[i])
+                ints.push_back(i);
+        }
+        return ints;
     };
 
+    auto print_cov = [] (auto vec) {
+        std::ptrdiff_t i = 0;
+        for (; i < std::ranges::ssize(vec) - 1; ++i) {
+            std::cout << vec[i] << ", ";
+        }
+        if (i >= 0)
+            std::cout << vec[i] << "\n";
+    };
     node_t r = libjst::root(tree);
 
-    std::vector<std::string> actual_labels{};
+    std::vector<std::vector<uint32_t>> actual_coverages{};
     std::stack<node_t> path{};
     path.push(r);
 
-    std::cout << "Labels: ";
+    std::cout << "Coverages: ";
     while (!path.empty()) {
         node_t p = std::move(path.top());
         path.pop();
-        cargo_t label = *p;
-        std::cout << to_string(label.sequence()) << " " << std::flush;
-        actual_labels.push_back(to_string(label.sequence()));
+        cargo_t cargo = *p;
+        print_cov(to_ints(cargo.coverage()));
+        actual_coverages.push_back(to_ints(cargo.coverage()));
 
         if (auto c_ref = p.next_ref(); c_ref.has_value()) {
             path.push(std::move(*c_ref));
@@ -128,11 +138,11 @@ TEST_P(labelled_tree_test, root_sink) {
     }
     std::cout << "\n";
 
-    std::ptrdiff_t expected_count = std::ranges::ssize(GetParam().expected_labels);
-    std::ptrdiff_t actual_count = std::ranges::ssize(actual_labels);
+    std::ptrdiff_t expected_count = std::ranges::ssize(GetParam().expected_coverages);
+    std::ptrdiff_t actual_count = std::ranges::ssize(actual_coverages);
     EXPECT_EQ(expected_count, actual_count);
     for (std::ptrdiff_t i = 0; i < std::min(expected_count, actual_count); ++i)
-        EXPECT_EQ(to_string(GetParam().expected_labels[i]), actual_labels[i]) << i;
+        EXPECT_EQ(GetParam().expected_coverages[i], actual_coverages[i]) << i;
 }
 
 // ----------------------------------------------------------------------------
@@ -140,67 +150,67 @@ TEST_P(labelled_tree_test, root_sink) {
 // ----------------------------------------------------------------------------
 using jst::contrib::operator""_dna4;
 
-INSTANTIATE_TEST_SUITE_P(no_variant, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(no_variant, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{},
-    .expected_labels{"AAAAGGGG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv0, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv0, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "C"_dna4, "AAAGGGG"_dna4, "AAAAGGGG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3}, {0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv7, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv7, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAAGGG"_dna4, "C"_dna4, ""_dna4, "G"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3}, {0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4, "GGGG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3}, {0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv6, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv6, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "G"_dna4, "T"_dna4, "G"_dna4,
-                                                      "GG"_dna4,
-                                  "GG"_dna4, "T"_dna4, "G"_dna4,
-                                             "GG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3}, {0, 2}, {0, 1, 2, 3},
+                                                         {0, 1, 2, 3},
+                                      {0, 1, 2, 3}, {0, 2}, {0, 1, 2, 3},
+                                                    {0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv5, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv5, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, ""_dna4, "T"_dna4, "GG"_dna4,
-                                                      "GGG"_dna4,
-                                  "G"_dna4, "T"_dna4, "GG"_dna4,
-                                             "GGG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3}, {0, 2}, {0, 1, 2, 3},
+                                                         {0, 1, 2, 3},
+                                      {0, 1, 2, 3}, {0, 2}, {0, 1, 2, 3},
+                                                    {0, 1, 2, 3}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv4, coloured_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4,
-                                  ""_dna4, "T"_dna4, "GGG"_dna4,
-                                  "GGGG"_dna4}
+    .expected_coverages{{0, 1, 2, 3}, {0}, {0, 1, 2, 3},
+                                      {0, 1, 2, 3}, {1, 2}, {0, 1, 2, 3},
+                                                    {0, 1, 2, 3}}
 }));

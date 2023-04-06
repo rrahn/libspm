@@ -17,6 +17,7 @@
 
 #include <seqan3/core/concept/cereal.hpp>
 
+#include <libjst/coverage/concept.hpp>
 #include <libjst/coverage/range_domain.hpp>
 #include <libjst/utility/bit_vector.hpp>
 
@@ -35,11 +36,17 @@ namespace libjst
 
         // needs its own iterator and output iterator?
 
+        explicit bit_coverage(data_type data, coverage_domain_t domain) :
+            _data{std::move(data)},
+            _domain{std::move(domain)}
+        {}
+
     public:
         using value_type = domain_value_type;
         using iterator = std::ranges::iterator_t<data_type const>;
 
         constexpr bit_coverage() = default;
+
         explicit constexpr bit_coverage(coverage_domain_t domain) :
             _data{},
             _domain{std::move(domain)}
@@ -85,6 +92,11 @@ namespace libjst
         //         _data[elem] = true;
         //     });
         // }
+
+
+        constexpr std::iter_reference_t<iterator> operator[](std::ptrdiff_t idx) const noexcept {
+            return _data[idx];
+        }
 
         constexpr iterator insert(value_type elem) {
             if (!get_domain().is_member(elem))
@@ -142,6 +154,10 @@ namespace libjst
             return _data.end();
         }
 
+        constexpr bool any() const noexcept {
+            return _data.any();
+        }
+
         // ----------------------------------------------------------------------------
         // Serialisation
         // ----------------------------------------------------------------------------
@@ -167,7 +183,7 @@ namespace libjst
             if (first.get_domain() != second.get_domain())
                 throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
-            return first & second;
+            return bit_coverage{first._data & second._data, first.get_domain()};
         }
 
         constexpr friend bit_coverage
@@ -175,7 +191,7 @@ namespace libjst
             if (first.get_domain() != second.get_domain())
                 throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
-            return first.and_not(second);
+            return bit_coverage{first._data.and_not(second._data), first.get_domain()};
         }
 
     };
