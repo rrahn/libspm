@@ -17,7 +17,8 @@
 #include <seqan3/alphabet/range/sequence.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 
-#include <libjst/utility/bit_vector.hpp>
+#include <libjst/coverage/bit_coverage.hpp>
+#include <libjst/rcms/compressed_multisequence.hpp>
 #include <libjst/variant/alternate_sequence_kind.hpp>
 #include <libjst/variant/compressed_sparse_variant_map.hpp>
 #include <libjst/variant/concept.hpp>
@@ -32,21 +33,27 @@ namespace libjst
     {
     public:
 
-        using coverage_type = bit_vector<>;
-        using variant_map_type = compressed_sparse_variant_map<alternate_sequence_store_t, coverage_type>;
+        using coverage_type = bit_coverage<uint32_t>;
+        using size_type = typename coverage_type::value_type;
+        // using variant_map_type = compressed_sparse_variant_map<alternate_sequence_store_t, coverage_type>;
+        using variant_map_type = compressed_multisequence<source_sequence_t, coverage_type>;
         using source_type = source_sequence_t;
 
-        using key_type = typename variant_map_type::key_type;
-        using mapped_type = typename variant_map_type::mapped_type;
+        // using key_type = typename variant_map_type::key_type;
+        // using mapped_type = typename variant_map_type::mapped_type;
 
-        using size_type = decltype(std::ranges::size(std::declval<coverage_type const &>()));
-        using alternate_sequence_type = std::ranges::range_value_t<alternate_sequence_store_t>;
+
+        // using size_type = decltype(std::ranges::size(std::declval<coverage_type const &>()));
+        using value_type = std::ranges::range_value_t<variant_map_type>;
+        using reference = std::ranges::range_reference_t<variant_map_type const &>;
 
     private:
 
-        source_sequence_t _reference{};
+        using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
+
+        // source_sequence_t _reference{};
         variant_map_type _variant_map{};
-        size_type _row_count{};
+        // size_type _row_count{};
 
     public:
         /*!\name Constructors, destructor and assignment
@@ -55,8 +62,7 @@ namespace libjst
         constexpr rcs_store() = default; //!< Default.
         // Construct from dimensions?
         constexpr rcs_store(source_sequence_t source, size_type initial_row_count) :
-            _reference{std::move(source)},
-            _row_count{initial_row_count}
+            _variant_map{std::move(source), coverage_domain_type{0, initial_row_count}}
         {}
         //!\}
 
@@ -65,11 +71,12 @@ namespace libjst
         // we may add a variant using vertical information -> like a list of indices for the coverage?
         // we may add a variant for a single sequence.
         // initial interface: position, alternate_sequence, coverage<>
-        constexpr bool add(key_type const src_position,
-                           alternate_sequence_type variant,
-                           coverage_type coverage) {
-            assert(src_position.value() + libjst::breakpoint_span(variant) <= std::ranges::size(source()));
-            assert(std::ranges::size(coverage) == size());
+        constexpr bool add(value_type value) {
+        // key_type const src_position,
+        //                    alternate_sequence_type variant,
+        //                    coverage_type coverage) {
+            // assert(src_position.value() + libjst::breakpoint_span(variant) <= std::ranges::size(source()));
+            // assert(std::ranges::size(coverage) == size());
 
             // TODO: coverage interface:
                 // .set(position [size/iterator]) -> rather same as select.
@@ -93,8 +100,8 @@ namespace libjst
             //                                             else
             //                                                 return key.first < libjst::position(variant);
             //                                        });
-            mapped_type value{src_position, std::move(variant), std::move(coverage)};
-            _variant_map.insert(std::ranges::end(_variant_map), std::move(value));
+            // mapped_type value{src_position, std::move(variant), std::move(coverage)};
+            _variant_map.insert(std::move(value));
             return true;
         }
 
@@ -104,7 +111,7 @@ namespace libjst
 
         constexpr source_sequence_t const & source() const noexcept
         {
-            return _reference;
+            return variants().source();
         }
 
         constexpr variant_map_type const & variants() const noexcept
@@ -114,7 +121,7 @@ namespace libjst
 
         constexpr size_type size() const noexcept
         {
-            return _row_count;
+            return variants().coverage_domain().size();
         }
 
         // ----------------------------------------------------------------------------
@@ -124,13 +131,13 @@ namespace libjst
         template <seqan3::cereal_input_archive archive_t>
         void load(archive_t & iarchive)
         {
-            iarchive(_reference, _variant_map, _row_count);
+            iarchive(_variant_map);
         }
 
         template <seqan3::cereal_output_archive archive_t>
         void save(archive_t & oarchive) const
         {
-            oarchive(_reference, _variant_map, _row_count);
+            oarchive(_variant_map);
         }
     };
 }  // namespace libjst

@@ -25,9 +25,9 @@ namespace libjst
     private:
 
         using base_node_type = libjst::tree_node_t<base_tree_t>;
+        using sink_type = libjst::tree_sink_t<base_tree_t>;
 
         class node_impl;
-        class sink_impl;
 
         using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
 
@@ -44,8 +44,9 @@ namespace libjst
         constexpr node_impl root() const noexcept {
             return node_impl{libjst::root(_wrappee)};
         }
-        constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(_wrappee)};
+
+        constexpr sink_type sink() const noexcept {
+            return libjst::sink(_wrappee);
         }
     };
 
@@ -75,10 +76,6 @@ namespace libjst
     public:
 
         node_impl() = default;
-        node_impl(node_impl const &) = default;
-        node_impl(node_impl &&) = default;
-        node_impl & operator=(node_impl const &) = default;
-        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const {
             return visit(base_node_type::next_alt());
@@ -95,7 +92,7 @@ namespace libjst
     private:
 
         template <typename maybe_child_t>
-        constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
+        constexpr std::optional<node_impl> visit(maybe_child_t && maybe_child) const {
             if (maybe_child) {
                 extension_t child_extension = extension_t::notify(*maybe_child);
                 return node_impl{std::move(*maybe_child), std::move(child_extension)};
@@ -104,31 +101,8 @@ namespace libjst
             }
         }
 
-        friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
+        friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept {
             return static_cast<base_node_type const &>(lhs) == rhs;
         }
-    };
-
-    template <typename base_tree_t,
-              template <typename, typename, typename...> typename node_extension_t,
-              typename ...extension_args_t>
-    class extendable_tree<base_tree_t, node_extension_t, extension_args_t...>::sink_impl {
-    private:
-        friend extendable_tree;
-
-        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
-        base_sink_type _base_sink{};
-
-        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
-        {}
-
-    private:
-
-        sink_impl() = default;
-
-        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
-            return lhs._base_sink == rhs;
-        }
-
     };
 }  // namespace libjst

@@ -15,7 +15,8 @@
 #include <seqan3/core/debug_stream.hpp>
 
 #include <libcontrib/closure_adaptor.hpp>
-#include <libcontrib/copyable_box.hpp>
+
+#include <libjst/coverage/concept.hpp>
 
 namespace libjst
 {
@@ -23,14 +24,18 @@ namespace libjst
         // requires covered tree
     class prune_tree_impl {
     private:
-        using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
+        using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
+
+        using boundary_type = typename base_node_type::position_type;
+        using delta_reference = typename boundary_type::delta_reference;
+        using coverage_type = libjst::variant_coverage_t<delta_reference>;
 
         class node_impl;
-        class sink_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
-        // add option for cheking coverage proportion aka. allele frequency
 
     public:
         /*!\name Constructors, destructor and assignment
@@ -52,8 +57,12 @@ namespace libjst
             return node_impl{std::move(base_root), std::move(base_coverage)};
         }
 
-        constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(_wrappee)};
+        constexpr sink_type sink() const noexcept {
+            return libjst::sink(_wrappee);
+        }
+
+        constexpr auto const & data() const noexcept {
+            return _wrappee.data();
         }
    };
 
@@ -63,22 +72,16 @@ namespace libjst
 
         friend prune_tree_impl;
 
-        using coverage_type = typename rcs_node_traits<base_node_type>::coverage_type;
-
-        coverage_type _branch_coverage{};
+        coverage_type _path_coverage{};
 
         explicit constexpr node_impl(base_node_type && base_node, coverage_type coverage) noexcept :
             base_node_type{std::move(base_node)},
-            _branch_coverage{std::move(coverage)}
+            _path_coverage{std::move(coverage)}
         {}
 
     public:
 
         node_impl() = default;
-        node_impl(node_impl const &) = default;
-        node_impl(node_impl &&) = default;
-        node_impl & operator=(node_impl const &) = default;
-        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return visit<true>(base_node_type::next_alt());
@@ -88,8 +91,8 @@ namespace libjst
             return visit<false>(base_node_type::next_ref());
         }
 
-        constexpr coverage_type const & coverage() const noexcept {
-            return _branch_coverage;
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{*(static_cast<base_node_type const &>(*this)), std::addressof(_path_coverage)};
         }
 
     private:
@@ -107,48 +110,46 @@ namespace libjst
 
         template <bool is_alt>
         constexpr coverage_type compute_child_coverage(base_node_type const & base_child) const {
-            coverage_type new_coverage{coverage()};
-            // seqan3::debug_stream << "Old cov: " << new_coverage << "\n";
             if constexpr (is_alt) {
                 // seqan3::debug_stream << "Cld cov: " << (*base_child).coverage() << "\n";
-                new_coverage &= (*base_child).coverage();
+                // new_coverage &= (*base_child).coverage();
+                return libjst::coverage_intersection(_path_coverage, (*base_child).coverage());
+            } else if (this->on_alternate_path() && this->high_boundary().is_low_end()) {
+                    // seqan3::debug_stream << "Alt cov:" << libjst::coverage(base_node_type::right_variant()) << "\n";
+                    return libjst::coverage_difference(_path_coverage, libjst::coverage(*(this->high_boundary())));
             } else {
-                update_alternate_ref_coverage(new_coverage);
+                return _path_coverage;
             }
             // seqan3::debug_stream << "New cov: " << new_coverage << "\n";
-            return new_coverage;
+            // return new_coverage;
         }
 
-        constexpr void update_alternate_ref_coverage(coverage_type & old_coverage) const noexcept {
-            if (base_node_type::on_alternate_path() && base_node_type::is_branching()) {
-                // seqan3::debug_stream << "Alt cov:" << libjst::coverage(base_node_type::right_variant()) << "\n";
-                old_coverage.and_not(libjst::coverage(base_node_type::right_variant()));
-            }
-        }
-
-        constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
+        constexpr friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept
+        {
             return static_cast<base_node_type const &>(lhs) == rhs;
         }
     };
 
     template <typename base_tree_t>
-    class prune_tree_impl<base_tree_t>::sink_impl {
+    class prune_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
     private:
+        [[no_unique_address]] coverage_type const * _path_coverage{};
+
         friend prune_tree_impl;
 
-        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
-        base_sink_type _base_sink{};
-
-        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
+        constexpr explicit cargo_impl(base_cargo_type base_cargo, coverage_type const * path_coverage) :
+            base_cargo_type{std::move(base_cargo)},
+            _path_coverage{path_coverage}
         {}
-
-        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
-            return lhs._base_sink == rhs;
-        }
-
     public:
-        sink_impl() = default;
+
+        cargo_impl() = default;
+
+        constexpr coverage_type const & coverage() const noexcept {
+            return *_path_coverage;
+        }
     };
+
 
     namespace _tree_adaptor {
         inline constexpr struct _prune

@@ -50,7 +50,7 @@ namespace libjst
                                         size_t count) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee}
         {
-            _left_bound = *std::ranges::begin(_wrappee.data().variants());
+            _left_bound = *std::ranges::begin(_wrappee.data().variants()); // TODO: refactor initialisation
             _right_bound = _left_bound;
 
             breakpoint_value_type sink_position =
@@ -127,7 +127,7 @@ namespace libjst
                 _left_state = state::left_bound;
 
             // initialise right state
-            if (libjst::position(base_node_type::right_variant()) < libjst::position(*_right_bound))
+            if (libjst::position(base_node_type::right_variant()) < libjst::position(*_right_bound)) //TODO
                 _right_state = state::regular;
             else
                 _right_state = state::right_bound;
@@ -171,15 +171,15 @@ namespace libjst
             switch (_left_state) {
                 case state::left_bound: return *_left_bound;
                 case state::right_bound: return *_right_bound;
-                default: return base_node_type::left_variant();
+                default: return base_node_type::left_variant(); //TODO
             }
         }
 
-        constexpr variant_reference right_variant() const noexcept {
+        constexpr variant_reference right_variant() const noexcept { //TODO
             switch (_right_state) {
                 case state::left_bound: return *_left_bound;
                 case state::right_bound: return *_right_bound;
-                default: return base_node_type::right_variant();
+                default: return base_node_type::right_variant(); //TODO
             }
         }
 

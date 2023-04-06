@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include <libcontrib/closure_adaptor.hpp>
 
 #include <libjst/sequence_tree/extendable_tree.hpp>
@@ -32,10 +34,12 @@ namespace libjst
 
         friend derived_t;
 
-        using sequence_type = typename rcs_node_traits<extended_node_t>::sequence_type;
-        using breakpoint_type = typename rcs_node_traits<extended_node_t>::breakpoint_type::value_type;
+        using breakend_iterator = std::remove_cvref_t<decltype(std::declval<extended_node_t const &>().low_boundary().get_breakend())>;
+        using variant_type = std::iter_reference_t<breakend_iterator>;
+        using sequence_type = libjst::alt_sequence_t<variant_type>;
+        using position_type = libjst::variant_position_t<variant_type>;
 
-        using label_strategy_type = journaled_sequence_label<breakpoint_type, sequence_type const &>;
+        using label_strategy_type = journaled_sequence_label<position_type, sequence_type>;
 
         template <typename base_label_t>
         class label_impl;
@@ -55,7 +59,7 @@ namespace libjst
         constexpr node_label_extension notify(extended_node_t const & child_node) const {
             node_label_extension child_extension{*this}; // copy current extension into child.
             if (as_derived(child_node).is_alt_node()) {
-                child_extension._label_strategy.record_variant(as_derived(child_node).left_variant());
+                child_extension._label_strategy.record_variant(as_derived(child_node).left_variant()); //TODO
             } else {
                 // now we could be in a multibranch state!
                 // thus we need to set the correct left position when we go into state A!

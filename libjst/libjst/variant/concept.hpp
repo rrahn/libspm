@@ -28,7 +28,9 @@ namespace libjst
 
     enum struct breakpoint_end : uint8_t {
         right = 0,
-        left = 1
+        left = 1,
+        low,
+        high
     };
 
     // ----------------------------------------------------------------------------
@@ -362,7 +364,7 @@ namespace libjst
     using _alt_sequence::alt_sequence;
 
     template <typename sequence_alternative_t>
-    using alt_sequence_t = std::remove_cvref_t<std::invoke_result_t<_alt_sequence::_cpo, sequence_alternative_t>>;
+    using alt_sequence_t = std::invoke_result_t<_alt_sequence::_cpo, sequence_alternative_t>;
 
     // ----------------------------------------------------------------------------
     // CPO libjst::effective_size

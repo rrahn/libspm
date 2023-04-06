@@ -13,18 +13,18 @@
 #include <string>
 
 #include <seqan3/test/expect_range_eq.hpp>
-
+#include <seqan3/utility/views/slice.hpp>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
+#include <libjst/sequence_tree/empty_label.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
-#include <libjst/sequence_tree/labelled_tree2.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
 #include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
-namespace jst::test::labelled_tree {
+namespace jst::test::volatile_tree {
 
 using source_t = std::vector<jst::contrib::dna4>;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
@@ -33,7 +33,7 @@ struct fixture {
     source_t source{};
     uint32_t coverage_size{4};
     std::vector<variant_t> variants{};
-    std::vector<source_t> expected_labels{};
+    std::vector<uint32_t> expected_traversal{};
 
     template <typename stream_t, typename this_t>
         requires std::same_as<std::remove_cvref_t<this_t>, fixture>
@@ -68,21 +68,21 @@ struct test : public ::testing::TestWithParam<fixture> {
     }
 };
 
-} // namespace jst::test::labelled_tree
+} // namespace jst::test::volatile_tree
 
 using namespace std::literals;
 
-using fixture = jst::test::labelled_tree::fixture;
-using variant_t = jst::test::labelled_tree::variant_t;
-struct labelled_tree_test : public jst::test::labelled_tree::test
+using fixture = jst::test::volatile_tree::fixture;
+using variant_t = jst::test::volatile_tree::variant_t;
+struct volatile_tree_test : public jst::test::volatile_tree::test
 {
-    using typename jst::test::labelled_tree::test::rcs_store_t;
-    using jst::test::labelled_tree::test::get_mock;
-    using jst::test::labelled_tree::test::GetParam;
+    using typename jst::test::volatile_tree::test::rcs_store_t;
+    using jst::test::volatile_tree::test::get_mock;
+    using jst::test::volatile_tree::test::GetParam;
 
     auto make_tree() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::labelled();
+        return libjst::volatile_tree{rcs_mock};
     }
 };
 
@@ -90,49 +90,47 @@ struct labelled_tree_test : public jst::test::labelled_tree::test
 // Test case definitions
 // ----------------------------------------------------------------------------
 
-TEST_P(labelled_tree_test, root_sink) {
+TEST_P(volatile_tree_test, root_sink) {
     auto tree = make_tree();
 
     using tree_t = decltype(tree);
 
     using node_t = libjst::tree_node_t<tree_t>;
+    using sink_t = libjst::tree_sink_t<tree_t>;
     using cargo_t = libjst::tree_label_t<tree_t>;
 
-    auto to_string = [] (auto seq) -> std::string {
-        std::string str;
-        for (char c : seq)
-            str.push_back(c);
-        return str;
-    };
+    EXPECT_TRUE((std::same_as<cargo_t, libjst::empty_label>));
 
     node_t r = libjst::root(tree);
+    sink_t s = libjst::sink(tree);
 
-    std::vector<std::string> actual_labels{};
+    uint32_t visitor_id{0};
+    std::vector<uint32_t> actual_traversal{};
     std::stack<node_t> path{};
-    path.push(r);
-
-    std::cout << "Labels: ";
+    std::cout << "id: ";
+    if (r != s) {
+        std::cout << visitor_id << ", ";
+        actual_traversal.push_back(visitor_id++);
+        path.push(r);
+    }
     while (!path.empty()) {
         node_t p = std::move(path.top());
         path.pop();
-        cargo_t label = *p;
-        std::cout << to_string(label.sequence()) << " " << std::flush;
-        actual_labels.push_back(to_string(label.sequence()));
 
         if (auto c_ref = p.next_ref(); c_ref.has_value()) {
+            std::cout << visitor_id << ", ";
+            actual_traversal.push_back(visitor_id++);
             path.push(std::move(*c_ref));
         }
         if (auto c_alt = p.next_alt(); c_alt.has_value()) {
+            std::cout << visitor_id << ", ";
+            actual_traversal.push_back(visitor_id++);
             path.push(std::move(*c_alt));
         }
     }
     std::cout << "\n";
 
-    std::ptrdiff_t expected_count = std::ranges::ssize(GetParam().expected_labels);
-    std::ptrdiff_t actual_count = std::ranges::ssize(actual_labels);
-    EXPECT_EQ(expected_count, actual_count);
-    for (std::ptrdiff_t i = 0; i < std::min(expected_count, actual_count); ++i)
-        EXPECT_EQ(to_string(GetParam().expected_labels[i]), actual_labels[i]) << i;
+    EXPECT_RANGE_EQ(GetParam().expected_traversal, actual_traversal);
 }
 
 // ----------------------------------------------------------------------------
@@ -140,67 +138,59 @@ TEST_P(labelled_tree_test, root_sink) {
 // ----------------------------------------------------------------------------
 using jst::contrib::operator""_dna4;
 
-INSTANTIATE_TEST_SUITE_P(no_variant, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(no_variant, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{},
-    .expected_labels{"AAAAGGGG"_dna4}
+    .expected_traversal{}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv0, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv0, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "C"_dna4, "AAAGGGG"_dna4, "AAAAGGGG"_dna4}
+    .expected_traversal{0, 1, 2, 3}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv7, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv7, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAAGGG"_dna4, "C"_dna4, ""_dna4, "G"_dna4}
+    .expected_traversal{0, 1, 2, 3}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4, "GGGG"_dna4}
+    .expected_traversal{0, 1, 2, 3}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv6, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv6, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "G"_dna4, "T"_dna4, "G"_dna4,
-                                                      "GG"_dna4,
-                                  "GG"_dna4, "T"_dna4, "G"_dna4,
-                                             "GG"_dna4}
+    .expected_traversal{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv5, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv5, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, ""_dna4, "T"_dna4, "GG"_dna4,
-                                                      "GGG"_dna4,
-                                  "G"_dna4, "T"_dna4, "GG"_dna4,
-                                             "GGG"_dna4}
+    .expected_traversal{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 }));
 
-INSTANTIATE_TEST_SUITE_P(snv4_snv4, labelled_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(snv4_snv4, volatile_tree_test, testing::Values(fixture{
     .source{"AAAAGGGG"_dna4},
     .variants{
         variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
         variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "GGG"_dna4,
-                                  ""_dna4, "T"_dna4, "GGG"_dna4,
-                                  "GGGG"_dna4}
+    .expected_traversal{0, 1, 2, 3, 4, 5, 6}
 }));

@@ -13,22 +13,24 @@
 #pragma once
 
 #include <libcontrib/closure_adaptor.hpp>
-#include <libcontrib/copyable_box.hpp>
 
+#include <libjst/sequence_tree/breakend_site_trimmed.hpp>
 #include <libjst/sequence_tree/concept.hpp>
 namespace libjst
 {
     template <typename base_tree_t>
     class trim_tree_impl {
     private:
-        using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
+        using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
+        using difference_type = std::ptrdiff_t;
 
         class node_impl;
-        class sink_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
-        std::size_t _max_branch_size{};
+        difference_type _max_branch_size{};
 
     public:
         /*!\name Constructors, destructor and assignment
@@ -41,7 +43,7 @@ namespace libjst
                       std::constructible_from<base_tree_t, wrapped_tree_t>)
         explicit constexpr trim_tree_impl(wrapped_tree_t && wrappee, std::size_t const max_branch_size) noexcept :
             _wrappee{(wrapped_tree_t &&)wrappee},
-            _max_branch_size{max_branch_size}
+            _max_branch_size{static_cast<difference_type>(max_branch_size)}
         {}
         //!\}
 
@@ -49,169 +51,140 @@ namespace libjst
             return node_impl{libjst::root(_wrappee), _max_branch_size};
         }
 
-        constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(_wrappee)};
+        constexpr sink_type sink() const noexcept {
+            return libjst::sink(_wrappee);
+        }
+
+        constexpr auto const & data() const noexcept {
+            return _wrappee.data();
         }
    };
 
     template <typename base_tree_t>
     class trim_tree_impl<base_tree_t>::node_impl : public base_node_type {
-    public:
-        using typename base_node_type::position_type;
     private:
+
+        using base_low_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().low_boundary())>;
+        using base_high_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().high_boundary())>;
 
         friend trim_tree_impl;
 
-        using difference_type = std::ptrdiff_t;
+        difference_type _max_branch_size{};
 
-        std::size_t _max_branch_size{};
-        difference_type _remaining_branch_size{};
-        // bool _on_variant_branch{false};
-
-        explicit constexpr node_impl(base_node_type base_node, std::size_t max_branch_size) noexcept :
-            node_impl{std::move(base_node), max_branch_size, static_cast<difference_type>(max_branch_size)}
-        {}
-
-        explicit constexpr node_impl(base_node_type && base_node,
-                                     std::size_t max_branch_size,
-                                     difference_type remaining_branch_size) noexcept :
+        explicit constexpr node_impl(base_node_type base_node, difference_type max_branch_size) noexcept :
             base_node_type{std::move(base_node)},
-            _max_branch_size{max_branch_size},
-            _remaining_branch_size{remaining_branch_size}
+            _max_branch_size{max_branch_size}
         {}
 
     public:
 
+        using low_position_type = base_low_position_type;
+        using high_position_type = breakend_site_trimmed<base_high_position_type>;
+
         node_impl() = default;
-        node_impl(node_impl const &) = default;
-        node_impl(node_impl &&) = default;
-        node_impl & operator=(node_impl const &) = default;
-        node_impl & operator=(node_impl &&) = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            if (can_be_trimmed()) {
-                return visit<true>(base_node_type::next_alt());
-            } else {
+            if (is_leaf())
                 return std::nullopt;
-            }
+            return visit<true>(base_node_type::next_alt());
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            if (can_be_trimmed()) {
-                return visit<false>(base_node_type::next_ref());
-            } else {
+            if (is_leaf())
                 return std::nullopt;
-            }
+            return visit<false>(base_node_type::next_ref());
         }
 
-        constexpr libjst::node_label_t<base_node_type> operator*() const noexcept {
-            return *static_cast<base_node_type const &>(*this);
-        }
-
-    protected:
-
-        constexpr position_type high_breakend() const {
-            position_type original_bp = base_node_type::high_breakend();
-            if (base_node_type::on_alternate_path()) {
-                assert(static_cast<difference_type>(original_bp) + _remaining_branch_size > 0);
-                return static_cast<position_type>(
-                        std::min<difference_type>(static_cast<difference_type>(original_bp),
-                                                  static_cast<difference_type>(original_bp) + _remaining_branch_size));
+        constexpr high_position_type high_boundary() const {
+            base_high_position_type base_high = base_node_type::high_boundary();
+            if (this->on_alternate_path()) {
+                using position_value_t = typename high_position_type::position_value_type;
+                position_value_t high_position = libjst::position(base_high);
+                assert(static_cast<difference_type>(high_position) + _max_branch_size > 0);
+                return high_position_type{std::move(base_high),
+                                          static_cast<position_value_t>(high_position + _max_branch_size)};
             } else {
-                return original_bp;
+                return high_position_type{std::move(base_high)};
             }
         }
+
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{this};
+        }
+
     private:
 
-        constexpr bool can_be_trimmed() const noexcept {
-            return _remaining_branch_size > 0;
+        constexpr bool is_leaf() const noexcept {
+            return _max_branch_size <= 0;
         }
 
         template <bool is_alt_node, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (is_alt_node && !base_node_type::on_alternate_path()) {
-                    return branch_off_new(std::move(*maybe_child));
-                } else if (base_node_type::on_alternate_path()) {
+                if (this->on_alternate_path()) { // parent not on alternate path but child is
                     return branch_off_further<is_alt_node>(std::move(*maybe_child));
                 } else { // nothing to spawn - remain in the reference branch.
-                    return node_impl{std::move(*maybe_child), _max_branch_size, _remaining_branch_size};
+                    return node_impl{std::move(*maybe_child), _max_branch_size};
                 }
             } else {
                 return std::nullopt;
             }
         }
 
-        // branches off the reference path
-        constexpr node_impl branch_off_new(base_node_type base_child) const noexcept {
-            std::size_t child_branch_size =
-                _max_branch_size +  std::ranges::size(libjst::alt_sequence(base_node_type::right_variant()));
-            node_impl new_child{std::move(base_child), child_branch_size, _remaining_branch_size};
-            return new_child;
-        }
-
         template <bool is_alt_node>
-        constexpr node_impl branch_off_further(base_node_type base_child) const noexcept {
-            node_impl new_child{std::move(base_child), _max_branch_size, _remaining_branch_size};
-            // std::cout << "Further Span: " << new_child.breakend_span<is_alt_node>() << "\n";
-            // if (new_child.breakend_span<is_alt_node>() > 1000) {
-            //     std::cout << "Stop\n";
-            // }
-            new_child._remaining_branch_size -= new_child.breakend_span<is_alt_node>();
-            return new_child;
-        }
-
-        template <bool is_alt_node>
-        constexpr difference_type breakend_span() const noexcept {
+        constexpr node_impl branch_off_further(base_node_type && base_child) const noexcept {
+            difference_type child_remaining = _max_branch_size;
             if constexpr (is_alt_node) {
-                return std::ranges::ssize(libjst::alt_sequence(base_node_type::left_variant()));
+                child_remaining -= std::ranges::ssize(libjst::alt_sequence(*base_child.low_boundary()));
             } else {
-                return base_node_type::high_breakend() - base_node_type::low_breakend();
+                child_remaining -= (libjst::position(base_child.high_boundary()) -
+                                    libjst::position(base_child.low_boundary()));
             }
+
+            return node_impl{std::move(base_child), child_remaining};
         }
 
-        // constexpr bool on_variant_branch() const noexcept {
-        //     return _on_variant_branch;
-        // }
-
-        // constexpr switch_to_variant_branch() const noexcept {
-        //     _on_variant_branch = true;
-        // }
-
-        constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
+        constexpr friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept
+        {
             return static_cast<base_node_type const &>(lhs) == rhs;
         }
     };
 
     template <typename base_tree_t>
-    class trim_tree_impl<base_tree_t>::sink_impl {
+    class trim_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
     private:
         friend trim_tree_impl;
 
-        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
-        base_sink_type _base_sink{};
+        node_impl const * _node{};
 
-        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
+        explicit constexpr cargo_impl(node_impl const * node) noexcept :
+            base_cargo_type{*static_cast<base_node_type const &>(*node)},
+            _node{node}
         {}
 
-        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
-            return lhs._base_sink == rhs;
+    public:
+        constexpr cargo_impl() = default;
+
+        constexpr auto sequence() const noexcept {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
+                                             libjst::position(_node->high_boundary()));
         }
 
-    public:
-        sink_impl() = default;
+    protected:
+        using base_cargo_type::sequence;
     };
 
     namespace _tree_adaptor {
-        inline constexpr struct _trim
+        struct _trim
         {
-            template <typename labelled_tree_t, std::unsigned_integral branch_size_t>
-            constexpr auto operator()(labelled_tree_t && tree, branch_size_t const branch_size) const
-                noexcept(std::is_nothrow_constructible_v<trim_tree_impl<std::remove_reference_t<labelled_tree_t>>>)
-                -> trim_tree_impl<std::remove_reference_t<labelled_tree_t>>
+            template <typename tree_t, std::unsigned_integral branch_size_t>
+            constexpr auto operator()(tree_t && tree, branch_size_t const branch_size) const
+                noexcept(std::is_nothrow_constructible_v<trim_tree_impl<std::remove_reference_t<tree_t>>>)
+                -> trim_tree_impl<std::remove_reference_t<tree_t>>
             {
-                using adapted_tree_t = trim_tree_impl<std::remove_reference_t<labelled_tree_t>>;
-                return adapted_tree_t{(labelled_tree_t &&)tree, branch_size};
+                using adapted_tree_t = trim_tree_impl<std::remove_reference_t<tree_t>>;
+                return adapted_tree_t{(tree_t &&)tree, branch_size};
             }
 
             template <std::unsigned_integral branch_size_t>
@@ -221,7 +194,8 @@ namespace libjst
             {
                 return jst::contrib::make_closure(_trim{}, branch_size);
             }
-        } trim{};
+        };
+        inline constexpr _trim trim{};
     } // namespace _tree_adaptor
 
     using _tree_adaptor::trim;
