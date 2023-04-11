@@ -64,14 +64,16 @@ namespace libjst
     template <typename base_tree_t>
     class merge_tree_impl<base_tree_t>::node_impl : public base_node_type {
     public:
-        using typename base_node_type::position_type;
+
+        using low_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().low_boundary())>;
+
     private:
 
         friend merge_tree_impl;
 
-        position_type _low_boundary{};
+        low_position_type _low_boundary{};
 
-        explicit constexpr node_impl(base_node_type && base_node, position_type cached_low) noexcept :
+        explicit constexpr node_impl(base_node_type && base_node, low_position_type cached_low) noexcept :
             base_node_type{std::move(base_node)},
             _low_boundary{std::move(cached_low)}
         {}
@@ -88,7 +90,7 @@ namespace libjst
             return visit_next<false>(base_node_type::next_ref());
         }
 
-        constexpr position_type const & low_boundary() const {
+        constexpr low_position_type const & low_boundary() const {
             return _low_boundary;
         }
 
@@ -101,7 +103,7 @@ namespace libjst
         template <bool is_alt_child>
         constexpr std::optional<node_impl> visit_next(auto maybe_child) const {
             if (maybe_child) {
-                position_type cached_low = maybe_child->low_boundary();
+                low_position_type cached_low = maybe_child->low_boundary();
                 node_impl new_child{std::move(*maybe_child), std::move(cached_low)};
                 new_child.extend();
                 return new_child;
@@ -150,6 +152,8 @@ namespace libjst
             return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
                                              libjst::position(_node->high_boundary()));
         }
+    protected:
+        using base_cargo_type::sequence;
     };
 
     namespace _tree_adaptor {

@@ -46,12 +46,16 @@ namespace libjst
             return _breakend;
         }
 
+        constexpr breakpoint_end get_breakend_site() const noexcept {
+            return _site;
+        }
+
         constexpr bool is_high_end() const noexcept {
-            return _site == breakpoint_end::high;
+            return get_breakend_site() == breakpoint_end::high;
         }
 
         constexpr bool is_low_end() const noexcept {
-            return _site == breakpoint_end::low;
+            return get_breakend_site() == breakpoint_end::low;
         }
 
     private:

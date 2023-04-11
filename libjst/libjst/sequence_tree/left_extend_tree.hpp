@@ -65,7 +65,8 @@ namespace libjst
     template <typename base_tree_t>
     class left_extend_tree_impl<base_tree_t>::node_impl : public base_node_type {
     private:
-        using base_position_type = typename base_node_type::position_type;
+        using base_low_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().low_boundary())>;
+        using base_high_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().high_boundary())>;
 
         friend left_extend_tree_impl;
 
@@ -80,7 +81,8 @@ namespace libjst
 
     public:
 
-        using position_type = breakend_site_trimmed<base_position_type>;
+        using low_position_type = breakend_site_trimmed<base_low_position_type>;
+        using high_position_type = base_high_position_type;
 
         node_impl() = default;
 
@@ -96,15 +98,12 @@ namespace libjst
             return visit(base_node_type::next_ref());
         }
 
-        constexpr position_type low_boundary() const {
-            using position_value_t = typename position_type::position_value_type;
-            base_position_type const & base_boundary = base_node_type::low_boundary();
-            position_value_t low_position = std::max<offset_type>(libjst::position(base_boundary) - _offset, _lowest);
-            return position_type{base_boundary, low_position};
-        }
-
-        constexpr position_type high_boundary() const {
-            return position_type{base_node_type::high_boundary()};
+        constexpr low_position_type low_boundary() const {
+            using position_value_t = typename low_position_type::position_value_type;
+            base_low_position_type base_low = base_node_type::low_boundary();
+            position_value_t low_position = libjst::position(base_low);
+            low_position = std::max<offset_type>(low_position - _offset, _lowest);
+            return low_position_type{std::move(base_low), low_position};
         }
 
     private:
@@ -145,6 +144,9 @@ namespace libjst
             return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
                                              libjst::position(_node->high_boundary()));
         }
+
+    protected:
+        using base_cargo_type::sequence;
     };
 
     namespace _tree_adaptor {

@@ -12,33 +12,38 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
 {
-    template <typename breakend_site_t>
+    template <typename wrapped_breakend_site_t>
+        requires (std::is_object_v<wrapped_breakend_site_t>)
     class breakend_site_trimmed
     {
     public:
 
-        using delta_reference = typename breakend_site_t::delta_reference;
-        using delta_value = typename breakend_site_t::delta_value;
-        using index_type = typename breakend_site_t::index_type;
-        using value_type = typename breakend_site_t::value_type;
+        using base_site_t = std::remove_cvref_t<wrapped_breakend_site_t>;
+
+        using delta_reference = typename base_site_t::delta_reference;
+        using delta_value = typename base_site_t::delta_value;
+        using index_type = typename base_site_t::index_type;
+        using value_type = typename base_site_t::value_type;
         using position_value_type = libjst::variant_position_t<delta_reference>;
 
     private:
 
-
-        breakend_site_t const & _wrappee{};
+        wrapped_breakend_site_t _wrappee{};
         position_value_type _max_position{};
 
     public:
 
         breakend_site_trimmed() = delete;
-        explicit constexpr breakend_site_trimmed(breakend_site_t const & breakend_site,
+
+        explicit constexpr breakend_site_trimmed(wrapped_breakend_site_t breakend_site,
                                                  position_value_type max_position = std::numeric_limits<position_value_type>::max()) :
-            _wrappee{breakend_site},
+            _wrappee{std::move(breakend_site)},
             _max_position{max_position}
         {
         }
@@ -49,6 +54,10 @@ namespace libjst
 
         constexpr auto get_breakend() const noexcept {
             return _wrappee.get_breakend();
+        }
+
+        constexpr auto get_breakend_site() const noexcept {
+            return _wrappee.get_breakend_site();
         }
 
         constexpr bool is_high_end() const noexcept {

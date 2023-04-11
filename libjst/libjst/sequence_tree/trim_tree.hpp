@@ -63,28 +63,23 @@ namespace libjst
     template <typename base_tree_t>
     class trim_tree_impl<base_tree_t>::node_impl : public base_node_type {
     private:
-        using base_position_type = typename base_node_type::position_type;
+
+        using base_low_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().low_boundary())>;
+        using base_high_position_type = std::remove_cvref_t<decltype(std::declval<base_node_type const &>().high_boundary())>;
 
         friend trim_tree_impl;
 
         difference_type _max_branch_size{};
-        difference_type _remaining_branch_size{};
 
         explicit constexpr node_impl(base_node_type base_node, difference_type max_branch_size) noexcept :
-            node_impl{std::move(base_node), max_branch_size, max_branch_size}
-        {}
-
-        explicit constexpr node_impl(base_node_type && base_node,
-                                     difference_type max_branch_size,
-                                     difference_type remaining_branch_size) noexcept :
             base_node_type{std::move(base_node)},
-            _max_branch_size{max_branch_size},
-            _remaining_branch_size{remaining_branch_size}
+            _max_branch_size{max_branch_size}
         {}
 
     public:
 
-        using position_type = breakend_site_trimmed<base_position_type>;
+        using low_position_type = base_low_position_type;
+        using high_position_type = breakend_site_trimmed<base_high_position_type>;
 
         node_impl() = default;
 
@@ -100,23 +95,16 @@ namespace libjst
             return visit<false>(base_node_type::next_ref());
         }
 
-        // If we cut the tree based on the length we need to specify different end position.
-        // So far we have used it through the values.
-        constexpr position_type low_boundary() const {
-            return position_type{base_node_type::low_boundary()};
-        }
-
-        constexpr position_type high_boundary() const {
-            using position_value_t = typename position_type::position_value_type;
-            base_position_type const & base_boundary = base_node_type::high_boundary();
+        constexpr high_position_type high_boundary() const {
+            base_high_position_type base_high = base_node_type::high_boundary();
             if (this->on_alternate_path()) {
-                assert(static_cast<difference_type>(libjst::position(base_boundary)) + _remaining_branch_size > 0);
-                return position_type{base_boundary, static_cast<position_value_t>(libjst::position(base_boundary) +
-                                                                                  _remaining_branch_size)};
-                        // std::min<difference_type>(static_cast<difference_type>(original_bp),
-                        //                           static_cast<difference_type>(original_bp) + _remaining_branch_size));
+                using position_value_t = typename high_position_type::position_value_type;
+                position_value_t high_position = libjst::position(base_high);
+                assert(static_cast<difference_type>(high_position) + _max_branch_size > 0);
+                return high_position_type{std::move(base_high),
+                                          static_cast<position_value_t>(high_position + _max_branch_size)};
             } else {
-                return position_type{base_boundary};
+                return high_position_type{std::move(base_high)};
             }
         }
 
@@ -127,34 +115,25 @@ namespace libjst
     private:
 
         constexpr bool is_leaf() const noexcept {
-            return _remaining_branch_size <= 0;
+            return _max_branch_size <= 0;
         }
 
         template <bool is_alt_node, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (is_alt_node && !this->on_alternate_path()) { // parent not on alternate path but child is
-                    return branch_off_new(std::move(*maybe_child));
-                } else if (base_node_type::on_alternate_path()) { // parent on alternate path
+                if (this->on_alternate_path()) { // parent not on alternate path but child is
                     return branch_off_further<is_alt_node>(std::move(*maybe_child));
                 } else { // nothing to spawn - remain in the reference branch.
-                    return node_impl{std::move(*maybe_child), _max_branch_size, _remaining_branch_size};
+                    return node_impl{std::move(*maybe_child), _max_branch_size};
                 }
             } else {
                 return std::nullopt;
             }
         }
 
-        // branches off the reference path
-        constexpr node_impl branch_off_new(base_node_type && base_child) const noexcept {
-            difference_type child_branch_size = _max_branch_size +
-                                std::ranges::ssize(libjst::alt_sequence(*(base_node_type::high_boundary())));
-            return node_impl{std::move(base_child), child_branch_size, _remaining_branch_size};
-        }
-
         template <bool is_alt_node>
         constexpr node_impl branch_off_further(base_node_type && base_child) const noexcept {
-            difference_type child_remaining = _remaining_branch_size;
+            difference_type child_remaining = _max_branch_size;
             if constexpr (is_alt_node) {
                 child_remaining -= std::ranges::ssize(libjst::alt_sequence(*base_child.low_boundary()));
             } else {
@@ -162,23 +141,8 @@ namespace libjst
                                     libjst::position(base_child.low_boundary()));
             }
 
-            return node_impl{std::move(base_child), _max_branch_size, child_remaining};
-            // std::cout << "Further Span: " << new_child.breakend_span<is_alt_node>() << "\n";
-            // if (new_child.breakend_span<is_alt_node>() > 1000) {
-            //     std::cout << "Stop\n";
-            // }
-            // new_child._remaining_branch_size -= new_child.breakend_span<is_alt_node>();
-            // return new_child;
+            return node_impl{std::move(base_child), child_remaining};
         }
-
-        // template <bool is_alt_node>
-        // constexpr difference_type breakend_span() const noexcept {
-        //     if constexpr (is_alt_node) {
-        //         return std::ranges::ssize(libjst::alt_sequence(base_node_type::left_variant())); //TODO
-        //     } else {
-        //         return base_node_type::high_breakend() - base_node_type::low_breakend();
-        //     }
-        // }
 
         constexpr friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept
         {
@@ -207,6 +171,8 @@ namespace libjst
                                              libjst::position(_node->high_boundary()));
         }
 
+    protected:
+        using base_cargo_type::sequence;
     };
 
     namespace _tree_adaptor {
