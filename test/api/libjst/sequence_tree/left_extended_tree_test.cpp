@@ -84,7 +84,7 @@ struct left_extended_tree : public jst::test::left_extended_tree::test
 
     auto make_tree() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::left_extend(GetParam().extend_size) | libjst::labelled();
+        return libjst::volatile_tree{rcs_mock} | libjst::labelled() | libjst::left_extend(GetParam().extend_size);
     }
 };
 

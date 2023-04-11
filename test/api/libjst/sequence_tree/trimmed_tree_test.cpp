@@ -84,7 +84,7 @@ struct trimmed_tree_test : public jst::test::labelled_tree::test
 
     auto make_tree() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::trim(GetParam().trim_size) | libjst::labelled();
+        return libjst::volatile_tree{rcs_mock} | libjst::labelled() | libjst::trim(GetParam().trim_size);
     }
 };
 

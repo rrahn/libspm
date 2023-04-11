@@ -99,7 +99,7 @@ namespace libjst
             breakpoint_end next_site = (*next_breakend).get_breakpoint_end();
             position_t next_high_boundary{std::move(next_breakend), std::move(next_site)};
             // Move over all
-            while (libjst::position(high_boundary()) > libjst::position(next_high_boundary)) {
+            while (this->from_variant() && libjst::position(next_high_boundary) < libjst::position(high_boundary())) {
                 next_breakend = std::ranges::next(next_high_boundary.get_breakend());
                 next_site = (*next_breakend).get_breakpoint_end();
                 next_high_boundary = position_t{std::move(next_breakend), std::move(next_site)};

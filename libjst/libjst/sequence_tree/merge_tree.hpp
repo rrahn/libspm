@@ -25,8 +25,10 @@ namespace libjst
     private:
         using base_node_type = libjst::tree_node_t<base_tree_t>;
         using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
 
         class node_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
 
@@ -90,6 +92,10 @@ namespace libjst
             return _low_boundary;
         }
 
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{this};
+        }
+
     private:
 
         template <bool is_alt_child>
@@ -98,9 +104,6 @@ namespace libjst
                 position_type cached_low = maybe_child->low_boundary();
                 node_impl new_child{std::move(*maybe_child), std::move(cached_low)};
                 new_child.extend();
-                if constexpr (is_alt_child) {
-                    new_child.activate_state(node_state::variant);
-                }
                 return new_child;
             } else {
                 return std::nullopt;
@@ -124,35 +127,30 @@ namespace libjst
         }
     };
 
-    // template <typename base_tree_t>
-    // class merge_tree_impl<base_tree_t>::node_impl::label_impl : public libjst::tree_label_t<base_tree_t> {
-    // private:
+    template <typename base_tree_t>
+    class merge_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
+    private:
+        using position_type = typename base_node_type::position_type;
 
-    //     using base_label_t = libjst::tree_label_t<base_tree_t>;
+        friend merge_tree_impl;
 
-    //     friend merge_tree_impl;
+        node_impl const * _node{};
 
-    //     breakpoint _low_breakend{};
-    //     breakpoint _high_breakend{};
+        explicit constexpr cargo_impl(node_impl const * node) noexcept :
+            base_cargo_type{*static_cast<base_node_type const &>(*node)},
+            _node{node}
+        {}
 
-    //     template <typename base_label_t>
-    //     explicit constexpr label_impl(base_label_t base_label,
-    //                                   breakpoint low_breakend,
-    //                                   breakpoint high_breakend) noexcept :
-    //         base_label_t{std::move(base_label)},
-    //         _low_breakend{low_breakend},
-    //         _high_breakend{high_breakend}
-    //     {}
+    public:
 
-    // public:
+        cargo_impl() = default;
 
-    //     label_impl() = default;
-
-    //     constexpr auto sequence() const noexcept {
-    //         assert(_low_breakend <= _high_breakend);
-    //         return base_label_t::sequence(_low_breakend.value(), _high_breakend.value());
-    //     }
-    // };
+        constexpr auto sequence() const noexcept {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
+                                             libjst::position(_node->high_boundary()));
+        }
+    };
 
     namespace _tree_adaptor {
         inline constexpr struct _merge

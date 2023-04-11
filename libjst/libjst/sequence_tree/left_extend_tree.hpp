@@ -26,9 +26,11 @@ namespace libjst
 
         using base_node_type = libjst::tree_node_t<base_tree_t>;
         using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
         using offset_type = std::ptrdiff_t;
 
         class node_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
         offset_type _offset{};
@@ -82,9 +84,9 @@ namespace libjst
 
         node_impl() = default;
 
-        // constexpr auto operator*() const noexcept {
-        //     return label_impl{*static_cast<base_node_type const &>(*this), _offset, _lowest};
-        // }
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{this};
+        }
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return visit(base_node_type::next_alt());
@@ -121,38 +123,29 @@ namespace libjst
         }
     };
 
-    // template <typename base_tree_t>
-    // class left_extend_tree_impl<base_tree_t>::label_impl : public base_label_type {
-    // private:
+    template <typename base_tree_t>
+    class left_extend_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
+    private:
 
-    //     friend left_extend_tree_impl;
+        friend left_extend_tree_impl;
 
-    //     offset_type _left_extension{};
-    //     offset_type _min_position{};
+        node_impl const * _node{};
 
-    //     constexpr explicit label_impl(base_label_type base_label, offset_type left_extension, offset_type min_position) noexcept :
-    //         base_label_type{std::move(base_label)},
-    //         _left_extension{left_extension},
-    //         _min_position{min_position}
-    //     {}
+        constexpr explicit cargo_impl(node_impl const * node) noexcept :
+            base_cargo_type{*static_cast<base_node_type const &>(*node)},
+            _node{node}
+        {}
 
-    // public:
+    public:
 
-    //     using typename base_label_type::size_type;
+        cargo_impl() = default;
 
-    //     label_impl() = default;
-
-    //     constexpr auto sequence(size_type left_pos, size_type right_pos = base_label_type::npos) const {
-    //         assert(left_pos >= _min_position);
-    //         assert(left_pos <= right_pos);
-    //         left_pos = std::max<std::ptrdiff_t>(_min_position, left_pos - _left_extension);
-    //         return base_label_type::sequence(left_pos, right_pos);
-    //     }
-
-    //     constexpr auto sequence() const {
-    //         return sequence(_min_position);
-    //     }
-    // };
+        constexpr auto sequence() const {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
+                                             libjst::position(_node->high_boundary()));
+        }
+    };
 
     namespace _tree_adaptor {
         inline constexpr struct _left_extend

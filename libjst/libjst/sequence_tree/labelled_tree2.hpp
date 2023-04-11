@@ -91,30 +91,26 @@ namespace libjst
         node_impl() = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            return visit_next(base_t::next_alt());
+            return visit_next<true>(base_t::next_alt());
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            return visit_next(base_t::next_ref());
+            return visit_next<false>(base_t::next_ref());
         }
 
         constexpr cargo_impl operator*() const noexcept {
-            return cargo_impl{*(static_cast<base_t const &>(*this)), this};
+            return cargo_impl{this};
         }
 
     private:
 
+        template <bool is_alt>
         constexpr std::optional<node_impl> visit_next(std::optional<base_t> && base_child) const noexcept {
             if (base_child.has_value()) {
                 // I need to check between alt_sequence and sequence between interval!
                 label_strategy_type child_label{_label};
-                if (base_child->from_variant()) {
+                if constexpr (is_alt) {
                     child_label.record_variant(*(base_child->low_boundary()));
-                    child_label.reset_positions(libjst::position(base_child->low_boundary()),
-                                                libjst::position(base_child->high_boundary()));
-                } else {
-                    child_label.reset_positions(libjst::position(base_child->low_boundary()),
-                                                libjst::position(base_child->high_boundary()));
                 }
                 return node_impl{std::move(*base_child), std::move(child_label)};
             }
@@ -134,8 +130,8 @@ namespace libjst
 
         friend labelled_tree;
 
-        constexpr explicit cargo_impl(base_cargo_type base_cargo, node_impl const * node) :
-            base_cargo_type{std::move(base_cargo)},
+        constexpr explicit cargo_impl(node_impl const * node) :
+            base_cargo_type{*(static_cast<base_node_type const &>(*node))},
             _node{node}
         {}
     public:
@@ -147,8 +143,10 @@ namespace libjst
         cargo_impl() = default;
 
         constexpr auto sequence() const noexcept {
-            return _node->_label.node_sequence();
+            return sequence(libjst::position(_node->low_boundary()), libjst::position(_node->high_boundary()));
         }
+
+    protected:
 
         constexpr auto sequence(size_type const first, size_type const last) const noexcept {
             assert(_node != nullptr);

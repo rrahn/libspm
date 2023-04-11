@@ -23,9 +23,11 @@ namespace libjst
     private:
         using base_node_type = libjst::tree_node_t<base_tree_t>;
         using sink_type = libjst::tree_sink_t<base_tree_t>;
+        using base_cargo_type = libjst::tree_label_t<base_tree_t>;
         using difference_type = std::ptrdiff_t;
 
         class node_impl;
+        class cargo_impl;
 
         base_tree_t _wrappee{};
         difference_type _max_branch_size{};
@@ -98,10 +100,6 @@ namespace libjst
             return visit<false>(base_node_type::next_ref());
         }
 
-        constexpr libjst::node_label_t<base_node_type> operator*() const noexcept {
-            return *static_cast<base_node_type const &>(*this);
-        }
-
         // If we cut the tree based on the length we need to specify different end position.
         // So far we have used it through the values.
         constexpr position_type low_boundary() const {
@@ -121,6 +119,11 @@ namespace libjst
                 return position_type{base_boundary};
             }
         }
+
+        constexpr cargo_impl operator*() const noexcept {
+            return cargo_impl{this};
+        }
+
     private:
 
         constexpr bool is_leaf() const noexcept {
@@ -181,6 +184,29 @@ namespace libjst
         {
             return static_cast<base_node_type const &>(lhs) == rhs;
         }
+    };
+
+    template <typename base_tree_t>
+    class trim_tree_impl<base_tree_t>::cargo_impl : public base_cargo_type {
+    private:
+        friend trim_tree_impl;
+
+        node_impl const * _node{};
+
+        explicit constexpr cargo_impl(node_impl const * node) noexcept :
+            base_cargo_type{*static_cast<base_node_type const &>(*node)},
+            _node{node}
+        {}
+
+    public:
+        constexpr cargo_impl() = default;
+
+        constexpr auto sequence() const noexcept {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
+                                             libjst::position(_node->high_boundary()));
+        }
+
     };
 
     namespace _tree_adaptor {
