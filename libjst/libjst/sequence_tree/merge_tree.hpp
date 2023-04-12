@@ -98,6 +98,15 @@ namespace libjst
             return cargo_impl{this};
         }
 
+    protected:
+
+        template <typename breakend_site_t>
+        constexpr void reset_low(breakend_site_t new_low) {
+            base_node_type::reset_low(std::move(new_low));
+            _low_boundary = base_node_type::low_boundary();
+            extend();
+        }
+
     private:
 
         template <bool is_alt_child>
