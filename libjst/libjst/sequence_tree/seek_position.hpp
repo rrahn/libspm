@@ -19,7 +19,7 @@
 
 #include <seqan3/core/concept/cereal.hpp>
 
-#include <libjst/sequence_tree/node_descriptor.hpp>
+#include <libjst/sequence_tree/breakend_site.hpp>
 #include <libjst/sequence_tree/path_descriptor.hpp>
 
 namespace libjst
@@ -32,7 +32,7 @@ namespace libjst
         static constexpr uint32_t max_index_width_v{(sizeof(index_t) << 3) - 1};
 
         union {
-            node_descriptor ref{};
+            breakpoint_end ref{};
             alternate_path_descriptor alt;
         } _descriptor{};
 
@@ -60,10 +60,10 @@ namespace libjst
             }
         }
 
-        constexpr void reset(index_t const variant_index, node_descriptor const ref_state) noexcept {
+        constexpr void reset(index_t const variant_index, breakpoint_end const site) noexcept {
             activate_reference_node();
             _variant_index = variant_index;
-            reference_node() = ref_state;
+            reference_node() = site;
         }
 
         constexpr index_t get_variant_index() const noexcept {
@@ -105,12 +105,12 @@ namespace libjst
             return _descriptor.alt;
         }
 
-        constexpr node_descriptor & reference_node() noexcept {
+        constexpr breakpoint_end & reference_node() noexcept {
             assert(!alternate_node_is_active());
             return _descriptor.ref;
         }
 
-        constexpr node_descriptor const & reference_node() const noexcept {
+        constexpr breakpoint_end const & reference_node() const noexcept {
             assert(!alternate_node_is_active());
             return _descriptor.ref;
         }
@@ -137,7 +137,7 @@ namespace libjst
             if (auto cmp_var = (lhs.get_variant_index() <=> rhs.get_variant_index()); cmp_var == 0) {
                 if (auto cmp_descr = lhs.alternate_node_is_active() ^ rhs.alternate_node_is_active(); cmp_descr == 0) {
                     return lhs.visit([&] <typename descriptor_t> (descriptor_t const & lhs_descriptor) {
-                        if constexpr (std::same_as<descriptor_t, node_descriptor>) {
+                        if constexpr (std::same_as<descriptor_t, breakpoint_end>) {
                             return lhs_descriptor <=> rhs._descriptor.ref;
                         } else {
                             return lhs_descriptor <=> rhs._descriptor.alt;
@@ -159,7 +159,7 @@ namespace libjst
     {
         stream << "<";
         position.visit([&] <typename descriptor_t>(descriptor_t const & descriptor) {
-            if constexpr (std::same_as<descriptor_t, node_descriptor>) {
+            if constexpr (std::same_as<descriptor_t, breakpoint_end>) {
                 stream << "ref = ";
             } else {
                 stream << "alt = ";

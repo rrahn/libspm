@@ -160,6 +160,15 @@ namespace libjst
         constexpr bool is_leaf() const noexcept {
             return reached_highest() || (base_node_type::high_boundary() == _partial_highest.base());
         }
+
+    protected:
+
+        template <typename breakend_site_t>
+        constexpr void reset_low(breakend_site_t new_low) {
+            base_node_type tmp{new_low, new_low};
+            static_cast<base_node_type &>(*this) = tmp.next_ref();
+        }
+
     private:
 
         constexpr bool reached_highest() const noexcept {
