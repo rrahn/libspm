@@ -17,6 +17,7 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/copyable_box.hpp>
 
+#include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/journaled_sequence_label.hpp>
 #include <libjst/variant/concept.hpp>
 

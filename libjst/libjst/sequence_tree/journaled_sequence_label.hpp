@@ -109,7 +109,7 @@ namespace libjst
                     _journal.record_insertion(alt_position, libjst::alt_sequence(variant));
                     break;
                 } default: {
-                    throw std::runtime_error{"Unknown alternate sequence kind."};
+                    //no-op
                 }
             }
         }
