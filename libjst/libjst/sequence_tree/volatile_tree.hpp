@@ -71,8 +71,6 @@ namespace libjst
 
         using base_t = node_type;
 
-    private:
-
         position_type _nil{};
 
         explicit constexpr node_impl(base_t && base_node, position_type nil) noexcept :

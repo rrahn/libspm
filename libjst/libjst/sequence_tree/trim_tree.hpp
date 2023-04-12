@@ -99,6 +99,7 @@ namespace libjst
             base_high_position_type base_high = base_node_type::high_boundary();
             if (this->on_alternate_path()) {
                 using position_value_t = typename high_position_type::position_value_type;
+                // TODO: Assumes not left extended! or we need to add the left extension below!
                 position_value_t high_position = libjst::position(base_high);
                 assert(static_cast<difference_type>(high_position) + _max_branch_size > 0);
                 return high_position_type{std::move(base_high),
@@ -121,7 +122,9 @@ namespace libjst
         template <bool is_alt_node, typename maybe_child_t>
         constexpr std::optional<node_impl> visit(maybe_child_t maybe_child) const {
             if (maybe_child) {
-                if (this->on_alternate_path()) { // parent not on alternate path but child is
+                if (is_alt_node && !this->on_alternate_path()) {
+                    return make_alternate_subtree(std::move(*maybe_child));
+                } else if (this->on_alternate_path()) {
                     return branch_off_further<is_alt_node>(std::move(*maybe_child));
                 } else { // nothing to spawn - remain in the reference branch.
                     return node_impl{std::move(*maybe_child), _max_branch_size};
@@ -129,6 +132,14 @@ namespace libjst
             } else {
                 return std::nullopt;
             }
+        }
+
+        constexpr node_impl make_alternate_subtree(base_node_type && base_child) const noexcept {
+            auto delta = *(base_child.low_boundary());
+            difference_type diff =
+                libjst::position(base_child.high_boundary()) - libjst::position(base_child.low_boundary()) +
+                libjst::effective_size(delta) - std::ranges::ssize(libjst::alt_sequence(delta));
+            return node_impl{std::move(base_child), _max_branch_size - diff};
         }
 
         template <bool is_alt_node>

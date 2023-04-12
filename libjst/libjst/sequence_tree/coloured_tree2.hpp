@@ -16,6 +16,7 @@
 
 #include <libcontrib/closure_adaptor.hpp>
 
+#include <libjst/sequence_tree/concept.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
