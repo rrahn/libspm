@@ -93,8 +93,8 @@ namespace libjst
 
     private:
 
-        constexpr friend bool operator==(iterator const & lhs, sentinel const & rhs) noexcept {
-            return lhs.branch().empty() || lhs.active_node() == rhs;
+        constexpr friend bool operator==(iterator const & lhs, sentinel const &) noexcept {
+            return lhs.branch().empty();
         }
 
         constexpr node_type const & active_node() const noexcept {
