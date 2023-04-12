@@ -15,26 +15,33 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/copyable_box.hpp>
 
+#include <libjst/sequence_tree/breakend_site_trimmed.hpp>
+#include <libjst/sequence_tree/breakend_site.hpp>
+#include <libjst/sequence_tree/breakpoint_node.hpp>
 #include <libjst/sequence_tree/concept.hpp>
-#include <libjst/sequence_tree/node_descriptor.hpp>
-#include <libjst/sequence_tree/rcs_node_traits.hpp>
+#include <libjst/sequence_tree/empty_label.hpp>
 #include <libjst/variant/breakpoint.hpp>
 
 namespace libjst
 {
-    template <typename base_tree_t>
+    template <typename rcs_store_t>
     class partial_tree {
     private:
-        using base_node_type = libjst::tree_node_t<base_tree_t>;
-        using variant_type = typename rcs_node_traits<base_node_type>::variant_type;
-        using breakpoint_value_type = typename breakpoint::value_type;
+
+        using variants_type = typename rcs_store_t::variant_map_type;
+        using variant_type = std::ranges::range_value_t<variants_type>;
+        using breakend_iterator = std::ranges::iterator_t<variants_type const &>;
+        using base_node_type = breakpoint_node<breakend_iterator>;
+        using position_type = typename base_node_type::position_type;
+        using trimmed_position_type = breakend_site_trimmed<position_type>;
+        using position_value_type = typename trimmed_position_type::position_value_type;
 
         class node_impl;
-        class sink_impl;
 
-        base_tree_t _wrappee{};
-        variant_type _left_bound{};
-        variant_type _right_bound{};
+        rcs_store_t const & _rcs_store{};
+        position_type _low_base{};
+        trimmed_position_type _partial_low_nil{};
+        trimmed_position_type _partial_high_nil{};
 
     public:
         /*!\name Constructors, destructor and assignment
@@ -42,201 +49,124 @@ namespace libjst
          */
         constexpr partial_tree() = default; //!< Default.
 
-        template <typename wrapped_tree_t>
-            requires (!std::same_as<wrapped_tree_t, partial_tree> &&
-                      std::constructible_from<base_tree_t, wrapped_tree_t>)
-        explicit constexpr partial_tree(wrapped_tree_t && wrappee,
-                                        breakpoint_value_type root_position,
-                                        size_t count) noexcept :
-            _wrappee{(wrapped_tree_t &&)wrappee}
+        partial_tree(rcs_store_t const & rcs_store, position_value_type root_position, position_value_type count) noexcept :
+            _rcs_store{rcs_store}
         {
-            _left_bound = *std::ranges::begin(_wrappee.data().variants()); // TODO: refactor initialisation
-            _right_bound = _left_bound;
+            // initiate low boundary
+            auto low = std::ranges::lower_bound(std::ranges::next(std::ranges::begin(data().variants())),
+                                                std::ranges::end(data().variants()),
+                                                root_position,
+                                                std::ranges::less{},
+                                                [&] (auto breakend_proxy) -> position_value_type {
+                                                     return libjst::position(std::move(breakend_proxy));
+                                                });
+            assert(root_position <= static_cast<position_value_type>(libjst::position(*low)));
+            _low_base = position_type{std::ranges::prev(low), breakpoint_end::low};
 
-            breakpoint_value_type sink_position =
-                std::min<size_t>(std::ranges::size(_wrappee.data().source()), root_position + count);
-            libjst::position(_left_bound) = breakpoint{root_position, breakpoint_end::right};
-            libjst::position(_right_bound) = breakpoint{sink_position, breakpoint_end::left};
+            auto high_base_it = std::ranges::prev(std::ranges::end(data().variants()));
+            _partial_low_nil = trimmed_position_type{position_type{high_base_it, breakpoint_end::low}, root_position};
+            _partial_high_nil = trimmed_position_type{position_type{high_base_it, breakpoint_end::high},
+                                                      root_position + count};
         }
         //!\}
 
         constexpr node_impl root() const noexcept {
-            return node_impl{libjst::root(_wrappee), _left_bound, _right_bound};
+            base_node_type base_root{_low_base, _low_base};
+            return node_impl{base_root.next_ref(), _partial_low_nil, _partial_high_nil};
         }
 
-        constexpr sink_impl sink() const noexcept {
-            return sink_impl{libjst::sink(_wrappee)};
+        constexpr nil_node_t sink() const noexcept {
+            return nil_node;
         }
 
-        constexpr base_tree_t const & base() const noexcept {
-            return _wrappee;
+        constexpr rcs_store_t const & data() const noexcept {
+            return _rcs_store;
         }
    };
 
-    template <typename wrapped_tree_t, std::integral offset_t, std::integral count_t>
-    partial_tree(wrapped_tree_t &&, offset_t, count_t) -> partial_tree<wrapped_tree_t>;
+    template <typename rcs_store_t, std::integral offset_t, std::integral count_t>
+    partial_tree(rcs_store_t const &, offset_t, count_t) -> partial_tree<rcs_store_t>;
 
     template <typename base_tree_t>
     class partial_tree<base_tree_t>::node_impl : public base_node_type {
-    protected:
-        using typename base_node_type::position_type;
-
     private:
-
-        using variant_iterator = typename rcs_node_traits<base_node_type>::variant_iterator;
-        using variant_reference = std::iter_reference_t<variant_iterator>;
 
         friend partial_tree;
 
-        enum state {
-            left_bound,
-            right_bound,
-            regular,
-        };
+        trimmed_position_type _partial_lowest;
+        trimmed_position_type _partial_highest;
 
-        variant_type const * _left_bound{};
-        variant_type const * _right_bound{};
-        state _left_state{state::left_bound};
-        state _right_state{state::regular};
-
-        explicit constexpr node_impl(base_node_type && base_node,
-                                     variant_type const & left_bound,
-                                     variant_type const & right_bound) noexcept :
+        explicit constexpr node_impl(base_node_type base_node,
+                                     trimmed_position_type partial_lowest,
+                                     trimmed_position_type partial_highest) noexcept :
             base_node_type{std::move(base_node)},
-            _left_bound{std::addressof(left_bound)},
-            _right_bound{std::addressof(right_bound)}
+            _partial_lowest{std::move(partial_lowest)},
+            _partial_highest{std::move(partial_highest)}
         {
-            // now set the variants to the correct positions! -> would it be possible to add a breakpoint layer that does this for us?
-            // we do not have a root node, but can emulate one!
-            // we are somewhere between left node and right node.
-            // left variant => largest variant before root_breakpoint
-            auto const & variants = base_node_type::rcs_store().variants();
-            auto initial_it = std::ranges::lower_bound(std::ranges::next(variants.begin()),
-                                                       variants.end(),
-                                                       libjst::position(*_left_bound),
-                                                       std::ranges::less{},
-                                                       [] (auto const & var) { return libjst::position(var); });
-            assert(initial_it != variants.begin());
-            base_node_type::set_left(std::ranges::prev(initial_it));
-            base_node_type::set_right(initial_it);
-            base_node_type::set_next(base_node_type::next_variant_after(initial_it));
-            // initialise left state
-            if (libjst::position(*_left_bound).value() == 0)
-                _left_state = state::regular;
-            else
-                _left_state = state::left_bound;
-
-            // initialise right state
-            if (libjst::position(base_node_type::right_variant()) < libjst::position(*_right_bound)) //TODO
-                _right_state = state::regular;
-            else
-                _right_state = state::right_bound;
         }
 
-        explicit constexpr node_impl(base_node_type && base_node,
-                                     variant_type const * left_bound,
-                                     variant_type const * right_bound,
-                                     state left_state,
-                                     state right_state) noexcept :
-            base_node_type{std::move(base_node)},
-            _left_bound{left_bound},
-            _right_bound{right_bound},
-            _left_state{left_state},
-            _right_state{right_state}
-        {}
-
     public:
+
+        using low_position_type = trimmed_position_type;
+        using high_position_type = trimmed_position_type;
 
         constexpr node_impl() = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            return visit<true>(base_node_type::next_alt());
+            if (reached_highest() /*&& (libjst::position(_partial_highest) != libjst::position(_partial_highest.base()))*/) {
+                base_node_type child{base_node_type::low_boundary(), base_node_type::high_boundary()};
+                child.toggle_alternate_path();
+                return node_impl{std::move(child), _partial_highest, trimmed_position_type{_partial_highest.base()}};
+            }
+
+            if (auto maybe_child = base_node_type::next_alt(); maybe_child.has_value()) {
+                trimmed_position_type child_highest = (!this->on_alternate_path()) ?
+                                                      trimmed_position_type{_partial_highest.base()} :
+                                                      _partial_highest;
+                return node_impl{std::move(*maybe_child), _partial_lowest, std::move(child_highest)};
+            }
+            return std::nullopt;
         }
 
         constexpr std::optional<node_impl> next_ref() const noexcept {
-            return visit<false>(base_node_type::next_ref());
-        }
-
-    protected:
-
-        constexpr position_type low_breakend() const noexcept {
-            return select_breakend(_left_state, base_node_type::low_breakend());
-        }
-
-        constexpr position_type high_breakend() const noexcept {
-            return select_breakend(_right_state, base_node_type::high_breakend());
-        }
-
-        constexpr variant_reference left_variant() const noexcept {
-            switch (_left_state) {
-                case state::left_bound: return *_left_bound;
-                case state::right_bound: return *_right_bound;
-                default: return base_node_type::left_variant(); //TODO
-            }
-        }
-
-        constexpr variant_reference right_variant() const noexcept { //TODO
-            switch (_right_state) {
-                case state::left_bound: return *_left_bound;
-                case state::right_bound: return *_right_bound;
-                default: return base_node_type::right_variant(); //TODO
-            }
-        }
-
-        constexpr bool is_branching() const noexcept {
-            return !reached_right_bound() && base_node_type::is_branching();
-        }
-
-        constexpr bool is_nil() const noexcept {
-            return base_node_type::is_nil() || reached_right_bound();
-        }
-    private:
-
-        constexpr bool reached_right_bound() const noexcept {
-            bool not_alternate = !base_node_type::on_alternate_path();
-            bool over_right_bound = libjst::position(*_right_bound).value() <= base_node_type::high_breakend();
-            return not_alternate && over_right_bound;
-        }
-
-        constexpr position_type select_breakend(state bound_state, position_type alt_breakpoint) const noexcept {
-            switch (bound_state) {
-                case state::left_bound: return libjst::position(*_left_bound).value();
-                case state::right_bound: return libjst::position(*_right_bound).value();
-                default: return alt_breakpoint;
-            }
-        }
-
-        template <bool is_alt>
-        constexpr std::optional<node_impl> visit(auto maybe_child) const {
-            if (maybe_child) {
-                state child_right_state = (is_alt) ? state::regular : _right_state;
-                return node_impl{std::move(*maybe_child), _left_bound, _right_bound, state::regular, child_right_state};
-            } else {
+            if (is_leaf()) {
                 return std::nullopt;
             }
+            return node_impl{base_node_type::next_ref(), _partial_lowest, _partial_highest};
         }
 
-        constexpr friend bool operator==(node_impl const & lhs, sink_impl const & rhs) noexcept {
-            return lhs.reached_right_bound() || static_cast<base_node_type const &>(lhs) == rhs;
+        constexpr empty_label operator*() const noexcept {
+            return {};
         }
-    };
 
-    template <typename base_tree_t>
-    class partial_tree<base_tree_t>::sink_impl {
+        constexpr low_position_type low_boundary() const noexcept {
+            position_type low_base = base_node_type::low_boundary();
+            if (libjst::position(low_base) < libjst::position(_partial_lowest)) {
+                return _partial_lowest;
+            }
+            return low_position_type{base_node_type::low_boundary()};
+        }
+
+        constexpr high_position_type high_boundary() const noexcept {
+            position_type high_base = base_node_type::high_boundary();
+            if (reached_highest()) {
+                return _partial_highest;
+            }
+            return low_position_type{std::move(high_base)};
+        }
+
+        constexpr bool is_leaf() const noexcept {
+            return reached_highest() || (base_node_type::high_boundary() == _partial_highest.base());
+        }
     private:
-        friend partial_tree;
 
-        using base_sink_type = libjst::tree_sink_t<base_tree_t>;
-        base_sink_type _base_sink{};
-
-        constexpr explicit sink_impl(base_sink_type base_sink) : _base_sink{std::move(base_sink)}
-        {}
-
-        friend bool operator==(sink_impl const & lhs, base_node_type const & rhs) noexcept {
-            return lhs._base_sink == rhs;
+        constexpr bool reached_highest() const noexcept {
+            return !this->on_alternate_path() &&
+                   libjst::position(_partial_highest) <= libjst::position(base_node_type::high_boundary());
         }
 
-    public:
-        sink_impl() = default;
+        constexpr friend bool operator==(node_impl const & lhs, nil_node_t const &) noexcept {
+            return lhs.is_leaf();
+        }
     };
 }  // namespace libjst

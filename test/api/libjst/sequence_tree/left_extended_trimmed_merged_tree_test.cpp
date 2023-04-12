@@ -14,7 +14,6 @@
 
 #include <seqan3/test/expect_range_eq.hpp>
 
-
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/sequence_tree/volatile_tree.hpp>

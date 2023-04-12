@@ -39,7 +39,7 @@ namespace libjst
 
     public:
 
-        breakend_site_trimmed() = delete;
+        breakend_site_trimmed() = default;
 
         explicit constexpr breakend_site_trimmed(wrapped_breakend_site_t breakend_site,
                                                  position_value_type max_position = std::numeric_limits<position_value_type>::max()) :
@@ -66,6 +66,10 @@ namespace libjst
 
         constexpr bool is_low_end() const noexcept {
             return _wrappee.is_low_end();
+        }
+
+        constexpr wrapped_breakend_site_t const & base() const noexcept {
+            return _wrappee;
         }
 
     private:
