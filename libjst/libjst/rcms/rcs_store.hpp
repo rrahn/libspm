@@ -17,45 +17,28 @@
 #include <seqan3/alphabet/range/sequence.hpp>
 #include <seqan3/core/concept/cereal.hpp>
 
-#include <libjst/coverage/bit_coverage.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
-#include <libjst/variant/alternate_sequence_kind.hpp>
-#include <libjst/variant/compressed_sparse_variant_map.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
 {
     // Client needs to make sure that the value types are compatible!?
-    template <seqan3::sequence source_sequence_t, typename alternate_sequence_store_t>
-        // requires sequence_alternative<std::ranges::range_value_t<alternate_sequence_store_t>>
-        // requires std::ranges::sized_range<source_sequence_t>
+    template <seqan3::sequence source_sequence_t, typename cms_t>
     class rcs_store
     {
-    public:
-
-        using coverage_type = bit_coverage<uint32_t>;
-        using size_type = typename coverage_type::value_type;
-        // using variant_map_type = compressed_sparse_variant_map<alternate_sequence_store_t, coverage_type>;
-        using variant_map_type = compressed_multisequence<source_sequence_t, coverage_type>;
-        using source_type = source_sequence_t;
-
-        // using key_type = typename variant_map_type::key_type;
-        // using mapped_type = typename variant_map_type::mapped_type;
-
-
-        // using size_type = decltype(std::ranges::size(std::declval<coverage_type const &>()));
-        using value_type = std::ranges::range_value_t<variant_map_type>;
-        using reference = std::ranges::range_reference_t<variant_map_type const &>;
-
     private:
 
-        using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
+        using coverage_domain_type = std::remove_cvref_t<decltype(std::declval<cms_t const &>().coverage_domain())>;
 
-        // source_sequence_t _reference{};
-        variant_map_type _variant_map{};
-        // size_type _row_count{};
+        cms_t _variant_map{};
 
     public:
+
+        using variant_map_type = cms_t;
+        using source_type = source_sequence_t;
+        using value_type = std::ranges::range_value_t<cms_t>;
+        using reference = std::ranges::range_reference_t<cms_t const &>;
+        using size_type = typename coverage_domain_type::value_type;
+
         /*!\name Constructors, destructor and assignment
          * \{
          */

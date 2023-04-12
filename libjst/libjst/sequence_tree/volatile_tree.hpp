@@ -26,8 +26,7 @@ namespace libjst
     class volatile_tree {
     private:
 
-        using rooted_rcs_store_type = rcs_store_t;
-        using variants_type = typename rooted_rcs_store_type::variant_map_type;
+        using variants_type = typename rcs_store_t::variant_map_type;
         using variant_type = std::ranges::range_value_t<variants_type>;
         using breakend_iterator = std::ranges::iterator_t<variants_type const &>;
         using node_type = breakpoint_node<breakend_iterator>;
@@ -35,7 +34,7 @@ namespace libjst
 
         class node_impl;
 
-        rooted_rcs_store_type const & _rooted_rcs_store{};
+        rcs_store_t const & _rcs_store{};
         position_type _low_nil{};
         position_type _high_nil{};
 
@@ -43,7 +42,7 @@ namespace libjst
 
         volatile_tree() = delete;
         volatile_tree(rcs_store_t const & rcs_store) noexcept :
-            _rooted_rcs_store{rcs_store}
+            _rcs_store{rcs_store}
         {
             _low_nil = position_type{std::ranges::begin(data().variants()), breakpoint_end::low};
             _high_nil = position_type{std::ranges::prev(std::ranges::end(data().variants())), breakpoint_end::high};
@@ -58,8 +57,8 @@ namespace libjst
             return nil_node;
         }
 
-        constexpr rooted_rcs_store_type const & data() const noexcept {
-            return _rooted_rcs_store;
+        constexpr rcs_store_t const & data() const noexcept {
+            return _rcs_store;
         }
     };
 

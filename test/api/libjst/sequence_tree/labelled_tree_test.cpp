@@ -20,7 +20,7 @@
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree2.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
-#include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
+#include <libjst/rcms/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
