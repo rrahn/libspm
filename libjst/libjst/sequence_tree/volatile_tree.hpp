@@ -99,6 +99,14 @@ namespace libjst
             return {};
         }
 
+    protected:
+
+        template <typename breakend_site_t>
+        constexpr void reset_low(breakend_site_t new_low) {
+            node_type tmp{new_low, new_low};
+            static_cast<node_type &>(*this) = tmp.next_ref();
+        }
+
     private:
 
         constexpr bool is_leaf() const noexcept {
