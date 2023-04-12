@@ -44,6 +44,8 @@ namespace libjst
         trimmed_position_type _partial_high_nil{};
 
     public:
+
+        using size_type = position_value_type;
         /*!\name Constructors, destructor and assignment
          * \{
          */

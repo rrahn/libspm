@@ -22,42 +22,33 @@
 
 namespace libjst
 {
-    template <typename wrapped_tree_t>
+    template <typename rcms_t>
     class chunked_tree_impl : public std::ranges::view_base {
     private:
 
-        using chunk_type = partial_tree<wrapped_tree_t const &>;
-        using maybe_wrapped_t = std::conditional_t<std::is_lvalue_reference_v<wrapped_tree_t>,
-                                                   std::reference_wrapper<std::remove_reference_t<wrapped_tree_t>>,
-                                                   wrapped_tree_t>;
+        using chunk_type = partial_tree<rcms_t>;
+        using ref_rcms_t = std::reference_wrapper<rcms_t const>;
+        using size_type = typename rcms_t::size_type;
 
         class iterator;
 
         using reference = typename iterator::reference;
         using difference_type = typename iterator::difference_type;
 
-        maybe_wrapped_t _wrappee;
-        size_t _chunk_size{};
-        size_t _overlap_size{};
+        ref_rcms_t _wrappee;
+        size_type _chunk_size{};
+        size_type _overlap_size{};
 
     public:
 
-        constexpr chunked_tree_impl() = default;
+        constexpr chunked_tree_impl() = delete;
 
-        template <typename wrappee_t, std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t>
-            requires (!std::same_as<std::remove_cvref_t<wrappee_t>, chunked_tree_impl> &&
-                      std::constructible_from<maybe_wrapped_t, wrappee_t>)
-        explicit constexpr chunked_tree_impl(wrappee_t && wrappee, chunk_size_t chunk_size, overlap_size_t overlap_size) noexcept :
-            _wrappee{(wrappee_t &&)wrappee},
-            _chunk_size{static_cast<size_t>(chunk_size)},
-            _overlap_size{static_cast<size_t>(overlap_size)}
+        template <std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t>
+        explicit constexpr chunked_tree_impl(rcms_t const & rcms, chunk_size_t chunk_size, overlap_size_t overlap_size) noexcept :
+            _wrappee{rcms},
+            _chunk_size{static_cast<size_type>(chunk_size)},
+            _overlap_size{static_cast<size_type>(overlap_size)}
         {}
-
-        chunked_tree_impl(chunked_tree_impl const &) = default;
-        chunked_tree_impl(chunked_tree_impl &&) = default;
-        chunked_tree_impl & operator=(chunked_tree_impl const &) = default;
-        chunked_tree_impl & operator=(chunked_tree_impl &&) = default;
-        ~chunked_tree_impl() = default;
 
         constexpr reference operator[](difference_type const step) const noexcept {
             return *(begin() + step);
@@ -72,15 +63,12 @@ namespace libjst
         }
     private:
 
-        constexpr wrapped_tree_t const & base() const noexcept {
-            if constexpr (std::is_lvalue_reference_v<wrapped_tree_t>)
-                return _wrappee.get();
-            else
-                return _wrappee;
+        constexpr rcms_t const & base() const noexcept {
+            return _wrappee.get();
         }
 
-        constexpr size_t max_chunk_count() const noexcept {
-            return std::ceil(std::ranges::size(base().data().source())/_chunk_size);
+        constexpr size_type max_chunk_count() const noexcept {
+            return (std::ranges::size(base().source()) + _chunk_size - 1) / _chunk_size;
         }
     };
 
@@ -181,14 +169,14 @@ namespace libjst
     namespace _tree_adaptor {
         inline constexpr struct _chunk
         {
-            template <typename wrapped_tree_t, std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>
-                requires requires { typename tree_node_t<wrapped_tree_t>; }
-            constexpr auto operator()(wrapped_tree_t && tree, chunk_size_t const chunk_size, overlap_size_t const overlap_size = 0) const
-                noexcept(std::is_nothrow_constructible_v<chunked_tree_impl<wrapped_tree_t>>)
-                -> chunked_tree_impl<wrapped_tree_t>
+            template <typename rcms_t, std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>
+                requires (!std::integral<rcms_t>)
+            constexpr auto operator()(rcms_t const & rcms, chunk_size_t const chunk_size, overlap_size_t const overlap_size = 0) const
+                noexcept(std::is_nothrow_constructible_v<chunked_tree_impl<rcms_t>>)
+                -> chunked_tree_impl<rcms_t>
             {
-                using adapted_tree_t = chunked_tree_impl<wrapped_tree_t>;
-                return adapted_tree_t{(wrapped_tree_t &&)tree, chunk_size, overlap_size};
+                using chunked_rcms_t = chunked_tree_impl<rcms_t>;
+                return chunked_rcms_t{rcms, chunk_size, overlap_size};
             }
 
             template <std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>

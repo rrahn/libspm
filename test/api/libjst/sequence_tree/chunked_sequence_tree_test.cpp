@@ -11,22 +11,23 @@
 #include <ranges>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/sequence_tree/coloured_tree.hpp>
-#include <libjst/sequence_tree/labelled_tree.hpp>
-#include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/chunked_tree.hpp>
+#include <libjst/sequence_tree/coloured_tree2.hpp>
+#include <libjst/sequence_tree/labelled_tree2.hpp>
+#include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/sequence_tree/volatile_tree.hpp>
+#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
-namespace jst::test::partial_sequence_tree {
+namespace jst::test::chunked_sequence_tree {
 
-using source_t = std::string;
-using variant_t = jst::test::variant<libjst::breakpoint, source_t, int, libjst::bit_vector<>>;
+using source_t = std::vector<jst::contrib::dna4>;
+using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct expected_root {
     source_t sequence{};
@@ -50,15 +51,22 @@ struct fixture {
 };
 
 struct test : public ::testing::TestWithParam<fixture> {
+    using coverage_type = libjst::bit_coverage<uint32_t>;
+    using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using rcs_store_t = mock_store<source_t>;
-
+    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_value_t = std::ranges::range_value_t<cms_t>;
+    using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
 
     void SetUp() override {
         _mock = rcs_store_t{GetParam().source, GetParam().coverage_size};
+        coverage_domain_type domain = _mock.variants().coverage_domain();
+
         std::ranges::for_each(GetParam().variants, [&] (auto var) {
-            _mock.insert(std::move(var));
+            _mock.add(cms_value_t{libjst::breakpoint{var.position, var.deletion},
+                                  var.insertion,
+                                  coverage_type{var.coverage, domain}});
         });
     }
 
@@ -67,35 +75,69 @@ struct test : public ::testing::TestWithParam<fixture> {
     }
 };
 
-} // namespace jst::test::partial_sequence_tree
+} // namespace jst::test::chunked_sequence_tree
 
 using namespace std::literals;
 
-using u = libjst::volatile_tree<jst::test::mock_store<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >;
-using t = libjst::chunked_tree_impl<u>;
-static_assert(std::is_constructible_v<u>, "Not default constructible!");
-static_assert(std::is_constructible_v<t>, "Not default constructible!");
-
-using fixture = jst::test::partial_sequence_tree::fixture;
-using variant_t = jst::test::partial_sequence_tree::variant_t;
-struct partial_sequence_tree_test : public jst::test::partial_sequence_tree::test
+using fixture = jst::test::chunked_sequence_tree::fixture;
+using variant_t = jst::test::chunked_sequence_tree::variant_t;
+struct chunked_sequence_tree_test : public jst::test::chunked_sequence_tree::test
 {
-    using typename jst::test::partial_sequence_tree::test::rcs_store_t;
-    using jst::test::partial_sequence_tree::test::get_mock;
-    using jst::test::partial_sequence_tree::test::GetParam;
+    using typename jst::test::chunked_sequence_tree::test::rcs_store_t;
+    using jst::test::chunked_sequence_tree::test::get_mock;
+    using jst::test::chunked_sequence_tree::test::GetParam;
 
 
     auto make_forest() const noexcept {
         auto const & rcs_mock = get_mock();
-        return libjst::volatile_tree{rcs_mock} | libjst::chunk(GetParam().chunk_size, GetParam().overlap_size)
-                                               | std::views::transform([&](auto && partial_tree) {
-                                                    using partial_tree_t = decltype(partial_tree);
-                                                    return ((partial_tree_t &&)partial_tree)
-                                                        | libjst::labelled<libjst::sequence_label_kind::root_path>()
-                                                        | libjst::coloured()
-                                                        | libjst::trim(GetParam().window_size)
-                                                        | libjst::merge();
-                                               });
+        return rcs_mock | libjst::chunk(GetParam().chunk_size, GetParam().overlap_size)
+                        | std::views::transform([&] (auto partial_tree) {
+                            return libjst::labelled(std::move(partial_tree)) | libjst::coloured()
+                                                                             | libjst::trim(GetParam().window_size)
+                                                                             | libjst::merge();
+                        });
+    }
+
+    template <typename tree_t>
+    constexpr void run_test(tree_t tree, size_t chunk_idx) {
+        using node_t = libjst::tree_node_t<tree_t>;
+        using cargo_t = libjst::tree_label_t<tree_t>;
+
+        auto cvt_to_string = [] (auto seq) -> std::string {
+            std::string str;
+            for (char c : seq)
+                str.push_back(c);
+            return str;
+        };
+
+        std::vector<std::string> actual_labels{};
+        std::stack<node_t> path{};
+        path.push(libjst::root(tree));
+
+        std::cout << "Labels: ";
+        while (!path.empty()) {
+            node_t p = std::move(path.top());
+            path.pop();
+            cargo_t label = *p;
+            if (!std::ranges::empty(label.sequence())) {
+                actual_labels.push_back(cvt_to_string(label.sequence()));
+                std::cout << actual_labels.back() << " " << std::flush;
+            }
+
+            if (auto c_ref = p.next_ref(); c_ref.has_value()) {
+                path.push(std::move(*c_ref));
+            }
+            if (auto c_alt = p.next_alt(); c_alt.has_value()) {
+                path.push(std::move(*c_alt));
+            }
+        }
+        std::cout << "\n";
+
+        std::ptrdiff_t expected_count = std::ranges::ssize(GetParam().expected_labels[chunk_idx]);
+        std::ptrdiff_t actual_count = std::ranges::ssize(actual_labels);
+        EXPECT_EQ(expected_count, actual_count);
+        for (std::ptrdiff_t i = 0; i < std::min(expected_count, actual_count); ++i)
+            EXPECT_EQ(cvt_to_string(GetParam().expected_labels[chunk_idx][i]), actual_labels[i]) << i;
     }
 };
 
@@ -103,145 +145,155 @@ struct partial_sequence_tree_test : public jst::test::partial_sequence_tree::tes
 // Test case definitions
 // ----------------------------------------------------------------------------
 
-TEST_P(partial_sequence_tree_test, traverse) {
+TEST_P(chunked_sequence_tree_test, traverse) {
     auto forest = make_forest();
 
     size_t chunk_idx{};
     for (auto && tree : forest) {
-        libjst::tree_traverser_base path{tree};
-        auto expected_it = std::ranges::begin(GetParam().expected_labels[chunk_idx]);
-        for (auto it = path.begin(); it != path.end(); ++it) {
-            auto && label = *it;
-            if (std::ranges::empty(label.sequence()))
-                continue;
+        std::string tracepoint = "Failed in chunk: " + std::to_string(chunk_idx);
+        SCOPED_TRACE(tracepoint);
+        run_test(std::move(tree), chunk_idx);
+        // libjst::tree_traverser_base path{tree};
+        // auto expected_it = std::ranges::begin(GetParam().expected_labels[chunk_idx]);
+        // for (auto it = path.begin(); it != path.end(); ++it) {
+        //     auto && label = *it;
+        //     if (std::ranges::empty(label.sequence()))
+        //         continue;
 
-            EXPECT_TRUE(expected_it != std::ranges::end(GetParam().expected_labels[chunk_idx]));
-            EXPECT_RANGE_EQ(*expected_it, label.sequence());
-            if (!std::ranges::equal(*expected_it, label.sequence())) {
-                std::cout << "Chunk idx: " << chunk_idx << " ";
-                std::cout << "Label pos: " << std::ranges::distance(std::ranges::begin(GetParam().expected_labels[chunk_idx]), expected_it) << "\n";
-            }
-            ++expected_it;
-        }
+        //     EXPECT_TRUE(expected_it != std::ranges::end(GetParam().expected_labels[chunk_idx]));
+        //     EXPECT_RANGE_EQ(*expected_it, label.sequence());
+        //     if (!std::ranges::equal(*expected_it, label.sequence())) {
+        //         std::cout << "Chunk idx: " << chunk_idx << " ";
+        //         std::cout << "Label pos: " << std::ranges::distance(std::ranges::begin(GetParam().expected_labels[chunk_idx]), expected_it) << "\n";
+        //     }
+        //     ++expected_it;
+        // }
         ++chunk_idx;
     }
+    EXPECT_EQ(chunk_idx, std::ranges::size(GetParam().expected_labels));
 }
 
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
 
-INSTANTIATE_TEST_SUITE_P(no_variant_single_chunk, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"aaaabbbb"},
+using jst::contrib::operator""_dna4;
+
+INSTANTIATE_TEST_SUITE_P(no_variant_single_chunk, chunked_sequence_tree_test, testing::Values(fixture{
+    .source{"AAAAGGGG"_dna4},
     .variants{},
     .coverage_size{4},
     .chunk_size{8},
     .window_size{4},
-    .expected_labels{{"aaaabbbb"}}
+    .expected_labels{{"AAAAGGGG"_dna4}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(no_variant_two_chunks, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"aaaabbbb"},
+INSTANTIATE_TEST_SUITE_P(no_variant_two_chunks, chunked_sequence_tree_test, testing::Values(fixture{
+    .source{"AAAAGGGG"_dna4},
     .variants{},
     .coverage_size{4},
     .chunk_size{4},
-    .window_size{4},
-    .expected_labels{{"aaaa"}, {"bbbb"}}
+    .window_size{2},
+    .expected_labels{{"AAAA"_dna4, "GG"_dna4}, {"GGGG"_dna4}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(no_variant_three_chunks, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"aaaabbbb"},
+INSTANTIATE_TEST_SUITE_P(no_variant_three_chunks, chunked_sequence_tree_test, testing::Values(fixture{
+    .source{"AAAAGGGG"_dna4},
     .variants{},
     .coverage_size{4},
     .chunk_size{3},
-    .window_size{4},
-    .expected_labels{{"aaa"},
-                     {"abb"},
-                     {"bb"}}
+    .window_size{2},
+    .expected_labels{{"AAA"_dna4, "AG"_dna4},
+                     {"AGG"_dna4, "GG"_dna4},
+                     {"GG"_dna4}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(two_variants_single_chunk, partial_sequence_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(two_variants_single_chunk, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"aaaabbbb"},
-    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
-              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+    .source{"AAAAGGGG"_dna4},
+    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .chunk_size{8},
     .window_size{4},
-    .expected_labels{{"a",
-                        "Iaab",
-                             "J",
-                             "b",
-                        "aaab",
-                             "Jbb",
-                             "bbb"}}
+    .expected_labels{{"A"_dna4,
+                       "CAAG"_dna4,
+                           "T"_dna4,
+                           "G"_dna4,
+                       "AAAG"_dna4,
+                           "TGG"_dna4,
+                           "GGG"_dna4}}
 }));
 
-INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks, partial_sequence_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"aaaabbbb"},
-    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
-              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+    .source{"AAAAGGGG"_dna4},
+    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .chunk_size{4},
-    .window_size{4},
-    .expected_labels{{"a",
-                        "Iaab",
-                             "J",
-                             "b",
-                        "aaa"
+    .window_size{3},
+    .expected_labels{{"A"_dna4,
+                        "CAAG"_dna4,
+                        "AAA"_dna4,
+                           "G"_dna4,
+                            "TG"_dna4,
+                            "GG"_dna4
                      },
                      {
-                        "b",
-                          "Jbb",
-                          "bbb"
+                        "G"_dna4,
+                          "TGG"_dna4,
+                          "GGG"_dna4
                      }}
 }));
 
-INSTANTIATE_TEST_SUITE_P(two_variants_three_chunks, partial_sequence_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(two_variants_three_chunks, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"aaaabbbb"},
-    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
-              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+    .source{"AAAAGGGG"_dna4},
+    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .chunk_size{3},
     .window_size{4},
-    .expected_labels{{"a",
-                        "Iaab",
-                             "J",
-                             "b",
-                        "aa"
+    .expected_labels{{"A"_dna4,
+                       "CAAG"_dna4,
+                           "T"_dna4,
+                           "G"_dna4,
+                       "AA"_dna4,
+                         "AG"_dna4,
+                           "TG"_dna4,
+                           "GG"_dna4
                      },
                      {
-                      "ab",
-                         "Jbb",
-                         "b"
+                      "AG"_dna4,
+                        "TGG"_dna4,
+                        "G"_dna4,
+                         "GG"_dna4
                      },
                      {
-                        "bb"
+                        "GG"_dna4
                      }}
 }));
 
-INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks_overlap, partial_sequence_tree_test, testing::Values(fixture{
+INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks_overlap, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"aaaabbbb"},
-    .variants{variant_t{.position{1}, .insertion{"I"}, .deletion{1}, .coverage{1,1,0,0}},
-              variant_t{.position{5}, .insertion{"J"}, .deletion{1}, .coverage{1,0,1,0}}},
+    .source{"AAAAGGGG"_dna4},
+    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .chunk_size{4},
     .overlap_size{2},
-    .window_size{4},
-    .expected_labels{{"a",
-                        "Iaab",
-                             "J",
-                             "b",
-                        "aaab",
-                             "Jbb",
-                             "b"
+    .window_size{2},
+    .expected_labels{{"A"_dna4,
+                       "CAA"_dna4,
+                       "AAAG"_dna4,
+                           "TGG"_dna4,
+                           "G"_dna4,
+                            "GG"_dna4
                      },
                      {
-                        "b",
-                          "Jbb",
-                          "bbb"
+                        "G"_dna4,
+                          "TGG"_dna4,
+                          "GGG"_dna4
                      }}
 }));
