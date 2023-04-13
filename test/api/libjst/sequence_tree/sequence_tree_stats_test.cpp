@@ -15,8 +15,8 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/sequence_tree/coloured_tree2.hpp>
-#include <libjst/sequence_tree/labelled_tree2.hpp>
+#include <libjst/sequence_tree/coloured_tree.hpp>
+#include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/prune_tree.hpp>
 #include <libjst/sequence_tree/stats.hpp>

@@ -18,7 +18,7 @@
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
-#include <libjst/sequence_tree/coloured_tree2.hpp>
+#include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 
