@@ -30,7 +30,7 @@ namespace libjst
             if (libjst::window_size(pattern) == 0)
                 return;
 
-            auto search_tree = tree | libjst::labelled<libjst::sequence_label_kind::root_path>()
+            auto search_tree = tree | libjst::labelled()
                                     | libjst::coloured()
                                     | trim(libjst::window_size(pattern) - 1)
                                     | prune_unsupported()

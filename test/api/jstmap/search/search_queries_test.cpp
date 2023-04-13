@@ -37,7 +37,7 @@ TEST(chunked_tree_test, recover_all_labels) {
     auto base_tree = libjst::make_volatile(rcsdb);
     auto chunked_base_tree = base_tree | libjst::chunk(1000u, window_size);
 
-    auto tree_adaptor = libjst::labelled<libjst::sequence_label_kind::root_path>()
+    auto tree_adaptor = libjst::labelled()
                       | libjst::coloured()
                       | libjst::trim(window_size)
                       | libjst::prune_unsupported()
@@ -104,7 +104,7 @@ TEST(chunked_tree_test, unwrap_bin_border) {
 
     // auto chunked_base_tree = libjst::make_volatile(rcsdb) | libjst::chunk(1000u);
     size_t const window_size = libjst::window_size(matcher) - 1;
-    auto tree_adaptor = libjst::labelled<libjst::sequence_label_kind::root_path>()
+    auto tree_adaptor = libjst::labelled()
                       | libjst::coloured()
                       | libjst::trim(window_size)
                       | libjst::prune_unsupported()
@@ -196,7 +196,7 @@ TEST(chunked_tree_test, bin_extension) {
 
     size_t const window_size = libjst::window_size(matcher) - 1;
     auto chunked_base_tree = libjst::make_volatile(rcsdb) | libjst::chunk(100u, window_size);
-    auto tree_adaptor = libjst::labelled<libjst::sequence_label_kind::root_path>()
+    auto tree_adaptor = libjst::labelled()
                       | libjst::coloured()
                       | libjst::trim(window_size)
                       | libjst::prune_unsupported()
