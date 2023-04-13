@@ -52,7 +52,7 @@ namespace libjst
         explicit constexpr int_coverage(elem_range_t && from_list, coverage_domain_t domain) :
             int_coverage{std::move(domain)}
         {
-            std::ranges::for_each(init_list, [&] (value_type elem) {
+            std::ranges::for_each(from_list, [&] (value_type elem) {
             if (!get_domain().is_member(elem))
                 throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
                 _data.emplace_hint(_data.end(), std::move(elem));
@@ -62,7 +62,7 @@ namespace libjst
         explicit constexpr int_coverage(std::initializer_list<value_type> from_list, coverage_domain_t domain) :
             int_coverage{std::move(domain)}
         {
-            std::ranges::for_each(init_list, [&] (value_type elem) {
+            std::ranges::for_each(from_list, [&] (value_type elem) {
             if (!get_domain().is_member(elem))
                 throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
                 _data.emplace_hint(_data.end(), std::move(elem));
@@ -74,6 +74,13 @@ namespace libjst
                 throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
 
             return _data.insert(elem);
+        }
+
+        constexpr iterator insert(iterator hint, value_type elem) {
+            if (!get_domain().is_member(elem))
+                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+
+            return _data.insert(std::move(hint), elem);
         }
 
         constexpr void clear() noexcept {
@@ -152,7 +159,7 @@ namespace libjst
                 throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             int_coverage result{};
-            std::ranges::set_intersection(first, second, std::back_inserter(result));
+            std::ranges::set_intersection(first, second, std::inserter(result, result.end()));
             return result;
         }
 
@@ -162,7 +169,7 @@ namespace libjst
                 throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             int_coverage result{};
-            std::ranges::set_difference(first, second, std::back_inserter(result));
+            std::ranges::set_difference(first, second, std::inserter(result, result.end()));
             return result;
         }
     };
