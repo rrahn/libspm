@@ -160,11 +160,10 @@ namespace libjst
         stream << "<";
         position.visit([&] <typename descriptor_t>(descriptor_t const & descriptor) {
             if constexpr (std::same_as<descriptor_t, breakpoint_end>) {
-                stream << "ref = ";
+                stream << "ref = " << ((descriptor == breakpoint_end::low) ? "low" : "high");
             } else {
-                stream << "alt = ";
+                stream << "alt = " << descriptor;
             }
-            stream << descriptor;
         });
         stream << " variant_idx = " << position.get_variant_index() << ">";
         return stream;
