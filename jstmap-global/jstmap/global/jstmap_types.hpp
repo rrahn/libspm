@@ -20,29 +20,30 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
-#include <libjst/utility/bit_vector.hpp>
-#include <libjst/variant/single_base_replacement_store.hpp>
+#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/rcs_store.hpp>
+#include <libjst/coverage/int_coverage.hpp>
 
 namespace jstmap
 {
 
 using alphabet_t = jst::contrib::dna5;
-using coverage_t = libjst::bit_vector<>;
+using coverage_t = libjst::int_coverage<uint32_t>;
 using reference_t = std::vector<alphabet_t>;
 using sequence_collection_t = std::vector<reference_t>;
 
-using snv_store_t = libjst::single_base_replacement_store<alphabet_t>;
-using rcs_store_t = libjst::rcs_store<reference_t, snv_store_t>;
+using cms_t = libjst::compressed_multisequence<reference_t, coverage_t>;
+using rcs_store_t = libjst::rcs_store<reference_t, cms_t>;
 
-using variant_store_t = snv_store_t;
-using variant_t = std::ranges::range_value_t<variant_store_t>;
+using variant_t = std::ranges::range_value_t<cms_t>;
 
 struct sequence_input_traits : public seqan3::sequence_file_input_default_traits_dna
 {
     using sequence_alphabet = alphabet_t;
     using sequence_legal_alphabet = jst::contrib::dna15; // conversion?
+    static_assert(seqan3::explicitly_convertible_to<sequence_legal_alphabet, sequence_alphabet>);
 };
+
 
 using sequence_file_t = seqan3::sequence_file_input<sequence_input_traits>;
 using sequence_record_t = std::ranges::range_value_t<sequence_file_t>;

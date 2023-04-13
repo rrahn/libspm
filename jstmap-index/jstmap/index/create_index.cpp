@@ -20,18 +20,17 @@
 #include <libjst/sequence_tree/prune_tree.hpp>
 #include <libjst/sequence_tree/prune_unsupported.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
 #include <jstmap/index/create_index.hpp>
 
 namespace jstmap
 {
-
+// TODO: put functionality into class, so that we can configure it.
 seqan3::interleaved_bloom_filter<> create_index(rcs_store_t const & rcs_store, index_options const & options)
 {
     // now here we need to change the classes.
-    auto forest = libjst::volatile_tree{rcs_store} | libjst::chunk(options.bin_size, options.bin_overlap);
+    auto forest = rcs_store | libjst::chunk(options.bin_size, options.bin_overlap);
 
     size_t const bin_count = std::ranges::size(forest);
     size_t ibf_size = 2ull * 1024ull * 1024ull * 1024ull; // 2GiBi
@@ -44,7 +43,7 @@ seqan3::interleaved_bloom_filter<> create_index(rcs_store_t const & rcs_store, i
     size_t window_size = options.kmer_size - 1;
     for (size_t bin_id = 0; bin_id < bin_count; ++bin_id) {
         // make more efficient by providing a hasher.
-        auto kmer_tree = forest[bin_id] | libjst::labelled<libjst::sequence_label_kind::root_path>()
+        auto kmer_tree = forest[bin_id] | libjst::labelled()
                                         | libjst::coloured()
                                         | libjst::trim(window_size)
                                         | libjst::prune_unsupported()

@@ -44,7 +44,7 @@ namespace jstmap
     match_aligner::ref_tree_type match_aligner::init(rcs_store_t const & rcs_store) {
         size_t window_size = std::ranges::size(_query_sequence) - 1;
         return rcs_store | libjst::make_volatile()
-                         | libjst::labelled<libjst::sequence_label_kind::root_path>()
+                         | libjst::labelled()
                          | libjst::coloured()
                          | libjst::trim(window_size)
                          | libjst::prune()

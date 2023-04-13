@@ -203,7 +203,7 @@ int search_main(seqan3::argument_parser & search_parser)
                 return std::ranges::size(query.value().sequence());
             });
             size_t const max_window_size = std::ranges::size((*largest_query_it).value().sequence()) - 1;
-            auto chunked_tree = libjst::make_volatile(rcs_store) | libjst::chunk(bin_size, max_window_size);
+            auto chunked_tree = rcs_store | libjst::chunk(bin_size, max_window_size);
             auto haystack = chunked_tree[bucket_idx];
 
             // Step 3: select matching strategy

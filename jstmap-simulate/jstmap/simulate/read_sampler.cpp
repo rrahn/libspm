@@ -37,7 +37,7 @@ namespace jstmap
     read_sampler::compute_tree_stats(size_t const size) const {
         log_debug("Compute tree statistics");
         log_debug("Variant count:", _rcs_store.variants().size());
-        return libjst::volatile_tree(_rcs_store) | libjst::labelled<libjst::sequence_label_kind::root_path>()
+        return libjst::volatile_tree(_rcs_store) | libjst::labelled()
                                                  | libjst::coloured()
                                                  | libjst::trim(size - 1)
                                                  | libjst::prune()
@@ -61,7 +61,7 @@ namespace jstmap
         sampled_read_list_type sampled_reads{};
         sampled_reads.reserve(sample_positions.size());
 
-        auto sample_tree = libjst::volatile_tree(_rcs_store) | libjst::labelled<libjst::sequence_label_kind::root_path>()
+        auto sample_tree = libjst::volatile_tree(_rcs_store) | libjst::labelled()
                                                              | libjst::coloured()
                                                              | libjst::trim(window_size)
                                                              | libjst::prune()
@@ -158,7 +158,7 @@ namespace jstmap
         auto && [read, match_position] = sample;
         size_t sample_size = std::ranges::size(read);
         size_t window_size = sample_size - 1;
-        auto validation_tree = libjst::volatile_tree(_rcs_store) | libjst::labelled<libjst::sequence_label_kind::root_path>()
+        auto validation_tree = libjst::volatile_tree(_rcs_store) | libjst::labelled()
                                                                  | libjst::coloured()
                                                                  | libjst::trim(window_size)
                                                                  | libjst::prune()
