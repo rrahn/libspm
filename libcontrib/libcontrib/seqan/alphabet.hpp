@@ -51,6 +51,13 @@ namespace seqan
         constexpr explicit alphabet_adaptor(rank_t r) : _symbol{seqan3::assign_rank_to(static_cast<seqan3::alphabet_rank_t<alphabet_t>>(r), alphabet_t{})}
         {}
 
+        template <seqan3::alphabet other_alphabet_t>
+            requires (!std::same_as<other_alphabet_t, alphabet_t>) &&
+                     seqan3::explicitly_convertible_to<other_alphabet_t, alphabet_t>
+        constexpr explicit alphabet_adaptor(alphabet_adaptor<other_alphabet_t> other) noexcept :
+            _symbol{static_cast<alphabet_t>(other._symbol)}
+        {}
+
         constexpr bool operator==(alphabet_adaptor const &) const noexcept = default;
         constexpr std::strong_ordering operator<=>(alphabet_adaptor const & other) const noexcept
         {
