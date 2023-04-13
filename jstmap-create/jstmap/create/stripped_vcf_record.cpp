@@ -41,9 +41,12 @@ namespace jstmap
         for (size_t i = 0; i < _alternative_count; ++i)
         {
             if (_alt[i][0] == '<') continue; // skip these alternatives for now
+
+            reference_t alt_sequence{_alt[i].begin(), _alt[i].end()};
+            variant_t variant{};
+
             if (_ref.size() == _alt[i].size() && _ref.size() == 1) { // SNP
-                store.add(_pos, variant_t{alphabet_t{_alt[i][0]}}, std::move(_genotypes[i]));
-                // store.emplace(snp_t{_pos, }, std::move(_genotypes[i]));
+                variant = variant_t{libjst::breakpoint{_pos, 1}, std::move(alt_sequence), std::move(_genotypes[i])};
             } else { // generic alternative: SNP, InDel, etc.
                 continue; // skip for now!
                 // auto [fst_ref, fst_alt] = std::ranges::mismatch(_ref, _alt[i]); // first non equal ranges in the beginning
@@ -59,6 +62,7 @@ namespace jstmap
                 // libjst::variant_deletion_t<indel_t> deletion = std::ranges::distance(fst_ref, lst_ref_rev.base());
                 // store.emplace(indel_t{_pos, std::move(allele), deletion}, std::move(_genotypes[i]));
             }
+            store.add(std::move(variant));
         }
     }
 
@@ -112,25 +116,25 @@ namespace jstmap
     void stripped_vcf_record::set_field_genotype(seqan::VcfRecord & record)
     {
         size_t total_haplotypes = seqan::length(seqan::sampleNames(*_io_context)) << 1;
-        coverage_t coverage{};
-        coverage.resize(total_haplotypes, false);
-        _genotypes.resize(_alternative_count, std::move(coverage));
+        _genotypes.resize(_alternative_count);
 
-        auto set_coverage = [&] (char const * ptr, size_t const haplotype_count) {
+        auto record_coverage = [&] (char const * ptr, size_t const haplotype_count) {
             assert(haplotype_count < total_haplotypes);
             uint32_t alt_index{};
             if (std::from_chars(ptr, ptr + 1, alt_index).ec != std::errc{})
                 throw std::runtime_error{"Extracting haplotype failed!"};
 
-            if (alt_index > 0)
-                _genotypes[--alt_index][haplotype_count] = true;
+            if (alt_index > 0) {
+                coverage_t & current_coverage = _genotypes[--alt_index];
+                current_coverage.insert(current_coverage.end(), haplotype_count);
+            }
         };
 
         size_t haplotype_count{};
         for (auto it = seqan::begin(record.genotypeInfos); it != seqan::end(record.genotypeInfos); ++it)
         {
-            set_coverage(std::addressof((*it)[0]), haplotype_count++);
-            set_coverage(std::addressof((*it)[2]), haplotype_count++);
+            record_coverage(std::addressof((*it)[0]), haplotype_count++);
+            record_coverage(std::addressof((*it)[2]), haplotype_count++);
         }
     }
 }  // namespace jstmap

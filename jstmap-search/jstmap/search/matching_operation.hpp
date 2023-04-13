@@ -37,7 +37,7 @@ namespace jstmap
                 if (libjst::window_size(matcher) == 0)
                     return;
 
-                auto search_tree = haystack | libjst::labelled<libjst::sequence_label_kind::root_path>()
+                auto search_tree = haystack | libjst::labelled()
                                             | libjst::coloured()
                                             | libjst::trim(libjst::window_size(matcher) - 1)
                                             | libjst::prune_unsupported()

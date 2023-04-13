@@ -75,12 +75,12 @@ namespace jstmap {
                 std::memcpy(tmp.data(), descriptor.data(), tmp.size());
                 dict.get<"ad"_tag>() = std::move(tmp);
             },
-            [&](libjst::node_descriptor descriptor) {
-                using data_t = std::underlying_type_t<libjst::node_state>;
+            [&](libjst::breakpoint_end descriptor) {
+                using data_t = std::underlying_type_t<libjst::breakpoint_end>;
                 static constexpr size_t max_byte_count = sizeof(data_t);
 
                 std::vector<std::byte> tmp(max_byte_count, std::byte{});
-                data_t _data = static_cast<data_t>(static_cast<libjst::node_state>(descriptor));
+                data_t _data = static_cast<data_t>(static_cast<libjst::breakpoint_end>(descriptor));
                 std::memcpy(tmp.data(), &_data, tmp.size());
                 dict.get<"rd"_tag>() = std::move(tmp);
             }
