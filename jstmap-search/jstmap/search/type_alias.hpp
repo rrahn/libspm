@@ -12,7 +12,6 @@
 #include <seqan/sequence.h>
 
 #include <libjst/sequence_tree/chunked_tree.hpp>
-#include <libjst/sequence_tree/volatile_tree.hpp>
 
 #include <jstmap/global/jstmap_types.hpp>
 #include <jstmap/global/search_query.hpp>
@@ -27,8 +26,7 @@ using bin_t = seqan::StringSet<bin_sequence_t>;
 using bucket_type = std::vector<search_query>;
 
 // Haystack types
-using jst_type = libjst::volatile_tree<rcs_store_t>;
-using chunked_jst_type = decltype(std::declval<jst_type>() | libjst::chunk(1u));
+using chunked_jst_type = libjst::chunked_tree_impl<rcs_store_t>;
 using haystack_type = std::ranges::range_reference_t<chunked_jst_type>;
 
 } // namespace jstmap

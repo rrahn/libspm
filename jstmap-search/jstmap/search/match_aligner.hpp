@@ -67,7 +67,7 @@ namespace jstmap
 
         using ref_tree_type = composed_tree_t<rcs_store_t const &,
                                                 libjst::make_volatile,
-                                                libjst::labelled<libjst::sequence_label_kind::root_path>,
+                                                libjst::labelled,
                                                 libjst::coloured,
                                                 detail::defer<libjst::trim, size_t>,
                                                 libjst::prune,
