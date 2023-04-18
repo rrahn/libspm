@@ -131,7 +131,7 @@ namespace libjst
         }
 
         constexpr bool empty() const noexcept {
-            return _data.empty();
+            return _data.none();
         }
 
         constexpr size_t size() const noexcept {
@@ -180,16 +180,16 @@ namespace libjst
 
         constexpr friend bit_coverage
         tag_invoke(std::tag_t<coverage_intersection>, bit_coverage const & first, bit_coverage const & second) {
-            if (first.get_domain() != second.get_domain())
-                throw std::domain_error{"Trying to intersect elements from different coverage domains."};
+            // if (first.get_domain() != second.get_domain())
+            //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             return bit_coverage{first._data & second._data, first.get_domain()};
         }
 
         constexpr friend bit_coverage
         tag_invoke(std::tag_t<coverage_difference>, bit_coverage first, bit_coverage const & second) {
-            if (first.get_domain() != second.get_domain())
-                throw std::domain_error{"Trying to intersect elements from different coverage domains."};
+            // if (first.get_domain() != second.get_domain())
+            //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             return bit_coverage{first._data.and_not(second._data), first.get_domain()};
         }

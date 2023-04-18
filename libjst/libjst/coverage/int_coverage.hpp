@@ -53,8 +53,9 @@ namespace libjst
             int_coverage{std::move(domain)}
         {
             std::ranges::for_each(from_list, [&] (value_type elem) {
-            if (!get_domain().is_member(elem))
-                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+                if (!get_domain().is_member(elem))
+                    throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+
                 _data.emplace_hint(_data.end(), std::move(elem));
             });
         }
@@ -63,8 +64,9 @@ namespace libjst
             int_coverage{std::move(domain)}
         {
             std::ranges::for_each(from_list, [&] (value_type elem) {
-            if (!get_domain().is_member(elem))
-                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+                if (!get_domain().is_member(elem))
+                    throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+
                 _data.emplace_hint(_data.end(), std::move(elem));
             });
         }
@@ -155,8 +157,8 @@ namespace libjst
 
         constexpr friend int_coverage
         tag_invoke(std::tag_t<coverage_intersection>, int_coverage const & first, int_coverage const & second) {
-            if (first.get_domain() != second.get_domain())
-                throw std::domain_error{"Trying to intersect elements from different coverage domains."};
+            // if (first.get_domain() != second.get_domain())
+            //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             int_coverage result{};
             std::ranges::set_intersection(first, second, std::inserter(result, result.end()));
@@ -165,8 +167,8 @@ namespace libjst
 
         constexpr friend int_coverage
         tag_invoke(std::tag_t<coverage_difference>, int_coverage const & first, int_coverage const & second) {
-            if (first.get_domain() != second.get_domain())
-                throw std::domain_error{"Trying to intersect elements from different coverage domains."};
+            // if (first.get_domain() != second.get_domain())
+            //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 
             int_coverage result{};
             std::ranges::set_difference(first, second, std::inserter(result, result.end()));
