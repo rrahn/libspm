@@ -16,7 +16,6 @@ macro(add_datasource_target)
     if(ARG_EXTRACT_COMMAND)
         set (extract_command ${ARG_EXTRACT_COMMAND})
     else ()
-        message(STATUS "Disable build for ${ARG_FILE}")
         set (extract_command "")
     endif ()
 
