@@ -88,10 +88,20 @@ namespace libjst
             return insert_impl(std::move(elem));
         }
 
+        iterator insert(const_iterator hint, value_type elem) {
+            return insert_impl(std::move(hint), std::move(elem));
+        }
+
         template <typename ...args_t>
             requires std::constructible_from<value_type, args_t...>
         iterator emplace(args_t &&... args) {
             return insert(value_type{(args_t &&)args...});
+        }
+
+        template <typename ...args_t>
+            requires std::constructible_from<value_type, args_t...>
+        iterator emplace_hint(const_iterator hint, args_t &&... args) {
+            return insert(std::move(hint), value_type{(args_t &&)args...});
         }
 
         // void erase(const_iterator first, const_iterator last = std::ranges::next(first));
@@ -147,6 +157,16 @@ namespace libjst
             _data.insert(std::ranges::next(_data.begin(), data_offset), std::move(get<1>(elem)));
             return iterator{std::move(breakend_it), get_data_iter(data_offset)};
         }
+
+        iterator insert_impl(const_iterator hint, value_type elem) {
+            // now iterator remains stable + strong exception guarantee
+            _data.reserve(_data.size() + 1);
+            auto [breakend_hint, data_hint] = std::move(hint).base();
+            auto breakend_it = _breakends.emplace_hint(std::move(breakend_hint), std::move(get<0>(elem)));
+            auto data_offset = std::ranges::distance(_breakends.begin(), breakend_it);
+            _data.insert(std::ranges::next(_data.begin(), data_offset), std::move(get<1>(elem)));
+            return iterator{std::move(breakend_it), get_data_iter(data_offset)};
+        }
     };
 
     template <typename key_t, typename value_t>
@@ -186,6 +206,14 @@ namespace libjst
             _breakend_it{std::move(other._breakend_it)},
             _data_it{std::move(other._data_it)}
         {}
+
+        constexpr std::pair<breakend_iterator, data_iterator> base() const & noexcept {
+            return {_breakend_it, _data_it};
+        }
+
+        constexpr std::pair<breakend_iterator, data_iterator> base() && noexcept {
+            return {std::move(_breakend_it), std::move(_data_it)};
+        }
 
         constexpr reference operator*() const noexcept {
             return reference{*_breakend_it, *_data_it};
