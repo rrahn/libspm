@@ -86,6 +86,7 @@ namespace libjst
         using iterator = iterator_impl<false>;
         using const_iterator = iterator_impl<true>;
         using value_type = std::iter_value_t<iterator>;
+        using source_type = source_t;
 
         compressed_multisequence() = default;
         explicit compressed_multisequence(source_t source, coverage_domain_type coverage_domain) :
@@ -113,6 +114,23 @@ namespace libjst
                 }
                 default: throw std::runtime_error{"Unkown delta kind."};
             }
+        }
+
+        // Check if given value is conflicting with some of the variants!
+        constexpr bool has_conflicts(value_type const & value) const  noexcept {
+            // find equal range in position
+            auto candidates = std::ranges::equal_range(std::ranges::next(_breakend_map.begin()),
+                                                       std::ranges::prev(_breakend_map.end()),
+                                                       libjst::low_breakend(value),
+                                                       std::ranges::less{},
+                                                       [] (auto && breakend) {
+                                                          return breakend.first.position();
+                                                       });
+            for (auto && breakend : candidates) {
+                if (!libjst::coverage_intersection(libjst::coverage(value), breakend.second).empty())
+                    return true;
+            }
+            return false;
         }
 
         // void erase(const_iterator first = end(), const_iterator last = end()) {
@@ -213,8 +231,9 @@ namespace libjst
                     position = libjst::high_breakend((fwd_value_t &&)value);
                 }
             }
-            return _breakend_map.emplace(breakend_key_type{code, position},
-                                         libjst::coverage((fwd_value_t &&) value));
+            return _breakend_map.emplace_hint(std::ranges::prev(_breakend_map.end()),
+                                              breakend_key_type{code, position},
+                                              libjst::coverage((fwd_value_t &&) value));
         }
 
         iterator insert_snv_impl(value_type value) {
