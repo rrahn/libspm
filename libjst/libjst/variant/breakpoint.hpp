@@ -129,7 +129,7 @@ namespace libjst
         }
 
         template <typename me_t>
-            requires std::same_as<std::remove_cvref_t<me_t>, me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, breakpoint>
         constexpr friend auto tag_invoke(std::tag_t<libjst::breakpoint_span>, me_t && me) noexcept
             -> value_type
         {
