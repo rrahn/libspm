@@ -28,7 +28,7 @@ rcs_store_t load_jst(std::filesystem::path const & rcs_store_path)
     rcs_store_t rcs_store{};
     {
         cereal::BinaryInputArchive input_archive{rcs_store_stream};
-       rcs_store.load(input_archive);
+        rcs_store.load(input_archive);
     }
     return rcs_store;
 }
