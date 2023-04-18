@@ -18,7 +18,7 @@
 
 #include <seqan/vcf_io.h>
 
-#include <libjst/utility/bit_vector.hpp>
+#include <libjst/coverage/range_domain.hpp>
 
 #include <jstmap/global/jstmap_types.hpp>
 
@@ -30,6 +30,8 @@ namespace jstmap
         using alternative_t = std::string;
         using genotypes_t = std::vector<coverage_t>;
         using position_t = uint32_t;
+        using coverage_value_t = typename coverage_t::value_type;
+        using domain_t = libjst::range_domain<coverage_value_t>;
 
         seqan::VcfIOContext<> const *_io_context{};
 
@@ -37,6 +39,7 @@ namespace jstmap
         std::string _ref{};
         std::vector<alternative_t> _alt{};
         genotypes_t _genotypes{};
+        domain_t _domain{};
         position_t _pos{};
         int16_t _chrom{};
         uint8_t _alternative_count{};
@@ -46,7 +49,9 @@ namespace jstmap
         using intermediate_variant_t = std::tuple<int32_t, std::string, int32_t, coverage_t>;
 
         stripped_vcf_record() = default;
-        stripped_vcf_record(seqan::VcfRecord &, seqan::VcfIOContext<> const &);
+        stripped_vcf_record(seqan::VcfRecord &,
+                            seqan::VcfIOContext<> const &,
+                            domain_t);
 
         std::string_view contig_name() const noexcept;
         genotypes_t const & field_genotype() const noexcept;

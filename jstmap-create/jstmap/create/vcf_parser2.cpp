@@ -90,7 +90,7 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
     seqan::VcfRecord record{};
     seqan::readRecord(record, vcf_file);
     reference_t reference = reference_for_record(reference_file, vcf_file, record);
-    size_t haplotype_count = seqan::length(seqan::sampleNames(seqan::context(vcf_file))) * 2;
+    uint32_t haplotype_count = seqan::length(seqan::sampleNames(seqan::context(vcf_file))) * 2;
     std::cout << "haplotype_count: " << haplotype_count << "\n";
 
     log(verbosity_level::verbose,
@@ -104,11 +104,14 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
     start = std::chrono::high_resolution_clock::now();
     rcs_store_t rcs_store{std::move(reference), haplotype_count};
     std::cout << "Size: " << rcs_store.size() << "\n";
-
+    size_t record_count{0};
     while (!seqan::atEnd(vcf_file))
     {
+        if (record_count++ % 1000 == 0) {
+            log_debug("Processing record: ", record_count);
+        }
         seqan::readRecord(record, vcf_file);
-        stripped_vcf_record tmp_record{record, seqan::context(vcf_file)};
+        stripped_vcf_record tmp_record{record, seqan::context(vcf_file), rcs_store.variants().coverage_domain()};
         tmp_record.alternatives(rcs_store);
         // std::ranges::copy(tmp_record.alternatives(), std::back_inserter(intermediate_variant_store));
     }
