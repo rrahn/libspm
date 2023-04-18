@@ -131,7 +131,7 @@ namespace libjst
         }
 
         constexpr bool empty() const noexcept {
-            return _data.empty();
+            return _data.none();
         }
 
         constexpr size_t size() const noexcept {

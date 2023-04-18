@@ -53,8 +53,9 @@ namespace libjst
             int_coverage{std::move(domain)}
         {
             std::ranges::for_each(from_list, [&] (value_type elem) {
-            if (!get_domain().is_member(elem))
-                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+                if (!get_domain().is_member(elem))
+                    throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+
                 _data.emplace_hint(_data.end(), std::move(elem));
             });
         }
@@ -63,8 +64,9 @@ namespace libjst
             int_coverage{std::move(domain)}
         {
             std::ranges::for_each(from_list, [&] (value_type elem) {
-            if (!get_domain().is_member(elem))
-                throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+                if (!get_domain().is_member(elem))
+                    throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};
+
                 _data.emplace_hint(_data.end(), std::move(elem));
             });
         }
