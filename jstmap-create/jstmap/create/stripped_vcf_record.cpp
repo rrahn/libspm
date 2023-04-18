@@ -23,8 +23,10 @@
 namespace jstmap
 {
     stripped_vcf_record::stripped_vcf_record(seqan::VcfRecord & record,
-                                             seqan::VcfIOContext<> const & io_context) :
-        _io_context{std::addressof(io_context)}
+                                             seqan::VcfIOContext<> const & io_context,
+                                             domain_t domain) :
+        _io_context{std::addressof(io_context)},
+        _domain{std::move(domain)}
     {
         set_field_chrom(record);
         set_field_pos(record);
@@ -62,7 +64,11 @@ namespace jstmap
                 // libjst::variant_deletion_t<indel_t> deletion = std::ranges::distance(fst_ref, lst_ref_rev.base());
                 // store.emplace(indel_t{_pos, std::move(allele), deletion}, std::move(_genotypes[i]));
             }
-            store.add(std::move(variant));
+            if (!store.variants().has_conflicts(variant)) {
+                store.add(std::move(variant));
+            } else {
+                std::cout << "CONFLICT\n";
+            }
         }
     }
 
@@ -116,7 +122,7 @@ namespace jstmap
     void stripped_vcf_record::set_field_genotype(seqan::VcfRecord & record)
     {
         size_t total_haplotypes = seqan::length(seqan::sampleNames(*_io_context)) << 1;
-        _genotypes.resize(_alternative_count);
+        _genotypes.resize(_alternative_count, coverage_t{_domain});
 
         auto record_coverage = [&] (char const * ptr, size_t const haplotype_count) {
             assert(haplotype_count < total_haplotypes);
