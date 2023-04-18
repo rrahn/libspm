@@ -54,7 +54,7 @@ TEST_F(compressed_multisequence_test, insert_snv) {
     using value_type = std::ranges::range_value_t<test_type>;
     coverage_type test_coverage{{0, 1, 2}, multisequence.coverage_domain()};
 
-    auto it = multisequence.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
+    auto it = multisequence.insert(value_type{libjst::breakpoint{3, 1}, "T"_dna4, test_coverage});
     EXPECT_EQ(libjst::low_breakend(*it), 3);
     EXPECT_EQ(libjst::high_breakend(*it), 4);
     EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(*it), "T"_dna4));
@@ -117,10 +117,10 @@ TEST_F(compressed_multisequence_test, iterate) {
     { // multiple variants
         test_type rcms{src, domain};
         coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
-        rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
-        rcms.insert(value_type{libjst::breakpoint{5, 6}, "T"_dna4, test_coverage});
-        rcms.insert(value_type{libjst::breakpoint{1, 2}, "T"_dna4, test_coverage});
-        rcms.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
+        rcms.insert(value_type{libjst::breakpoint{9, 1}, "T"_dna4, test_coverage});
+        rcms.insert(value_type{libjst::breakpoint{5, 1}, "T"_dna4, test_coverage});
+        rcms.insert(value_type{libjst::breakpoint{1, 1}, "T"_dna4, test_coverage});
+        rcms.insert(value_type{libjst::breakpoint{3, 1}, "T"_dna4, test_coverage});
 
         auto it = rcms.begin();
         EXPECT_EQ(libjst::low_breakend(*it), 0);
@@ -183,7 +183,7 @@ TEST_F(compressed_multisequence_test, empty) {
     EXPECT_FALSE(std::ranges::empty(rcms));
 
     coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
-    rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{9, 1}, "T"_dna4, test_coverage});
 
     EXPECT_FALSE(std::ranges::empty(rcms));
 }
@@ -199,12 +199,31 @@ TEST_F(compressed_multisequence_test, size) {
     EXPECT_EQ(rcms.size(), 2u);
 
     coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
-    rcms.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{9, 1}, "T"_dna4, test_coverage});
     EXPECT_EQ(rcms.size(), 3u);
-    rcms.insert(value_type{libjst::breakpoint{5, 6}, "T"_dna4, test_coverage});
-    rcms.insert(value_type{libjst::breakpoint{1, 2}, "T"_dna4, test_coverage});
-    rcms.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{5, 1}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{1, 1}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{3, 1}, "T"_dna4, test_coverage});
     EXPECT_EQ(rcms.size(), 6u);
+}
+
+TEST_F(compressed_multisequence_test, has_conflicts) {
+    source_type src{"AAAAAAAAAAAAAAA"_dna4};
+    using value_type = std::ranges::range_value_t<test_type>;
+
+    test_type rcms{src, coverage_domain_type{0, 10}};
+    coverage_type test_coverage{{0, 1, 2}, rcms.coverage_domain()};
+    rcms.insert(value_type{libjst::breakpoint{9, 1}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{5, 1}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{1, 1}, "T"_dna4, test_coverage});
+    rcms.insert(value_type{libjst::breakpoint{3, 1}, "T"_dna4, test_coverage});
+
+    EXPECT_FALSE((rcms.has_conflicts(value_type{libjst::breakpoint{0, 1}, "T"_dna4, test_coverage})));
+    EXPECT_FALSE((rcms.has_conflicts(value_type{libjst::breakpoint{14, 1}, "T"_dna4, test_coverage})));
+    EXPECT_FALSE((rcms.has_conflicts(value_type{libjst::breakpoint{2, 1}, "T"_dna4, test_coverage})));
+    EXPECT_FALSE((rcms.has_conflicts(value_type{libjst::breakpoint{1, 1}, "T"_dna4, coverage_type{{3, 4, 5}, rcms.coverage_domain()}})));
+    EXPECT_TRUE((rcms.has_conflicts(value_type{libjst::breakpoint{1, 1}, "T"_dna4, coverage_type{{1, 3, 4, 5}, rcms.coverage_domain()}})));
+    EXPECT_TRUE((rcms.has_conflicts(value_type{libjst::breakpoint{9, 1}, "T"_dna4, coverage_type{{2, 9}, rcms.coverage_domain()}})));
 }
 
 TEST_F(compressed_multisequence_test, serialise) {
@@ -216,10 +235,10 @@ TEST_F(compressed_multisequence_test, serialise) {
 
     test_type rcms_out{src, coverage_domain_type{0, 10}};
     coverage_type test_coverage{{0, 1, 2}, rcms_out.coverage_domain()};
-    rcms_out.insert(value_type{libjst::breakpoint{9, 10}, "T"_dna4, test_coverage});
-    rcms_out.insert(value_type{libjst::breakpoint{5, 6}, "T"_dna4, test_coverage});
-    rcms_out.insert(value_type{libjst::breakpoint{1, 2}, "T"_dna4, test_coverage});
-    rcms_out.insert(value_type{libjst::breakpoint{3, 4}, "T"_dna4, test_coverage});
+    rcms_out.insert(value_type{libjst::breakpoint{9, 1}, "T"_dna4, test_coverage});
+    rcms_out.insert(value_type{libjst::breakpoint{5, 1}, "T"_dna4, test_coverage});
+    rcms_out.insert(value_type{libjst::breakpoint{1, 1}, "T"_dna4, test_coverage});
+    rcms_out.insert(value_type{libjst::breakpoint{3, 1}, "T"_dna4, test_coverage});
 
     std::stringstream buffer{};
     { // writing to output string stream
