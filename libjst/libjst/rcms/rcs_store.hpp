@@ -88,6 +88,11 @@ namespace libjst
             return true;
         }
 
+        constexpr void reserve(size_type const new_capacity)
+        {
+            _variant_map.reserve(new_capacity);
+        }
+
         // ----------------------------------------------------------------------------
         // Accessor
         // ----------------------------------------------------------------------------
