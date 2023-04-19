@@ -110,10 +110,8 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
         if (record_count++ % 1000 == 0) {
             log_debug("Processing record: ", record_count);
         }
-        seqan::readRecord(record, vcf_file);
-        stripped_vcf_record tmp_record{record, seqan::context(vcf_file), rcs_store.variants().coverage_domain()};
+        stripped_vcf_record tmp_record{vcf_file, rcs_store.variants().coverage_domain()};
         tmp_record.alternatives(rcs_store);
-        // std::ranges::copy(tmp_record.alternatives(), std::back_inserter(intermediate_variant_store));
     }
 
     log(verbosity_level::verbose,

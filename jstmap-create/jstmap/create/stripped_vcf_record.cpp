@@ -22,18 +22,6 @@
 
 namespace jstmap
 {
-    stripped_vcf_record::stripped_vcf_record(seqan::VcfRecord & record,
-                                             seqan::VcfIOContext<> const & io_context,
-                                             domain_t domain) :
-        _io_context{std::addressof(io_context)},
-        _domain{std::move(domain)}
-    {
-        set_field_chrom(record);
-        set_field_pos(record);
-        set_field_ref(record);
-        set_field_alt(record);
-        set_field_genotype(record);
-    }
 
     void stripped_vcf_record::alternatives(rcs_store_t & store) const
     {
@@ -77,36 +65,29 @@ namespace jstmap
         return _genotypes;
     }
 
-    std::string_view stripped_vcf_record::contig_name() const noexcept
+    void stripped_vcf_record::set_field_chrom(std::string_view field)
     {
-        assert(_io_context != nullptr);
-        assert(_chrom < seqan::length(seqan::contigNames(*_io_context)));
-        return {seqan::toCString(seqan::contigNames(*_io_context)[_chrom])};
+        _chrom_name.assign(field.begin(), field.end());
     }
 
-    void stripped_vcf_record::set_field_chrom(seqan::VcfRecord & record) noexcept
+    void stripped_vcf_record::set_field_pos(std::string_view field)
     {
-        _chrom = record.rID;
+        if (auto res = std::from_chars(field.data(), field.data() + field.size(), _pos); res.ptr == field.data())
+            throw std::make_error_code(res.ec);
+
+        --_pos; // correct 1-based offset.
     }
 
-    void stripped_vcf_record::set_field_pos(seqan::VcfRecord & record) noexcept
+    void stripped_vcf_record::set_field_ref(std::string_view field)
     {
-        _pos = record.beginPos;
+        _ref.assign(field.begin(), field.end());
     }
 
-    void stripped_vcf_record::set_field_ref(seqan::VcfRecord & record)
+    void stripped_vcf_record::set_field_alt(std::string_view field)
     {
-        _ref.assign(seqan::begin(record.ref, seqan::Standard{}), seqan::end(record.ref, seqan::Standard{}));
-    }
-
-    void stripped_vcf_record::set_field_alt(seqan::VcfRecord & record)
-    {
-        // using std::swap;
-        // swap(_alt, record.alt);
-
         _alternative_count = 1;
-        auto first = seqan::begin(record.alt);
-        for (auto it = seqan::begin(record.alt); it != seqan::end(record.alt); ++it) { // go over alternative
+        auto first = field.begin();
+        for (auto it = field.begin(); it != field.end(); ++it) { // go over alternative
             if (*it == ',') { // found a new alternative
                 _alt.emplace_back(first, it); // emplace the alternative
                 ++_alternative_count;
@@ -115,32 +96,51 @@ namespace jstmap
             }
         }
         // emplace last element
-        assert(first != seqan::end(record.alt));
-        _alt.emplace_back(first, seqan::end(record.alt)); // emplace the alternative
+        assert(first != field.end());
+        _alt.emplace_back(first, field.end()); // emplace the alternative
     }
 
-    void stripped_vcf_record::set_field_genotype(seqan::VcfRecord & record)
+    void stripped_vcf_record::set_field_genotype(std::string_view genotypes)
     {
-        size_t total_haplotypes = seqan::length(seqan::sampleNames(*_io_context)) << 1;
         _genotypes.resize(_alternative_count, coverage_t{_domain});
 
-        auto record_coverage = [&] (char const * ptr, size_t const haplotype_count) {
-            assert(haplotype_count < total_haplotypes);
-            uint32_t alt_index{};
-            if (std::from_chars(ptr, ptr + 1, alt_index).ec != std::errc{})
+        auto record_coverage = [&] (auto alt_first, auto alt_last, size_t const haplotype_idx) {
+            assert(haplotype_idx < _haplotype_count);
+            int32_t alt_index{};
+            if (std::from_chars(std::to_address(alt_first), std::to_address(alt_last), alt_index).ec != std::errc{})
                 throw std::runtime_error{"Extracting haplotype failed!"};
 
             if (alt_index > 0) {
                 coverage_t & current_coverage = _genotypes[--alt_index];
-                current_coverage.insert(current_coverage.end(), haplotype_count);
+                current_coverage.insert(current_coverage.end(), haplotype_idx);
             }
         };
 
-        size_t haplotype_count{};
-        for (auto it = seqan::begin(record.genotypeInfos); it != seqan::end(record.genotypeInfos); ++it)
-        {
-            record_coverage(std::addressof((*it)[0]), haplotype_count++);
-            record_coverage(std::addressof((*it)[2]), haplotype_count++);
+        size_t haplotype_idx{};
+        for (std::ptrdiff_t sample_idx = 0; sample_idx < _sample_count; ++sample_idx) {
+            // TODO: determine ploidy
+            std::string_view genotype = read_field(genotypes);
+            auto genotype_it = genotype.begin();
+            // TODO: fix if more than 9 alternatives per position.
+            record_coverage(genotype_it, genotype_it + 1, haplotype_idx++);
+            genotype_it += 2;
+            record_coverage(genotype_it, genotype_it + 1, haplotype_idx++);
         }
     }
+
+    std::string_view stripped_vcf_record::read_field(std::string_view & buffer) noexcept {
+        auto delimiter_ptr = std::memchr(std::to_address(buffer.begin()), '\t', buffer.size());
+        if (delimiter_ptr == nullptr) {
+            std::string_view field{};
+            std::swap(buffer, field);
+            return field;
+        }
+
+        char const * field_end = reinterpret_cast<char const *>(delimiter_ptr);
+        std::ptrdiff_t field_span = field_end - buffer.data();
+        std::string_view field{buffer.begin(), buffer.begin() + field_span};
+        buffer = buffer.substr(field_span + 1);
+        return field;
+    }
+
 }  // namespace jstmap
