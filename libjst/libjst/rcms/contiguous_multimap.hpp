@@ -13,6 +13,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bit>
 #include <concepts>
 
 #include <seqan3/core/concept/cereal.hpp>
@@ -81,6 +82,7 @@ namespace libjst
         using iterator = iterator_impl<false>;
         using const_iterator = iterator_impl<true>;
         using value_type = std::iter_value_t<iterator>;
+        using size_type = typename data_type::size_type;
 
         constexpr contiguous_multimap() = default;
 
@@ -106,6 +108,11 @@ namespace libjst
 
         // void erase(const_iterator first, const_iterator last = std::ranges::next(first));
         // iterator find(key_type);
+
+        constexpr void reserve(size_type const new_capacity) {
+            _breakends.reserve(new_capacity);
+            _data.reserve(new_capacity);
+        }
 
         iterator begin() noexcept {
             return iterator{_breakends.begin(), get_data_iter(0)};
@@ -151,7 +158,7 @@ namespace libjst
 
         iterator insert_impl(value_type elem) {
             // now iterator remains stable + strong exception guarantee
-            _data.reserve(_data.size() + 1);
+            reserve(std::bit_ceil(_data.size() + 1));
             auto breakend_it = _breakends.emplace(std::move(get<0>(elem)));
             auto data_offset = std::ranges::distance(_breakends.begin(), breakend_it);
             _data.insert(std::ranges::next(_data.begin(), data_offset), std::move(get<1>(elem)));
@@ -160,7 +167,7 @@ namespace libjst
 
         iterator insert_impl(const_iterator hint, value_type elem) {
             // now iterator remains stable + strong exception guarantee
-            _data.reserve(_data.size() + 1);
+            reserve(std::bit_ceil(_data.size() + 1));
             auto [breakend_hint, data_hint] = std::move(hint).base();
             auto breakend_it = _breakends.emplace_hint(std::move(breakend_hint), std::move(get<0>(elem)));
             auto data_offset = std::ranges::distance(_breakends.begin(), breakend_it);

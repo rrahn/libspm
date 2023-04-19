@@ -96,6 +96,11 @@ public:
     {
         return _elements.max_size();
     }
+
+    constexpr void reserve(size_type const new_capacity)
+    {
+        _elements.reserve(new_capacity);
+    }
     //!\}
 
     /*!\name Modifiers
