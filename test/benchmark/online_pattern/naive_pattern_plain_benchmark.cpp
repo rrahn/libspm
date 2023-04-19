@@ -55,28 +55,28 @@ static void naive_pattern(benchmark::State & state, args_t && ...args)
 }
 
 BENCHMARK_CAPTURE(naive_pattern,
-                  online_pattern_linear_needle32,
-                  DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
+                  online_pattern_plain_needle32,
+                  "/home/rahn/workspace/jstmap/build/bench/Release/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
                   DATADIR"needle32.fa")
                     ->MeasureProcessCPUTime()
                     ->UseRealTime();
 
 BENCHMARK_CAPTURE(naive_pattern,
-                  online_pattern_linear_needle64,
+                  online_pattern_plain_needle64,
                   DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
                   DATADIR"needle64.fa")
                     ->MeasureProcessCPUTime()
                     ->UseRealTime();
 
 BENCHMARK_CAPTURE(naive_pattern,
-                  online_pattern_linear_needle128,
+                  online_pattern_plain_needle128,
                   DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
                   DATADIR"needle128.fa")
                     ->MeasureProcessCPUTime()
                     ->UseRealTime();
 
 BENCHMARK_CAPTURE(naive_pattern,
-                  online_pattern_linear_needle256,
+                  online_pattern_plain_needle256,
                   DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
                   DATADIR"needle256.fa")
                     ->MeasureProcessCPUTime()
