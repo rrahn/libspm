@@ -438,25 +438,6 @@ namespace libjst
             });
         }
 
-// return-statement with no value, in function returning
-// std::__detail::__variant::__visit_result_t<
-//     seqan3::detail::multi_invocable<
-//         libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::
-//             delta_proxy<
-//                 libjst::contiguous_multimap<
-//                     libjst::packed_breakend_key<unsigned int>,
-//                     libjst::bit_coverage<unsigned int> >::iterator_impl<true> >::
-//             get_breakend_mate(libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::indel_key_type) const::
-//                 <lambda(const libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::deletion_type&)>,
-//                     libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::
-//                         delta_proxy<libjst::contiguous_multimap<libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int> >::iterator_impl<true> >::
-//             get_breakend_mate(libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::indel_key_type) const::
-//                 <lambda(const libjst::compressed_multisequence<std::vector<seqan::alphabet_adaptor<seqan3::dna4> >, libjst::bit_coverage<unsigned int> >::insertion_type&)> >,
-//                     const std::variant<libjst::deletion_element<libjst::contiguous_multimap<libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int> >::iterator_impl<false> >,
-//                                        libjst::insertion_element<std::vector<seqan::alphabet_adaptor<seqan3::dna4>, std::allocator<seqan::alphabet_adaptor<seqan3::dna4> > > > >&>
-
-// aka libjst::contiguous_multimap_proxy<const libjst::packed_breakend_key<unsigned int>, libjst::bit_coverage<unsigned int>&>
-
     private:
 
         constexpr breakend_reference_t get_breakend_mate(indel_key_type key) const noexcept {
@@ -532,13 +513,18 @@ namespace libjst
             });
         }
 
+        template <typename result_t>
+        using make_result_t = std::conditional_t<std::is_rvalue_reference_v<result_t>,
+                                                 std::remove_reference_t<result_t>,
+                                                 result_t>;
+
         template <typename cpo_t>
-            requires std::tag_invocable<cpo_t, breakpoint &&>
+            requires std::tag_invocable<cpo_t, breakpoint>
         friend constexpr auto tag_invoke(cpo_t cpo, delta_proxy me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, breakpoint &&>)
-            -> std::tag_invoke_result_t<cpo_t, breakpoint &&>
+            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, breakpoint>)
+            -> make_result_t<std::tag_invoke_result_t<cpo_t, breakpoint>>
         {
-            return cpo(libjst::get_breakpoint(me));
+            return std::tag_invoke(cpo, libjst::get_breakpoint(std::move(me)));
         }
 
         friend constexpr breakpoint tag_invoke(std::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
