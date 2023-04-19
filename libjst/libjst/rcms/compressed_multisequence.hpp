@@ -87,6 +87,7 @@ namespace libjst
         using const_iterator = iterator_impl<true>;
         using value_type = std::iter_value_t<iterator>;
         using source_type = source_t;
+        using size_type = typename breakend_map_type::size_type;
 
         compressed_multisequence() = default;
         explicit compressed_multisequence(source_t source, coverage_domain_type coverage_domain) :
@@ -156,6 +157,10 @@ namespace libjst
 
         constexpr size_t size() const noexcept {
             return std::ranges::size(_breakend_map);
+        }
+
+        constexpr void reserve(size_type const new_capacity) {
+            return _breakend_map.reserve(new_capacity);
         }
 
         constexpr coverage_domain_type const & coverage_domain() const noexcept {
