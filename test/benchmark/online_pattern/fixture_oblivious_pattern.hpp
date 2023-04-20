@@ -39,15 +39,16 @@ namespace just::bench
         template <typename matcher_t>
         void run(::benchmark::State & state, matcher_t matcher)
         {
-            auto tree = libjst::make_volatile(this->store()) | libjst::labelled()
-                                                             | libjst::coloured()
-                                                             | libjst::trim(libjst::window_size(matcher) - 1)
-                                                             | libjst::prune()
-                                                             | libjst::left_extend(libjst::window_size(matcher) - 1)
-                                                             | libjst::merge();
+            auto tree_closure = libjst::labelled() | libjst::coloured()
+                                                   | libjst::trim(libjst::window_size(matcher) - 1)
+                                                   | libjst::prune()
+                                                   | libjst::left_extend(libjst::window_size(matcher) - 1)
+                                                   | libjst::merge();
 
-            base_t::run(state, matcher, [tree] () { return libjst::tree_traverser_base{tree}; });
-            this->processed_bytes = base_t::total_bytes(tree);
+            base_t::run(state, matcher, tree_closure, [] (auto const & tree) {
+                return libjst::tree_traverser_base{tree};
+            });
+            this->processed_bytes = base_t::total_bytes(tree_closure);
         }
     };
 }  // namespace just::bench

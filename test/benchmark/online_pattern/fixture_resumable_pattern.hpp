@@ -32,13 +32,13 @@ namespace just::bench
         using state_t = libjst::matcher_state_t<matcher_t>;
         using state_stack_t = std::stack<state_t>;
 
-        matcher_t & _matcher;
+        matcher_t _matcher{};
         state_stack_t _states{};
 
     public:
 
-        constexpr explicit state_manager(matcher_t & matcher) noexcept :
-            _matcher{matcher},
+        constexpr explicit state_manager(matcher_t matcher) noexcept :
+            _matcher{std::move(matcher)},
             _states{}
         {}
 
@@ -66,19 +66,17 @@ namespace just::bench
         template <typename matcher_t>
         void run(::benchmark::State & state, matcher_t matcher)
         {
+            auto tree_closure = libjst::labelled() | libjst::coloured()
+                                                   | libjst::trim(libjst::window_size(matcher) - 1)
+                                                   | libjst::prune()
+                                                   | libjst::merge();
             state_manager manager{matcher};
-            auto tree = libjst::make_volatile(this->store()) | libjst::labelled()
-                                                             | libjst::coloured()
-                                                             | libjst::trim(libjst::window_size(matcher) - 1)
-                                                             | libjst::prune()
-                                                             | libjst::merge();
-
-            base_t::run(state, matcher, [&, tree] () {
+            base_t::run(state, matcher, tree_closure, [manager] (auto const & tree) mutable {
                 libjst::tree_traverser_base path{tree};
                 path.subscribe(manager);
                 return path;
             });
-            this->processed_bytes = base_t::total_bytes(tree);
+            this->processed_bytes = base_t::total_bytes(tree_closure);
         }
     };
 }  // namespace just::bench

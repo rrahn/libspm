@@ -7,6 +7,8 @@
 
 #include <benchmark/benchmark.h>
 
+#include <thread>
+
 #include <libjst/matcher/shiftor_matcher.hpp>
 
 #include "fixture_oblivious_pattern.hpp"
@@ -17,7 +19,9 @@ BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern, shiftor, capture<&chr22_n
     run(state, libjst::shiftor_matcher(needle()));
 }
 
-BENCHMARK_REGISTER_F(fixture_oblivious_pattern, shiftor)->Range(1,20);
+BENCHMARK_REGISTER_F(fixture_oblivious_pattern, shiftor)
+    ->RangeMultiplier(2)->Range(1,std::thread::hardware_concurrency())
+    ->UseRealTime();
 
 } // namespace just::bench
 

@@ -14,7 +14,10 @@
 
 #include <benchmark/benchmark.h>
 
+#include <omp.h>
+
 #include <functional>
+#include <ranges>
 #include <stack>
 
 #include <seqan3/test/performance/units.hpp>
@@ -22,7 +25,9 @@
 #include <jstmap/global/load_jst.hpp>
 #include <jstmap/search/load_queries.hpp>
 
+#include <libjst/sequence_tree/chunked_tree.hpp>
 #include <libjst/sequence_tree/stats.hpp>
+#include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
 #include "fixture_config.hpp"
@@ -76,24 +81,47 @@ namespace just::bench
             return _rcs_store;
         }
 
-        template <typename tree_t>
-        inline size_t total_bytes(tree_t const & tree) noexcept {
-            return libjst::stats(tree).symbol_count;
+        template <typename tree_closure_t>
+        inline size_t total_bytes(tree_closure_t && tree_closure) noexcept {
+            return libjst::stats(tree_closure(store() | libjst::make_volatile())).symbol_count;
         }
 
-        template <typename matcher_t, typename traverser_factory_t>
-        void run(::benchmark::State & state, matcher_t & matcher, traverser_factory_t && make_traverser) {
+        template <typename matcher_t, typename tree_closure_t, typename traverser_factory_t>
+        void run(::benchmark::State & state,
+                 matcher_t & matcher,
+                 tree_closure_t && closure,
+                 traverser_factory_t && make_traverser)
+        {
+            auto trees = libjst::chunk(store(), get_chunk_size(state.range(0)))
+                       | std::views::transform([&] (auto && tree) { return closure(tree); });
 
-            size_t hit_count{};
+            int32_t hit_count{};
             for (auto _ : state)
             {
-                hit_count = 0;
-                auto traverser = make_traverser();
+                benchmark::DoNotOptimize(hit_count = execute(trees, matcher, (traverser_factory_t &&) make_traverser));
+                benchmark::ClobberMemory();
+            }
+        }
+
+        constexpr size_t get_chunk_size(size_t const thread_count) noexcept {
+            return (std::ranges::size(store().source()) + thread_count - 1) / thread_count;
+        }
+
+        template <typename trees_t, typename matcher_t, typename traverser_factory_t>
+        static int32_t execute(trees_t && trees, matcher_t & matcher, traverser_factory_t && make_traverser) {
+            int32_t hit_count = 0;
+            std::ptrdiff_t const chunk_count = std::ranges::ssize(trees);
+
+            #pragma omp parallel for shared(trees), firstprivate(matcher, make_traverser), schedule(static), reduction(+:hit_count)
+            for (std::ptrdiff_t chunk = 0; chunk < chunk_count; ++chunk) {
+                auto tree = trees[chunk];
+                auto traverser = make_traverser(tree);
                 for (auto it = traverser.begin(); it != traverser.end(); ++it) {
                     auto && cargo = *it;
                     matcher(cargo.sequence(), [&] (auto const &) { ++hit_count; });
                 }
             }
+            return hit_count;
         }
     };
 }  // namespace just::bench

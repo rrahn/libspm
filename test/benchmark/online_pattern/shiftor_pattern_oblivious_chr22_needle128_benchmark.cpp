@@ -13,9 +13,13 @@
 
 namespace just::bench {
 
-BENCHMARK_TEMPLATE_F(fixture_oblivious_pattern, shiftor, capture<&chr22_needle128>)(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern, shiftor, capture<&chr22_needle128>)(benchmark::State& state) {
     run(state, libjst::shiftor_matcher(needle()));
 }
+
+BENCHMARK_REGISTER_F(fixture_oblivious_pattern, shiftor)
+    ->RangeMultiplier(2)->Range(1,std::thread::hardware_concurrency())
+    ->UseRealTime();
 } // namespace just::bench
 
 BENCHMARK_MAIN();
