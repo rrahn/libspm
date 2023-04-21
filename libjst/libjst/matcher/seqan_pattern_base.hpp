@@ -44,7 +44,7 @@ namespace libjst
             compatible_haystack_t seqan_haystack =
                 jst::contrib::make_seqan_container(std::views::all((haystack_t &&)haystack));
 
-            seqan::Finder<compatible_haystack_t> finder{seqan_haystack};
+            auto finder = to_derived(this)->make_finder(seqan_haystack);
 
             while (find_impl(finder, to_derived(this)->get_pattern())) {
                 callback(finder);
@@ -58,6 +58,12 @@ namespace libjst
             return std::apply([&] (auto && ...custom_args) {
                 return find(finder, pattern, (decltype(custom_args)) custom_args...);
             }, to_derived(this)->custom_find_arguments());
+        }
+
+        template <typename haystack_t>
+        constexpr auto make_finder(haystack_t & haystack) const noexcept
+        {
+            return seqan::Finder<haystack_t>{haystack};
         }
 
         constexpr auto & get_pattern() noexcept
