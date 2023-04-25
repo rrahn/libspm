@@ -29,7 +29,7 @@ namespace libjst
     class compressed_multisequence_reversed {
     private:
 
-        using wrapped_source_t = decltype(std::declval<rcms_t const &>().source());
+        using wrapped_source_t = typename rcms_t::source_type;
         using wrapped_iterator = std::ranges::iterator_t<rcms_t const &>;
         using coverage_type = libjst::variant_coverage_t<std::iter_reference_t<wrapped_iterator>>;
         using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
@@ -37,11 +37,11 @@ namespace libjst
         class iterator_impl;
         class delta_proxy;
 
-        rcms_t const & _wrappee;
+        std::reference_wrapper<rcms_t const> _wrappee;
 
     public:
 
-        using source_type = std::ranges::reverse_view<std::views::all_t<wrapped_source_t>>;
+        using source_type = std::ranges::reverse_view<wrapped_source_t>;
         using iterator = iterator_impl;
         using value_type = std::iter_value_t<iterator>;
 
@@ -52,23 +52,23 @@ namespace libjst
         }
 
         constexpr source_type source() const noexcept {
-            return _wrappee.source() | std::views::all | std::views::reverse;
+            return _wrappee.get().source() | std::views::reverse;
         }
 
         constexpr size_t size() const noexcept {
-            return _wrappee.size();
+            return _wrappee.get().size();
         }
 
         constexpr coverage_domain_type const & coverage_domain() const noexcept {
-            return _wrappee.coverage_domain();
+            return _wrappee.get().coverage_domain();
         }
 
         constexpr iterator begin() const noexcept {
-            return iterator{_wrappee.end(), std::ranges::size(source())};
+            return iterator{_wrappee.get().end(), std::ranges::size(source())};
         }
 
         constexpr iterator end() const noexcept {
-            return iterator{_wrappee.begin(), std::ranges::size(source())};
+            return iterator{_wrappee.get().begin(), std::ranges::size(source())};
         }
 
     private:
@@ -186,13 +186,33 @@ namespace libjst
 
         delta_proxy() = delete;
 
-        constexpr breakpoint_end get_breakpoint_end() const noexcept {
-            breakpoint_end tmp = (*_reverse_it).get_breakpoint_end();
-            return (tmp == breakpoint_end::low) ? breakpoint_end::high : breakpoint_end::low;
+        constexpr auto get_key() const noexcept -> decltype((*_reverse_it).get_key()) {
+            return (*_reverse_it).get_key();
         }
 
-        constexpr std::optional<wrapped_iterator> jump_to_mate() const noexcept {
-            return (*_reverse_it).jump_to_mate();
+        constexpr breakpoint_end get_breakpoint_end() const noexcept {
+            auto breakend_key = get_key(); // the pointed to object!
+            return breakend_key.visit(seqan3::detail::multi_invocable{
+                [pos = breakend_key.position()] (indel_breakend_kind code) {
+                    switch (code) {
+                        case indel_breakend_kind::deletion_low: return breakpoint_end::high;
+                        case indel_breakend_kind::deletion_high: return breakpoint_end::low;
+                        case indel_breakend_kind::nil: return (pos == 0) ? breakpoint_end::high : breakpoint_end::low;
+                        default: return breakpoint_end::low;
+                    }
+                },
+                [] (...) {
+                    return breakpoint_end::low;
+                }
+            });
+        }
+
+        // TODO: We can not remove just delegate to the underlying function!
+        constexpr std::optional<iterator_impl> jump_to_mate() const noexcept {
+            if (auto mate = (*_reverse_it).jump_to_mate(); mate.has_value()) {
+                return iterator_impl{std::move(*mate), _source_size};
+            }
+            return std::nullopt;
         }
 
     private:
@@ -222,9 +242,10 @@ namespace libjst
             return me._source_size - libjst::position(*me._reverse_it);
         }
 
-        template <typename cpo_t>
-            requires std::tag_invocable<cpo_t, std::iter_reference_t<wrapped_iterator>>
-        friend constexpr auto tag_invoke(cpo_t cpo, delta_proxy me)
+        template <typename cpo_t, typename me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, delta_proxy> &&
+                     std::tag_invocable<cpo_t, std::iter_reference_t<wrapped_iterator>>
+        friend constexpr auto tag_invoke(cpo_t cpo, me_t && me)
             noexcept(std::is_nothrow_tag_invocable_v<cpo_t, std::iter_reference_t<wrapped_iterator>>)
             -> std::tag_invoke_result_t<cpo_t, std::iter_reference_t<wrapped_iterator>>
         {

@@ -32,10 +32,10 @@ std::tuple<size_t, uint8_t, seqan3::interleaved_bloom_filter<>> load_index(std::
     return std::tuple{bin_size, kmer_size, std::move(ibf)};
 }
 
-std::pair<size_t, std::vector<bucket_type>>
+std::pair<size_t, std::vector<search_queries_type>>
 filter_queries(std::vector<search_query> const & queries, search_options const & options)
 {
-    using bucket_list_t = std::vector<bucket_type>;
+    using bucket_list_t = std::vector<search_queries_type>;
     auto [bin_size, kmer_size, ibf] = load_index(options.index_input_file_path);
     log_debug("IBF bin_size:", bin_size);
     log_debug("IBF kmer_size:", kmer_size);
@@ -86,7 +86,7 @@ filter_queries(std::vector<search_query> const & queries, search_options const &
     std::ranges::for_each(thread_local_buffer, [&](auto & local_bucket_list) {
         size_t bucket_idx = 0;
         std::ranges::for_each(local_bucket_list, [&] (auto const & source_bucket) {
-            bucket_type & target_bucket = read_bucket_list[bucket_idx];
+            search_queries_type & target_bucket = read_bucket_list[bucket_idx];
             target_bucket.reserve(target_bucket.size() + source_bucket.size());
             std::ranges::move(source_bucket, std::back_inserter(target_bucket));
             ++bucket_idx;

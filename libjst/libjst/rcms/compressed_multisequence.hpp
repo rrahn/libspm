@@ -86,7 +86,7 @@ namespace libjst
         using iterator = iterator_impl<false>;
         using const_iterator = iterator_impl<true>;
         using value_type = std::iter_value_t<iterator>;
-        using source_type = source_t;
+        using source_type = std::span<std::ranges::range_value_t<source_t> const>;
         using size_type = typename breakend_map_type::size_type;
 
         compressed_multisequence() = default;
@@ -151,7 +151,7 @@ namespace libjst
         //     return _source;
         // }
 
-        constexpr source_t const & source() const noexcept {
+        constexpr source_type source() const noexcept {
             return _source;
         }
 
@@ -380,7 +380,7 @@ namespace libjst
 
         using breakend_reference_t = std::iter_reference_t<breakend_iterator>;
         using reference = breakend_reference_t;
-        using sequence_reference = delta_sequence_variant<source_t>;
+        using sequence_reference = source_type;
 
         breakend_reference_t _breakend_reference;
         indel_map_type const & _indel_map;
@@ -398,12 +398,17 @@ namespace libjst
             return value_type{libjst::breakpoint(*this), libjst::alt_sequence(*this), libjst::coverage(*this)};
         }
 
+        constexpr breakend_key_type get_key() const noexcept {
+            return _breakend_reference.first;
+        }
+
         constexpr breakpoint_end get_breakpoint_end() const noexcept {
             return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
-                [] (indel_breakend_kind code) {
+                [pos = _breakend_reference.first.position()] (indel_breakend_kind code) {
                     switch (code) {
                         case indel_breakend_kind::deletion_low: [[fallthrough]];
                         case indel_breakend_kind::insertion_low: return breakpoint_end::low;
+                        case indel_breakend_kind::nil: return (pos == 0) ? breakpoint_end::low : breakpoint_end::high;
                         default: return breakpoint_end::high;
                     }
                 },
@@ -508,7 +513,7 @@ namespace libjst
                     }
                 },
                 [&] (...) {
-                    return sequence_reference{_snv_table[(int)_breakend_reference.first.snv_value()]};
+                    return sequence_reference{std::addressof(_snv_table[(int)_breakend_reference.first.snv_value()]), 1};
                 }
             });
         }
