@@ -79,15 +79,21 @@ namespace libjst
 
         constexpr node_impl unwind(breakpoint_end site, breakend_iterator seek_breakend) const {
             node_impl tmp = root();
-            tmp.reset_low(breakend_site<breakend_iterator>{std::move(seek_breakend), site});
+            difference_type breakend_idx = std::ranges::distance(std::ranges::begin(data().variants()), seek_breakend);
+            seek_position initial_position{};
+            initial_position.reset(breakend_idx, site);
+            tmp.reset(breakend_site<breakend_iterator>{std::move(seek_breakend), site}, std::move(initial_position));
             return tmp;
         }
 
         constexpr node_impl unwind(alternate_path_descriptor const & descriptor, breakend_iterator seek_breakend) const {
             node_impl tmp = root();
             --seek_breakend;
+            difference_type breakend_idx = std::ranges::distance(std::ranges::begin(data().variants()), seek_breakend);
             breakpoint_end low_end = (*seek_breakend).get_breakpoint_end();
-            tmp.reset_low(breakend_site<breakend_iterator>{std::move(seek_breakend), low_end});
+            seek_position initial_position{};
+            initial_position.reset(breakend_idx, low_end);
+            tmp.reset(breakend_site<breakend_iterator>{std::move(seek_breakend), low_end}, std::move(initial_position));
 
             for (auto it = std::ranges::begin(descriptor); it != std::ranges::end(descriptor); ++it) {
                 if (*it) {
@@ -134,6 +140,12 @@ namespace libjst
         template <typename breakend_site_t>
         constexpr void reset_low(breakend_site_t && low_boundary) {
             base_node_type::reset_low(std::move(low_boundary));
+        }
+
+        template <typename breakend_site_t>
+        constexpr void reset(breakend_site_t && low_boundary, seek_position position) {
+            _seek_offset = position;
+            reset_low(std::move(low_boundary));
         }
 
     private:

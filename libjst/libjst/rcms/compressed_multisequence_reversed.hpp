@@ -14,10 +14,13 @@
 
 #include <ranges>
 
+#include <seqan3/utility/detail/multi_invocable.hpp>
+
 #include <libcontrib/type_traits.hpp>
 #include <libcontrib/std/tag_invoke.hpp>
 
 #include <libjst/coverage/concept.hpp>
+#include <libjst/rcms/packed_breakend_key.hpp>
 #include <libjst/variant/concept.hpp>
 #include <libjst/variant/breakpoint_reversed.hpp>
 

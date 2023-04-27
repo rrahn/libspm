@@ -16,11 +16,12 @@
 
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
+#include <libjst/sequence_tree/seek_position.hpp>
+
 #include <jstmap/global/match_position.hpp>
 #include <jstmap/search/seed_prefix_extender.hpp>
 #include <jstmap/search/seed_suffix_extender.hpp>
 
-#include <libjst/sequence_tree/seek_position.hpp>
 
 namespace jstmap
 {
@@ -38,8 +39,8 @@ namespace jstmap
         {}
 
         template <typename cargo_t, typename finder_t, typename needle_hit_t,  typename callback_t>
-        constexpr void operator()(cargo_t && cargo,
-                                  finder_t && finder,
+        constexpr void operator()(cargo_t && seed_cargo,
+                                  finder_t && seed_finder,
                                   needle_hit_t && needle_hit,
                                   [[maybe_unused]] callback_t && callback) const
         {
@@ -48,28 +49,26 @@ namespace jstmap
             std::ranges::subrange needle_suffix{std::ranges::next(std::ranges::begin(needle), needle_hit.i2 + _seed_size),
                                                 std::ranges::end(needle)};
 
-            seed_suffix_extender right_extender{_bucket.base_tree, std::move(needle_suffix), max_errors};
+            seed_suffix_extender suffix_extender{_bucket.base_tree, std::move(needle_suffix), max_errors};
             // what do we actually need?
 
-            right_extender(cargo, finder, [&] ([[maybe_unused]] auto && right_cargo,
-                                               [[maybe_unused]] auto && right_finder,
-                                               [[maybe_unused]] int32_t right_errors) {
-                assert(right_errors >= 0);
-                assert(static_cast<uint32_t>(right_errors) <= max_errors);
-                // we need to build the left extender!
+            suffix_extender(seed_cargo, seed_finder, [&] ([[maybe_unused]] auto && suffix_cargo,
+                                               [[maybe_unused]] auto && suffix_finder,
+                                               [[maybe_unused]] int32_t suffix_errors) {
+                assert(suffix_errors >= 0);
+                assert(static_cast<uint32_t>(suffix_errors) <= max_errors);
+                // we need to build the prefix extender!
                 std::ranges::subrange needle_prefix{std::ranges::begin(needle),
                                                     std::ranges::next(std::ranges::begin(needle), needle_hit.i2)};
-                seed_prefix_extender left_extender{_bucket.base_tree, std::move(needle_prefix), max_errors - right_errors};
-                left_extender(cargo, finder, [&] ([[maybe_unused]] auto && left_cargo,
-                                                  [[maybe_unused]] auto && left_finder,
-                                                  [[maybe_unused]] int32_t total_errors){
-                    // TODO: wrap in special position object!
-                    std::ptrdiff_t left_start = to_forward_end(endPosition(left_finder));
-                    libjst::seek_position left_seek = left_extender.to_forward_position(left_cargo.position());
-                    libjst::seek_position merged_seek = merge(std::move(left_seek), right_cargo.position());
+                seed_prefix_extender prefix_extender{_bucket.base_tree, std::move(needle_prefix), max_errors - suffix_errors};
+                prefix_extender(seed_cargo, seed_finder, [&] ([[maybe_unused]] auto && prefix_cargo,
+                                                              [[maybe_unused]] auto && prefix_finder,
+                                                              [[maybe_unused]] int32_t total_errors){
+                    std::ptrdiff_t prefix_start = beginPosition(prefix_finder);
+                    libjst::seek_position joined_position = join(prefix_cargo.position(), suffix_cargo.position());
 
                     callback(needle_hit.i1,
-                             match_position{.tree_position = std::move(merged_seek), .label_offset = left_start});
+                             match_position{.tree_position = std::move(joined_position), .label_offset = prefix_start});
                 });
             });
 
@@ -81,15 +80,17 @@ namespace jstmap
             return static_cast<uint32_t>(floor(_error_rate * length(needle)));
         }
 
-        constexpr libjst::seek_position merge(libjst::seek_position left, libjst::seek_position right) const noexcept {
-            return right.visit(seqan3::detail::multi_invocable{
-                [&] (libjst::alternate_path_descriptor const & right_descriptor) {
-                    for (bool elem : right_descriptor)
-                        left.next_alternate_node(elem);
+        constexpr libjst::seek_position join(libjst::seek_position prefix_position,
+                                             libjst::seek_position suffix_position) const noexcept {
+            return suffix_position.visit(seqan3::detail::multi_invocable{
+                [&] (libjst::alternate_path_descriptor const & suffix_position_descriptor) {
+                    auto it = std::ranges::next(suffix_position_descriptor.begin(), 1);
+                    for (; it != suffix_position_descriptor.end(); ++it)
+                        prefix_position.next_alternate_node(*it);
 
-                    return left;
+                    return prefix_position;
                 },
-                [&] (...) { return left; }
+                [&] (...) { return prefix_position; }
             });
         }
 

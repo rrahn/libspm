@@ -54,9 +54,9 @@ namespace jstmap
 
             libjst::tree_traverser_base traverser{filter_tree};
             for (auto it = traverser.begin(); it != traverser.end(); ++it) {
-                auto cargo = *it;
-                filter(cargo.sequence(), [&] (auto const & finder) {
-                    callback(cargo, finder, filter.position());
+                auto seed_cargo = *it;
+                filter(seed_cargo.sequence(), [&] (auto const & seed_finder) {
+                    callback(seed_cargo, seed_finder, filter.position());
                 });
             }
         }

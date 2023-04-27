@@ -204,16 +204,6 @@ int search_main(seqan3::argument_parser & search_parser)
                                         return std::views::all(query.value().sequence());
                                    })};
 
-            // Step 2: transform to haystack
-            // auto largest_query_it = std::ranges::max_element(bucket, std::ranges::less{}, [] (search_query const & query) {
-            //     return std::ranges::size(query.value().sequence());
-            // });
-            // size_t const max_window_size = std::ranges::size((*largest_query_it).value().sequence()) - 1;
-            // auto chunked_tree = rcs_store | libjst::chunk(bin_size, max_window_size);
-            // auto haystack = chunked_tree[bin_idx];
-
-            // Step 3: select matching strategy
-
             // Step 4: apply matching
             bucket_searcher searcher{std::move(current_bucket), 0.0};
             // searcher([] () { std::cout << "Found match!\n"; });
