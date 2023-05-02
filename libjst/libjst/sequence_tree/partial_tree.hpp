@@ -42,6 +42,12 @@ namespace libjst
         position_type _low_base{};
         trimmed_position_type _partial_low_nil{};
         trimmed_position_type _partial_high_nil{};
+    protected:
+
+        constexpr explicit partial_tree(rcs_store_t const & rcs_store) noexcept :
+            _rcs_store{rcs_store}
+        {
+        }
 
     public:
 
@@ -52,7 +58,7 @@ namespace libjst
         constexpr partial_tree() = default; //!< Default.
 
         partial_tree(rcs_store_t const & rcs_store, position_value_type root_position, position_value_type count) noexcept :
-            _rcs_store{rcs_store}
+            partial_tree{rcs_store}
         {
             // initiate low boundary
             auto low = std::ranges::lower_bound(std::ranges::next(std::ranges::begin(data().variants())),
@@ -63,12 +69,11 @@ namespace libjst
                                                      return libjst::position(std::move(breakend_proxy));
                                                 });
             assert(root_position <= static_cast<position_value_type>(libjst::position(*low)));
-            _low_base = position_type{std::ranges::prev(low), breakpoint_end::low};
 
+            set_low_base(position_type{std::ranges::prev(low), breakpoint_end::low});
             auto high_base_it = std::ranges::prev(std::ranges::end(data().variants()));
-            _partial_low_nil = trimmed_position_type{position_type{high_base_it, breakpoint_end::low}, root_position};
-            _partial_high_nil = trimmed_position_type{position_type{high_base_it, breakpoint_end::high},
-                                                      root_position + count};
+            set_low_nil(trimmed_position_type{position_type{high_base_it, breakpoint_end::low}, root_position});
+            set_high_nil(trimmed_position_type{position_type{high_base_it, breakpoint_end::high}, root_position + count});
         }
         //!\}
 
@@ -84,7 +89,20 @@ namespace libjst
         constexpr rcs_store_t const & data() const noexcept {
             return _rcs_store;
         }
-   };
+    protected:
+
+        constexpr void set_low_base(position_type low_base) noexcept {
+            _low_base = std::move(low_base);
+        }
+
+        constexpr void set_low_nil(trimmed_position_type low_nil) noexcept {
+            _partial_low_nil = std::move(low_nil);
+        }
+
+        constexpr void set_high_nil(trimmed_position_type high_nil) noexcept {
+            _partial_high_nil = std::move(high_nil);
+        }
+    };
 
     template <typename rcs_store_t, std::integral offset_t, std::integral count_t>
     partial_tree(rcs_store_t const &, offset_t, count_t) -> partial_tree<rcs_store_t>;

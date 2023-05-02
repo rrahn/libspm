@@ -123,6 +123,14 @@ namespace libjst
 
         constexpr node_impl() = default;
 
+        constexpr base_node_type base() const & noexcept {
+            return static_cast<base_node_type const &>(*this);
+        }
+
+        constexpr base_node_type base() && noexcept {
+            return static_cast<base_node_type &&>(*this);
+        }
+
         constexpr std::optional<node_impl> next_alt() const noexcept {
             return visit<true>(base_node_type::next_alt());
         }
@@ -143,9 +151,13 @@ namespace libjst
         }
 
         template <typename breakend_site_t>
-        constexpr void reset(breakend_site_t && low_boundary, seek_position position) {
-            _seek_offset = position;
+        constexpr void reset(breakend_site_t && low_boundary, seek_position offset) {
+            reset_offset(std::move(offset));
             reset_low(std::move(low_boundary));
+        }
+
+        constexpr void reset_offset(seek_position offset) noexcept {
+            _seek_offset = std::move(offset);
         }
 
     private:
