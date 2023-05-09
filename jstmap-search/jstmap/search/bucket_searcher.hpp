@@ -38,6 +38,7 @@ namespace jstmap
             // instantiate pigeonhole filter.
             pigeonhole_filter filter{_bucket, _error_rate};
             // run pigeonhole filter on subtree
+            // std::cout << "Run filter\n" << std::flush;
             filter([&] (auto && cargo, auto && finder, auto && needle_position) {
                 uint32_t seed_size = endPosition(finder) - beginPosition(finder);
                 seed_verifier verifier{_bucket, _error_rate, seed_size};

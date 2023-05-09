@@ -72,7 +72,6 @@ namespace jstmap
             extension_state_manager manager{extender};
             suffix_traverser.subscribe(manager);
             for (auto cargo : suffix_traverser) {
-                // auto cargo = *node;
                 extender(cargo.sequence(), [&] (auto && suffix_finder) {
                     callback(match_position{.tree_position = cargo.position(),
                                             .label_offset = endPosition(suffix_finder)},

@@ -52,13 +52,13 @@ int index_main(seqan3::argument_parser & index_parser)
                             'o',
                             "bin-overlap",
                             "The size of the bin overlap used for the ibf creation. Must be smaller than the bin size.",
-                            seqan3::option_spec::advanced,
+                            seqan3::option_spec::standard,
                             seqan3::arithmetic_range_validator{0u, 1000u});
     index_parser.add_option(options.kmer_size,
                             'k',
                             "kmer-size",
                             "The kmer-size used for the ibf creation.",
-                            seqan3::option_spec::advanced,
+                            seqan3::option_spec::standard,
                             seqan3::arithmetic_range_validator{0u, 31u});
 
     try

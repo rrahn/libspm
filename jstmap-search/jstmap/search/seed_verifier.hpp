@@ -44,13 +44,12 @@ namespace jstmap
                                   needle_hit_t && needle_hit,
                                   [[maybe_unused]] callback_t && callback) const
         {
-            auto const & needle = _bucket.needle_list[needle_hit.index];
+            auto && needle = _bucket.needle_list[needle_hit.index];
             uint32_t max_errors = get_error_count(needle);
             std::ptrdiff_t suffix_start = needle_hit.offset + needle_hit.count; // Can this be larger than length of needle?
             std::ranges::subrange needle_suffix{std::ranges::next(std::ranges::begin(needle), suffix_start),
                                                 std::ranges::end(needle)};
             seed_suffix_extender suffix_extender{_bucket.base_tree, std::move(needle_suffix), max_errors};
-
             suffix_extender(seed_cargo, seed_finder, [&] (match_position end_position,
                                                           [[maybe_unused]] int32_t suffix_errors) {
                 assert(suffix_errors >= 0);

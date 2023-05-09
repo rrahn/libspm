@@ -395,7 +395,8 @@ namespace libjst
         delta_proxy() = delete;
 
         constexpr operator value_type() const noexcept {
-            return value_type{libjst::breakpoint(*this), libjst::alt_sequence(*this), libjst::coverage(*this)};
+            auto seq = libjst::alt_sequence(*this);
+            return value_type{libjst::get_breakpoint(*this), source_t{seq.begin(), seq.end()}, libjst::coverage(*this)};
         }
 
         constexpr breakend_key_type get_key() const noexcept {

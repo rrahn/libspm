@@ -184,7 +184,10 @@ namespace libjst
         constexpr auto make_finder(haystack_t & haystack) const noexcept
         {
             // TODO: configure repeat length and finder.
-            return seqan::Finder<haystack_t, finder_spec_type>{haystack, 1000, 1};
+            if (std::ranges::size(haystack) > 1000)
+                return seqan::Finder<haystack_t, finder_spec_type>{haystack, 1000, 1};
+            else
+                return seqan::Finder<haystack_t, finder_spec_type>{haystack};
         }
 
         constexpr pigeonhole_matcher & get_pattern() noexcept {
@@ -203,9 +206,6 @@ namespace libjst
         constexpr bool initialise(seqan::Finder<haystack_t, finder_spec_type> & finder,
                                   pattern_type & pattern)
         {
-            if (!empty(finder))
-                return false;
-
             pattern.finderLength = std::ranges::size(haystack(finder));
             pattern.finderPosOffset = 0;
             pattern.finderPosNextOffset = pattern.maxSeqLen + pattern.finderLength;
@@ -217,12 +217,11 @@ namespace libjst
             if (!_firstNonRepeatRange(finder, pattern))
                 return false;
 
+            clear(finder.hits);
             if (_pigeonholeProcessQGram(finder, pattern, hash(pattern.shape, hostIterator(hostIterator(finder)))))
-            {
                 _copyPigeonholeHit(finder, pattern);
-                return true;
-            }
-            return false;
+
+            return true;
         }
 
         template <typename haystack_t, typename ...args_t>
@@ -231,11 +230,15 @@ namespace libjst
                          args_t && ...args)
         {
             pattern_type & pattern = matcher._pattern;
-            if (bool res = matcher.initialise(finder, pattern); !res) {
-                return find(finder, pattern, (args_t &&)args...);
-            } else {
-                return res;
+            if (empty(finder)) {
+                if (!matcher.initialise(finder, pattern)) {
+                    return false;
+                } else if (finder.curHit != finder.endHit) {
+                    return true;
+                }
             }
+
+            return find(finder, pattern, (args_t &&)args...);
         }
     };
 
