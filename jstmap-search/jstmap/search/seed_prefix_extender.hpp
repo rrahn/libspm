@@ -41,13 +41,15 @@ namespace jstmap
         using tree_t = decltype(std::declval<reverse_rcs_t>() | libjst::make_volatile());
         using reverse_needle_t = decltype(std::declval<needle_t&&>() | std::views::reverse);
 
+        base_tree_t const & _base_tree;
         reverse_rcs_t _reverse_rcms;
         tree_t _reverse_tree;
         reverse_needle_t _reverse_needle;
         uint32_t _error_count{};
     public:
         seed_prefix_extender(base_tree_t const & base_tree, needle_t needle, uint32_t error_count) noexcept :
-            _reverse_rcms{base_tree.data().variants()},
+            _base_tree{base_tree},
+            _reverse_rcms{_base_tree.data().variants()},
             _reverse_tree{_reverse_rcms | libjst::make_volatile()},
             _reverse_needle{(needle_t &&) needle | std::views::reverse},
             _error_count{error_count}
@@ -77,8 +79,40 @@ namespace jstmap
 
             // now reverse position!
             std::ptrdiff_t distance_to_end = std::ranges::ssize(seed_cargo.sequence()) - (beginPosition(seed_finder) - 1);
-            match_position start{.tree_position = seed_prefix_seek_position{seed_cargo.position(), breakend_count},
-                                 .label_offset = reference_size - (std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end)};
+            std::ptrdiff_t global_start_offset = std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end;
+            auto breakend_it = std::ranges::next(_base_tree.data().variants().begin(), seed_cargo.position().get_variant_index());
+            std::ptrdiff_t variant_position = libjst::position(*breakend_it);
+
+            match_position start{};
+            if (global_start_offset < variant_position) {
+                log_debug("We can variant seek!");
+                // we know the seed variant index is upper bound!
+                // we get its index by subtracting
+                start.tree_position.reset(breakend_count - seed_cargo.position().get_variant_index(),
+                                          libjst::breakpoint_end::low); // must site be the inverse?
+            } else {
+                log_debug("We can use normal seek!");
+                start.tree_position = seed_prefix_seek_position{seed_cargo.position(), breakend_count};
+            }
+            start.label_offset = reference_size - global_start_offset;
+            log_debug("global_start_offset: ", global_start_offset);
+            log_debug("variant_position: ", variant_position);
+
+            // match_position start{.tree_position = seed_prefix_seek_position{seed_cargo.position(), breakend_count},
+            //                      .label_offset = reference_size - (std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end)};
+            log_debug("prefix extender::cargo_sequence: ", std::ranges::ssize(seed_cargo.sequence()));
+            log_debug("prefix extender::cargo_path_sequence: ", std::ranges::ssize(seed_cargo.path_sequence()));
+            log_debug("prefix extender::finder_begin: ", beginPosition(seed_finder));
+            log_debug("prefix extender::finder_end: ", endPosition(seed_finder));
+            log_debug("prefix extender::global_begin: ", std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end);
+            log_debug("prefix extender::global_end: ", std::ranges::ssize(seed_cargo.path_sequence()) - (std::ranges::ssize(seed_cargo.sequence()) - (endPosition(seed_finder))));
+            log_debug("prefix extender::distance_to_end: ", distance_to_end);
+            log_debug("prefix extender::start: ", start);
+            auto reverse_breakend_it = std::ranges::next(_reverse_rcms.variants().begin(), start.tree_position.get_variant_index());
+            log_debug("position reverse variant: ", libjst::position(*reverse_breakend_it));
+            log_debug("position reverse explicit: ", reference_size - variant_position);
+
+
 
             auto extend_tree = _reverse_tree | libjst::labelled()
                                              | libjst::coloured()

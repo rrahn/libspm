@@ -21,9 +21,11 @@
 #include <libjst/sequence_tree/partial_tree.hpp>
 #include <libjst/sequence_tree/prune_tree.hpp>
 #include <libjst/sequence_tree/seekable_tree.hpp>
+#include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
+#include <jstmap/global/application_logger.hpp>
 #include <jstmap/global/match_position.hpp>
 #include <jstmap/search/seed_node_wrapper.hpp>
 #include <jstmap/search/seed_extension_tree.hpp>
@@ -60,6 +62,7 @@ namespace jstmap
             std::ptrdiff_t distance_to_end = std::ranges::ssize(seed_cargo.sequence()) - endPosition(seed_finder);
             match_position start{.tree_position = seed_cargo.position(),
                                  .label_offset = std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end};
+            // log_info("Generate tree at: ", start);
 
             auto extend_tree = _base_tree | libjst::labelled()
                                           | libjst::coloured()
@@ -71,7 +74,9 @@ namespace jstmap
             libjst::tree_traverser_base suffix_traverser{extend_tree};
             extension_state_manager manager{extender};
             suffix_traverser.subscribe(manager);
+            // size_t counter{};
             for (auto cargo : suffix_traverser) {
+                // log_("Extend #", counter++);
                 extender(cargo.sequence(), [&] (auto && suffix_finder) {
                     callback(match_position{.tree_position = cargo.position(),
                                             .label_offset = endPosition(suffix_finder)},
