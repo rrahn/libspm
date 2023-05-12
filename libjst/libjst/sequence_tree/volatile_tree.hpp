@@ -106,11 +106,11 @@ namespace libjst
             static_cast<node_type &>(*this) = tmp.next_ref();
         }
 
-    private:
-
         constexpr bool is_leaf() const noexcept {
             return base_t::high_boundary() == _nil;
         }
+
+    private:
 
         constexpr friend bool operator==(node_impl const & lhs, nil_node_t const &) noexcept
         {

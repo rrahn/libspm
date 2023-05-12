@@ -43,7 +43,7 @@ namespace libjst
 
         class node_impl;
 
-        rcs_store_t const & _rcs_store{};
+        rcs_store_t const & _rcs_store;
         position_type _low_base{};
         _low_position_type _partial_low_nil{};
         _high_position_type _partial_high_nil{};
@@ -84,7 +84,7 @@ namespace libjst
             partial_position_type partial_root{_low_base.get_breakend(), high_base_it, breakpoint_end::low};
             set_low_nil(_low_position_type{std::move(partial_root), root_position});
 
-            auto high = std::ranges::upper_bound(low,
+            auto high = std::ranges::lower_bound(low,
                                                  high_base_it,
                                                  end_position,
                                                  std::ranges::less{},
@@ -136,13 +136,16 @@ namespace libjst
 
         _low_position_type _partial_lowest;
         _high_position_type _partial_highest;
+        bool _passed_high_bound{false};
 
         explicit constexpr node_impl(base_node_type base_node,
                                      _low_position_type partial_lowest,
-                                     _high_position_type partial_highest) noexcept :
+                                     _high_position_type partial_highest,
+                                     bool passed_high_bound = false) noexcept :
             base_node_type{std::move(base_node)},
             _partial_lowest{std::move(partial_lowest)},
-            _partial_highest{std::move(partial_highest)}
+            _partial_highest{std::move(partial_highest)},
+            _passed_high_bound{passed_high_bound}
         {
         }
 
@@ -154,7 +157,10 @@ namespace libjst
         constexpr node_impl() = default;
 
         constexpr std::optional<node_impl> next_alt() const noexcept {
-            if (reached_highest() /*&& (libjst::position(_partial_highest) != libjst::position(_partial_highest.base()))*/) {
+            if (reached_highest() && !_passed_high_bound) {
+                assert(libjst::position(base_node_type::low_boundary()) <= libjst::position(_partial_highest));
+                assert(libjst::position(_partial_highest) <= libjst::position(base_node_type::high_boundary()));
+
                 base_node_type child{base_node_type::low_boundary(), base_node_type::high_boundary()};
                 child.toggle_alternate_path();
                 partial_position_type _low{base_node_type::low_boundary().get_breakend(),
@@ -165,7 +171,8 @@ namespace libjst
                                                    _partial_highest.get_breakend_site()};
                 return node_impl{std::move(child),
                                  low_position_type{std::move(_low), libjst::position(_partial_highest)},
-                                 high_position_type{std::move(global_bound)}};
+                                 high_position_type{std::move(global_bound)},
+                                 true};
             }
 
             if (auto maybe_child = base_node_type::next_alt(); maybe_child.has_value()) {
@@ -175,7 +182,7 @@ namespace libjst
                                                                                  _partial_highest.base().get_bound(),
                                                                                  _partial_highest.get_breakend_site()}};
                 }
-                return node_impl{std::move(*maybe_child), _partial_lowest, std::move(child_highest)};
+                return node_impl{std::move(*maybe_child), _partial_lowest, std::move(child_highest), _passed_high_bound};
             }
             return std::nullopt;
         }
@@ -184,7 +191,7 @@ namespace libjst
             if (is_leaf()) {
                 return std::nullopt;
             }
-            return node_impl{base_node_type::next_ref(), _partial_lowest, _partial_highest};
+            return node_impl{base_node_type::next_ref(), _partial_lowest, _partial_highest, _passed_high_bound};
         }
 
         constexpr empty_label operator*() const noexcept {
@@ -207,6 +214,8 @@ namespace libjst
             return high_position_type{partial_position_type{std::move(high_base)}};
         }
 
+    protected:
+
         constexpr bool is_leaf() const noexcept {
             auto high_bound = base_node_type::high_boundary();
             partial_position_type nil{_partial_highest.base().get_breakend(),
@@ -215,7 +224,6 @@ namespace libjst
             return reached_highest() || (nil == _partial_highest.base());
         }
 
-    protected:
 
         template <typename breakend_site_t>
         constexpr void reset_low(breakend_site_t new_low) {
