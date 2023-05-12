@@ -26,16 +26,15 @@ namespace jstmap
 
         explicit constexpr seed_prefix_seek_position() = default;
 
-        explicit constexpr seed_prefix_seek_position(base_t seed_position, size_t breakends_count) noexcept :
-            base_t{std::move(seed_position)}
+        explicit constexpr seed_prefix_seek_position(base_t seed_position, size_t breakends_count) noexcept : base_t{}
         {
-            size_t reverse_breakend_idx = breakends_count - seed_position.get_variant_index() - 1;
+            size_t reverse_breakend_idx = breakends_count - seed_position.get_variant_index();
             seed_position.visit(seqan3::detail::multi_invocable{
                 [&, reverse_breakend_idx] (libjst::breakpoint_end site) {
-                    base_t::reset(reverse_breakend_idx - 1, site);
+                    base_t::reset(reverse_breakend_idx, site);
                 },
                 [&, reverse_breakend_idx] (libjst::alternate_path_descriptor const &) {
-                    base_t::initiate_alternate_node(reverse_breakend_idx);
+                    base_t::initiate_alternate_node(reverse_breakend_idx + 1);
                 }
             });
         }

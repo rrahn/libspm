@@ -190,6 +190,17 @@ int search_main(seqan3::argument_parser & search_parser)
 
         // We need to write more information including the reference sequences and the length of the reference sequences.
 
+        // auto print_breakend = [&] (size_t const index) {
+        //     auto breakend = *(rcs_store.variants().begin() + index);
+        //     log_info("#################");
+        //     log_info("breakend index: ", index);
+        //     log_info("low breakend: ", libjst::low_breakend(breakend));
+        //     log_info("high breakend: ", libjst::high_breakend(breakend));
+        //     log_info("#################");
+        // };
+
+        // print_breakend(194111);
+
         start = std::chrono::high_resolution_clock::now();
         auto query_matches = queries
                            | std::views::transform([] (search_query & query) {
@@ -198,19 +209,15 @@ int search_main(seqan3::argument_parser & search_parser)
                            | seqan3::ranges::to<std::vector>();
 
         // now where do we get the chunk size from?
-        auto chunked_rcms = rcs_store | libjst::chunk(15625u);
+        auto chunked_rcms = rcs_store | libjst::chunk(bin_size);
 
         for (size_t bin_idx = 0; bin_idx < std::ranges::size(chunked_rcms); ++bin_idx)
         { // parallel region
             if (search_queries[bin_idx].empty())
                 continue;
 
-            // if (bin_idx != 682)
-            //     continue;
-
             // Step 1: distribute search:
             log_debug("Local search in bucket: ", bin_idx);
-
             bucket current_bucket{.base_tree = chunked_rcms[bin_idx],
                                   .needle_list = search_queries[bin_idx] /*| std::views::drop(9789)*/ | std::views::transform([] (search_query const & query) {
                                         return std::views::all(query.value().sequence());
@@ -219,7 +226,7 @@ int search_main(seqan3::argument_parser & search_parser)
             //              std::ranges::size(current_bucket.base_tree.data().source()) << "\n";
             // Step 4: apply matching
             log_debug("Initiate searcher");
-            bucket_searcher searcher{std::move(current_bucket), 0.0};
+            bucket_searcher searcher{std::move(current_bucket), options.error_rate};
             // searcher([] () { std::cout << "Found match!\n"; });
             // ATTENTION!!! Not thread safe!
             searcher([&] (std::ptrdiff_t query_idx, match_position position) {
@@ -259,16 +266,18 @@ int search_main(seqan3::argument_parser & search_parser)
 
         // std::vector<search_matches> aligned_matches_list{};
         // aligned_matches_list.reserve(query_matches.size());
+        size_t match_count{};
+        std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
+            match_count += query_match.matches().size();
+            // search_matches aligned_matches{std::move(query_match).query()};
+            // match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
 
-        // std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
-        //     search_matches aligned_matches{std::move(query_match).query()};
-        //     match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
-
-        //     for (match_position pos : query_match.matches()) {
-        //         aligned_matches.record_match(aligner(std::move(pos)));
-        //     }
-        //     aligned_matches_list.push_back(std::move(aligned_matches));
-        // });
+            // for (match_position pos : query_match.matches()) {
+            //     aligned_matches.record_match(aligner(std::move(pos)));
+            // }
+            // aligned_matches_list.push_back(std::move(aligned_matches));
+        });
+        std::cout << "match_count: " << match_count << "\n";
 
         end = std::chrono::high_resolution_clock::now();
         log_info("Aligning time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
