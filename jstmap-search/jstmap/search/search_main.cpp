@@ -211,7 +211,13 @@ int search_main(seqan3::argument_parser & search_parser)
         // now where do we get the chunk size from?
         auto chunked_rcms = rcs_store | libjst::chunk(bin_size);
 
-        for (size_t bin_idx = 0; bin_idx < std::ranges::size(chunked_rcms); ++bin_idx)
+        size_t bucket_counts{};
+        std::ranges::for_each(search_queries, [&] (auto const & bucket) {
+            bucket_counts += bucket.size();
+        });
+        log_info("Total bucket count: ", bucket_counts);
+
+        for (std::ptrdiff_t bin_idx = 0; bin_idx < std::ranges::ssize(chunked_rcms); ++bin_idx)
         { // parallel region
             if (search_queries[bin_idx].empty())
                 continue;
@@ -230,7 +236,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // searcher([] () { std::cout << "Found match!\n"; });
             // ATTENTION!!! Not thread safe!
             searcher([&] (std::ptrdiff_t query_idx, match_position position) {
-                log_debug("Record match for query ", query_idx, " at ", position);
+                // log_debug("Record match for query ", query_idx, " at ", position);
                 query_matches[query_idx].record_match(std::move(position));
             });
 

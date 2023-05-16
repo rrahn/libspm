@@ -46,9 +46,10 @@ namespace jstmap
                                   [[maybe_unused]] callback_t && callback) const
         {
             auto && needle = _bucket.needle_list[needle_hit.index];
-            log_debug("Verify needle: ", needle_hit);
-            log_debug("Seed position: ", seed_cargo.position());
+            // log_debug("Verify needle: ", needle_hit);
+            // log_debug("Seed position: ", seed_cargo.position());
             uint32_t max_errors = get_error_count(needle);
+            // log_debug("Max error: ", max_errors);
             std::ptrdiff_t suffix_start = needle_hit.offset + needle_hit.count; // Can this be larger than length of needle?
             std::ranges::subrange needle_suffix{std::ranges::next(std::ranges::begin(needle), suffix_start),
                                                 std::ranges::end(needle)};
@@ -57,15 +58,15 @@ namespace jstmap
                                                           [[maybe_unused]] int32_t suffix_errors) {
                 assert(suffix_errors >= 0);
                 assert(static_cast<uint32_t>(suffix_errors) <= max_errors);
-                log_debug("Found valid suffix at: ", end_position);
-                log_debug("Prepare prefix at seed: ", seed_cargo.position());
+                // log_debug("Found valid suffix at: ", end_position);
+                // log_debug("Prepare prefix at seed: ", seed_cargo.position());
 
                 std::ranges::subrange needle_prefix{std::ranges::begin(needle),
                                                     std::ranges::next(std::ranges::begin(needle), needle_hit.offset)};
                 seed_prefix_extender prefix_extender{_bucket.base_tree, std::move(needle_prefix), max_errors - suffix_errors};
                 prefix_extender(seed_cargo, seed_finder, [&] (match_position begin_position,
                                                               [[maybe_unused]] int32_t total_errors){
-                    log_debug("Extend prefix at: ", seed_cargo.position());
+                    // log_debug("Extend prefix at: ", seed_cargo.position());
                     begin_position.tree_position = join(begin_position.tree_position, end_position.tree_position);
                     callback(needle_hit.index, std::move(begin_position));
                 });
