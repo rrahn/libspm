@@ -14,14 +14,19 @@
 
 #include <functional>
 
+#include <jstmap/global/match_position.hpp>
+
 namespace jstmap
 {
     template <typename extender_t>
     class extension_state_manager {
     private:
 
-        using state_t = libjst::matcher_state_t<extender_t>;
+        using best_path_match_t = std::pair<match_position, int32_t>;
+        using matcher_state_t = libjst::matcher_state_t<extender_t>;
+        using state_t = std::pair<matcher_state_t, best_path_match_t>;
         using state_stack_t = std::stack<state_t>;
+
 
         extender_t & _extender;
         state_stack_t _states{};
@@ -31,16 +36,27 @@ namespace jstmap
         constexpr explicit extension_state_manager(extender_t & extender) noexcept :
             _extender{extender},
             _states{}
-        {}
+        {
+            _states.emplace(matcher_state_t{},
+                            best_path_match_t{match_position{}, std::numeric_limits<int32_t>::lowest()});
+        }
 
         constexpr void notify_push() {
-            _states.push(_extender.capture());
+            _states.emplace(_extender.capture(), _states.top().second);
         }
 
         constexpr void notify_pop() {
             assert(!_states.empty());
-            _extender.restore(_states.top());
+            _extender.restore(_states.top().first);
             _states.pop();
+        }
+
+        constexpr state_t & top() noexcept {
+            return _states.top();
+        }
+
+        constexpr state_t const & top() const noexcept {
+            return _states.top();
         }
 
         // constexpr void print_state() const noexcept {

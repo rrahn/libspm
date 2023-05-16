@@ -76,12 +76,19 @@ namespace jstmap
             suffix_traverser.subscribe(manager);
             // size_t counter{};
             for (auto cargo : suffix_traverser) {
-                // log_("Extend #", counter++);
                 extender(cargo.sequence(), [&] (auto && suffix_finder) {
-                    callback(match_position{.tree_position = cargo.position(),
-                                            .label_offset = endPosition(suffix_finder)},
-                                            -getScore(extender.capture()));
+                    auto [best_position, best_score] = manager.top().second;
+                    if (int32_t score = getScore(extender.capture()); score > best_score) {
+                        manager.top().second = std::pair{match_position{.tree_position = cargo.position(),
+                                                                        .label_offset = endPosition(suffix_finder)},
+                                                         score};
+                    }
                 });
+                if (cargo.is_leaf()) {
+                    auto [best_position, best_score] = manager.top().second;
+                    if (-best_score <= _error_count)
+                        callback(std::move(best_position), -best_score);
+                }
             }
         }
     };

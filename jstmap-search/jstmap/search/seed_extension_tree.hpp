@@ -56,6 +56,9 @@ namespace jstmap
             _base = _wrappee.seek(start.tree_position); // from seeking to the node!
             auto base_cargo = *_base;
             // - compute the label distance until next breakend.
+            // log_debug("std::ranges::ssize(base_cargo.path_sequence()): ", std::ranges::ssize(base_cargo.path_sequence()));
+            // log_debug("position(*(_base.low_boundary())): ", libjst::position(*(_base.low_boundary())));
+            // log_debug("position(*(_base.high_boundary())): ", libjst::position(*(_base.high_boundary())));
             assert(std::ranges::ssize(base_cargo.path_sequence()) >= start.label_offset);
             difference_type _distance_to_high = std::ranges::ssize(base_cargo.path_sequence()) - start.label_offset;
 
@@ -185,6 +188,11 @@ namespace jstmap
         constexpr auto path_sequence() const noexcept {
             assert(_node != nullptr);
             return base_cargo_type::sequence(0, libjst::position(_node->high_boundary()));
+        }
+
+        constexpr bool is_leaf() const noexcept {
+            assert(_node != nullptr);
+            return _node->is_leaf();
         }
 
     protected:

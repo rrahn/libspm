@@ -64,7 +64,7 @@ filter_queries(std::vector<search_query> const & queries, search_options const &
         size_t const thread_id = omp_get_thread_num();
         search_query query = queries[query_idx];
         size_t const query_size = std::ranges::size(query.value().sequence());
-        size_t const error_count = std::ceil(query_size * options.error_rate);
+        size_t const error_count = std::floor(query_size * options.error_rate);
         size_t const kmer_threshold = query_size - kmer_size + 1 - (error_count * kmer_size);
         log_debug("IBF kmer_threshold:", kmer_threshold);
 
