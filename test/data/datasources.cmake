@@ -137,3 +137,7 @@ declare_datasource (FILE needle128.fa USE_GUNZIP_EXTRACT
 declare_datasource (FILE needle256.fa USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/needle256.fa.gz
                     URL_HASH SHA256=bf19935e362516d9046b252726baf769ab33b6a33e6bee0403905bf95398a7b8)
+
+declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf.gz
+                    URL_HASH SHA256=3e9e5eadd8ba599f4382de09a02530eac70b84505853e1358c38240c73461be9)
