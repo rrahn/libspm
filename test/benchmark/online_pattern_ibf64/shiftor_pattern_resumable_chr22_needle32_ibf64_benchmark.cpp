@@ -13,7 +13,7 @@
 
 namespace just::bench {
 
-BENCHMARK_TEMPLATE_DEFINE_F(fixture_resumable_pattern_ibf, shiftor, capture<&chr22_needle32>)(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(fixture_resumable_pattern_ibf, shiftor, capture<&chr22_needle32_ibf64>)(benchmark::State& state) {
     libjst::restorable_shiftor_matcher matcher{needle()};
     run(state, matcher);
 }

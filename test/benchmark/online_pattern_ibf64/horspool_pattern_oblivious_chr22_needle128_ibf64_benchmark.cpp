@@ -7,22 +7,19 @@
 
 #include <benchmark/benchmark.h>
 
-#include <thread>
-
-#include <libjst/matcher/shiftor_matcher.hpp>
+#include <libjst/matcher/horspool_matcher.hpp>
 
 #include "fixture_oblivious_pattern_ibf.hpp"
 
 namespace just::bench {
 
-BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern_ibf, shiftor, capture<&chr22_needle32>)(benchmark::State& state) {
-    run(state, libjst::shiftor_matcher(needle()));
+BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern_ibf, horspool, capture<&chr22_needle128_ibf64>)(benchmark::State& state) {
+    run(state, libjst::horspool_matcher(needle()));
 }
 
-BENCHMARK_REGISTER_F(fixture_oblivious_pattern_ibf, shiftor)
+BENCHMARK_REGISTER_F(fixture_oblivious_pattern_ibf, horspool)
     ->RangeMultiplier(2)->Range(1,std::thread::hardware_concurrency())
     ->UseRealTime();
-
 } // namespace just::bench
 
 BENCHMARK_MAIN();

@@ -24,35 +24,35 @@ struct benchmark_configuration
     std::filesystem::path jst_ibf_file;
 };
 
-inline constexpr auto chr22_needle32 = [] () {
+inline constexpr auto chr22_needle32_ibf64 = [] () {
     return benchmark_configuration{
         .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
         .needle_file{DATADIR"needle32.fa"},
-        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf"}
+        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf"}
     };
 };
 
-inline constexpr auto chr22_needle64 = [] () {
+inline constexpr auto chr22_needle64_ibf64 = [] () {
     return benchmark_configuration{
         .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
         .needle_file{DATADIR"needle64.fa"},
-        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf"}
+        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf"}
     };
 };
 
-inline constexpr auto chr22_needle128 = [] () {
+inline constexpr auto chr22_needle128_ibf64 = [] () {
     return benchmark_configuration{
         .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
         .needle_file{DATADIR"needle128.fa"},
-        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf"}
+        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf"}
     };
 };
 
-inline constexpr auto chr22_needle256 = [] () {
+inline constexpr auto chr22_needle256_ibf64 = [] () {
     return benchmark_configuration{
         .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
         .needle_file{DATADIR"needle256.fa"},
-        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.b6k.k21.ibf"}
+        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf"}
     };
 };
 }  // namespace just::bench
