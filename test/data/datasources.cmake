@@ -144,40 +144,40 @@ declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phase
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c64.k21.ibf.gz
-                    URL_HASH SHA256=e61c6d1486a2c96e4c505e7d1bbcee7ab1efc6016b4d2395136240ff97dd2ad5)
+                    URL_HASH SHA256=cd2b5d0b451a39644105cf4694a0bf176c5ab18a295bc81b7e452d1d8024252f)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c128.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c128.k21.ibf.gz
-                    URL_HASH SHA256=72b8a142a76e5f4528cfa3c275b767d1d328d56ae90f92fe149527381bf82d09)
+                    URL_HASH SHA256=64ba4b13f568fd9ea86c3d7fbb0671b994d50e947caaea1760c5e7f36cadaacc)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c256.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c256.k21.ibf.gz
-                    URL_HASH SHA256=2d06eb26ca49a04628a64b409484b0a7b22f68e32583ab22f4b22b2046cffc0f)
+                    URL_HASH SHA256=869b574fab0abdda63aeb96e3a60e6c296295f94d1c7c545b2a58af0d3229c6f)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c512.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c512.k21.ibf.gz
-                    URL_HASH SHA256=55ecaca21eafed58acfe7e3d9a5852a3b6c9105365a475a7277405758a9504e1)
+                    URL_HASH SHA256=bad977e0526cd4e37068cdea88ce42252e157ec1e6eece2e0d48f588c0799697)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf.gz
-                    URL_HASH SHA256=d8077cc57a2566a3d0d3d0470dd77c1602e912300a4df8c6890acb3c7e2e16ad)
+                    URL_HASH SHA256=959ee8a0f68428c921b18485cc13d161b37635f9a8221c10d27394e15af6f5c1)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c2048.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c2048.k21.ibf.gz
-                    URL_HASH SHA256=247beec7521c3aa3dc8a3e57bdedec0d1c9bfb14c17f630013545e875cbe555a)
+                    URL_HASH SHA256=874ae92db560e8259e93ff753bc7bdc8d07df2f463a601ba5c790d4db0ceaeea)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c4096.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c4096.k21.ibf.gz
-                    URL_HASH SHA256=5363f77bd22d96947fb76075dfbd6a6f38fccae1a6b9bbf1fb9621760a150621)
+                    URL_HASH SHA256=d76912394c16c6216e827bf60cf0344a1ddd0412e54bccf5094bf11634f01e34)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c8192.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c8192.k21.ibf.gz
-                    URL_HASH SHA256=4bed24e7f88ff4479b3612973b27aae488c2469b146c7902e1547897050f7c97)
+                    URL_HASH SHA256=0aafb8a0b481c55a1338fd73fca69d3f6523f1bfb326895feac15d1264eb1bc1)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c16384.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c16384.k21.ibf.gz
-                    URL_HASH SHA256=17e5e57e3d8b0eb56a93f32c1301c0d2aa12ebd5686023c36554f3521bf0d0d2)
+                    URL_HASH SHA256=29e343432f534dec113fe5feebd77d7f40e632bbe7dc38afe3f2eba3bff44e27)
 
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c32768.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c32768.k21.ibf.gz
-                    URL_HASH SHA256=c03c6fdf890137406de6fd9039d5f5e1023accbe272f1a540b4e8ec26462551a)
+                    URL_HASH SHA256=1edac6e53ad441398ca3ff9016d26c9fbaa526ea9a302e79ee0e797f7141725e)
