@@ -202,11 +202,18 @@ int search_main(seqan3::argument_parser & search_parser)
         // print_breakend(194111);
 
         start = std::chrono::high_resolution_clock::now();
-        auto query_matches = queries
-                           | std::views::transform([] (search_query & query) {
-                                return all_matches{std::move(query)};
-                           })
-                           | seqan3::ranges::to<std::vector>();
+        // auto query_matches = queries
+        //                    | std::views::transform([] (search_query & query) {
+        //                         return all_matches{std::move(query)};
+        //                    })
+        //                    | seqan3::ranges::to<std::vector>();
+
+
+        using match_positions_t = std::vector<match_position>;
+        using bucket_matches_t = std::unordered_map<size_t, match_positions_t>;
+        using thread_local_bucket_matches_t = std::vector<bucket_matches_t>;
+        thread_local_bucket_matches_t thread_local_matches{};
+        thread_local_matches.resize(options.thread_count);
 
         // now where do we get the chunk size from?
         auto chunked_rcms = rcs_store | libjst::chunk(bin_size);
@@ -217,15 +224,20 @@ int search_main(seqan3::argument_parser & search_parser)
         });
         log_info("Total bucket count: ", bucket_counts);
 
+        // parallelising this?
+        // go over the bins in dynamic fashion
+        #pragma omp parallel for num_threads(options.thread_count) shared(chunked_rcms, thread_local_matches, search_queries, options) schedule(dynamic)
         for (std::ptrdiff_t bin_idx = 0; bin_idx < std::ranges::ssize(chunked_rcms); ++bin_idx)
         { // parallel region
-            if (search_queries[bin_idx].empty())
+            auto const & bucket_queries = search_queries[bin_idx];
+            if (bucket_queries.empty())
                 continue;
 
+            bucket_matches_t & local_matches = thread_local_matches[omp_get_thread_num()];
             // Step 1: distribute search:
             log_debug("Local search in bucket: ", bin_idx);
             bucket current_bucket{.base_tree = chunked_rcms[bin_idx],
-                                  .needle_list = search_queries[bin_idx] /*| std::views::drop(9789)*/ | std::views::transform([] (search_query const & query) {
+                                  .needle_list = bucket_queries | std::views::transform([] (search_query const & query) {
                                         return std::views::all(query.value().sequence());
                                    })};
             // std::cout << "std::ranges::size(current_bucket.base_tree.data().source()) = " <<
@@ -237,31 +249,8 @@ int search_main(seqan3::argument_parser & search_parser)
             // ATTENTION!!! Not thread safe!
             searcher([&] (std::ptrdiff_t query_idx, match_position position) {
                 // log_debug("Record match for query ", query_idx, " at ", position);
-                query_matches[query_idx].record_match(std::move(position));
+                local_matches[bucket_queries[query_idx].key()].push_back(std::move(position));
             });
-
-        // }
-
-        // * filter out duplicates? parallel?
-        // * A) same read/read_pair is found in multiple locations (report only one hit per bin?)
-        //  * depends on mapping mode: if best or all best then only the mapping locations with the lowest error count
-        //  * if all then all alternative mapping locations sorted by their error count
-        //      * needs: error_count and query_id for filtering
-        // * B) If same hit identified in two bins because of bin-overlap.
-        //  * depends on the HIBF setting: if with overlap then yes if not then search unidentified reads in overlap region with tight window.
-        //  * how many reads are left and how many regions must be searched?
-        //      * assume same base coordinate to filter
-
-        // { // parallel region
-            // * run simd alignment to obtain CIGAR string on all filtered matches and report
-            //  -> multi-threaded conversion to record and synchronised buffer
-                // -> one buffer per thread to fill -> full buffer is pushed into queue -> empty buffer is reserved when available
-                // -> single buffer writes out record stream into bgzf_ostream (possibly unsynchronised?)
-            // * report in BAM file
-            // We do not want to have a critical region here.
-            // But somehow we need to provide some mechanism to say there is a new batch available.
-            // We need the concurrent queue here!
-
         }
 
         end = std::chrono::high_resolution_clock::now();
@@ -273,8 +262,11 @@ int search_main(seqan3::argument_parser & search_parser)
         // std::vector<search_matches> aligned_matches_list{};
         // aligned_matches_list.reserve(query_matches.size());
         size_t match_count{};
-        std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
-            match_count += query_match.matches().size();
+        std::ranges::for_each(thread_local_matches, [&] (bucket_matches_t const & _bucket_matches) {
+            for (auto const & match_positions : _bucket_matches) {
+                match_count += match_positions.second.size();
+            }
+        });
             // search_matches aligned_matches{std::move(query_match).query()};
             // match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
 
@@ -282,7 +274,6 @@ int search_main(seqan3::argument_parser & search_parser)
             //     aligned_matches.record_match(aligner(std::move(pos)));
             // }
             // aligned_matches_list.push_back(std::move(aligned_matches));
-        });
         std::cout << "match_count: " << match_count << "\n";
 
         end = std::chrono::high_resolution_clock::now();
