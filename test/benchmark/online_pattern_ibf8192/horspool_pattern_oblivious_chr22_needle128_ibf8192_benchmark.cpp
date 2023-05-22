@@ -18,7 +18,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern_ibf, horspool, capture<&ch
 }
 
 BENCHMARK_REGISTER_F(fixture_oblivious_pattern_ibf, horspool)
-    ->RangeMultiplier(2)->Range(1,std::thread::hardware_concurrency())
+    ->RangeMultiplier(2)->Range(1,1)
     ->UseRealTime();
 } // namespace just::bench
 
