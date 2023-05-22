@@ -32,7 +32,7 @@ static void naive_pattern(benchmark::State & state, args_t && ...args)
     size_t sequence_count = rcs_store.size();
     size_t batch_size = 16;
     size_t total_runs = sequence_count / batch_size;
-    std::vector<sequence_t> batch{batch_size, rcs_store.source()};
+    std::vector<sequence_t> batch{batch_size, sequence_t{rcs_store.source().begin(),rcs_store.source().end()}};
 
     seqan::Pattern<sequence_t, seqan::Simple> pattern{needle};
     size_t hit_count{};
