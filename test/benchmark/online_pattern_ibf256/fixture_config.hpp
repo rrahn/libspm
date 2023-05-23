@@ -14,15 +14,10 @@
 
 #include <filesystem>
 
+#include "../online_pattern_ibf64/fixture_config.hpp"
+
 namespace just::bench
 {
-
-struct benchmark_configuration
-{
-    std::filesystem::path jst_file;
-    std::filesystem::path needle_file;
-    std::filesystem::path jst_ibf_file;
-};
 
 inline constexpr auto chr22_needle32_ibf256 = [] () {
     return benchmark_configuration{

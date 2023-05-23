@@ -12,44 +12,5 @@
 
 #pragma once
 
-#include <functional>
-
-#include <libjst/sequence_tree/labelled_tree.hpp>
-#include <libjst/sequence_tree/coloured_tree.hpp>
-#include <libjst/sequence_tree/left_extend_tree.hpp>
-#include <libjst/sequence_tree/merge_tree.hpp>
-#include <libjst/sequence_tree/prune_tree.hpp>
-#include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/sequence_tree/volatile_tree.hpp>
-
-#include "fixture_base_ibf.hpp"
-
-namespace just::bench
-{
-    template <typename capture_t>
-    class fixture_oblivious_pattern_ibf : public fixture_base_ibf<capture_t>
-    {
-    private:
-        using base_t = fixture_base_ibf<capture_t>;
-    public:
-
-        fixture_oblivious_pattern_ibf() = default;
-        virtual ~fixture_oblivious_pattern_ibf() = default;
-
-        template <typename matcher_t>
-        void run(::benchmark::State & state, matcher_t matcher)
-        {
-            auto tree_closure = libjst::labelled() | libjst::coloured()
-                                                   | libjst::trim(libjst::window_size(matcher) - 1)
-                                                   | libjst::prune()
-                                                   | libjst::left_extend(libjst::window_size(matcher) - 1)
-                                                   | libjst::merge();
-
-            base_t::run(state, matcher, tree_closure, [] (auto const & tree) {
-                return libjst::tree_traverser_base{tree};
-            });
-            this->processed_bytes = base_t::total_bytes(tree_closure);
-        }
-    };
-}  // namespace just::bench
-
+#include "../online_pattern_ibf64/fixture_oblivious_pattern_ibf.hpp"
+#include "fixture_config.hpp"
