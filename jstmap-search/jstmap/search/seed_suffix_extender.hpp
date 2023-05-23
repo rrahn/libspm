@@ -86,7 +86,7 @@ namespace jstmap
                 });
                 if (cargo.is_leaf()) {
                     auto [best_position, best_score] = manager.top().second;
-                    if (-best_score <= _error_count)
+                    if (-best_score <= static_cast<decltype(best_score)>(_error_count))
                         callback(std::move(best_position), -best_score);
                 }
             }
