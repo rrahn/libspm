@@ -16,7 +16,7 @@
 #include <ranges>
 
 #include <seqan3/alphabet/range/sequence.hpp>
-#include <seqan3/range/views/to_rank.hpp>
+#include <seqan3/alphabet/views/to_rank.hpp>
 #include <seqan3/core/debug_stream.hpp>
 
 #include <libjst/search/state_manager_concept.hpp>
