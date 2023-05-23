@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <seqan/index.h>
-
 #include <libcontrib/seqan/container_adapter.hpp>
+
+#include <seqan/index.h>
 
 #include <libjst/matcher/seqan_pattern_base.hpp>
 
