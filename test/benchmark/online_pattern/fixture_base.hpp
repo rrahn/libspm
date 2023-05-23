@@ -109,21 +109,28 @@ namespace just::bench
             int32_t hit_count{};
             for (auto _ : state)
             {
-                benchmark::DoNotOptimize(hit_count = execute(trees, matcher, (traverser_factory_t &&) make_traverser));
+                benchmark::DoNotOptimize(hit_count = execute(trees, matcher, (traverser_factory_t &&) make_traverser, state.range(0)));
                 benchmark::ClobberMemory();
             }
         }
 
         constexpr size_t get_chunk_size(size_t const thread_count) noexcept {
-            return (std::ranges::size(store().source()) + thread_count - 1) / thread_count;
+            if (thread_count == 1) {
+                return std::ranges::size(store().source());
+            } else {
+                return std::ranges::size(store().source()) / 10000;
+            }
         }
 
         template <typename trees_t, typename matcher_t, typename traverser_factory_t>
-        static int32_t execute(trees_t && trees, matcher_t & matcher, traverser_factory_t && make_traverser) {
+        static int32_t execute(trees_t && trees,
+                               matcher_t & matcher,
+                               traverser_factory_t && make_traverser,
+                               uint32_t thread_count) {
             int32_t hit_count = 0;
             std::ptrdiff_t const chunk_count = std::ranges::ssize(trees);
 
-            #pragma omp parallel for shared(trees), firstprivate(matcher, make_traverser), schedule(static), reduction(+:hit_count)
+            #pragma omp parallel for num_threads(thread_count), shared(trees), firstprivate(matcher, make_traverser), schedule(static), reduction(+:hit_count)
             for (std::ptrdiff_t chunk = 0; chunk < chunk_count; ++chunk) {
                 auto tree = trees[chunk];
                 auto traverser = make_traverser(tree);
