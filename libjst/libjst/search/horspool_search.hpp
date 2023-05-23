@@ -16,7 +16,7 @@
 #include <ranges>
 
 #include <seqan3/alphabet/range/sequence.hpp>
-#include <seqan3/range/views/to_rank.hpp>
+#include <seqan3/alphabet/views/to_rank.hpp>
 
 #include <libjst/search/state_manager_concept.hpp>
 #include <libjst/search/state_manager_single.hpp>
@@ -88,7 +88,7 @@ public:
         size_t max_rank = std::ranges::distance(_pattern) - 1;
         occurrence_table.fill(max_rank);
         size_t symbol_idx{};
-        for (auto rank : _pattern | seqan3::ranges::to_rank | std::views::take(max_rank))
+        for (auto rank : _pattern | seqan3::views::to_rank | std::views::take(max_rank))
             occurrence_table[rank] = max_rank - ++symbol_idx;
 
         _state_manager.state() = max_rank;

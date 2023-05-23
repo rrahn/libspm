@@ -9,7 +9,7 @@
 
 #include <seqan3/alphabet/adaptation/char.hpp>
 #include <seqan3/utility/container/aligned_allocator.hpp>
-#include <seqan3/range/container/dynamic_bitset.hpp>
+// #include <seqan3/range/container/dynamic_bitset.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
@@ -65,7 +65,7 @@ public:
         auto && haystack = get_haystack();
 
         // Create needle!
-        std::mt19937 rng{sequence_size};
+        std::mt19937 rng(sequence_size);
         std::uniform_int_distribution<size_t> needle_begin_dist{0, haystack.size() - needle.size()};
         size_t needle_begin = needle_begin_dist(rng);
         std::ranges::copy(haystack.begin() + needle_begin, haystack.begin() + needle_begin + needle.size(),
