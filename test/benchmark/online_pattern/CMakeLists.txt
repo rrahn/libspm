@@ -21,6 +21,30 @@ target_use_datasources(naive_pattern_plain_benchmark FILES
                        needle128.fa
                        needle256.fa)
 
+onlin_pattern_benchmark(shiftor_pattern_plain_benchmark.cpp)
+target_use_datasources(shiftor_pattern_plain_benchmark FILES
+                       ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst
+                       needle32.fa
+                       needle64.fa
+                       needle128.fa
+                       needle256.fa)
+
+onlin_pattern_benchmark(horspool_pattern_plain_benchmark.cpp)
+target_use_datasources(horspool_pattern_plain_benchmark FILES
+                       ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst
+                       needle32.fa
+                       needle64.fa
+                       needle128.fa
+                       needle256.fa)
+
+onlin_pattern_benchmark(myers_pattern_plain_benchmark.cpp)
+target_use_datasources(myers_pattern_plain_benchmark FILES
+                       ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst
+                       needle32.fa
+                       needle64.fa
+                       needle128.fa
+                       needle256.fa)
+
 # Shiftor resumable pattern benchmarks
 
 onlin_pattern_benchmark(shiftor_pattern_resumable_chr22_needle32_benchmark.cpp)
