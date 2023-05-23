@@ -100,7 +100,7 @@ namespace just::bench
         }
 
         constexpr float to_error_rate(int32_t error_count) noexcept {
-            return static_cast<float>(error_count)/100.0;
+            return static_cast<float>(error_count)/100.0 + 0.0001;
         }
 
         inline size_t total_bytes() noexcept {

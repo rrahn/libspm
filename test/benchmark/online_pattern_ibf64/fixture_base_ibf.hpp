@@ -100,7 +100,7 @@ namespace just::bench
         }
 
         constexpr float to_error_rate(int32_t error_count) noexcept {
-            _options.error_rate = static_cast<float>(error_count)/100.0;
+            _options.error_rate = static_cast<float>(error_count)/100.0 + 0.00001;
             return _options.error_rate;
         }
 
