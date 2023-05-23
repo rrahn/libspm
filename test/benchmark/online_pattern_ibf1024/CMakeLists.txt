@@ -63,3 +63,31 @@ target_use_datasources(horspool_pattern_oblivious_chr22_needle128_ibf1024_benchm
 
 onlin_pattern_ibf_benchmark(horspool_pattern_oblivious_chr22_needle256_ibf1024_benchmark.cpp)
 target_use_datasources(horspool_pattern_oblivious_chr22_needle256_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle256.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+# Myers resumable pattern benchmarks
+
+onlin_pattern_ibf_benchmark(myers_pattern_resumable_chr22_needle32_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_resumable_chr22_needle32_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle32.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_resumable_chr22_needle64_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_resumable_chr22_needle64_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle64.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_resumable_chr22_needle128_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_resumable_chr22_needle128_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle128.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_resumable_chr22_needle256_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_resumable_chr22_needle256_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle256.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+# Myers oblivious pattern benchmarks
+
+onlin_pattern_ibf_benchmark(myers_pattern_oblivious_chr22_needle32_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_oblivious_chr22_needle32_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle32.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_oblivious_chr22_needle64_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_oblivious_chr22_needle64_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle64.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_oblivious_chr22_needle128_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_oblivious_chr22_needle128_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle128.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+onlin_pattern_ibf_benchmark(myers_pattern_oblivious_chr22_needle256_ibf1024_benchmark.cpp)
+target_use_datasources(myers_pattern_oblivious_chr22_needle256_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle256.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
