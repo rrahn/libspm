@@ -56,7 +56,7 @@ static void naive_pattern(benchmark::State & state, args_t && ...args)
 
 BENCHMARK_CAPTURE(naive_pattern,
                   online_pattern_plain_needle32,
-                  "/home/rahn/workspace/jstmap/build/bench/Release/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
+                  DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst",
                   DATADIR"needle32.fa")
                     ->MeasureProcessCPUTime()
                     ->UseRealTime();
