@@ -23,6 +23,7 @@
 #include <seqan3/test/performance/units.hpp>
 
 #include <jstmap/global/load_jst.hpp>
+#include <jstmap/global/match_position.hpp>
 #include <jstmap/search/load_queries.hpp>
 #include <jstmap/search/filter_queries.hpp>
 
@@ -35,7 +36,6 @@
 #include <libjst/sequence_tree/stats.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
-#include <libjst/traversal/tree_traverser_base.hpp>
 
 #include "fixture_config.hpp"
 
@@ -51,8 +51,8 @@ namespace just::bench
     };
 
     template <typename capture_t>
-    class fixture_base_ibf : public ::benchmark::Fixture,
-                             protected capture_t
+    class fixture_base_seed_extend : public ::benchmark::Fixture,
+                                     protected capture_t
     {
     protected:
         using sequence_t = jstmap::reference_t;
@@ -63,21 +63,17 @@ namespace just::bench
 
         jstmap::rcs_store_t _rcs_store{};
         queries_t _queries{};
-        jstmap::search_options _options{};
 
     public:
 
-        fixture_base_ibf() = default;
-        virtual ~fixture_base_ibf() = default;
+        fixture_base_seed_extend() = default;
+        virtual ~fixture_base_seed_extend() = default;
 
         virtual void SetUp(::benchmark::State const &) override {
-            auto [jst_file, needle_file, ibf_file] = this->fixture();
+            auto [jst_file, needle_file] = this->fixture();
 
             _rcs_store = jstmap::load_jst(jst_file);
             _queries = jstmap::load_queries(needle_file);
-            _options.index_input_file_path = ibf_file;
-            _options.thread_count = 1;
-            _options.error_rate = 0.0;
         }
 
         virtual void TearDown(::benchmark::State & state) override {
@@ -99,12 +95,17 @@ namespace just::bench
             });
         }
 
-        constexpr float to_error_rate(int32_t error_count) noexcept {
-            _options.error_rate = static_cast<float>(error_count)/100.0 + 0.00001;
-            return _options.error_rate;
+        constexpr size_t get_chunk_size(size_t const thread_count) noexcept {
+            return (std::ranges::size(store().source()) + thread_count - 1) / thread_count;
         }
 
-        inline size_t total_bytes(size_t window_size) noexcept {
+        constexpr float to_error_rate(int32_t error_count) noexcept {
+            return static_cast<float>(error_count)/100.0 + 0.0001;
+        }
+
+        inline size_t total_bytes() noexcept {
+            size_t window_size = needle().size();
+
             auto tree = store() | libjst::make_volatile()
                                 | libjst::labelled()
                                 | libjst::coloured()
@@ -113,62 +114,33 @@ namespace just::bench
                                 | libjst::left_extend(window_size - 1)
                                 | libjst::merge();
 
-            return libjst::stats(tree).symbol_count;
+            return libjst::stats(tree).symbol_count * std::ranges::size(queries());
         }
 
-        template <typename matcher_t, typename tree_closure_t, typename traverser_factory_t>
-        void run(::benchmark::State & state,
-                 matcher_t && make_pattern,
-                 tree_closure_t && closure,
-                 traverser_factory_t && make_traverser)
+        template <typename runner_creator_t>
+        void run(::benchmark::State & state, runner_creator_t && make_runner)
         {
-            _options.thread_count = state.range(0);
-            auto queries = make_queries();
+            auto trees = libjst::chunk(store(), get_chunk_size(state.range(0)));
             int32_t hit_count{};
             for (auto _ : state)
             {
-                auto [bin_size, search_queries] = jstmap::filter_queries(queries, _options);
-                auto trees = store() | libjst::chunk(bin_size);
-
-                benchmark::DoNotOptimize(hit_count = execute(trees, make_pattern, closure, search_queries, make_traverser, _options));
+                benchmark::DoNotOptimize(hit_count = execute(trees, make_runner, queries(), state.range(0)));
                 benchmark::ClobberMemory();
             }
         }
 
-        constexpr auto make_queries() const noexcept {
-            size_t query_idx{};
-            auto queries = _queries
-                     | std::views::transform([&] (jstmap::sequence_record_t const & record) {
-                        return jstmap::search_query{query_idx++, record};
-                     })
-                     | seqan3::ranges::to<std::vector>();
-            return queries;
-        }
-
-        template <typename trees_t, typename matcher_t, typename tree_closure_t, typename search_queries_t, typename traverser_factory_t>
+        template <typename trees_t, typename runner_creator_t, typename search_queries_t>
         static int32_t execute(trees_t && trees,
-                               matcher_t && make_pattern,
-                               tree_closure_t && tree_closure,
-                               search_queries_t const & queries,
-                               traverser_factory_t && make_traverser,
-                               jstmap::search_options const & options) {
+                               runner_creator_t && make_runner,
+                               search_queries_t && queries,
+                               size_t const thread_count) {
             int32_t hit_count = 0;
             std::ptrdiff_t const chunk_count = std::ranges::ssize(trees);
 
-            #pragma omp parallel for num_threads(options.thread_count), shared(trees), firstprivate(make_pattern, make_traverser, tree_closure), schedule(static), reduction(+:hit_count)
+            #pragma omp parallel for num_threads(thread_count), shared(trees), firstprivate(make_runner, queries), schedule(static), reduction(+:hit_count)
             for (std::ptrdiff_t chunk = 0; chunk < chunk_count; ++chunk) {
-                if (std::ranges::empty(queries[chunk])) continue;
-
-                auto pattern = make_pattern(queries[chunk] |
-                                    std::views::transform([] (jstmap::search_query const & query) {
-                                        return std::views::all(query.value().sequence());
-                                    }));
-                auto tree = trees[chunk] | tree_closure(libjst::window_size(pattern));
-                auto traverser = make_traverser(tree);
-                for (auto it = traverser.begin(); it != traverser.end(); ++it) {
-                    auto && cargo = *it;
-                    pattern(cargo.sequence(), [&] (auto const &) { ++hit_count; });
-                }
+                auto runner = make_runner(trees[chunk], queries);
+                runner([&] (std::ptrdiff_t, jstmap::match_position) { ++hit_count; });
             }
             return hit_count;
         }
