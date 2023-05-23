@@ -97,7 +97,7 @@ namespace jstmap
             };
 
             prefix_position.visit(seqan3::detail::multi_invocable{
-                [&] (libjst::breakpoint_end site) {
+                [&] (libjst::breakpoint_end) {
                     // log_debug("On reference path");
                     while (breakend_it != _base_tree.data().variants().begin() &&
                            global_start_offset < get_position(*breakend_it)) {
@@ -220,7 +220,7 @@ namespace jstmap
                 });
                 if (cargo.is_leaf()) {
                     auto [best_position, best_score] = manager.top().second;
-                    if (-best_score <= _error_count)
+                    if (-best_score <= static_cast<decltype(best_score)>(_error_count))
                         callback(std::move(best_position), -best_score);
                 }
             }
