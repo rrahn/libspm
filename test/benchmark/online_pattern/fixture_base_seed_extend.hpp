@@ -96,11 +96,7 @@ namespace just::bench
         }
 
         constexpr size_t get_chunk_size(size_t const thread_count) noexcept {
-            if (thread_count == 1) {
-                return std::ranges::size(store().source());
-            } else {
-                return std::ranges::size(store().source()) / 10000;
-            }
+            return (std::ranges::size(store().source()) + thread_count - 1) / thread_count;
         }
 
         constexpr float to_error_rate(int32_t error_count) noexcept {
@@ -125,23 +121,12 @@ namespace just::bench
         void run(::benchmark::State & state, runner_creator_t && make_runner)
         {
             auto trees = libjst::chunk(store(), get_chunk_size(state.range(0)));
-            auto queries = make_queries();
             int32_t hit_count{};
             for (auto _ : state)
             {
-                benchmark::DoNotOptimize(hit_count = execute(trees, make_runner, queries, state.range(0)));
+                benchmark::DoNotOptimize(hit_count = execute(trees, make_runner, queries(), state.range(0)));
                 benchmark::ClobberMemory();
             }
-        }
-
-        constexpr auto make_queries() const noexcept {
-            size_t query_idx{};
-            auto queries = _queries
-                     | std::views::transform([&] (jstmap::sequence_record_t const & record) {
-                        return jstmap::search_query{query_idx++, record};
-                     })
-                     | seqan3::ranges::to<std::vector>();
-            return queries;
         }
 
         template <typename trees_t, typename runner_creator_t, typename search_queries_t>
@@ -154,9 +139,7 @@ namespace just::bench
 
             #pragma omp parallel for num_threads(thread_count), shared(trees), firstprivate(make_runner, queries), schedule(static), reduction(+:hit_count)
             for (std::ptrdiff_t chunk = 0; chunk < chunk_count; ++chunk) {
-                auto runner = make_runner(trees[chunk], queries | std::views::transform([] (jstmap::search_query const & query) {
-                                            return std::views::all(query.value().sequence());
-                                          }));
+                auto runner = make_runner(trees[chunk], queries);
                 runner([&] (std::ptrdiff_t, jstmap::match_position) { ++hit_count; });
             }
             return hit_count;
