@@ -103,13 +103,14 @@ namespace just::bench
                  tree_closure_t && closure,
                  traverser_factory_t && make_traverser)
         {
-            auto trees = libjst::chunk(store(), get_chunk_size(state.range(0)))
+            size_t const thread_count = state.range(0);
+            auto trees = libjst::chunk(store(), get_chunk_size(thread_count))
                        | std::views::transform([&] (auto && tree) { return closure(tree); });
 
             int32_t hit_count{};
             for (auto _ : state)
             {
-                benchmark::DoNotOptimize(hit_count = execute(trees, matcher, (traverser_factory_t &&) make_traverser, state.range(0)));
+                benchmark::DoNotOptimize(hit_count = execute(trees, matcher, (traverser_factory_t &&) make_traverser, thread_count));
                 benchmark::ClobberMemory();
             }
         }
