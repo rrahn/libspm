@@ -91,3 +91,8 @@ target_use_datasources(myers_pattern_oblivious_chr22_needle128_ibf1024_benchmark
 
 onlin_pattern_ibf_benchmark(myers_pattern_oblivious_chr22_needle256_ibf1024_benchmark.cpp)
 target_use_datasources(myers_pattern_oblivious_chr22_needle256_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst needle256.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
+
+# Pigeonhole oblivious pattern benchmarks
+
+onlin_pattern_benchmark(pigeonhole_pattern_oblivious_chr22_sim100x100Ke3_ibf1024_benchmark.cpp)
+target_use_datasources(pigeonhole_pattern_oblivious_chr22_sim100x100Ke3_ibf1024_benchmark FILES ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst sim_reads_chr22_s100_c100K_e3.fa ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c1024.k21.ibf)
