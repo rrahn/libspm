@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 
 #include <libjst/sequence_tree/labelled_tree.hpp>
@@ -27,31 +28,32 @@
 namespace just::bench
 {
     template <typename capture_t>
-    class fixture_oblivious_pattern_ibf : public fixture_base_ibf<capture_t>
+    class fixture_pigeonhole_pattern_ibf : public fixture_base_ibf<capture_t>
     {
     private:
         using base_t = fixture_base_ibf<capture_t>;
     public:
 
-        fixture_oblivious_pattern_ibf() = default;
-        virtual ~fixture_oblivious_pattern_ibf() = default;
+        fixture_pigeonhole_pattern_ibf() = default;
+        virtual ~fixture_pigeonhole_pattern_ibf() = default;
 
-        template <typename matcher_t>
-        void run(::benchmark::State & state, matcher_t matcher)
+        template <typename pattern_creator_t>
+        void run(::benchmark::State & state, pattern_creator_t && make_pattern)
         {
-            auto tree_closure = [] (size_t window_size) {
+            std::atomic<size_t> _window_size{};
+            auto tree_closure = [&] (size_t window_size) {
+                _window_size.store(window_size, std::memory_order_relaxed);
                 return libjst::labelled() | libjst::coloured()
                                           | libjst::trim(window_size - 1)
                                           | libjst::prune()
                                           | libjst::left_extend(window_size - 1)
                                           | libjst::merge();
             };
-            auto make_pattern = [&] (auto const &) { return matcher; };
 
             base_t::run(state, make_pattern, tree_closure, [] (auto const & tree) {
                 return libjst::tree_traverser_base{tree};
             });
-            this->processed_bytes = base_t::total_bytes(libjst::window_size(matcher));
+            this->processed_bytes = base_t::total_bytes(_window_size.load());
         }
     };
 }  // namespace just::bench

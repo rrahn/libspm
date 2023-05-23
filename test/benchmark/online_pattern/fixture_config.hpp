@@ -50,4 +50,11 @@ inline constexpr auto chr22_needle256 = [] () {
         .needle_file{DATADIR"needle256.fa"}
     };
 };
+
+inline constexpr auto chr22_sim100x100Ke3 = [] () {
+    return benchmark_configuration{
+        .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
+        .needle_file{DATADIR"sim_reads_chr22_s100_c100K_e3.fa"}
+    };
+};
 }  // namespace just::bench

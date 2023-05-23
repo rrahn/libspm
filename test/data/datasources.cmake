@@ -181,3 +181,7 @@ declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phase
 declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c32768.k21.ibf USE_GUNZIP_EXTRACT
                     URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c32768.k21.ibf.gz
                     URL_HASH SHA256=1edac6e53ad441398ca3ff9016d26c9fbaa526ea9a302e79ee0e797f7141725e)
+
+declare_datasource (FILE sim_reads_chr22_s100_c100K_e3.fa USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/sim_reads_chr22_s100_c100K_e3.fa.gz
+                    URL_HASH SHA256=8f4ee4d8ac66d2a72fd4da33591e39e2b6ad7e1fbbf258ad0708f5af255e8a22)
