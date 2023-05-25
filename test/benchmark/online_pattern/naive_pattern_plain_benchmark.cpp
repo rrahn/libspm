@@ -51,7 +51,6 @@ static void naive_pattern(benchmark::State & state, args_t && ...args)
     }
     state.counters["bytes"] = total_bytes(rcs_store);
     state.counters["bytes_per_second"] = seqan3::test::bytes_per_second(total_bytes(rcs_store));
-    state.counters["#hits"] = hit_count;
 }
 
 BENCHMARK_CAPTURE(naive_pattern,

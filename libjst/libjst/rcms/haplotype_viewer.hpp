@@ -17,7 +17,7 @@
 #include <type_traits>
 
 #include <libjst/journal.hpp>
-#include <libjst/referentially_compressed_sequence_store/rcs_store.hpp>
+#include <libjst/rcms/rcs_store.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
@@ -30,12 +30,10 @@ namespace libjst
 
         using source_type = typename rcs_store_t::source_type;
 
-        using variant_map_type = typename rcs_store_t::variant_map_type;
-        using variant_type = std::ranges::range_value_t<variant_map_type>;
-        using position_type = std::remove_cvref_t<libjst::variant_position_t<variant_type>>;
-        using difference_type = typename position_type::value_type;
+        using variant_type = typename rcs_store_t::reference;
+        using difference_type = std::remove_cvref_t<libjst::variant_position_t<variant_type>>;
 
-        using journal_type = journal<difference_type, source_type const &>;
+        using journal_type = journal<difference_type, source_type>;
 
         class proxy;
 
@@ -56,6 +54,10 @@ namespace libjst
         constexpr rcs_store_t const & base() const noexcept {
             return _wrappee.get();
         }
+
+        constexpr size_t size() const noexcept {
+            return base().size();
+        }
     };
 
     template <typename rcs_store_t>
@@ -72,15 +74,18 @@ namespace libjst
         constexpr explicit proxy(haplotype_viewer const & host, difference_type const offset) :
             _journal{host.base().source()}
         {
-
             if (offset >= 0 && offset < host.base().size()) {
                 std::ptrdiff_t journal_offset{};
-                std::ranges::for_each(host.base().variants(), [&] (auto const & variant) {
-                    if (libjst::coverage(variant)[offset]) {
+                auto it = host.base().variants().begin() + 1;
+                auto last = host.base().variants().end() - 1;
+                for (; it != last; ++it) {
+                // std::ranges::for_each(host.base().variants(), [&] (auto && variant) {
+                    auto && variant = *it;
+                    if (libjst::coverage(variant).contains(offset)) {
                         record(variant, journal_offset + libjst::position(variant));
                         journal_offset += libjst::effective_size(variant);
                     }
-                });
+                };
             }
         }
     public:
@@ -102,10 +107,12 @@ namespace libjst
                     _journal.record_substitution(position, libjst::alt_sequence(variant));
                     break;
                 } case alternate_sequence_kind::deletion: {
-                    _journal.record_deletion(position, libjst::breakpoint_span(variant));
+                    _journal.record_deletion(position, libjst::breakpoint_span(libjst::get_breakpoint(variant)));
                     break;
                 } case alternate_sequence_kind::insertion: {
                     _journal.record_insertion(position, libjst::alt_sequence(variant));
+                    break;
+                } case alternate_sequence_kind::unknown: {
                     break;
                 } default: {
                     throw std::runtime_error{"Unknown alternate sequence kind."};
