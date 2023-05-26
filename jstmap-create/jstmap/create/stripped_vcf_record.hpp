@@ -25,6 +25,10 @@
 
 namespace jstmap
 {
+    struct variant_stat{
+        size_t snv_count{};
+        size_t indel_count{};
+    };
     class stripped_vcf_record
     {
     private:
@@ -40,6 +44,7 @@ namespace jstmap
         std::vector<alternative_t> _alt{};
         genotypes_t _genotypes{};
         domain_t _domain{};
+        variant_stat * _stat{};
         position_t _pos{};
         int32_t _sample_count{};
         int32_t _haplotype_count{};
@@ -53,8 +58,9 @@ namespace jstmap
         stripped_vcf_record() = default;
 
         template <typename vcf_file_t>
-        stripped_vcf_record(vcf_file_t & vcf_file, domain_t domain) :
-            _domain{std::move(domain)}
+        stripped_vcf_record(vcf_file_t & vcf_file, domain_t domain, variant_stat & stat) :
+            _domain{std::move(domain)},
+            _stat{&stat}
         {
             auto & file_context = seqan::context(vcf_file);
             _sample_count = seqan::length(seqan::sampleNames(file_context));
