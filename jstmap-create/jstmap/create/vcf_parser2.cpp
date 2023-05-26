@@ -103,20 +103,21 @@ void construct_jst_from_vcf2(std::filesystem::path const & reference_file,
 
     start = std::chrono::high_resolution_clock::now();
     rcs_store_t rcs_store{std::move(reference), haplotype_count};
-    std::cout << "Size: " << rcs_store.size() << "\n";
+    log_info("Haplotype count: ", haplotype_count);
     size_t record_count{0};
+    variant_stat stat{};
     while (!seqan::atEnd(vcf_file))
     {
-        if (record_count++ % 1000 == 0) {
-            log_debug("Processing record: ", record_count);
-        }
-        stripped_vcf_record tmp_record{vcf_file, rcs_store.variants().coverage_domain()};
+        // if (record_count++ % 1000 == 0) {
+        //     log_debug("Processing record: ", record_count);
+        // }
+        stripped_vcf_record tmp_record{vcf_file, rcs_store.variants().coverage_domain(), stat};
         tmp_record.alternatives(rcs_store);
     }
 
-    log(verbosity_level::verbose,
-        logging_level::info,
-        "Time parsing vcf: ", duration(start), " s");
+    log_info("Time parsing vcf: ", duration(start), " s");
+    log_info("#SNVs: ", stat.snv_count);
+    log_info("#InDels: ", stat.indel_count);
 
     // // ----------------------------------------------------------------------------
     // // Sort the variants.  VCF is sorted by specification?

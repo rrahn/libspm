@@ -36,8 +36,10 @@ namespace jstmap
             variant_t variant{};
 
             if (_ref.size() == _alt[i].size() && _ref.size() == 1) { // SNP
+                ++_stat->snv_count;
                 variant = variant_t{libjst::breakpoint{_pos, 1}, std::move(alt_sequence), std::move(_genotypes[i])};
             } else { // generic alternative: SNP, InDel, etc.
+                ++_stat->indel_count;
                 continue; // skip for now!
                 // auto [fst_ref, fst_alt] = std::ranges::mismatch(_ref, _alt[i]); // first non equal ranges in the beginning
                 // auto ref_suffix = _ref | std::views::drop(std::ranges::distance(std::ranges::begin(_ref), fst_ref))
