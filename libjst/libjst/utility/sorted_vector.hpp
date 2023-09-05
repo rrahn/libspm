@@ -79,6 +79,14 @@ public:
     }
     //!\}
 
+    constexpr container_t & data() noexcept {
+        return _elements;
+    }
+
+    constexpr container_t const & data() const noexcept {
+        return _elements;
+    }
+
     /*!\name Cpacity
      * \{
      */
