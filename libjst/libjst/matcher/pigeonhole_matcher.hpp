@@ -65,6 +65,9 @@ namespace libjst
             _patternInit(_pattern, _error_rate);
         }
 
+        constexpr auto position() const noexcept {
+            return seqan::position(_pattern);
+        }
     private:
 
         template <typename haystack_t>
@@ -92,7 +95,7 @@ namespace libjst
             if (!empty(finder))
                 return false;
 
-            pattern.finderLength = length(haystack(finder));
+            pattern.finderLength = std::ranges::size(haystack(finder));
             pattern.finderPosOffset = 0;
             pattern.finderPosNextOffset = pattern.maxSeqLen + pattern.finderLength;
 
