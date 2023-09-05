@@ -77,7 +77,6 @@ filter_queries(std::vector<search_query> const & queries, search_options const &
         // Bin assignment:
         for (size_t bin_idx = 0; bin_idx < bin_counts.size(); ++bin_idx)
             if (bin_counts[bin_idx] >= kmer_threshold) {
-                log_debug("Found bin:", bin_idx);
                 thread_local_buffer[thread_id][bin_idx].push_back(query);
             }
     }

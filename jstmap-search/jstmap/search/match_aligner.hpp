@@ -68,9 +68,9 @@ namespace jstmap
         using ref_tree_type = composed_tree_t<rcs_store_t const &,
                                                 libjst::make_volatile,
                                                 libjst::labelled,
-                                                libjst::coloured,
+                                                // libjst::coloured,
                                                 detail::defer<libjst::trim, size_t>,
-                                                libjst::prune,
+                                                // libjst::prune,
                                                 detail::defer<libjst::left_extend, size_t>,
                                                 libjst::merge,
                                                 libjst::seek
@@ -78,12 +78,16 @@ namespace jstmap
 
         record_sequence_t const & _query_sequence;
         ref_tree_type _reference_tree;
+        double _error_rate{};
 
     public:
 
-        explicit match_aligner(rcs_store_t const & rcs_store, record_sequence_t const & query_sequence) :
+        explicit match_aligner(rcs_store_t const & rcs_store,
+                               record_sequence_t const & query_sequence,
+                               double error_rate = 0.03) :
             _query_sequence{query_sequence},
-            _reference_tree{init(rcs_store)}
+            _reference_tree{init(rcs_store)},
+            _error_rate{error_rate}
         {}
 
         search_match operator()(match_position pos) const;

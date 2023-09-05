@@ -134,8 +134,17 @@ int search_main(seqan3::argument_parser & search_parser)
         log_debug("Load reference database");
         start = std::chrono::high_resolution_clock::now();
         rcs_store_t rcs_store = load_jst(options.jst_input_file_path);
+        // For debug purposes!
+
+        // rcs_store_t rcs_store{reference_t{rcs_store_tmp.source().begin(), rcs_store_tmp.source().end()}, rcs_store_tmp.size()};
+        // auto it_end = rcs_store_tmp.variants().end() - 1;
+        // auto it = it_end - 1;
+        // for (; it != it_end; ++it) {
+        //     rcs_store.add(*it);
+        // }
+
         end = std::chrono::high_resolution_clock::now();
-        log_debug("Loading time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Loading time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
         // Now we want to handle the bins as well.
 
@@ -165,7 +174,7 @@ int search_main(seqan3::argument_parser & search_parser)
             // log_debug("Bucket sizes:", bucket_sizes);
         }
         end = std::chrono::high_resolution_clock::now();
-        log_debug("Filter time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Filter time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
         // #TODO: add later
         // std::cout << "bin_size = " << bin_size << "\n";
@@ -189,22 +198,27 @@ int search_main(seqan3::argument_parser & search_parser)
                            | seqan3::ranges::to<std::vector>();
 
         // now where do we get the chunk size from?
-        auto chunked_rcms = rcs_store | libjst::chunk(bin_size);
+        auto chunked_rcms = rcs_store | libjst::chunk(15625u);
 
-        for (size_t bin_idx = 0; bin_idx < search_queries.size(); ++bin_idx)
+        for (size_t bin_idx = 0; bin_idx < std::ranges::size(chunked_rcms); ++bin_idx)
         { // parallel region
             if (search_queries[bin_idx].empty())
                 continue;
 
+            // if (bin_idx != 682)
+            //     continue;
+
             // Step 1: distribute search:
-            log_debug("Local search in bucket:", bin_idx);
+            log_debug("Local search in bucket: ", bin_idx);
 
             bucket current_bucket{.base_tree = chunked_rcms[bin_idx],
-                                  .needle_list = search_queries[bin_idx] | std::views::transform([] (search_query const & query) {
+                                  .needle_list = search_queries[bin_idx] /*| std::views::drop(9789)*/ | std::views::transform([] (search_query const & query) {
                                         return std::views::all(query.value().sequence());
                                    })};
-
+            // std::cout << "std::ranges::size(current_bucket.base_tree.data().source()) = " <<
+            //              std::ranges::size(current_bucket.base_tree.data().source()) << "\n";
             // Step 4: apply matching
+            log_debug("Initiate searcher");
             bucket_searcher searcher{std::move(current_bucket), 0.0};
             // searcher([] () { std::cout << "Found match!\n"; });
             // ATTENTION!!! Not thread safe!
@@ -238,37 +252,37 @@ int search_main(seqan3::argument_parser & search_parser)
         }
 
         end = std::chrono::high_resolution_clock::now();
-        log_debug("Matching time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Matching time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
 
         // Step 5: postprocess matches
         start = std::chrono::high_resolution_clock::now();
 
-        std::vector<search_matches> aligned_matches_list{};
-        aligned_matches_list.reserve(query_matches.size());
+        // std::vector<search_matches> aligned_matches_list{};
+        // aligned_matches_list.reserve(query_matches.size());
 
-        std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
-            search_matches aligned_matches{std::move(query_match).query()};
-            match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
+        // std::ranges::for_each(query_matches, [&] (all_matches & query_match) {
+        //     search_matches aligned_matches{std::move(query_match).query()};
+        //     match_aligner aligner{rcs_store, aligned_matches.query().value().sequence()};
 
-            for (match_position pos : query_match.matches()) {
-                aligned_matches.record_match(aligner(std::move(pos)));
-            }
-            aligned_matches_list.push_back(std::move(aligned_matches));
-        });
+        //     for (match_position pos : query_match.matches()) {
+        //         aligned_matches.record_match(aligner(std::move(pos)));
+        //     }
+        //     aligned_matches_list.push_back(std::move(aligned_matches));
+        // });
 
         end = std::chrono::high_resolution_clock::now();
-        log_debug("Aligning time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Aligning time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
         // Filter globally for the best hits.
         // Ater reducing them to the same file sort, uniquify and then erase redundant matches.
 
         // Step 6: finalise
         start = std::chrono::high_resolution_clock::now();
-        bam_writer writer{rcs_store, options.map_output_file_path};
-        std::ranges::for_each(aligned_matches_list, [&] (search_matches const & matches) {
-            writer.write_matches(matches);
-        });
+        // bam_writer writer{rcs_store, options.map_output_file_path};
+        // std::ranges::for_each(aligned_matches_list, [&] (search_matches const & matches) {
+        //     writer.write_matches(matches);
+        // });
         end = std::chrono::high_resolution_clock::now();
-        log_debug("Writing time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
+        log_info("Writing time:", std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), "s");
     }
     catch (std::exception const & ex)
     {

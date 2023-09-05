@@ -43,7 +43,9 @@ namespace jstmap
         template <typename callback_t>
         constexpr void operator()(callback_t && callback) const {
             libjst::pigeonhole_matcher filter{_bucket.needle_list, _error_rate};
-            std::cout << "libjst::window_size(filter) = " << libjst::window_size(filter) << "\n";
+
+            assert(libjst::window_size(filter) > 0);
+            // std::cout << "libjst::window_size(filter) = " << libjst::window_size(filter) << "\n";
 
             auto filter_tree = _bucket.base_tree | libjst::labelled()
                                                  | libjst::coloured()
@@ -56,7 +58,9 @@ namespace jstmap
             libjst::tree_traverser_base traverser{filter_tree};
             for (auto it = traverser.begin(); it != traverser.end(); ++it) {
                 auto seed_cargo = *it;
+                // std::cout << "First sequence\n";
                 filter(seed_cargo.sequence(), [&] (auto const & seed_finder) {
+                    // std::cout << "Found seed\n";
                     callback(seed_cargo, seed_finder, filter.position());
                 });
             }

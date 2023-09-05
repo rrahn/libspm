@@ -28,6 +28,7 @@
 
 #include <jstmap/global/match_position.hpp>
 #include <jstmap/search/seed_node_wrapper.hpp>
+#include <jstmap/search/seed_extension_tree.hpp>
 #include <jstmap/search/seed_prefix_node_cargo.hpp>
 #include <jstmap/search/seed_prefix_seek_position.hpp>
 
@@ -57,96 +58,54 @@ namespace jstmap
                                   finder_t && seed_finder,
                                   callback_t && callback) const
         {
+            // we need to map the position based on the local label!
             if (std::ranges::empty(_reverse_needle)) {
-                callback(match_position{.tree_position = seed_cargo.position(),
-                                        .label_offset = beginPosition(seed_finder)},
+                libjst::seek_position prefix_position = seed_cargo.position();
+                prefix_position.visit([&] <typename descriptor_t> (descriptor_t const &) {
+                    if constexpr (!std::same_as<descriptor_t, libjst::breakpoint_end>)
+                        prefix_position.initiate_alternate_node(prefix_position.get_variant_index());
+                });
+                callback(match_position{.tree_position = std::move(prefix_position),
+                                        .label_offset = to_path_position(beginPosition(seed_finder), seed_cargo)},
                                         _error_count);
                 return;
             }
 
             libjst::restorable_myers_prefix_matcher extender{_reverse_needle, _error_count};
+            auto reference_size = std::ranges::ssize(_reverse_tree.data().source());
+            auto breakend_count = _reverse_tree.data().variants().size();
+
+            // now reverse position!
+            std::ptrdiff_t distance_to_end = std::ranges::ssize(seed_cargo.sequence()) - (beginPosition(seed_finder) - 1);
+            match_position start{.tree_position = seed_prefix_seek_position{seed_cargo.position(), breakend_count},
+                                 .label_offset = reference_size - (std::ranges::ssize(seed_cargo.path_sequence()) - distance_to_end)};
 
             auto extend_tree = _reverse_tree | libjst::labelled()
                                              | libjst::coloured()
-                                             | libjst::trim(libjst::window_size(extender) - 1)
                                              | libjst::prune()
                                              | libjst::merge()
-                                             | libjst::seek();
+                                             | libjst::seek()
+                                             | jstmap::extend_from(start, libjst::window_size(extender));
 
-            using tree_t = decltype(extend_tree);
-            using node_t = libjst::tree_node_t<tree_t>;
-            using extender_t = decltype(extender);
-            using state_t = typename extender_t::state_type;
-
-            auto const & variants = extend_tree.data().variants();
-            seed_prefix_seek_position prefix_start_position{seed_cargo.position(), std::ranges::size(variants)};
-            node_t initial_node{extend_tree.seek(std::move(prefix_start_position))};
-            initial_node.toggle_alternate_path(); // Mark as alternate path to forbid extension on reference path
-
-            auto reference_size = std::ranges::ssize(_reverse_tree.data().source());
-            auto prefix_start_it = hostIterator(hostIterator(begin(seed_finder))); // iterator to local haystack segment of current node
-            std::ptrdiff_t seed_begin_offset = std::ranges::distance(seed_cargo.path_sequence().begin(), prefix_start_it);
-            std::ptrdiff_t prefix_start = reference_size - seed_begin_offset;
-
-            seed_prefix_node_cargo initial_cargo{*initial_node, _reverse_tree};
-            auto suffix_begin = std::ranges::next(initial_cargo.path_sequence().begin(), prefix_start);
-            auto label_suffix = std::ranges::subrange{suffix_begin, initial_cargo.sequence().end()};
-
-            // we call the extender and he updates its internal state!
-            extender(label_suffix, [&] (auto const & extender_finder) {
-                callback(match_position{.tree_position = initial_cargo.position(),
-                                        .label_offset = reference_size - endPosition(extender_finder)},
-                                        -getScore(extender.capture()));
-                // callback(initial_cargo, seed_prefix_finder{extender_finder, reference_size}, );
-            });
-
-            // // We do not need to extend the tree!
-            // if (std::ranges::size(label_suffix) >= libjst::window_size(extender) - 1)
-            //     return;
-
-            // Can we generate a new partial tree?
-
-
-            // Follow the path:
-            std::stack<node_t> node_stack{};
-            std::stack<state_t> state_stack{};
-
-            // we need a different end condition!?
-
-            // we may need some other comparison, because we don't want to move further.
-            if (auto c_ref = initial_node.next_ref(); c_ref.has_value()) {
-                node_stack.push(std::move(*c_ref));
-                state_stack.push(extender.capture());
-            }
-            if (auto c_alt = initial_node.next_alt(); c_alt.has_value()) {
-                node_stack.push(std::move(*c_alt));
-                state_stack.push(extender.capture());
-            }
-
-            // Now we have to move here!
-            while (!node_stack.empty()) {
-                node_t node = std::move(node_stack.top());
-                extender.restore(std::move(state_stack.top()));
-                node_stack.pop();
-                state_stack.pop();
-
-                seed_prefix_node_cargo cargo{*node, _reverse_tree};
-                extender(cargo.sequence(), [&] (auto const & extender_finder) {
-                    callback(match_position{.tree_position = cargo.position(),
-                                            .label_offset = reference_size - endPosition(extender_finder)},
+            libjst::tree_traverser_base prefix_traverser{extend_tree};
+            extension_state_manager manager{extender};
+            prefix_traverser.subscribe(manager);
+            for (auto cargo : prefix_traverser) {
+                seed_prefix_node_cargo prefix_cargo{std::move(cargo), _reverse_tree};
+                extender(prefix_cargo.sequence(), [&] (auto const & prefix_finder) {
+                    callback(match_position{.tree_position = prefix_cargo.position(),
+                                            .label_offset = reference_size -
+                                                            to_path_position(endPosition(prefix_finder), prefix_cargo)},
                                             -getScore(extender.capture()));
-                    // callback(cargo, seed_prefix_finder{extender_finder, reference_size}, -getScore(extender.capture()));
                 });
-
-                if (auto c_ref = node.next_ref(); c_ref.has_value()) {
-                    node_stack.push(std::move(*c_ref));
-                    state_stack.push(extender.capture());
-                }
-                if (auto c_alt = node.next_alt(); c_alt.has_value()) {
-                    node_stack.push(std::move(*c_alt));
-                    state_stack.push(extender.capture());
-                }
             }
+        }
+
+    private:
+        template <typename position_t, typename cargo_t>
+        constexpr auto to_path_position(position_t local_position, cargo_t const & cargo) const noexcept {
+            return std::ranges::ssize(cargo.path_sequence()) -
+                   (std::ranges::ssize(cargo.sequence()) - local_position);
         }
     };
 }  // namespace jstmap
