@@ -42,7 +42,7 @@ TEST_F(compressed_multisequence_test, construct) {
     coverage_domain_type domain{0, 10};
     test_type multisequence{src, domain};
 
-    EXPECT_EQ(multisequence.source(), source_type{"AAAAAAAAAAAAAAA"_dna4});
+    EXPECT_RANGE_EQ(multisequence.source(), source_type{"AAAAAAAAAAAAAAA"_dna4});
     EXPECT_TRUE(multisequence.coverage_domain() == domain);
 }
 

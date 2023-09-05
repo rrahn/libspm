@@ -27,9 +27,9 @@ using variant_t = jst::test::variant<libjst::breakpoint, source_t, int, libjst::
 struct fixture {
     source_t source{};
     std::vector<variant_t> variants{};
-    std::size_t coverage_size{};
+    uint32_t coverage_size{};
     source_t needle{};
-    std::vector<std::size_t> expected_occurrences{};
+    std::vector<uint32_t> expected_occurrences{};
 
     template <typename stream_t, typename this_t>
         requires std::same_as<std::remove_cvref_t<this_t>, fixture>

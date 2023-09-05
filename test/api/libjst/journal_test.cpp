@@ -258,10 +258,14 @@ TEST_F(journal_test, record_deletion)
 
     journal_type journal_base{sequence};
 
-    EXPECT_NE((journal_base.record_deletion(12, 1)), std::ranges::end(journal_base));
-    EXPECT_NE((journal_base.record_deletion(8, 1)), std::ranges::end(journal_base));
-    EXPECT_NE((journal_base.record_deletion(4, 1)), std::ranges::end(journal_base));
-    EXPECT_NE((journal_base.record_deletion(0, 1)), std::ranges::end(journal_base));
+    auto it = journal_base.record_deletion(12, 1);
+    EXPECT_NE(it, std::ranges::end(journal_base));
+    it = journal_base.record_deletion(8, 1);
+    EXPECT_NE(it, std::ranges::end(journal_base));
+    it = journal_base.record_deletion(4, 1);
+    EXPECT_NE(it, std::ranges::end(journal_base));
+    it = journal_base.record_deletion(0, 1);
+    EXPECT_NE(it, std::ranges::end(journal_base));
 
     std::string expected_base{sequence};
     EXPECT_RANGE_EQ(journal_base.sequence(), expected_base.erase(12, 1).erase(8, 1).erase(4, 1).erase(0, 1));

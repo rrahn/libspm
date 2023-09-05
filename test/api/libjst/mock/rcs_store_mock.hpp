@@ -34,6 +34,7 @@ namespace jst::test
         insertion_t insertion{};
         deletion_t deletion{};
         coverage_t coverage{};
+        libjst::range_domain<uint32_t> domain{};
 
     private:
         friend position_t & tag_invoke(std::tag_t<libjst::position>, variant & me) {

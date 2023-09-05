@@ -153,17 +153,20 @@ public:
 
     iterator erase(iterator pos)
     {
-        return iterator{_elements.erase(pos.base())};
+        return iterator{std::addressof(_elements),
+                        std::ranges::distance(_elements.begin(), _elements.erase(pos.base()))};
     }
 
     iterator erase(const_iterator pos)
     {
-        return iterator{_elements.erase(pos.base())};
+        return iterator{std::addressof(_elements),
+                        std::ranges::distance(_elements.begin(), _elements.erase(pos.base()))};
     }
 
     iterator erase(const_iterator first, const_iterator last)
     {
-        return iterator{_elements.erase(first.base(), last.base())};
+        return iterator{std::addressof(_elements),
+                        std::ranges::distance(_elements.begin(), _elements.erase(first.base(), last.base()))};
     }
 
     size_type erase(key_t const & key)

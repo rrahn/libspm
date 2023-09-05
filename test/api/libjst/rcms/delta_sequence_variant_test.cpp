@@ -27,7 +27,7 @@ TEST_F(delta_sequence_variant_test, concept) {
     EXPECT_TRUE(std::ranges::contiguous_range<sequence_type>);
     EXPECT_TRUE(std::ranges::view<sequence_type>);
     EXPECT_TRUE(std::ranges::sized_range<sequence_type>);
-    EXPECT_FALSE(std::ranges::common_range<sequence_type>);
+    EXPECT_TRUE(std::ranges::common_range<sequence_type>);
     EXPECT_TRUE(std::ranges::borrowed_range<sequence_type>);
 }
 
