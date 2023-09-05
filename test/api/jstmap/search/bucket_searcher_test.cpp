@@ -154,34 +154,26 @@ TEST_F(bucket_searcher_test, complete_tree) {
     auto base_tree = rcs_store | libjst::make_volatile();
 
     // now we need to generate positions and extract reads from this with errors?
-    auto [sampled_positions, reads] = generate_reads(base_tree, 100);
-    // constexpr std::ptrdiff_t offset{30'000'000};
-    // constexpr std::ptrdiff_t read_length{100};
+    auto [sampled_positions, tmp_reads] = generate_reads(base_tree, 100);
 
-    // std::vector<jstmap::reference_t> reads{};
-    // reads.emplace_back(rcs_store.source().begin() + offset,
-    //                    rcs_store.source().begin() + offset + read_length);
+    std::vector<jstmap::reference_t> reads{tmp_reads};
+
     auto verify_tree = base_tree | libjst::labelled()
-                                 | libjst::trim(99u)
                                  | libjst::merge()
                                  | libjst::seek();
 
     jstmap::bucket test_bucket{.base_tree = base_tree, .needle_list = reads};
     jstmap::bucket_searcher searcher{test_bucket, 0.0};
     searcher([&] (std::ptrdiff_t const needle_index, jstmap::match_position && match) {
-        std::cout << "*" << std::flush;
         auto node = verify_tree.seek(match.tree_position);
         auto cargo = *node;
         auto root_path_label = cargo.path_sequence();
         auto match_begin = std::ranges::next(root_path_label.begin(), match.label_offset);
         auto match_end = std::ranges::next(match_begin, 100);
-        jstmap::reference_t match_segment{match_begin, match_end};
-        EXPECT_EQ(reads[needle_index], match_segment) << "Position: " << match.tree_position
-                                                      << " Offset: " << match.label_offset;
+        std::string match_segment{match_begin, match_end};
+        std::string needle{reads[needle_index].begin(), reads[needle_index].end()};
+        EXPECT_EQ(match_segment, needle) << "Position: " << match.tree_position
+                                         << " Offset: " << match.label_offset
+                                         << " Needle: " << needle_index;
     });
 }
-
-// Identität:
-// Experte für, Lehrer für
-// In Schritte aufteilen
-// Format vorgeben

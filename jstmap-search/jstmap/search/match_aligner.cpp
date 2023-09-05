@@ -23,10 +23,12 @@ namespace jstmap
     {
         auto node = _reference_tree.seek(pos.tree_position);
         auto cargo = *node;
-        auto ref_sequence = cargo.sequence();
+        auto ref_sequence = cargo.path_sequence();
 
-        size_t end_position = std::ranges::size(ref_sequence) - pos.label_offset;
-        size_t begin_position = end_position - std::ranges::size(_query_sequence);
+        std::ptrdiff_t errors = std::ceil(_error_rate * std::ranges::ssize(_query_sequence));
+        std::ptrdiff_t begin_position = std::max<std::ptrdiff_t>(0, pos.label_offset - errors);
+        std::ptrdiff_t end_position = std::min(pos.label_offset + std::ranges::ssize(_query_sequence) + errors,
+                                               std::ranges::ssize(ref_sequence));
 
         auto align_config = match_aligner::get_alignment_config(
             seqan3::match_score{4},
@@ -45,9 +47,9 @@ namespace jstmap
         size_t window_size = std::ranges::size(_query_sequence) - 1;
         return rcs_store | libjst::make_volatile()
                          | libjst::labelled()
-                         | libjst::coloured()
+                        //  | libjst::coloured()
                          | libjst::trim(window_size)
-                         | libjst::prune()
+                        //  | libjst::prune()
                          | libjst::left_extend(window_size)
                          | libjst::merge()
                          | libjst::seek();
