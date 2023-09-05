@@ -119,6 +119,10 @@ namespace libjst
             return get_domain().size();
         }
 
+        constexpr void reserve(size_t const new_capacity) noexcept {
+            return _data.reserve(new_capacity);
+        }
+
         constexpr coverage_domain_t const & get_domain() const noexcept {
             return _domain;
         }
@@ -159,9 +163,20 @@ namespace libjst
         tag_invoke(std::tag_t<coverage_intersection>, int_coverage const & first, int_coverage const & second) {
             // if (first.get_domain() != second.get_domain())
             //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
+            // we get the first as copy.
+            // we use two iterators to compare the elements with each other.
+            // if first < second: move until first >= second
+            if (first.size() == first.max_size()) return second;
+            if (second.size() == second.max_size()) return first;
 
+            // return first.compute_intersection(second);
+
+            size_t min_size = std::min(first.size(), second.size());
             int_coverage result{};
-            std::ranges::set_intersection(first, second, std::inserter(result, result.end()));
+            result.reserve(min_size);
+            std::ranges::set_intersection(first._data.data(),
+                                          second._data.data(),
+                                          std::back_inserter(result._data.data()));
             return result;
         }
 
@@ -173,6 +188,28 @@ namespace libjst
             int_coverage result{};
             std::ranges::set_difference(first, second, std::inserter(result, result.end()));
             return result;
+        }
+
+        constexpr int_coverage compute_intersection(int_coverage rhs) const noexcept {
+            auto lhs_it = _data.data().begin();
+            auto rhs_it = rhs._data.data().begin();
+            auto inserter = rhs_it;
+
+            while (lhs_it != _data.data().end() && rhs_it != rhs._data.data().end()) {
+                if (*lhs_it == *rhs_it) {
+                    std::iter_swap(inserter, rhs_it);
+                    ++inserter;
+                    ++lhs_it;
+                    ++rhs_it;
+                } else {
+                    bool const left_less = *lhs_it < *rhs_it;
+                    lhs_it += left_less;
+                    rhs_it += !left_less;
+                }
+            }
+            rhs._data.data().erase(inserter, rhs._data.data().end());
+            rhs._data.data().shrink_to_fit();
+            return rhs;
         }
     };
 }  // namespace libjst
