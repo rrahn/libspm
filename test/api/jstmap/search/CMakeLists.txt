@@ -11,3 +11,6 @@ add_jstmap_test (load_queries_test.cpp "jstmap::search")
 target_use_datasources (load_queries_test FILES sim_reads_ref1x10.fa)
 
 add_jstmap_test (search_queries_test.cpp "jstmap::search")
+
+add_jstmap_test (seed_prefix_seek_position_test.cpp "jstmap::search")
+add_jstmap_test (seed_prefix_node_cargo_test.cpp "jstmap::search")
