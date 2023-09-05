@@ -274,7 +274,7 @@ private:
             assert(!entry_value(entry_left).empty());
             assert(!suffix.empty());
             return _dictionary.emplace(++entry_left_it, last, std::move(suffix));
-        } else { // B: erease suffix of left entry and infix of right entry
+        } else { // B: erase suffix of left entry and infix of right entry
             // 1. find right entry
             dictionary_iterator entry_right_it =
                 lower_bound(std::ranges::subrange{entry_left_it, std::ranges::end(_dictionary)}, last);

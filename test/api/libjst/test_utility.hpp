@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <string_view>
@@ -16,8 +17,8 @@
 
 #include <seqan3/alphabet/gap/gapped.hpp>
 #include <seqan3/alphabet/range/sequence.hpp>
-#include <seqan3/range/views/to_char.hpp>
-#include <seqan3/range/views/to.hpp>
+#include <seqan3/alphabet/views/to_char.hpp>
+#include <seqan3/utility/range/to.hpp>
 
 #include <libjst/context_position.hpp>
 
@@ -62,7 +63,7 @@ inline constexpr auto make_gapped = [] (std::string_view const seq) -> std::vect
 
 inline constexpr auto sequence_to_string = [] <seqan3::sequence range_t>(range_t && sequence) -> std::string
 {
-    return sequence | seqan3::ranges::to_char | seqan3::ranges::to<std::string>;
+    return sequence | seqan3::views::to_char | seqan3::ranges::to<std::string>;
 };
 
 class jst_context_map_fixture

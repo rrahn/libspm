@@ -17,7 +17,7 @@
 #include <libcontrib/closure_adaptor.hpp>
 #include <libcontrib/copyable_box.hpp>
 
-#include <seqan3/range/views/type_reduce.hpp>
+#include <seqan3/utility/views/type_reduce.hpp>
 
 #include <libjst/container/concept_jst.hpp>
 #include <libjst/container/concept_serialiser.hpp>

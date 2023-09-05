@@ -16,7 +16,7 @@ struct packed_breakend_key : public ::testing::Test {
 };
 
 TEST_F(packed_breakend_key, construct_snv) {
-    test_type test{2, 3000};
+    test_type test{static_cast<uint8_t>(2), 3000};
 
     EXPECT_FALSE(test.is_indel());
     EXPECT_EQ(test.snv_value(), 2);
@@ -50,16 +50,16 @@ TEST_F(packed_breakend_key, construct_insertion) {
 TEST_F(packed_breakend_key, max_position) {
     using value_t = typename test_type::underlying_type;
     value_t max_position = (1 << 29) - 1;
-    test_type test{0, max_position};
+    test_type test{static_cast<uint8_t>(0), max_position};
     EXPECT_EQ(test.position(), max_position);
 
-    test_type test2{0, max_position + 1};
+    test_type test2{static_cast<uint8_t>(0), max_position + 1};
     EXPECT_EQ(test2.position(), 0);
 }
 
 TEST_F(packed_breakend_key, visit) {
     using value_t = typename test_type::underlying_type;
-    test_type test_snv{2, 3000};
+    test_type test_snv{static_cast<uint8_t>(2), 3000};
     test_snv.visit(seqan3::detail::multi_invocable{
         [] (libjst::indel_breakend_kind) { FAIL() << "Expected snv."; },
         [] (value_t snv) { EXPECT_EQ(snv, 2); }
@@ -73,7 +73,7 @@ TEST_F(packed_breakend_key, visit) {
 }
 
 TEST_F(packed_breakend_key, equal) {
-    test_type test_snv{2, 3000};
+    test_type test_snv{static_cast<uint8_t>(2), 3000};
     test_type test_del{libjst::indel_breakend_kind::deletion_high, 6321};
 
     EXPECT_EQ(test_snv, test_snv);
@@ -81,7 +81,7 @@ TEST_F(packed_breakend_key, equal) {
 }
 
 TEST_F(packed_breakend_key, unequal) {
-    test_type test_snv{2, 3000};
+    test_type test_snv{static_cast<uint8_t>(2), 3000};
     test_type test_del{libjst::indel_breakend_kind::deletion_high, 6321};
     test_type test_ins{libjst::indel_breakend_kind::insertion_low, 0};
 
@@ -92,16 +92,16 @@ TEST_F(packed_breakend_key, unequal) {
 
 
 TEST_F(packed_breakend_key, less) {
-    test_type{2, 3000};
+    test_type{static_cast<uint8_t>(2), 3000};
     test_type test_del{libjst::indel_breakend_kind::deletion_high, 6321};
     test_type{libjst::indel_breakend_kind::insertion_low, 0};
 
-    EXPECT_LT((test_type{2, 3000}), (test_type{3, 3000}));
-    EXPECT_LT((test_type{2, 3000}), (test_type{libjst::indel_breakend_kind::insertion_low, 3001}));
-    EXPECT_LT((test_type{2, 3000}), (test_type{libjst::indel_breakend_kind::deletion_low, 3000}));
-    EXPECT_LT((test_type{2, 3000}), (test_type{libjst::indel_breakend_kind::deletion_high, 3001}));
+    EXPECT_LT((test_type{static_cast<uint8_t>(2), 3000}), (test_type{static_cast<uint8_t>(3), 3000}));
+    EXPECT_LT((test_type{static_cast<uint8_t>(2), 3000}), (test_type{libjst::indel_breakend_kind::insertion_low, 3001}));
+    EXPECT_LT((test_type{static_cast<uint8_t>(2), 3000}), (test_type{libjst::indel_breakend_kind::deletion_low, 3000}));
+    EXPECT_LT((test_type{static_cast<uint8_t>(2), 3000}), (test_type{libjst::indel_breakend_kind::deletion_high, 3001}));
     EXPECT_LT((test_type{libjst::indel_breakend_kind::insertion_low, 3000}),
-              (test_type{0, 3000}));
+              (test_type{static_cast<uint8_t>(0), 3000}));
     EXPECT_LT((test_type{libjst::indel_breakend_kind::insertion_low, 3000}),
               (test_type{libjst::indel_breakend_kind::insertion_low, 3001}));
     EXPECT_LT((test_type{libjst::indel_breakend_kind::insertion_low, 3000}),
@@ -119,6 +119,6 @@ TEST_F(packed_breakend_key, less) {
     EXPECT_LT((test_type{libjst::indel_breakend_kind::deletion_high, 3000}),
               (test_type{libjst::indel_breakend_kind::insertion_low, 3000}));
     EXPECT_LT((test_type{libjst::indel_breakend_kind::deletion_high, 3000}),
-              (test_type{0, 3000}));
+              (test_type{static_cast<uint8_t>(0), 3000}));
 
 }

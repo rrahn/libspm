@@ -10,7 +10,7 @@
 #include <filesystem>
 
 #include <seqan3/alignment/aligned_sequence/aligned_sequence_concept.hpp>
-#include <seqan3/core/detail/debug_stream_alphabet.hpp>
+#include <seqan3/alphabet/detail/debug_stream_alphabet.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
 #include <jstmap/simulate/load_reference.hpp>

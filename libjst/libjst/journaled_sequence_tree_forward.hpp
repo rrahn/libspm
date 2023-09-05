@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <optional>
 #include <ranges>

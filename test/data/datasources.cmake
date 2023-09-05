@@ -2,10 +2,6 @@ cmake_minimum_required (VERSION 3.8)
 
 include (app_datasources)
 
-declare_datasource (FILE 1KGP.chr22.vcf_new.jst
-                    URL ${CMAKE_SOURCE_DIR}/test/data/1KGP.chr22.vcf_new.jst
-                    URL_HASH SHA256=d37426013ba014a8980a4c516b9998535acd2bf6463e8066b170c0fe35de1a97)
-
 # copies file to <build>/data/in.fasta
 declare_datasource (FILE empty.fa
                     URL ${CMAKE_SOURCE_DIR}/test/data/empty.fa
@@ -73,7 +69,7 @@ declare_datasource (FILE sim_reads_ref5x10.fa
 
 # Simulated vcf files
 
-declare_datasource (FILE sim_ref_10Kb.fasta.gz USE_GUNZIP_EXTRACT
+declare_datasource (FILE sim_ref_10Kb.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb.fasta.gz
                     URL_HASH SHA256=d4c76490c23668387228f5b9ada7d86212b38a1656f068f820b7d161ce8dce0a)
 
@@ -81,7 +77,7 @@ declare_datasource (FILE sim_ref_10Kb_SNPs.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs.vcf
                     URL_HASH SHA256=652694c7fc52fe77baeb6fcab8c4a36a41c8bdb40b98e48d27d2b73d913f2067)
 
-declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz USE_GUNZIP_EXTRACT
+declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs_haplotypes.fasta.gz
                     URL_HASH SHA256=d9d37d7474884a7bc4bae99c5cdd6457cee6438bbf63ef48c0959dbff8fb1bca)
 
@@ -93,7 +89,7 @@ declare_datasource (FILE sim_ref_10Kb_SNP_INDELs.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs.vcf
                     URL_HASH SHA256=3f9f65b60d160094f400a3695e6b3685d0275a0e46b5e11d3eed7846d28f088f)
 
-declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz USE_GUNZIP_EXTRACT
+declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL_HASH SHA256=993400d2fd437cc49ddffb296d14cba505e85e5f5e13d3ab5609aa0c46d26d99)
 

@@ -10,7 +10,6 @@
 #include <concepts>
 #include <type_traits>
 
-#include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 
 #include <libjst/utility/sorted_vector.hpp>

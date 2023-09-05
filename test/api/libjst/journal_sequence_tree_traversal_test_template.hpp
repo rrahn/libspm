@@ -14,11 +14,13 @@
 #include <span>
 
 #include <seqan3/alphabet/adaptation/char.hpp>
-#include <seqan3/core/detail/debug_stream_type.hpp>
+#include <seqan3/core/debug_stream/debug_stream_type.hpp>
 #include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
-#include <libjst/set.hpp>
+// #include <libjst/set.hpp>
+#include <libjst/journaled_sequence_tree.hpp>
+#include <libjst/detail/delta_event_shared.hpp>
 
 #include "test_utility.hpp" // make_gaped
 

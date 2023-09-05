@@ -5,9 +5,11 @@
 // shipped with this file and also available at: https://github.com/seqan/seqan3/blob/master/LICENSE.md
 // -----------------------------------------------------------------------------------------------------
 
+#include <libjst/concept.hpp>
+#include <libjst/journaled_sequence_tree_forward.hpp>
+
 #include "journal_sequence_tree_traversal_test_template.hpp"
 
-#include <libjst/jst_forward.hpp>
 
 struct forward_test : public libjst::test::traversal_fixture_base
 {};

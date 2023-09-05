@@ -27,7 +27,7 @@ TEST(horspool_pattern_test, dna4_pattern)
 
     jst::contrib::horspool_pattern pattern{needle};
 
-    auto op = libjst::search_operation(pattern);
+    auto op = libjst::search_operation_old(pattern);
 
     std::vector<size_t> actual_positions{};
     op(std::views::all(haystack), [&] (auto const & finder) {
