@@ -156,7 +156,8 @@ namespace libjst
         explicit pigeonhole_matcher(_needle_t && needle, double error_rate = 0.0) :
             _error_rate{error_rate}
         {
-            appendValue(_multi_needle, jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)));
+            appendValue(getFibre(_needle_index, seqan::QGramText{}),
+                        jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)));
             _patternInit(_pattern, _error_rate);
         }
 
@@ -168,7 +169,8 @@ namespace libjst
             _error_rate{error_rate}
         {
             for (auto && needle : multi_needle)
-                appendValue(_multi_needle, jst::contrib::make_seqan_container(std::views::all((decltype(needle) &&) needle)));
+                appendValue(getFibre(_needle_index, seqan::QGramText{}),
+                            jst::contrib::make_seqan_container(std::views::all((decltype(needle) &&) needle)));
 
             _patternInit(_pattern, _error_rate);
         }
