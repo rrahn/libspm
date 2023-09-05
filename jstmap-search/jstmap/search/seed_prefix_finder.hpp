@@ -44,9 +44,5 @@ namespace jstmap
         friend auto beginPosition(seed_prefix_finder const & me) noexcept {
             return me._source_size - endPosition(me.base());
         }
-
-        friend auto endPosition(seed_prefix_finder const & me) noexcept {
-            return me._source_size - beginPosition(me.base());
-        }
     };
 }  // namespace jstmap

@@ -43,6 +43,7 @@ namespace jstmap
         template <typename callback_t>
         constexpr void operator()(callback_t && callback) const {
             libjst::pigeonhole_matcher filter{_bucket.needle_list, _error_rate};
+            std::cout << "libjst::window_size(filter) = " << libjst::window_size(filter) << "\n";
 
             auto filter_tree = _bucket.base_tree | libjst::labelled()
                                                  | libjst::coloured()

@@ -44,34 +44,32 @@ namespace jstmap
                                   needle_hit_t && needle_hit,
                                   [[maybe_unused]] callback_t && callback) const
         {
-            auto const & needle = _bucket.needle_list[needle_hit.i1];
+            auto const & needle = _bucket.needle_list[needle_hit.index];
             uint32_t max_errors = get_error_count(needle);
-            std::ranges::subrange needle_suffix{std::ranges::next(std::ranges::begin(needle), needle_hit.i2 + _seed_size),
+            std::ptrdiff_t suffix_start = needle_hit.offset + needle_hit.count; // Can this be larger than length of needle?
+            std::ranges::subrange needle_suffix{std::ranges::next(std::ranges::begin(needle), suffix_start),
                                                 std::ranges::end(needle)};
-
+            std::cout << "std::ranges::size(needle_suffix): " << std::ranges::size(needle_suffix) << "\n";
             seed_suffix_extender suffix_extender{_bucket.base_tree, std::move(needle_suffix), max_errors};
             // what do we actually need?
 
-            suffix_extender(seed_cargo, seed_finder, [&] ([[maybe_unused]] auto && suffix_cargo,
-                                               [[maybe_unused]] auto && suffix_finder,
-                                               [[maybe_unused]] int32_t suffix_errors) {
+            suffix_extender(seed_cargo, seed_finder, [&] (match_position end_position,
+                                                          [[maybe_unused]] int32_t suffix_errors) {
+                std::cout << "." << std::flush;
                 assert(suffix_errors >= 0);
                 assert(static_cast<uint32_t>(suffix_errors) <= max_errors);
                 // we need to build the prefix extender!
                 std::ranges::subrange needle_prefix{std::ranges::begin(needle),
-                                                    std::ranges::next(std::ranges::begin(needle), needle_hit.i2)};
+                                                    std::ranges::next(std::ranges::begin(needle), needle_hit.offset)};
                 seed_prefix_extender prefix_extender{_bucket.base_tree, std::move(needle_prefix), max_errors - suffix_errors};
-                prefix_extender(seed_cargo, seed_finder, [&] ([[maybe_unused]] auto && prefix_cargo,
-                                                              [[maybe_unused]] auto && prefix_finder,
+                prefix_extender(seed_cargo, seed_finder, [&] (match_position begin_position,
                                                               [[maybe_unused]] int32_t total_errors){
-                    std::ptrdiff_t prefix_start = beginPosition(prefix_finder);
-                    libjst::seek_position joined_position = join(prefix_cargo.position(), suffix_cargo.position());
-
-                    callback(needle_hit.i1,
-                             match_position{.tree_position = std::move(joined_position), .label_offset = prefix_start});
+                    std::cout << ":" << std::flush;
+                    begin_position.tree_position = join(begin_position.tree_position, end_position.tree_position);
+                    callback(needle_hit.index, std::move(begin_position));
                 });
             });
-
+            std::cout << " | " << std::flush;
         }
     private:
 
