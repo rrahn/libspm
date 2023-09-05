@@ -71,6 +71,10 @@ namespace libjst
             });
         }
 
+        constexpr bool contains(std::ptrdiff_t idx) const noexcept {
+            return _data.contains(idx);
+        }
+
         constexpr iterator insert(value_type elem) {
             if (!get_domain().is_member(elem))
                 throw std::domain_error{"The given element " + std::to_string(elem) + " is no member of the coverage domain!"};

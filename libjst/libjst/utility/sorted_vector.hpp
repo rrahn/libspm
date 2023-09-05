@@ -323,20 +323,20 @@ private:
     iterator find_impl(comparable_key_t && key)
     {
         auto base_it = std::ranges::lower_bound(_elements, key, compare_t{});
-        if (compare_t{}(key, *base_it)) // not identical
-            return iterator{_elements.end()};
+        if (base_it == _elements.end() || compare_t{}(key, *base_it)) // not identical
+            return iterator{std::addressof(_elements), std::ranges::ssize(_elements)};
 
-        return iterator{base_it};
+        return iterator{std::addressof(_elements), std::ranges::distance(_elements.begin(), base_it)};
     }
 
     template <typename comparable_key_t>
     const_iterator find_impl(comparable_key_t && key) const
     {
         auto base_it = std::ranges::lower_bound(_elements, key, compare_t{});
-        if (compare_t{}(key, *base_it)) // not identical
-            return const_iterator{_elements.end()};
+        if (base_it == _elements.end() || compare_t{}(key, *base_it)) // not identical
+            return const_iterator{std::addressof(_elements), std::ranges::ssize(_elements)};
 
-        return const_iterator{base_it};
+        return const_iterator{std::addressof(_elements), std::ranges::distance(_elements.begin(), base_it)};
     }
 
     template <typename value_t>
