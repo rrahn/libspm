@@ -51,6 +51,8 @@ namespace libjst
 
         constexpr node_impl root() const noexcept {
             base_node_type && base_root = libjst::root(_wrappee);
+            // here we have an issue!
+            // instead we need to ask for the index?
             difference_type root_index = std::ranges::distance(std::ranges::begin(data().variants()),
                                                                base_root.low_boundary().get_breakend());
             seek_position root_offset{};
