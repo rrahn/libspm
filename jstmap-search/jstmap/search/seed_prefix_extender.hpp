@@ -26,9 +26,10 @@
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
+#include <jstmap/global/match_position.hpp>
+#include <jstmap/search/seed_node_wrapper.hpp>
 #include <jstmap/search/seed_prefix_node_cargo.hpp>
 #include <jstmap/search/seed_prefix_seek_position.hpp>
-#include <jstmap/search/seed_prefix_finder.hpp>
 
 namespace jstmap
 {
@@ -39,12 +40,14 @@ namespace jstmap
         using tree_t = decltype(std::declval<reverse_rcs_t>() | libjst::make_volatile());
         using reverse_needle_t = decltype(std::declval<needle_t&&>() | std::views::reverse);
 
+        reverse_rcs_t _reverse_rcms;
         tree_t _reverse_tree;
         reverse_needle_t _reverse_needle;
         uint32_t _error_count{};
     public:
         seed_prefix_extender(base_tree_t const & base_tree, needle_t needle, uint32_t error_count) noexcept :
-            _reverse_tree{libjst::rcs_store_reversed{base_tree.data().variants()} | libjst::make_volatile()},
+            _reverse_rcms{base_tree.data().variants()},
+            _reverse_tree{_reverse_rcms | libjst::make_volatile()},
             _reverse_needle{(needle_t &&) needle | std::views::reverse},
             _error_count{error_count}
         {}
@@ -54,6 +57,13 @@ namespace jstmap
                                   finder_t && seed_finder,
                                   callback_t && callback) const
         {
+            if (std::ranges::empty(_reverse_needle)) {
+                callback(match_position{.tree_position = seed_cargo.position(),
+                                        .label_offset = beginPosition(seed_finder)},
+                                        _error_count);
+                return;
+            }
+
             libjst::restorable_myers_prefix_matcher extender{_reverse_needle, _error_count};
 
             auto extend_tree = _reverse_tree | libjst::labelled()
@@ -70,35 +80,38 @@ namespace jstmap
 
             auto const & variants = extend_tree.data().variants();
             seed_prefix_seek_position prefix_start_position{seed_cargo.position(), std::ranges::size(variants)};
-            node_t initial_node = extend_tree.seek(std::move(prefix_start_position));
+            node_t initial_node{extend_tree.seek(std::move(prefix_start_position))};
             initial_node.toggle_alternate_path(); // Mark as alternate path to forbid extension on reference path
 
-            // Set the correct right extension point, only because we know we left extended by this size
-            // TODO: Do this on a level above
-            // Alternative: Allow to get base journal sequence from the label and iterator so that we can get a position
-            // on the root path which must be the same!
-            // not the same sequences!
             auto reference_size = std::ranges::ssize(_reverse_tree.data().source());
-            auto haystack_end = std::ranges::next(hostIterator(hostIterator(hostIterator(seed_finder))), beginPosition(seed_finder));
-            auto prefix_begin_offset = std::ranges::distance(seed_cargo.path_sequence().begin(), haystack_end);
-            auto reverse_begin_offset = reference_size - 1 - prefix_begin_offset;
+            auto prefix_start_it = hostIterator(hostIterator(begin(seed_finder))); // iterator to local haystack segment of current node
+            std::ptrdiff_t seed_begin_offset = std::ranges::distance(seed_cargo.path_sequence().begin(), prefix_start_it);
+            std::ptrdiff_t prefix_start = reference_size - seed_begin_offset;
 
             seed_prefix_node_cargo initial_cargo{*initial_node, _reverse_tree};
-            auto suffix_begin = std::ranges::next(initial_cargo.path_sequence().begin(), reverse_begin_offset);
+            auto suffix_begin = std::ranges::next(initial_cargo.path_sequence().begin(), prefix_start);
             auto label_suffix = std::ranges::subrange{suffix_begin, initial_cargo.sequence().end()};
 
             // we call the extender and he updates its internal state!
             extender(label_suffix, [&] (auto const & extender_finder) {
-                callback(initial_cargo, seed_prefix_finder{extender_finder, reference_size}, -getScore(extender.capture()));
+                callback(match_position{.tree_position = initial_cargo.position(),
+                                        .label_offset = reference_size - endPosition(extender_finder)},
+                                        -getScore(extender.capture()));
+                // callback(initial_cargo, seed_prefix_finder{extender_finder, reference_size}, );
             });
 
-            // We do not need to extend the tree!
-            if (std::ranges::size(label_suffix) >= libjst::window_size(extender) - 1)
-                return;
+            // // We do not need to extend the tree!
+            // if (std::ranges::size(label_suffix) >= libjst::window_size(extender) - 1)
+            //     return;
+
+            // Can we generate a new partial tree?
+
 
             // Follow the path:
             std::stack<node_t> node_stack{};
             std::stack<state_t> state_stack{};
+
+            // we need a different end condition!?
 
             // we may need some other comparison, because we don't want to move further.
             if (auto c_ref = initial_node.next_ref(); c_ref.has_value()) {
@@ -119,7 +132,10 @@ namespace jstmap
 
                 seed_prefix_node_cargo cargo{*node, _reverse_tree};
                 extender(cargo.sequence(), [&] (auto const & extender_finder) {
-                    callback(cargo, seed_prefix_finder{extender_finder, reference_size}, -getScore(extender.capture()));
+                    callback(match_position{.tree_position = cargo.position(),
+                                            .label_offset = reference_size - endPosition(extender_finder)},
+                                            -getScore(extender.capture()));
+                    // callback(cargo, seed_prefix_finder{extender_finder, reference_size}, -getScore(extender.capture()));
                 });
 
                 if (auto c_ref = node.next_ref(); c_ref.has_value()) {
