@@ -66,17 +66,22 @@ namespace just::bench
         template <typename matcher_t>
         void run(::benchmark::State & state, matcher_t matcher)
         {
-            auto tree_closure = libjst::labelled() | libjst::coloured()
-                                                   | libjst::trim(libjst::window_size(matcher) - 1)
-                                                   | libjst::prune()
-                                                   | libjst::merge();
+            auto tree_closure = [] (size_t window_size) {
+                return libjst::labelled() | libjst::coloured()
+                                          | libjst::trim(window_size - 1)
+                                          | libjst::prune()
+                                          | libjst::merge();
+            };
+
+            auto make_pattern = [&] (auto const &) {  return matcher; };
+
             state_manager manager{matcher};
-            base_t::run(state, matcher, tree_closure, [manager] (auto const & tree) mutable {
+            base_t::run(state, make_pattern, tree_closure, [manager] (auto const & tree) mutable {
                 libjst::tree_traverser_base path{tree};
                 path.subscribe(manager);
                 return path;
             });
-            this->processed_bytes = base_t::total_bytes(tree_closure);
+            this->processed_bytes = base_t::total_bytes(libjst::window_size(matcher));
         }
     };
 }  // namespace just::bench
