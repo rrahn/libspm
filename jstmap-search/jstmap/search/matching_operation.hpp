@@ -29,7 +29,7 @@ namespace jstmap
         matching_operation() = default;
 
         template <typename callback_t>
-        constexpr void operator()(haystack_type && haystack, bucket_type const & bucket, callback_t && callback) const {
+        constexpr void operator()(haystack_type && haystack, search_queries_type const & bucket, callback_t && callback) const {
 
             std::ranges::for_each(bucket, [&] (search_query const & query) {
                 libjst::horspool_matcher matcher{query.value().sequence()};

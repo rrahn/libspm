@@ -35,8 +35,9 @@
 #include <jstmap/search/filter_queries.hpp>
 #include <jstmap/search/match_aligner.hpp>
 #include <jstmap/search/load_queries.hpp>
-#include <jstmap/search/matching_operation.hpp>
 #include <jstmap/search/search_main.hpp>
+#include <jstmap/search/bucket_searcher.hpp>
+#include <jstmap/search/bucket.hpp>
 // #include <jstmap/search/search_queries.hpp>
 #include <jstmap/search/type_alias.hpp>
 // #include <jstmap/search/write_results.hpp>
@@ -140,20 +141,20 @@ int search_main(seqan3::argument_parser & search_parser)
 
         start = std::chrono::high_resolution_clock::now();
         size_t bin_size{std::numeric_limits<size_t>::max()};
-        std::vector<bucket_type> bucket_list{};
+        std::vector<search_queries_type> search_queries{};
         // What if the ibf is not present?
         if (options.index_input_file_path.empty())
         {
             log_debug("No prefilter enabled");
-            bucket_list.resize(1);
-            bucket_list[0] = queries;
+            search_queries.resize(1);
+            search_queries[0] = queries;
         }
         else
         {
             log_debug("Applying IBF prefilter");
-            std::tie(bin_size, bucket_list) = filter_queries(queries, options);
+            std::tie(bin_size, search_queries) = filter_queries(queries, options);
             log_debug("Bin size:", bin_size);
-            log_debug("Bucket count:", bucket_list.size());
+            log_debug("Bucket count:", search_queries.size());
             // auto bucket_sizes = bucket_list | std::views::transform([](auto const & bucket) {
             //     return std::ranges::size(bucket);
             // });
@@ -187,34 +188,39 @@ int search_main(seqan3::argument_parser & search_parser)
                            })
                            | seqan3::ranges::to<std::vector>();
 
+        // now where do we get the chunk size from?
+        auto chunked_rcms = rcs_store | libjst::chunk(bin_size);
 
-        for (size_t bucket_idx = 0; bucket_idx < bucket_list.size(); ++bucket_idx)
+        for (size_t bin_idx = 0; bin_idx < search_queries.size(); ++bin_idx)
         { // parallel region
-            auto const & bucket = bucket_list[bucket_idx];
-
-            if (bucket.empty())
+            if (search_queries[bin_idx].empty())
                 continue;
 
             // Step 1: distribute search:
-            log_debug("Local search in bucket:", bucket_idx);
+            log_debug("Local search in bucket:", bin_idx);
+
+            bucket current_bucket{.base_tree = chunked_rcms[bin_idx],
+                                  .needle_list = search_queries[bin_idx] | std::views::transform([] (search_query const & query) {
+                                        return std::views::all(query.value().sequence());
+                                   })};
 
             // Step 2: transform to haystack
-            auto largest_query_it = std::ranges::max_element(bucket, std::ranges::less{}, [] (search_query const & query) {
-                return std::ranges::size(query.value().sequence());
-            });
-            size_t const max_window_size = std::ranges::size((*largest_query_it).value().sequence()) - 1;
-            auto chunked_tree = rcs_store | libjst::chunk(bin_size, max_window_size);
-            auto haystack = chunked_tree[bucket_idx];
+            // auto largest_query_it = std::ranges::max_element(bucket, std::ranges::less{}, [] (search_query const & query) {
+            //     return std::ranges::size(query.value().sequence());
+            // });
+            // size_t const max_window_size = std::ranges::size((*largest_query_it).value().sequence()) - 1;
+            // auto chunked_tree = rcs_store | libjst::chunk(bin_size, max_window_size);
+            // auto haystack = chunked_tree[bin_idx];
 
             // Step 3: select matching strategy
 
-            auto op = matching_operation{};
-                // requires: options.error_count, bucket,
-
             // Step 4: apply matching
-            op(std::move(haystack), bucket, [&] (search_query const & query, match_position position) {
-                log_debug("Record match for query ", query.key(), " at ", position);
-                query_matches[query.key()].record_match(std::move(position));
+            bucket_searcher searcher{std::move(current_bucket), 0.0};
+            // searcher([] () { std::cout << "Found match!\n"; });
+            // ATTENTION!!! Not thread safe!
+            searcher([&] (std::ptrdiff_t query_idx, match_position position) {
+                log_debug("Record match for query ", query_idx, " at ", position);
+                query_matches[query_idx].record_match(std::move(position));
             });
 
         // }
