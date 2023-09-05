@@ -74,8 +74,8 @@ target_link_libraries (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_m
 add_library (jstmap::test::unit ALIAS jstmap_test_unit)
 
 add_library (jstmap_test_performance INTERFACE)
-target_include_directories (jstmap_test_performance INTERFACE "gbenchmark" "jstmap::test")
-target_link_libraries (jstmap_test_performance INTERFACE "gbenchmark" "jstmap::test" )
+target_include_directories (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test")
+target_link_libraries (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test" )
 add_library (jstmap::test::performance ALIAS jstmap_test_performance)
 
 add_library (jstmap_test_asan INTERFACE)
