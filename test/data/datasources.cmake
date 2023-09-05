@@ -73,7 +73,7 @@ declare_datasource (FILE sim_reads_ref5x10.fa
 
 # Simulated vcf files
 
-declare_datasource (FILE sim_ref_10Kb.fasta.gz
+declare_datasource (FILE sim_ref_10Kb.fasta.gz USE_GUNZIP_EXTRACT
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb.fasta.gz
                     URL_HASH SHA256=d4c76490c23668387228f5b9ada7d86212b38a1656f068f820b7d161ce8dce0a)
 
@@ -81,7 +81,7 @@ declare_datasource (FILE sim_ref_10Kb_SNPs.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs.vcf
                     URL_HASH SHA256=652694c7fc52fe77baeb6fcab8c4a36a41c8bdb40b98e48d27d2b73d913f2067)
 
-declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz
+declare_datasource (FILE sim_ref_10Kb_SNPs_haplotypes.fasta.gz USE_GUNZIP_EXTRACT
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNPs_haplotypes.fasta.gz
                     URL_HASH SHA256=d9d37d7474884a7bc4bae99c5cdd6457cee6438bbf63ef48c0959dbff8fb1bca)
 
@@ -93,7 +93,7 @@ declare_datasource (FILE sim_ref_10Kb_SNP_INDELs.vcf
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs.vcf
                     URL_HASH SHA256=3f9f65b60d160094f400a3695e6b3685d0275a0e46b5e11d3eed7846d28f088f)
 
-declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
+declare_datasource (FILE sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz USE_GUNZIP_EXTRACT
                     URL ${CMAKE_SOURCE_DIR}/test/data/sim_ref_10Kb_SNP_INDELs_haplotypes.fasta.gz
                     URL_HASH SHA256=993400d2fd437cc49ddffb296d14cba505e85e5f5e13d3ab5609aa0c46d26d99)
 
@@ -107,7 +107,7 @@ declare_datasource (FILE sim_ref_10Kb_no_variants.vcf
 
 # Data sources for benchmarking
 
-declare_datasource (FILE Ash1_v2.2.fa.gz
+declare_datasource (FILE Ash1_v2.2.fa.gz USE_GUNZIP_EXTRACT
                     URL ftp://ftp.ccb.jhu.edu/pub/data/Homo_sapiens/Ash1/v2.2/Assembly/Ash1_v2.2.fa.gz)
 
 declare_datasource (FILE ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst
@@ -117,3 +117,23 @@ declare_datasource (FILE ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.201305
 declare_datasource (FILE ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst.ibf
                     URL ftp://ftp.imp.fu-berlin.de//pub/rmaerker/jstmap/current/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.jst.ibf
                     URL_HASH SHA256=c1cc172b447bb0b4d95b62a1b948e5c23e8bb82b743c38aba0fac071b6399a33)
+
+declare_datasource (FILE ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.gz
+                    URL_HASH SHA256=907f7aa263e3357c6c6c70929ffac06268918ff4b29814f505bbfc2d01a2339b)
+
+declare_datasource (FILE needle32.fa USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/needle32.fa.gz
+                    URL_HASH SHA256=182ed3ee816c1b8a6fa88f7e6b09ae2d35b702b0a372628daeeae3fa6cadffde)
+
+declare_datasource (FILE needle64.fa USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/needle64.fa.gz
+                    URL_HASH SHA256=66705d6e5159e1d9675e83e430f1ecf853e28f811d38f77d3576262f9e7c9a2f)
+
+declare_datasource (FILE needle128.fa USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/needle128.fa.gz
+                    URL_HASH SHA256=0043b0dfa4a5418afdc9cc1ae3a4113b176cf40af47b5d871de343a0138fcaf0)
+
+declare_datasource (FILE needle256.fa USE_GUNZIP_EXTRACT
+                    URL ftp://ftp.imp.fu-berlin.de/pub/rmaerker/just_bench/v0.0.1/needle256.fa.gz
+                    URL_HASH SHA256=bf19935e362516d9046b252726baf769ab33b6a33e6bee0403905bf95398a7b8)
