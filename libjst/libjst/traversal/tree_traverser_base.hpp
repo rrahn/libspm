@@ -33,6 +33,7 @@ namespace libjst
     public:
         explicit tree_traverser_base(tree_t const & tree) noexcept : _tree{std::cref(tree)}
         {}
+        explicit tree_traverser_base(tree_t && tree) noexcept = delete;
 
         constexpr iterator begin() noexcept {
             return iterator{*this};
