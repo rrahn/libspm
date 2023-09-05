@@ -51,6 +51,10 @@ namespace libjst
             }
         }
 
+        constexpr bool empty() const noexcept {
+            return seqan::empty(get_pattern().data_host);
+        }
+
     private:
 
         template <typename seqan_finder_t, typename seqan_pattern_t>
@@ -91,7 +95,7 @@ namespace libjst
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<libjst::window_size>, seqan_pattern_base const & me) noexcept {
-            return seqan::length(seqan::needle(me.get_pattern()));
+            return (me.empty()) ? 0 : seqan::length(seqan::needle(me.get_pattern()));
         }
     };
 
