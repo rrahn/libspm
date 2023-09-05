@@ -34,7 +34,7 @@ namespace libjst
     public:
 
         using variant_map_type = cms_t;
-        using source_type = source_sequence_t;
+        using source_type = typename cms_t::source_type;
         using value_type = std::ranges::range_value_t<cms_t>;
         using reference = std::ranges::range_reference_t<cms_t const &>;
         using size_type = typename coverage_domain_type::value_type;
@@ -97,7 +97,7 @@ namespace libjst
         // Accessor
         // ----------------------------------------------------------------------------
 
-        constexpr source_sequence_t const & source() const noexcept
+        constexpr source_type source() const noexcept
         {
             return variants().source();
         }

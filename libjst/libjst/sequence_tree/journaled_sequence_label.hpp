@@ -30,6 +30,8 @@ namespace libjst
     private:
 
         using journal_type = journal<position_t, source_t>;
+        using journaled_sequence_type = typename journal_type::journaled_sequence_type;
+        using journaled_sequence_iterator = std::ranges::iterator_t<journaled_sequence_type>;
         using offset_type = std::make_signed_t<position_t>;
 
         journal_type _journal{}; //!\bried Journal structure managing alternate path sequence.
@@ -41,7 +43,7 @@ namespace libjst
 
         using position_type = position_t;
         using size_type = position_t;
-        using sequence_type = detail::subrange_t<typename journal_type::journaled_sequence_type>;
+        using sequence_type = std::ranges::subrange<journaled_sequence_iterator, journaled_sequence_iterator>;
 
         static constexpr size_type npos{std::numeric_limits<size_type>::max()};
 
@@ -56,7 +58,9 @@ namespace libjst
             assert(first <= last);
             auto jseq = _journal.sequence();
             size_type max_end = std::min<size_type>(last, std::ranges::size(jseq));
-            return std::move(jseq) | seqan3::views::slice(to_alt_position(first), to_alt_position(max_end));
+            return std::ranges::subrange{std::ranges::next(jseq.begin(), to_alt_position(first)),
+                                         std::ranges::next(jseq.begin(), to_alt_position(max_end))};
+            // return std::move(jseq) | seqan3::views::slice(to_alt_position(first), to_alt_position(max_end));
         }
 
         constexpr sequence_type node_sequence() const noexcept {
