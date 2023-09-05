@@ -28,9 +28,9 @@ namespace jst::contrib
 
     public:
         using value_type = std::ranges::range_value_t<range_t>;
-        using reference = std::ranges::range_reference_t<std::remove_const_t<range_t>>;
+        using reference = std::ranges::range_reference_t<range_t>;
         using const_reference = std::ranges::range_reference_t<std::remove_const_t<range_t> const>;
-        using iterator = std::ranges::iterator_t<std::remove_const_t<range_t>>;
+        using iterator = std::ranges::iterator_t<range_t>;
         using const_iterator = std::ranges::iterator_t<std::remove_const_t<range_t> const>;
         using size_type = std::make_unsigned_t<std::iter_difference_t<iterator>>;
         using difference_type = std::iter_difference_t<iterator>;
@@ -45,6 +45,18 @@ namespace jst::contrib
         seqan_container_adapter(seqan_container_adapter &&) = default;
         seqan_container_adapter & operator=(seqan_container_adapter const &) = default;
         seqan_container_adapter & operator=(seqan_container_adapter &&) = default;
+
+        constexpr reference operator[](difference_type const index) noexcept
+            requires std::ranges::random_access_range<range_t>
+        {
+            return (*_range)[index];
+        }
+
+        constexpr const_reference operator[](difference_type const index) const noexcept
+            requires std::ranges::random_access_range<range_t const>
+        {
+            return (*_range)[index];
+        }
 
         constexpr iterator begin() noexcept(noexcept(std::ranges::begin(*_range)))
         {
@@ -169,13 +181,25 @@ namespace seqan
     {
 
         typedef Iter<detail::container_t<range_t>,
-                     AdaptorIterator<Iter<detail::container_t<range_t>, StdIteratorAdaptor> > > Type;
+                     AdaptorIterator<
+                        Iter<
+                            detail::container_t<range_t>,
+                            StdIteratorAdaptor
+                        >
+                    >
+                > Type;
     };
     template <typename range_t>
     struct Iterator<jst::contrib::seqan_container_adapter<range_t> const, Rooted>
     {
         typedef Iter<detail::container_t<range_t> const,
-                     AdaptorIterator<Iter<detail::container_t<range_t> const, StdIteratorAdaptor> > > Type;
+                     AdaptorIterator<
+                        Iter<
+                            detail::container_t<range_t> const,
+                            StdIteratorAdaptor
+                        >
+                    >
+                > Type;
     };
 
     template <typename range_t>
