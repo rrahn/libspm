@@ -34,11 +34,14 @@ namespace seqan {
 
         template <std::ranges::viewable_range _needle_t, std::unsigned_integral error_count_t>
             requires (!std::same_as<_needle_t, Pattern>)
-        constexpr explicit Pattern(_needle_t && needle, error_count_t const max_error_count = 0u) :
-            base_type{(_needle_t &&) needle, -static_cast<int32_t>(max_error_count)}
+        constexpr explicit Pattern(_needle_t && needle, error_count_t const max_error_count = 0u) : base_type{}
         {
-            _patternFirstInit(to_base(), seqan::needle(to_base()));
-            _patternInit(to_base(), to_state(), std::ignore);
+            if (!std::ranges::empty(needle)) {
+                setHost(to_base(), (_needle_t &&)needle);
+                setScoreLimit(to_base(), -static_cast<int32_t>(max_error_count));
+                _patternFirstInit(to_base(), seqan::needle(to_base()));
+                _patternInit(to_base(), to_state(), std::ignore);
+            }
         }
 
         template <typename finder_t>
@@ -46,8 +49,7 @@ namespace seqan {
             using haystack_t = typename Haystack<finder_t>::Type;
             using haystack_size_t = typename Size<haystack_t>::Type;
 
-            if (!initialise(finder))
-                return false;
+            if (empty(to_base().data_host) || !initialise(finder)) return false;
 
             haystack_size_t haystack_length = std::min<haystack_size_t>(length(haystack(finder)),
                                                                         this->needleSize - scoreLimit(to_state()) + 1);
