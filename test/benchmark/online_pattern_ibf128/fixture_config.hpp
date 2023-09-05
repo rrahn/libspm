@@ -50,4 +50,12 @@ inline constexpr auto chr22_needle256_ibf128 = [] () {
         .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c128.k21.ibf"}
     };
 };
+
+inline constexpr auto chr22_sim100x100Ke3_ibf128 = [] () {
+    return benchmark_configuration{
+        .jst_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst"},
+        .needle_file{DATADIR"sim_reads_chr22_s100_c100K_e3.fa"},
+        .jst_ibf_file{DATADIR"ALL.chr22.shapeit2_integrated_v1a.GRCh38.20181129.phased.vcf.jst.c128.k21.ibf"}
+    };
+};
 }  // namespace just::bench

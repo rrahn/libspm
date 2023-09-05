@@ -49,12 +49,13 @@ namespace just::bench
     {
     protected:
         using sequence_t = jstmap::reference_t;
+        using queries_t = std::vector<jstmap::sequence_record_t>;
 
         size_t processed_bytes;
     private:
 
         jstmap::rcs_store_t _rcs_store{};
-        sequence_t _needle{};
+        queries_t _queries{};
 
     public:
 
@@ -65,7 +66,7 @@ namespace just::bench
             auto [jst_file, needle_file] = this->fixture();
 
             _rcs_store = jstmap::load_jst(jst_file);
-            _needle = jstmap::load_queries(needle_file)[0].sequence();
+            _queries = jstmap::load_queries(needle_file);
         }
 
         virtual void TearDown(::benchmark::State & state) override {
@@ -74,11 +75,21 @@ namespace just::bench
         }
 
         sequence_t const & needle() const noexcept {
-            return _needle;
+            return _queries[0].sequence();
+        }
+
+        auto queries() const noexcept {
+            return _queries | std::views::transform([] (auto const & record) -> sequence_t const & {
+                return record.sequence();
+            });
         }
 
         jstmap::rcs_store_t const & store() const noexcept {
             return _rcs_store;
+        }
+
+        constexpr float to_error_rate(int32_t error_count) const noexcept {
+            return static_cast<float>(error_count) / 100.0;
         }
 
         template <typename tree_closure_t>
