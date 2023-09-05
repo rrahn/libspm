@@ -14,10 +14,118 @@
 
 #include <seqan/index.h>
 
+#include <libcontrib/seqan/container_adapter.hpp>
+
 #include <libjst/matcher/seqan_pattern_base.hpp>
+
+namespace seqan {
+
+    template <typename TRange, typename TFinderSpec, typename TIteratorSpec>
+    struct Iterator<Finder<jst::contrib::seqan_container_adapter<TRange>, TFinderSpec> const, TIteratorSpec>
+    {
+        using Type = typename Iterator<jst::contrib::seqan_container_adapter<TRange> const, TIteratorSpec>::Type;
+    };
+
+    using PigeonholeSeedOnlyTag = seqan::Tag<struct SeedOnly>;
+    template <>
+    struct Pigeonhole<PigeonholeSeedOnlyTag>
+    {
+        enum { ONE_PER_DIAGONAL = 0 };    // disable for heuristic.
+        enum { HAMMING_ONLY = 0 };        // 1..no indels; 0..allow indels
+    };
+
+    using PigeonholeSeedOnly = Pigeonhole<PigeonholeSeedOnlyTag>;
+
+    struct PigeonholeSeedOnlyPosition {
+        std::ptrdiff_t index{};
+        std::ptrdiff_t offset{};
+        std::ptrdiff_t count{};
+
+    private:
+
+        constexpr friend bool operator==(PigeonholeSeedOnlyPosition const &, PigeonholeSeedOnlyPosition const &) noexcept = default;
+
+        template <typename stream_t, typename me_t>
+            requires std::same_as<std::remove_cvref_t<me_t>, PigeonholeSeedOnlyPosition>
+        friend stream_t & operator<<(stream_t & stream, me_t && me) {
+            stream << "<" << me.index << ", " << me.offset << ", " << me.count << ">";
+            return stream;
+        }
+    };
+
+    template <typename TIndex>
+    struct Position<Pattern<TIndex, PigeonholeSeedOnly>> {
+        using Type = PigeonholeSeedOnlyPosition;
+    };
+
+    template <typename THaystack, typename TPattern>
+    struct FindResult<Finder<THaystack, PigeonholeSeedOnly>, TPattern>
+    {
+        using Type = SwiftHit_<int64_t>;
+    };
+
+    template <typename TFinder, typename TIndex, typename THValue>
+    inline bool _pigeonholeProcessQGram(TFinder &finder,
+                                        Pattern<TIndex, PigeonholeSeedOnly> &pattern,
+                                        THValue hash)
+    {
+        typedef typename Fibre<TIndex, QGramSA>::Type const TSA;
+        typedef typename Iterator<TSA, Standard>::Type      TSAIter;
+        typedef typename TFinder::TPigeonholeHit            THit;
+
+        TIndex const &index = host(pattern);
+
+        // all previous matches reported -> search new ones
+        clear(finder.hits);
+
+        TSAIter saBegin = begin(indexSA(index), Standard());
+        Pair<unsigned> ndlPos;
+        THit hit;
+
+        unsigned bktNo = getBucket(index.bucketMap, hash);
+        TSAIter occ = saBegin + indexDir(index)[bktNo];
+        TSAIter occEnd = saBegin + indexDir(index)[bktNo + 1];
+
+        for(; occ != occEnd; ++occ)
+        {
+            // Haystack occurrence site
+            hit.hstkPos = finder.curPos;
+            hit.bucketWidth = length(getFibre(index, QGramShape{}));
+            // Needle occurrence site
+            posLocalize(ndlPos, *occ, stringSetLimits(index));
+            hit.ndlSeqNo = getSeqNo(ndlPos);
+            hit.ndlPos = getSeqOffset(ndlPos);
+            hit.hitLengthNeedle = hit.bucketWidth;
+            appendValue(finder.hits, hit);
+        }
+
+        finder.curHit = begin(finder.hits, Standard());
+        finder.endHit = end(finder.hits, Standard());
+
+        return !empty(finder.hits);
+    }
+
+    template <typename TFinder, typename TIndex>
+    inline void _copyPigeonholeHit(TFinder &finder, Pattern<TIndex, PigeonholeSeedOnly> &pattern)
+    {
+        auto const & hit = *finder.curHit;
+        pattern.curSeqNo = hit.ndlSeqNo;
+        pattern.curBeginPos = hit.ndlPos;
+        pattern.curEndPos = hit.ndlPos + hit.hitLengthNeedle;
+    }
+
+    template <typename TIndex>
+    inline PigeonholeSeedOnlyPosition position(Pattern<TIndex, PigeonholeSeedOnly> const & pattern) noexcept
+    {
+        return {.index = static_cast<std::ptrdiff_t>(pattern.curSeqNo),
+                .offset = static_cast<std::ptrdiff_t>(pattern.curBeginPos),
+                .count = static_cast<std::ptrdiff_t>(pattern.curEndPos - pattern.curBeginPos)};
+    }
+} // namespace seqan
 
 namespace libjst
 {
+
     template <std::ranges::random_access_range needle_t>
     class pigeonhole_matcher : public seqan_pattern_base<pigeonhole_matcher<needle_t>>
     {
@@ -30,7 +138,7 @@ namespace libjst
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
         using multi_needle_type = seqan::StringSet<compatible_needle_type>;
         using qgram_shape_type = seqan::Shape<std::ranges::range_value_t<compatible_needle_type>, seqan::SimpleShape>;
-        using finder_spec_type = seqan::Pigeonhole<>;
+        using finder_spec_type = seqan::PigeonholeSeedOnly;
         using index_type = seqan::Index<multi_needle_type, seqan::IndexQGram<qgram_shape_type, seqan::OpenAddressing>>;
         using pattern_type = seqan::Pattern<index_type, finder_spec_type>;
 
@@ -73,7 +181,8 @@ namespace libjst
         template <typename haystack_t>
         constexpr auto make_finder(haystack_t & haystack) const noexcept
         {
-            return seqan::Finder<haystack_t, finder_spec_type>{haystack};
+            // TODO: configure repeat length and finder.
+            return seqan::Finder<haystack_t, finder_spec_type>{haystack, 1000, 1};
         }
 
         constexpr pigeonhole_matcher & get_pattern() noexcept {
