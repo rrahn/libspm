@@ -147,6 +147,9 @@ namespace libjst
             return sequence(libjst::position(_node->low_boundary()), libjst::position(_node->high_boundary()));
         }
 
+        constexpr auto path_sequence() const noexcept {
+            return sequence(0, libjst::position(_node->high_boundary()));
+        }
     protected:
 
         constexpr auto sequence(size_type const first, size_type const last) const noexcept {

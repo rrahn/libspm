@@ -161,6 +161,11 @@ namespace libjst
             return base_cargo_type::sequence(libjst::position(_node->low_boundary()),
                                              libjst::position(_node->high_boundary()));
         }
+
+        constexpr auto path_sequence() const noexcept {
+            assert(_node != nullptr);
+            return base_cargo_type::sequence(0, libjst::position(_node->high_boundary()));
+        }
     protected:
         using base_cargo_type::sequence;
     };
