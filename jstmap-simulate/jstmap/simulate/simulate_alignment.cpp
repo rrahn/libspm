@@ -16,6 +16,7 @@
 
 #include <seqan3/alignment/aligned_sequence/aligned_sequence_concept.hpp>
 #include <seqan3/alphabet/nucleotide/dna4.hpp>
+#include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
 #include <jstmap/simulate/simulate_alignment.hpp>
@@ -39,25 +40,28 @@ std::map<size_t, short> generate_random_positions(size_t length, size_t n, rando
 }
 
 template <std::uniform_random_bit_generator random_generator_t>
-seqan3::gapped<seqan3::dna5> random_char(random_generator_t & generator)
+seqan3::gapped<jst::contrib::dna5> random_char(random_generator_t & generator)
 {
     std::uniform_int_distribution<short> distr{0, 3};
-    return static_cast<seqan3::gapped<seqan3::dna5> >(seqan3::dna4{}.assign_rank(distr(generator)));
+    std::array tmp{'A', 'C', 'G', 'T'};
+    return static_cast<seqan3::gapped<jst::contrib::dna5> >(
+        seqan3::assign_char_to(tmp[distr(generator)], jst::contrib::dna5{}));
 }
 
 template <std::uniform_random_bit_generator random_generator_t>
-seqan3::gapped<seqan3::dna5> random_char(seqan3::gapped<seqan3::dna5> old_char, random_generator_t & generator)
+seqan3::gapped<jst::contrib::dna5> random_char(seqan3::gapped<jst::contrib::dna5> old_char, random_generator_t & generator)
 {
     std::uniform_int_distribution<short> distr{0, 3};
-    seqan3::gapped<seqan3::dna5> new_char;
+    std::array tmp{'A', 'C', 'G', 'T'};
+    seqan3::gapped<jst::contrib::dna5> new_char;
     do
     {
-        new_char = static_cast<seqan3::dna5>(seqan3::dna4{}.assign_rank(distr(generator)));
+        new_char = seqan3::assign_char_to(tmp[distr(generator)], jst::contrib::dna5{});
     } while (new_char == old_char);
     return new_char;
 }
 
-alignment_t simulate_alignment(sequence_t & unaligned, double error_rate)
+alignment_t simulate_alignment(raw_sequence_t & unaligned, double error_rate)
 {
     assert(error_rate >= 0.0);
     assert(error_rate <= 1);

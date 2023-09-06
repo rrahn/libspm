@@ -6,12 +6,14 @@
 // -----------------------------------------------------------------------------------------------------
 
 #include <filesystem>
+#include <vector>
 
-#include <jstmap/search/global_types.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
 namespace jstmap
 {
 
-std::vector<raw_sequence_t> load_queries(std::filesystem::path const &);
+using queries_type = std::vector<sequence_record_t>;
+queries_type load_queries(std::filesystem::path const &);
 
 } // namespace jstmap

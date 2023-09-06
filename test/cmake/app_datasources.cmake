@@ -1,4 +1,52 @@
-include (ExternalProject)
+include(ExternalProject)
+
+function(datasource_target source target)
+    string(TOLOWER "datasource--${source}" __datasource_name)
+    set(${target} ${__datasource_name} PARENT_SCOPE)
+endfunction()
+
+macro(add_datasource_target)
+    set(options NO_EXTRACT)
+    set(one_value_args DOWNLOAD_NAME URL_HASH FILE)
+    set(multi_value_args URL EXTRACT_COMMAND)
+
+    cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+    # Check if ectract command was used and if not set empty extract command
+    if(ARG_EXTRACT_COMMAND)
+        set (extract_command ${ARG_EXTRACT_COMMAND})
+    else ()
+        set (extract_command "")
+    endif ()
+
+    # Check if download name was given and if not use file name.
+    if(ARG_DOWNLOAD_NAME)
+        set (download_name ${ARG_DOWNLOAD_NAME})
+    else ()
+        set (download_name ${ARG_FILE})
+    endif ()
+
+    datasource_target("${ARG_FILE}" datasource_name)
+
+    ExternalProject_Add(
+        "${datasource_name}"
+        URL "${ARG_URL}"
+        URL_HASH "${ARG_URL_HASH}"
+        DOWNLOAD_NAME "${download_name}"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND    "${extract_command}"
+        INSTALL_COMMAND  ${CMAKE_COMMAND} -E create_symlink <DOWNLOAD_DIR>/${ARG_FILE} <INSTALL_DIR>/${ARG_FILE}
+        TEST_COMMAND ""
+        PREFIX "${DATA_ROOT_DIR}/_datasources"
+        INSTALL_DIR "${DATA_DIR}"
+        DOWNLOAD_NO_EXTRACT ${ARG_NO_EXTRACT} # don't extract archive files like .tar.gz.
+        LOG_BUILD TRUE
+        LOG_INSTALL TRUE
+        LOG_OUTPUT_ON_FAILURE TRUE
+        ${ARG_UNPARSED_ARGUMENTS}
+    )
+    unset (extract_command)
+endmacro()
 
 # Example call:
 #
@@ -35,31 +83,44 @@ include (ExternalProject)
 # overwrite the default behaviour. See https://cmake.org/cmake/help/latest/module/ExternalProject.html for more
 # information.
 function(declare_datasource)
-    set(options "")
+    set(options USE_GUNZIP_EXTRACT USE_DEFAULT_EXTRACT)
     set(one_value_args FILE URL_HASH)
     set(multi_value_args URL)
 
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
-    string(TOLOWER "datasource--${ARG_FILE}" datasource_name)
+    datasource_target("${ARG_FILE}" datasource_name)
 
-    # create data folder
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
+    # Check if gunzip shall be used.
+    if (ARG_USE_GUNZIP_EXTRACT)
+        string(REGEX MATCH ".+gz$" GZ_EXTENSION_MATCH "${ARG_URL}")
+        if (GZ_EXTENSION_MATCH STREQUAL "")
+            message (FATAL_ERROR "Specified URL with wrong extension.")
+        endif ()
 
-    ExternalProject_Add(
-        "${datasource_name}"
-        URL "${ARG_URL}"
-        URL_HASH "${ARG_URL_HASH}"
-        DOWNLOAD_NAME "${ARG_FILE}"
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND
-            ${CMAKE_COMMAND} -E create_symlink <DOWNLOADED_FILE> ${CMAKE_CURRENT_BINARY_DIR}/data/${ARG_FILE}
-        TEST_COMMAND ""
-        PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_datasources"
-        DOWNLOAD_NO_EXTRACT TRUE # don't extract archive files like .tar.gz.
-        ${ARG_UNPARSED_ARGUMENTS}
-    )
+        find_program(GZIP gzip NAMES gunzip REQUIRED)
+
+        set (GUNZIP_COMMAND ${GZIP} -fd)  # force decompression
+        set (GZIP_FILE "${ARG_FILE}.gz")
+        add_datasource_target(FILE ${ARG_FILE}
+                              URL ${ARG_URL}
+                              URL_HASH ${ARG_URL_HASH}
+                              DOWNLOAD_NAME ${GZIP_FILE}
+                              NO_EXTRACT
+                              EXTRACT_COMMAND
+                                ${CMAKE_COMMAND} -E chdir <DOWNLOAD_DIR> ${GUNZIP_COMMAND} ${GZIP_FILE})
+
+        unset (GUNZIP_COMMAND)
+        unset (GZIP_FILE)
+    else ()
+        if (ARG_USE_DEFAULT_EXTRACT)
+            add_datasource_target(FILE ${ARG_FILE}
+                                  URL ${ARG_URL}
+                                  URL_HASH ${ARG_URL_HASH})
+        else ()
+            add_datasource_target(FILE ${ARG_FILE} URL ${ARG_URL} URL_HASH ${ARG_URL_HASH} NO_EXTRACT)
+        endif ()
+    endif ()
 endfunction()
 
 # Example call:
@@ -86,7 +147,7 @@ function(target_use_datasources target)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
     foreach(filename ${ARG_FILES})
-        string(TOLOWER "datasource--${filename}" datasource_name)
+        datasource_target("${filename}" datasource_name)
         add_dependencies ("${target}" "${datasource_name}")
     endforeach()
 endfunction()

@@ -14,13 +14,12 @@
 #include <seqan3/argument_parser/exceptions.hpp>
 #include <seqan3/argument_parser/validators.hpp>
 
-#include <jstmap/index/application_logger.hpp>
+#include <jstmap/global/application_logger.hpp>
+#include <jstmap/global/load_jst.hpp>
+#include <jstmap/index/create_index.hpp>
 #include <jstmap/index/index_main.hpp>
-#include <jstmap/index/journaled_sequence_tree_builder.hpp>
-#include <jstmap/index/load_sequence.hpp>
 #include <jstmap/index/options.hpp>
-#include <jstmap/index/serialise_jst.hpp>
-#include <jstmap/index/vcf_parser.hpp>
+#include <jstmap/index/save_index.hpp>
 
 namespace jstmap
 {
@@ -29,13 +28,13 @@ int index_main(seqan3::argument_parser & index_parser)
 {
     index_options options{};
 
-    index_parser.add_positional_option(options.sequence_file,
+    index_parser.add_positional_option(options.jst_input_file,
                                        "The input file.",
-                                       seqan3::input_file_validator{{"fa", "fasta"}});
+                                       seqan3::input_file_validator{{"jst"}});
     index_parser.add_positional_option(options.output_file,
                                        "The output file.",
                                        seqan3::output_file_validator{seqan3::output_file_open_options::create_new,
-                                                                     {"jst"}});
+                                                                     {"ibf"}});
     index_parser.add_flag(options.is_quite,
                           '\0',
                           "quite",
@@ -44,22 +43,30 @@ int index_main(seqan3::argument_parser & index_parser)
                           '\0',
                           "verbose",
                           "Verbose logging output will be emitted.");
-    index_parser.add_option(options.vcf_file,
-                            '\0',
-                            "vcf",
-                            "The vcf file to construct the index for. Note the path given to the sequence file "
-                            "must contain the associated contigs for this vcf file.",
-                            seqan3::option_spec::standard,
-                            seqan3::input_file_validator{{"vcf"}});
-    index_parser.add_option(options.bin_count,
+    index_parser.add_option(options.bin_size,
                             'b',
-                            "bin-count",
-                            "The number of bins used in the partitioned jst.",
+                            "bin-size",
+                            "The size of each bin for the index construction.",
                             seqan3::option_spec::standard);
+    index_parser.add_option(options.bin_overlap,
+                            'o',
+                            "bin-overlap",
+                            "The size of the bin overlap used for the ibf creation. Must be smaller than the bin size.",
+                            seqan3::option_spec::standard,
+                            seqan3::arithmetic_range_validator{0u, 1000u});
+    index_parser.add_option(options.kmer_size,
+                            'k',
+                            "kmer-size",
+                            "The kmer-size used for the ibf creation.",
+                            seqan3::option_spec::standard,
+                            seqan3::arithmetic_range_validator{0u, 31u});
 
     try
     {
         index_parser.parse();
+        if (options.bin_overlap >= options.bin_size)
+            throw std::invalid_argument{"The bin overlap of " + std::to_string(options.bin_overlap) + " must be "
+                                        "smaller than the bin size of " + std::to_string(options.bin_size) + "!"};
     }
     catch (seqan3::argument_parser_error const & ex)
     {
@@ -89,45 +96,20 @@ int index_main(seqan3::argument_parser & index_parser)
     int error_code = 0;
     try
     {
-        if (index_parser.is_option_set("vcf")) // Construct from the vcf file.
-        {
-            log(verbosity_level::standard, logging_level::info,
-                "Create from vcf ", options.vcf_file, " and contigs ", options.sequence_file);
+        log(verbosity_level::standard, logging_level::info, "Load jst: ", options.jst_input_file);
+        auto jst = load_jst(options.jst_input_file);
 
-            auto jst_per_contig = construct_jst_from_vcf(options.sequence_file, options.vcf_file);
-            log(verbosity_level::standard, logging_level::info,
-                "Generated ", jst_per_contig.size(), " journal sequence tree(s).");
+        log(verbosity_level::standard, logging_level::info, "Creating the index with bin size ", options.bin_size,
+                                                            ", bin overlap ", options.bin_overlap,
+                                                            ", and kmer-size ", options.kmer_size);
+        auto ibf = create_index(jst, options);
 
-            // Create jst per contig and give it a proper name.
-            size_t contig_idx{};
-            std::ranges::for_each(jst_per_contig, [&] (auto const & jst)
-            {
-                std::filesystem::path filename_with_id = options.output_file;
-                std::filesystem::path new_filename = filename_with_id.stem();
-                new_filename += std::filesystem::path{std::to_string(contig_idx++)};
-                new_filename += filename_with_id.extension();
-                filename_with_id.replace_filename(new_filename);
-
-                partitioned_jst_t partitioned_jst{std::addressof(jst), options.bin_count};
-
-                log(verbosity_level::standard, logging_level::info, "Serialise jst ", filename_with_id);
-                serialise(jst, partitioned_jst, options.output_file);
-            });
-        }
-        else // Construct from the sequence alignment.
-        {
-            log(verbosity_level::standard, logging_level::info, "Create by alignment <", options.sequence_file, ">");
-            auto sequences = load_sequences(options.sequence_file);
-            log(verbosity_level::verbose, logging_level::info, "Loaded ", sequences.size(), " sequences");
-            auto [jst, partitioned_jst] = build_journaled_sequence_tree(std::move(sequences), options.bin_count);
-
-            log(verbosity_level::verbose, logging_level::info, "Serialise jst <", options.output_file, ">");
-            serialise(jst, partitioned_jst, options.output_file);
-        }
+        log(verbosity_level::standard, logging_level::info, "Saving index: ", options.output_file);
+        save_index(ibf, options);
     }
     catch (std::exception const & ex)
     {
-        log(verbosity_level::standard, logging_level::error, "While creating the jst: ", ex.what());
+        log(verbosity_level::standard, logging_level::error, "While creating the index: ", ex.what());
         error_code = -1;
     }
     log(verbosity_level::standard, logging_level::info, "Stop index creation");

@@ -13,26 +13,21 @@
 #include <stdexcept> // invalid_argument
 
 #include <seqan3/io/sequence_file/input.hpp>
-#include <seqan3/std/filesystem>
+#include <filesystem>
 
 #include <jstmap/simulate/load_reference.hpp>
 
 namespace jstmap
 {
 
-struct my_traits : seqan3::sequence_file_input_default_traits_dna
+raw_sequence_t load_reference(std::filesystem::path const & sequence_file)
 {
-    using legal_sequence_alphabet_type = seqan3::dna5;
-};
-
-sequence_t load_reference(std::filesystem::path const & sequence_file)
-{
-    seqan3::sequence_file_input<my_traits> fin{sequence_file};
+    seqan3::sequence_file_input<sequence_input_traits> fin{sequence_file};
     auto it = fin.begin();
     if (it == fin.end())
         throw std::invalid_argument("Input file is empty.");
 
-    return seqan3::get<seqan3::field::seq>(*it);
+    return std::move((*it).sequence());
 }
 
 } // namespace jstmap

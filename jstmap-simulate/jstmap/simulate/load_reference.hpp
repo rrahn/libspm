@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <jstmap/simulate/global_types.hpp>
+#include <jstmap/global/jstmap_type_alias.hpp>
 
 namespace jstmap
 {
 
-sequence_t load_reference(std::filesystem::path const & sequence_file);
+raw_sequence_t load_reference(std::filesystem::path const & sequence_file);
 
 } // namespace jstmap

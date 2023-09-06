@@ -21,7 +21,12 @@ struct search_options
 {
     std::filesystem::path jst_input_file_path{}; //!< The file path to the journaled sequence tree.
     std::filesystem::path query_input_file_path{}; //!< The file path containing the queries.
+    std::filesystem::path index_input_file_path{}; //!< The file path containing the ibf index.
     std::filesystem::path map_output_file_path{}; //!< The file path to write the alignment map file to.
+    float error_rate{0.0}; //!< The error rate to use for mapping the reads.
+    size_t thread_count{1}; //!< The number of threads to use for the program.
+    bool is_quite = false; //!< Determines wether to log additional information; defaults to `false`.
+    bool is_verbose = false; //!< Determines wether to log verbose information; defaults to `false`.
 };
 
 }  // namespace jstmap

@@ -7,23 +7,27 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <random>
 
 #include <seqan3/alphabet/nucleotide/dna5.hpp>
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
-#include <jstmap/index/application_logger.hpp>
-#include <jstmap/index/vcf_parser.hpp>
-#include <jstmap/search/load_jst.hpp>
+#include <jstmap/create/vcf_parser.hpp>
+#include <jstmap/global/application_logger.hpp>
+#include <jstmap/global/load_jst.hpp>
+#include <jstmap/global/jstmap_types.hpp>
 
-using sequence_t = seqan3::dna5_vector;
+#include <libcontrib/seqan/alphabet.hpp>
 
-auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
-{
-    jstmap::application_logger logger{false, jstmap::verbosity_level::quite};
-    jstmap::set_application_logger(&logger);
-    return std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
-}
+using sequence_t = jstmap::reference_t;
+
+// auto create_jst_from_vcf(std::filesystem::path reference_file, std::filesystem::path vcf_file)
+// {
+//     jstmap::application_logger logger{false, jstmap::verbosity_level::quite};
+//     jstmap::set_application_logger(&logger);
+//     return std::move(jstmap::construct_jst_from_vcf(reference_file, vcf_file).front());
+// }
 
 template <typename sequences_t, typename algorithm_t>
 auto naive_traversal(sequences_t && sequences, algorithm_t && algorithm)
@@ -40,4 +44,27 @@ sequence_t generate_query(size_t const query_size)
 {
     using alphabet_t = std::ranges::range_value_t<sequence_t>;
     return seqan3::test::generate_sequence<alphabet_t>(query_size);
+}
+
+sequence_t sample_query(sequence_t const & reference, size_t const query_size)
+{
+    sequence_t query;
+    query.resize(query_size);
+
+    std::uniform_int_distribution<size_t> dist(0, std::ranges::size(reference) - query_size);
+    std::mt19937 rng{43};
+
+    while (true) {
+        size_t offset = dist(rng);
+        auto ref_it = std::ranges::next(std::ranges::begin(reference)) + offset;
+        if (std::ranges::all_of(ref_it, ref_it + query_size, [] (auto s) { return s == jst::contrib::dna5{'A'} ||
+                                                                                  s == jst::contrib::dna5{'N'}; })) {
+            continue;
+        } else {
+            std::ranges::copy_n(ref_it, query_size, std::ranges::begin(query));
+            break;
+        }
+    }
+
+    return query;
 }

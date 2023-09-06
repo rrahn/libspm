@@ -1,9 +1,18 @@
 cmake_minimum_required (VERSION 3.14)
 
+if (NOT DATA_ROOT_DIR)
+    set(DATA_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
+
 # Set directories for test output files, input data and binaries.
-file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/output)
-add_definitions (-DOUTPUTDIR=\"${CMAKE_CURRENT_BINARY_DIR}/output/\")
-add_definitions (-DDATADIR=\"${CMAKE_CURRENT_BINARY_DIR}/data/\")
+set (DATA_DIR "${DATA_ROOT_DIR}/data/")
+message(STATUS "Using DATA_ROOT_DIR: ${DATA_ROOT_DIR}")
+
+file (MAKE_DIRECTORY ${DATA_DIR})
+file (MAKE_DIRECTORY ${DATA_ROOT_DIR}/output)
+
+add_definitions (-DOUTPUTDIR=\"${DATA_ROOT_DIR}/output/\")
+add_definitions (-DDATADIR=\"${DATA_DIR}\")
 add_definitions (-DBINDIR=\"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/\")
 
 # Define cmake configuration flags to configure and build external projects with the same flags as specified for
@@ -60,20 +69,33 @@ target_link_libraries (jstmap_test INTERFACE "pthread" "seqan3::seqan3")
 add_library (jstmap::test ALIAS jstmap_test)
 
 add_library (jstmap_test_unit INTERFACE)
-target_include_directories (jstmap_test_unit INTERFACE "gtest" "gtest_main" "jstmap::test")
-target_link_libraries (jstmap_test_unit INTERFACE "gtest" "gtest_main" "jstmap::test")
+target_include_directories (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_main" "jstmap::test")
+target_link_libraries (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_main" "jstmap::test")
 add_library (jstmap::test::unit ALIAS jstmap_test_unit)
 
 add_library (jstmap_test_performance INTERFACE)
-target_include_directories (jstmap_test_performance INTERFACE "gbenchmark" "jstmap::test")
-target_link_libraries (jstmap_test_performance INTERFACE "gbenchmark" "jstmap::test" )
+target_include_directories (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test")
+target_link_libraries (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test" )
 add_library (jstmap::test::performance ALIAS jstmap_test_performance)
+
+add_library (jstmap_test_asan INTERFACE)
+target_compile_options(jstmap_test_asan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_options(jstmap_test_asan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_libraries (jstmap_test_asan INTERFACE "jstmap::test::unit")
+add_library (jstmap::test::asan ALIAS jstmap_test_asan)
+
+add_library (jstmap_test_tsan INTERFACE)
+target_compile_options(jstmap_test_tsan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_options(jstmap_test_tsan INTERFACE "${JST_SANITIZER_FLAGS}")
+target_link_libraries (jstmap_test_tsan INTERFACE "jstmap::test::unit")
+add_library (jstmap::test::tsan ALIAS jstmap_test_tsan)
 
 # ----------------------------------------------------------------------------
 # Commonly used macros for the different test modules.
 # ----------------------------------------------------------------------------
 
 include (app_datasources)
+include (read_simulation)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (seqan3_require_benchmark)

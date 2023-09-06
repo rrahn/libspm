@@ -19,12 +19,13 @@ namespace jstmap
 
 struct index_options
 {
-    std::filesystem::path sequence_file{}; //!< The file path contianing the sequences to index.
-    std::filesystem::path vcf_file{}; //!< The file path contianing the vcf file to build the jst for.
+    std::filesystem::path jst_input_file{}; //!< The file path the jst to build the index for.
     std::filesystem::path output_file{}; //!< The file path to write the constructed index to.
     bool is_quite{false}; //!< Wether the index app should run in quite mode.
     bool is_verbose{false}; //!< Wether the index app should run in verbose mode.
-    uint32_t bin_count = 1; //!< The number of bins to partition the JST into.
+    size_t bin_size = 10'000; //!< The size of a bin for the index construction.
+    size_t bin_overlap = 500; //!< The size of the bin overlap for the ibf construction.
+    uint8_t kmer_size = 25; //!< The kmer-size to use for the ibf creation.
 };
 
 }  // namespace jstmap
