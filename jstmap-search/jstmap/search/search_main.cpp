@@ -38,9 +38,7 @@
 #include <jstmap/search/search_main.hpp>
 #include <jstmap/search/bucket_searcher.hpp>
 #include <jstmap/search/bucket.hpp>
-// #include <jstmap/search/search_queries.hpp>
 #include <jstmap/search/type_alias.hpp>
-// #include <jstmap/search/write_results.hpp>
 #include <jstmap/search/options.hpp>
 
 namespace jstmap
