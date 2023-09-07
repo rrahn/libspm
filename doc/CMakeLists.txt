@@ -13,6 +13,7 @@ if (${DOXYGEN_FOUND})
     set (APP_TEMPLATE_DOXYGEN_PREDEFINED_NDEBUG "")
     set (APP_TEMPLATE_DOXYGEN_ENABLED_SECTIONS "DEV")
     set (APP_TEMPLATE_DOXYGEN_EXTRACT_PRIVATE "YES")
+    set (JSTMAP_DOXYGEN_LOGFILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen.log")
 
     configure_file (${APP_TEMPLATE_DOXYFILE_IN} ${APP_TEMPLATE_DOXYGEN_OUTPUT_DIR}/Doxyfile)
     add_custom_target (doc
@@ -24,3 +25,12 @@ if (${DOXYGEN_FOUND})
 else ()
     message (STATUS "Doxygen not found.")
 endif ()
+
+### Enable testing
+
+enable_testing ()
+
+message (STATUS "Add doc test.")
+add_test (NAME doc_test
+          COMMAND bash -c "cat ${JSTMAP_DOXYGEN_LOGFILE}; test ! -s ${JSTMAP_DOXYGEN_LOGFILE}"
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
