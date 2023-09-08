@@ -18,19 +18,19 @@ TEST(extended_word_test, size) {
     EXPECT_EQ(word0.size(), 0ull);
 
     libjst::extended_word<> word7{0b001101010};
-    EXPECT_EQ(word7.size(), 7ull);
+    EXPECT_EQ(word7.size(), 7ull) << "word7: " << word7 << '\n';
 
     libjst::extended_word<> word70{word7};
     word70 <<= 63;
-    EXPECT_EQ(word70.size(), 70ull);
+    EXPECT_EQ(word70.size(), 70ull) << "word70: " << word70 << '\n';
 
     libjst::extended_word<> word133{word70};
     word133 <<= 63;
-    EXPECT_EQ(word133.size(), 133ull);
+    EXPECT_EQ(word133.size(), 133ull) << "word133: " << word133 << '\n';
 
     libjst::extended_word<> word196{word133};
     word196 <<= 63;
-    EXPECT_EQ(word196.size(), 196ull);
+    EXPECT_EQ(word196.size(), 196ull) << "word196: " << word196 << '\n';
 }
 
 TEST(extended_word_test, max_size) {

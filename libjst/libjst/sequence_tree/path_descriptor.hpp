@@ -65,7 +65,7 @@ namespace libjst
 
         constexpr extended_word & operator<<=(size_t const shift) noexcept {
             assert(shift < bits_per_word);
-            word_t const shift_mask = (1 << shift) - 1;
+            word_t const shift_mask = (static_cast<word_t>(1) << shift) - 1;
             word_t carry_bits{};
             for (word_t & word : _data) {
                 word_t next_carry = std::rotl(word, shift) & shift_mask;
@@ -120,9 +120,30 @@ namespace libjst
             } ((data_t &&)data, (fn_t &&)apply, std::make_index_sequence<word_count>());
         }
 
+        template <typename stream_t>
+        void print_word(stream_t & stream, word_t const & word) const noexcept {
+            stream << std::bitset<bits_per_word>{word};
+        }
+
         friend constexpr bool operator==(extended_word const &, extended_word const &) noexcept = default;
         friend constexpr std::strong_ordering operator<=>(extended_word const &, extended_word const &) noexcept = default;
+
+        template <typename char_t, typename char_traits_t, typename extended_word_t>
+            requires std::same_as<std::remove_cvref_t<extended_word_t>, extended_word<>>
+        friend std::basic_ostream<char_t, char_traits_t> & operator<<(std::basic_ostream<char_t, char_traits_t> & stream,
+                                                                      extended_word_t && ext_word)
+        {
+            stream << "[";
+            for (size_t i = ext_word._data.size(); i > 0; --i) {
+                ext_word.print_word(stream, ext_word._data[i-1]);
+                stream << ' ';
+            }
+            stream << "]";
+            return stream;
+        }
     };
+
+
     class alternate_path_descriptor {
     protected:
 
