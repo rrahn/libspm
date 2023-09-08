@@ -15,7 +15,7 @@ namespace test
     class non_default_type
     {
     private:
-        t _value{};
+        t _value;
     public:
 
         constexpr non_default_type()
@@ -166,7 +166,7 @@ TYPED_TEST(copyable_box_test, reset)
 
     EXPECT_EQ(*box1, 10);
     box1.reset();
-    EXPECT_EQ(*box1, 10);
+    EXPECT_FALSE(box1.has_value());
 }
 
 TYPED_TEST(copyable_box_test, emplace)
