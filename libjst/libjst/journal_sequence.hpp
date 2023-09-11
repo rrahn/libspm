@@ -264,8 +264,10 @@ private:
 
 namespace std::ranges {
 
+//!\cond
 template <typename journal_t>
 inline constexpr bool enable_borrowed_range<libjst::journal_sequence<journal_t>> = true;
+//!\endcond
 
 } // namespace std::ranges
 

@@ -222,6 +222,9 @@ namespace libjst
 }  // namespace libjst
 
 namespace std::ranges {
+
+    //!\cond
     template <typename source_t>
     inline constexpr bool enable_borrowed_range<libjst::delta_sequence_variant<source_t>> = true;
+    //!\endcond
 } // namespace std

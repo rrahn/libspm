@@ -42,8 +42,10 @@ namespace libjst
 } // namespace libjst
 
 namespace seqan3 {
+    //!\cond
     template <>
     constexpr bool add_enum_bitwise_operators<libjst::node_state> = true;
+    //!\endcond
 } // namespace seqan3
 
 namespace libjst {

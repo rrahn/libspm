@@ -1,0 +1,64 @@
+name: Documentation-CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Prevent multiple builds of this workfkow from running at the same time and allow cancelation of builds in progress.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+  TZ: Europe/Berlin
+
+defaults:
+  run:
+    shell: bash -Eexuo pipefail {0}
+
+jobs:
+    # add job to build, configure and test doxygen documentation
+    run:
+      runs-on: ubuntu-22.04
+      timeout-minutes: 120
+      steps:
+        # add Checkout step to fetch the repository with submodules
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            submodules: recursive
+
+        # add Install Cmake step to install cmake from seqan/actions/setup-cmake
+        - name: Install CMake
+          uses: seqan/actions/setup-cmake@main
+          with:
+            cmake: 3.27.4
+
+        # add Install latex step to install latex from ubuntu package manager
+        - name: Install Latex
+          run: |
+            sudo apt-get update
+            sudo apt-get install texlive texlive-font-utils -y
+
+        # add Install Doxygen step to install doxygen from seqan/actions/setup-doxygen
+        - name: Install Doxygen
+          uses: seqan/actions/setup-doxygen@main
+          with:
+            doxygen: 1.9.6
+
+        # add Build Tests step to configure and build documentation tests
+        - name: Build Tests
+          run: |
+            mkdir -p build
+            cd build
+            cmake ..
+            make doc
+
+        # add Run Tests step to run documentation tests using 2 threads in current directory with outputting on failure
+        - name: Run Tests
+          run: |
+            cd build
+            ctest --output-on-failure --test-dir doc
+

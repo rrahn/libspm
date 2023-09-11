@@ -1,0 +1,80 @@
+name: base-CI
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: 'Operating system to run tests on'
+        type: string
+        required: true
+      compiler:
+        description: 'Compiler to run tests with'
+        type: string
+        required: true
+      build_type:
+        description: 'Build type to run tests with'
+        type: string
+        required: true
+      test_suite:
+        description: 'Test suite to run'
+        type: string
+        required: true
+      cxx_flags:
+        description: 'Additional CXX flags to pass to cmake'
+        type: string
+        required: false
+        default: '-fdiagnostics-color -ftemplate-backtrace-limit=0 -fconcepts-diagnostics-depth=2'
+      threads:
+        description: 'Number of threads to use for building and testing'
+        type: number
+        required: false
+        default: 2
+
+env:
+    TZ: Europe/Berlin
+
+defaults:
+  run:
+    shell: bash -Eexuo pipefail {0}
+
+jobs:
+  run:
+    runs-on: ${{ inputs.os }}
+    steps:
+      # add Checkout step to fetch repository with recursive submodules
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # add Setup toolchain for tests
+      - name: Setup toolchain
+        uses: seqan/actions/setup-toolchain@main
+        with:
+          compiler: ${{ inputs.compiler }}
+          ccache_size: 75M
+
+      # add Install cmake step to install cmake 3.27.4 from seqan/actions main
+      - name: Install cmake
+        uses: seqan/actions/setup-cmake@main
+        with:
+          cmake: 3.27.4
+
+      # add Build Tests step to configure and build documentation tests
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE:STRING=${{ inputs.build_type }} \
+                   -DCMAKE_CXX_FLAGS:STRING="${{ inputs.cxx_flags }}"
+      - name: Build
+        run: |
+          ccache -z
+          cd build/${{ inputs.test_suite }}
+          make -k -j${{ inputs.threads }}
+          ccache -sv
+
+      - name: Test
+        run: |
+          cd build/${{ inputs.test_suite }}
+          ctest . -j${{ inputs.threads }} --output-on-failure
