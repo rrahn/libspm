@@ -16,8 +16,6 @@
 
 #include <cereal/types/variant.hpp>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 namespace libjst
 {
 
@@ -45,13 +43,13 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(value());
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(value());
@@ -84,13 +82,13 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(value());
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(value());
@@ -134,13 +132,13 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(_indel);
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(_indel);

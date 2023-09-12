@@ -14,8 +14,6 @@
 
 #include <concepts>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 #include <libcontrib/type_traits.hpp>
 #include <libcontrib/std/tag_invoke.hpp>
 
@@ -42,13 +40,13 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(_breakpoint, _alt_sequence, _coverage);
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(_breakpoint, _alt_sequence, _coverage);

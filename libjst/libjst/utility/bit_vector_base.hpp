@@ -21,7 +21,6 @@
 
 #include <cereal/types/base_class.hpp>
 
-#include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/utility/detail/bits_of.hpp>
 
 namespace libjst
@@ -518,11 +517,11 @@ public:
      */
     /*!\brief Saves this bit vector to the given output archive.
      *
-     * \tparam output_archive_t The type of the output_archive; must model seqan3::cereal_output_archive.
+     * \tparam output_archive_t The type of the output_archive; must model typename.
      *
      * \param[in, out] archive The archive to serialise this object to.
      */
-    template <seqan3::cereal_output_archive output_archive_t>
+    template <typename output_archive_t>
     void save(output_archive_t & archive) const
     {
         archive(cereal::base_class<base_t>(this), _size);
@@ -530,11 +529,11 @@ public:
 
     /*!\brief Loads this this bit vector from the given input archive.
      *
-     * \tparam input_archive_t The type of the input_archive; must model seqan3::cereal_input_archive.
+     * \tparam input_archive_t The type of the input_archive; must model typename.
      *
      * \param[in, out] archive The archive to serialise this object from.
      */
-    template <seqan3::cereal_input_archive input_archive_t>
+    template <typename input_archive_t>
     void load(input_archive_t & archive)
     {
         archive(cereal::base_class<base_t>(this), _size);

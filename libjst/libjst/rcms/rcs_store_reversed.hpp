@@ -15,7 +15,6 @@
 #include <algorithm>
 
 #include <seqan3/alphabet/range/sequence.hpp>
-#include <seqan3/core/concept/cereal.hpp>
 
 #include <libjst/rcms/compressed_multisequence_reversed.hpp>
 

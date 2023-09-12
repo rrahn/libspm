@@ -16,7 +16,6 @@
 #include <span>
 #include <variant>
 
-#include <seqan3/core/concept/cereal.hpp>
 #include <seqan3/utility/detail/multi_invocable.hpp>
 
 #include <libjst/rcms/packed_breakend_key.hpp>

@@ -17,8 +17,6 @@
 
 #include <cereal/types/base_class.hpp>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 #include <libjst/sequence_tree/breakend_site.hpp>
 #include <libjst/sequence_tree/path_descriptor.hpp>
 
@@ -79,14 +77,14 @@ namespace libjst
             }
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(_active_descriptor, _variant_index);
             visit([&] (auto const & descriptor) { oarchive(descriptor); });
         }
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(_active_descriptor, _variant_index);
