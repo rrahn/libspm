@@ -73,6 +73,11 @@ target_include_directories (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gt
 target_link_libraries (jstmap_test_unit INTERFACE "GTest::gtest" "GTest::gtest_main" "jstmap::test")
 add_library (jstmap::test::unit ALIAS jstmap_test_unit)
 
+# Add dedicated unit test interface for libjst using Catch2 as test framework.
+add_library (libjst_test_catch2 INTERFACE)
+target_link_libraries (libjst_test_catch2 INTERFACE "jstmap::test" "libjst::libjst" "Catch2::Catch2WithMain")
+add_library (libjst::test::catch2 ALIAS libjst_test_catch2)
+
 add_library (jstmap_test_performance INTERFACE)
 target_include_directories (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test")
 target_link_libraries (jstmap_test_performance INTERFACE "benchmark::benchmark" "jstmap::test" )
@@ -96,6 +101,7 @@ add_library (jstmap::test::tsan ALIAS jstmap_test_tsan)
 
 include (app_datasources)
 include (read_simulation)
+include (require_catch2)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (seqan3_require_benchmark)
