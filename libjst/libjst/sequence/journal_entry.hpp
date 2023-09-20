@@ -123,7 +123,7 @@ namespace libjst
          */
         friend bool operator==(journal_entry const &lhs, journal_entry const &rhs) noexcept
         {
-            return lhs.begin_position() == rhs.begin_position();
+            return lhs.begin_position() == rhs.begin_position() && lhs.segment().begin() == rhs.segment().begin();
         }
 
         /**
