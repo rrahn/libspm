@@ -34,7 +34,7 @@ namespace libjst
         using journaled_sequence_iterator = std::ranges::iterator_t<journaled_sequence_type>;
         using offset_type = std::make_signed_t<position_t>;
 
-        journal_type _journal{}; //!\bried Journal structure managing alternate path sequence.
+        journal_type _journal{}; //!\brief Journal structure managing alternate path sequence.
         position_t _left_position{}; //!\brief Left journaled sequence position marking begin of node label.
         position_t _right_position{}; //!\brief Right journaled sequence position marking end of node label.
         offset_type _offset{}; //!\brief Offset between journaled sequence positions and corresponding source position.
