@@ -180,7 +180,7 @@ namespace libjst
                 return position_type{end()};
 
             auto journal_it = upper_bound(sequence_position) - 1;
-            assert(position_is_covered_by(*journal_it, sequence_position));
+            assert(journal_it->position_is_covered_by(sequence_position));
             difference_type const segment_offset = sequence_position - journal_it->begin_position();
             auto segment_it = std::ranges::next(journal_it->segment().begin(), segment_offset);
             return position_type{std::move(journal_it), std::move(segment_it)};
@@ -192,7 +192,7 @@ namespace libjst
                 return const_position_type{end()};
 
             auto journal_it = upper_bound(sequence_position) - 1;
-            assert(position_is_covered_by(*journal_it, sequence_position));
+            assert(journal_it->position_is_covered_by(sequence_position));
             difference_type const segment_offset = sequence_position - journal_it->begin_position();
             auto segment_it = std::ranges::next(journal_it->segment().begin(), segment_offset);
             return const_position_type{std::move(journal_it), std::move(segment_it)};
@@ -221,8 +221,8 @@ namespace libjst
             auto [maybe_low_prefix, low_suffix] = split_at(low);
             auto [ignore_high_prefix, high_suffix] = split_at(high);
 
-            if (maybe_low_prefix.has_value())
-                entries_marked_for_insertion[marked_insert_entries++] = std::move(*maybe_low_prefix);
+            if (!std::ranges::empty(maybe_low_prefix.segment()))
+                entries_marked_for_insertion[marked_insert_entries++] = std::move(maybe_low_prefix);
 
             if (insertion_size > 0)
                 entries_marked_for_insertion[marked_insert_entries++] =
@@ -313,8 +313,8 @@ namespace libjst
 
         iterator_impl() = default;
 
-        iterator_impl(iterator_impl<!is_const> other)
-            requires is_const && std::convertible_to<std::ranges::iterator_t<journal_type>, journal_iterator> :
+        iterator_impl(iterator_impl<!is_const> other) requires
+            (is_const && std::convertible_to<std::ranges::iterator_t<journal_type>, journal_iterator>) :
             _journal_it{std::move(other._journal_it)}
         {
         }

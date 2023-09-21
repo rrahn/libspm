@@ -72,7 +72,7 @@ namespace libjst
 
         friend auto split_at(journal_position const &pos) noexcept
         {
-            return split_at(*pos.journal_it, pos.sequence_it);
+            return pos.journal_it->split_at(pos.sequence_it);
         }
     };
 } // namespace libjst

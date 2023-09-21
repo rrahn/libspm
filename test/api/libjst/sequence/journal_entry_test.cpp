@@ -101,3 +101,65 @@ SCENARIO("Two journal entries can be compared", "[sequence],[journal_entry]")
         }
     }
 }
+
+SCENARIO("A journal entry can be split")
+{
+    GIVEN("A journal entry with begin position 42 and segment 'ACGT'")
+    {
+        std::vector sequence{'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T'};
+        auto segment_begin = sequence.begin() + 4;
+        auto segment_end = sequence.begin() + 8;
+        libjst::journal_entry entry{42u, std::ranges::subrange{segment_begin, segment_end}};
+        WHEN("the journal entry is split at position 44")
+        {
+            auto split_it = entry.segment().begin() + 2;
+            auto [entry1, entry2] = entry.split_at(split_it);
+            THEN("the first journal entry covers the interval [42, 44)")
+            {
+                REQUIRE(entry1.begin_position() == 42u);
+                REQUIRE(entry1.segment().begin() == segment_begin);
+                REQUIRE(entry1.end_position() == 44u);
+            }
+            AND_THEN("the second journal entry covers the interval [44, 46)")
+            {
+                REQUIRE(entry2.begin_position() == 44u);
+                REQUIRE(entry2.segment().begin() == segment_begin + 2);
+                REQUIRE(entry2.end_position() == 46u);
+            }
+        }
+        WHEN("the journal entry is split before the begin of the segment")
+        {
+            auto split_it = entry.segment().begin() - 1;
+            auto [entry1, entry2] = entry.split_at(split_it);
+            THEN("the first journal entry covers the interval [42, 42)")
+            {
+                REQUIRE(entry1.begin_position() == 42u);
+                REQUIRE(entry1.segment().begin() == segment_begin);
+                REQUIRE(entry1.end_position() == 42u);
+            }
+            AND_THEN("the second journal entry covers the interval [42, 46)")
+            {
+                REQUIRE(entry2.begin_position() == 42u);
+                REQUIRE(entry2.segment().begin() == segment_begin);
+                REQUIRE(entry2.end_position() == 46u);
+            }
+        }
+        WHEN("the journal entry is split after the end of the segment")
+        {
+            auto split_it = entry.segment().end() + 1;
+            auto [entry1, entry2] = entry.split_at(split_it);
+            THEN("the first journal entry covers the interval [42, 46)")
+            {
+                REQUIRE(entry1.begin_position() == 42u);
+                REQUIRE(entry1.segment().begin() == segment_begin);
+                REQUIRE(entry1.end_position() == 46u);
+            }
+            AND_THEN("the second journal entry covers the interval [46, 46)")
+            {
+                REQUIRE(entry2.begin_position() == 46u);
+                REQUIRE(entry2.segment().begin() == segment_end);
+                REQUIRE(entry2.end_position() == 46u);
+            }
+        }
+    }
+}

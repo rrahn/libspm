@@ -261,7 +261,7 @@ namespace libjst
 
         iterator_impl &operator+=(difference_type count) noexcept
         {
-            if (auto next_position = current_position() + count; position_is_covered_by(*_journal_it, next_position))
+            if (auto next_position = current_position() + count; _journal_it->position_is_covered_by(next_position))
                 _sequence_it += count;
             else
                 *this = iterator_impl{_journal, _journal->find(next_position)};
