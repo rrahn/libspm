@@ -48,6 +48,21 @@ jobs:
           with:
             doxygen: 1.9.6
 
+        # Install python 3.11
+        - name: Set up Python 3.11
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.11
+
+        # Install sphinx, breathe, furo, and exhale into virtual environment
+        - name: Run Python commands
+          run: |
+            pip install --upgrade pip
+            python3.11 -m venv env
+            source env/bin/activate
+            echo "VIRTUAL ENV:" $VIRTUAL_ENV
+            pip install sphinx breathe furo exhale
+
         # add Build Tests step to configure and build documentation tests
         - name: Build Tests
           run: |
