@@ -30,7 +30,7 @@ jobs:
       runs-on: ${{ inputs.os }}
       timeout-minutes: 120
       outputs:
-        artefact_cache_key: ${{ runner.os }}-doc-artefacts-cache
+        artefact_cache_key: ${{ runner.os }}-doc-artefacts-cache-${{ github.sha }}
       steps:
         # add Checkout step to fetch the repository with submodules
         - name: Checkout
@@ -88,4 +88,4 @@ jobs:
           if: ${{ inputs.cache_doc_artefacts }}
           with:
             path: build/doc/
-            key: ${{ runner.os }}-doc-artefacts-cache
+            key: ${{ runner.os }}-doc-artefacts-cache-${{ github.sha }}
