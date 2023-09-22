@@ -1,0 +1,61 @@
+name: Deploy documentation
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Prevent multiple builds of this workfkow from running at the same time and allow cancelation of builds in progress.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+  TZ: Europe/Berlin
+
+defaults:
+  run:
+    shell: bash -Eexuo pipefail {0}
+
+jobs:
+  run:
+    uses: ./.github/workflows/build_and_test_docs.yml
+    with:
+      os: ubuntu-latest
+      cache_doc_artefacts: true
+
+  deploy:
+    needs: run
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # add Checkout step to fetch the repository with submodules
+      - name: Mock build structure
+        run: mkdir -p build/doc
+
+      - name: Restore build artefacts
+        uses: actions/cache/restore@v3
+        id: cache
+        with:
+          path: build/doc/
+          key: ${{ needs.run.outputs.artefact_cache_key }}
+          fail-on-cache-miss: true
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: build/doc/build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
