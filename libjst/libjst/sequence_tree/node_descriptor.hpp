@@ -16,7 +16,6 @@
 #include <string_view>
 
 #include <seqan3/core/add_enum_bitwise_operators.hpp>
-#include <seqan3/core/concept/cereal.hpp>
 
 namespace libjst
 {
@@ -142,13 +141,13 @@ namespace libjst {
             return _state;
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(_state, _on_alternate_path);
         }
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(_state, _on_alternate_path);

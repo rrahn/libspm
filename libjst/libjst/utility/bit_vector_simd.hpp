@@ -177,7 +177,7 @@ public:
     //!\endcond
 
     //!\copydoc libjst::bit_vector_base::load
-    template <seqan3::cereal_input_archive input_archive_t>
+    template <typename input_archive_t>
     void load(input_archive_t & archive)
     {
         base_t::load(archive);

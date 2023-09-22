@@ -15,8 +15,6 @@
 #include <concepts>
 #include <type_traits>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 namespace libjst
 {
     enum class indel_breakend_kind {
@@ -90,7 +88,7 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             position_t packed_key{};
@@ -99,7 +97,7 @@ namespace libjst
             _position = packed_key;
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             position_t packed_key = _code << ((sizeof(position_t) * 8) - 3ull);

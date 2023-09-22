@@ -15,8 +15,6 @@
 #include <algorithm>
 #include <ranges>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 #include <libjst/coverage/range_domain.hpp>
 #include <libjst/utility/sorted_vector.hpp>
 
@@ -147,13 +145,13 @@ namespace libjst
         // Serialisation
         // ----------------------------------------------------------------------------
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t & iarchive)
         {
             iarchive(_data, _domain);
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t & oarchive) const
         {
             oarchive(_data, _domain);

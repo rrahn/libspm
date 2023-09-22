@@ -22,8 +22,6 @@
 
 #include <cereal/types/array.hpp>
 
-#include <seqan3/core/concept/cereal.hpp>
-
 namespace libjst
 {
 
@@ -90,13 +88,13 @@ namespace libjst
             return bits_per_word * word_count;
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t const & oarchive) const
         {
             oarchive(_data);
         }
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t &iarchive) noexcept
         {
             iarchive(_data);
@@ -274,13 +272,13 @@ namespace libjst
             return iterator{std::addressof(get_word()), 0};
         }
 
-        template <seqan3::cereal_output_archive archive_t>
+        template <typename archive_t>
         void save(archive_t const & oarchive) const
         {
             oarchive(get_word());
         }
 
-        template <seqan3::cereal_input_archive archive_t>
+        template <typename archive_t>
         void load(archive_t &iarchive) noexcept
         {
             iarchive(get_word());
