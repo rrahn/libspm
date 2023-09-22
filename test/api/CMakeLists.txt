@@ -50,8 +50,31 @@ macro (add_cli_test test_filename target_dependencies)
     add_app_test (${test_filename} CLI_TEST ${target_dependencies})
 endmacro ()
 
+# Special test macro to add a test that uses Catch2.
+macro (add_catch2_test test_filename)
+    enable_testing ()
+
+    # Extract the test target name.
+    file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
+    seqan3_test_component (target "${source_file}" TARGET_NAME)
+    seqan3_test_component (test_name "${source_file}" TEST_NAME)
+
+    add_executable (${target} ${test_filename})
+    target_link_libraries (${target} PRIVATE "libjst::test::catch2")
+
+    add_dependencies (api_test ${target})
+
+    # Set the target
+    add_test (NAME "${test_name}" COMMAND ${target})
+
+    unset (source_file)
+    unset (target)
+    unset (test_name)
+endmacro()
+
 seqan3_require_ccache ()
 seqan3_require_test ()
+require_catch2 ()
 
 # Load the tests from the subdirectories
 add_subdirectories ()

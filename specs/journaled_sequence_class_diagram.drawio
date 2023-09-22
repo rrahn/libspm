@@ -1,0 +1,675 @@
+<mxfile host="65bd71144e">
+    <diagram id="nrLCvtrrT3yPIYF-veDs" name="Page-1">
+        <mxGraphModel dx="2229" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="583" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="15" value="&lt;br&gt;&lt;b&gt;JournaledSequence&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="-490" y="590" width="480" height="763.6800000000003" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="typename sequence_t: random_access_range&lt;br&gt;typename sequence_size_t = std::ranges::range_size_t&amp;lt;sequence_t&amp;gt;" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" parent="15" vertex="1">
+                    <mxGeometry y="55" width="480" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="100" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="- _journal: journal_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="120" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="140" width="480" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="148" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="348" value="- journal_type: Journal&amp;lt;sequence_iterator, sequence_size_t&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="168" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="346" value="- entry_type: std::ranges::range_value_t&amp;lt;journal_type&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="188" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="366" value="- template &amp;lt;bool&amp;gt; class Iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="15">
+                    <mxGeometry y="208" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="+ iterator: Iterator&amp;lt;false&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="228" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="+ const_iterator: Iterator&amp;lt;true&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="248" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="+ value_type: std::iter_value_t&amp;lt;iterator_t&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="268" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="+ reference: JournaledSequence::ElementProxy&amp;lt;false&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="288" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="+ const_reference: JournaledSequence::ElementProxy&amp;lt;true&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="308" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="+ difference_type: std::iter_dfifference_t&amp;lt;iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="328" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="+ size_type: sequence_size_t" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="348" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="353" value="+ segment_type: typename entry_type::sequence_type;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="15">
+                    <mxGeometry y="368" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="388" width="480" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="396" width="480" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="+ JournaledSequence(): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="416" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="354" value="+ JournaledSequence(s: segment_type): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="15">
+                    <mxGeometry y="437.73" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="+ begin(): iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="459.46000000000004" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="+ begin() const: const_iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="481.19000000000005" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="+ end(): iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="502.9200000000001" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="+ end() const: const_iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="524.6500000000001" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="+ operator[](p: size_type): reference " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="546.3800000000001" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" value="+ operator[](p: size_type) const: const_reference " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="568.1100000000001" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="+ clear(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="589.8400000000001" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="38" value="+ insert(i: const_iterator, s: sequence_type): iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="611.5700000000002" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="+ erase(i: const_iterator): iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="633.3000000000002" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="+ erase(i: const_iterator, j: const_iterator): iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="655.0300000000002" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="+ replace(i: const_iterator, j: const_iterator, s: sequence_t&amp;): iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="676.7600000000002" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="+ size() const noexcept: size_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="698.4900000000002" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="+ max_size() const noexcept: size_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="720.2200000000003" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="+ empty() const noexcept: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="741.9500000000003" width="480" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="412" style="edgeStyle=none;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="48" target="367">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="&lt;br&gt;&lt;b&gt;Journal&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="600" width="600" height="895.0300000000002" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="typename sequence_iterator_t: std::forward_iterator&lt;br&gt;typename sequence_size_t = std::make_unsigned&amp;lt;std::iter_difference_t&amp;lt;sequence_iterator_t&amp;gt;&amp;gt;: integral" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" parent="48" vertex="1">
+                    <mxGeometry y="55" width="600" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="100" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="- _journal: journal_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="120" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="140" width="600" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="148" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="394" value="- entry_type: JournalEntry&amp;lt;sequence_size_t, sequence_iterator_t&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="168" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="111" value="- sequence_type: entry_type::sequence_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="188" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="113" value="- journal_type: std::vector&amp;lt;entry_type&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="208" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="310" value="- template &amp;lt;bool&amp;gt; class Iterator:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="228" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="+ value_type: iter_value_t&amp;lt;iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="248" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="+ iterator: Iterator&amp;lt;true&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="268" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="+ const_iterator: JournalIterator&amp;lt;true&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="288" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="+ reference: iter_reference_t&amp;lt;iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="308" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="+ const_reference: iter_reference_t&amp;lt;const_iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="328" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="+ difference_type: iter_difference_t&amp;lt;iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="348" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="59" value="+ size_type: entry_type::size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="368" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="262" value="+ position_type: JournalPosition&amp;lt;iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="388" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="251" value="+ const_position_type: JournalPosition&amp;lt;const_iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="408" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="428" width="600" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="436" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="309" value="+ Journal()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="456" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="+ begin(): iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="477.73" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="66" value="+ begin() const: const_iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="499.46000000000004" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="67" value="+ end(): iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="521.19" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="68" value="+ end() const: const_iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="542.9200000000001" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="+ clear(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="564.6500000000001" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="72" value="+ record_sequence_edit(i: position_type, j: position_type, s: sequence_type): position_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="586.3800000000001" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="285" value="+ record_sequence_edit(i: const_position_type, j: const_position_type, s: sequence_type): position_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="608.1100000000001" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="76" value="+ size() const noexcept: size_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="629.8400000000001" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="77" value="+ max_size() const noexcept: size_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="651.5700000000002" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="78" value="+ empty() const noexcept: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="673.3000000000002" width="600" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="258" value="+ upper_bound(p: size_type): iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="695.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="395" value="+ upper_bound(p: size_type) const: const_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="715.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="259" value="+ lower_bound(p: size_type): iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="735.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="396" value="+ lower_bound(p: size_type) const: const_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="755.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="398" value="+ find(p: size_type) : position_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="775.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="397" value="+ find(p: size_type) const: const_position_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="795.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="117" value="- update_positions_of_remaining_entries(i: const_iterator, d: difference_type): void" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="815.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="399" value="- const_cast_position(p: const_position_type): position_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="835.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="400" value="- record_impl(i: position_type, j: position_type, s: sequence_type): position_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="855.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="401" value="- check_journal_invariants() const noexcept: bool" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="875.0300000000002" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="79" value="&lt;br&gt;&lt;b&gt;JournalEntry&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="9.12999999999997" width="590" height="451.57000000000016" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="typename sequence_size_t: integral&lt;br&gt;typename sequence_iterator_t: random_access_iterator" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" parent="79" vertex="1">
+                    <mxGeometry y="55" width="590" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="81" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="100" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="- _position: size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="120" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="109" value="- _segment: sequence_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="140" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="83" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="160" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="84" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="168" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="85" value="+ size_type: sequence_size_t" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="188" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="86" value="+ sequence_type: subrange&amp;lt;sequence_iterator_t, sequence_iterator_t&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="208" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="92" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="228" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="93" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="236" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="392" value="+ JournalEntry(): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="79">
+                    <mxGeometry y="256" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="94" value="+ JournalEntry(p: size_type, s: sequence_type): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="277.73" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="104" value="+ begin_position() const noexcept: position_type " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="299.46000000000004" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="252" value="+ end_position() const noexcept: position_type " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="321.19000000000005" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="115" value="+ segment() const noexcept(nothrow_copyable_v&lt;value_type&gt;): sequence_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="342.9200000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="254" value="+ friend position_is_covered_by(e: JournalEntry const &amp;, p:size_type) noexcept: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="364.6500000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="260" value="+ friend split_at(e: JournalEntry const &amp;, i: sequence_type::iterator) noexcept: pair&lt;JournalEntry, JournalEntry&gt; " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="386.3800000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="116" value="+ friend operator==(l: JournalEntry const &amp;, r: JournalEntry const &amp;) noexcept: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="79" vertex="1">
+                    <mxGeometry y="408.1100000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="393" value="+ friend operator&lt;=&gt;(l: JournalEntry const &amp;, r: JournalEntry const &amp;) noexcept: std::total_ordering" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="79">
+                    <mxGeometry y="429.84000000000015" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="120" value="" style="endArrow=none;html=1;endSize=12;startArrow=none;startSize=14;startFill=0;align=left;verticalAlign=bottom;endFill=0;" parent="1" source="48" target="79" edge="1">
+                    <mxGeometry x="-1" y="3" relative="1" as="geometry">
+                        <mxPoint x="690" y="910" as="sourcePoint"/>
+                        <mxPoint x="850" y="910" as="targetPoint"/>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="122" value="1" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;align=left;verticalAlign=bottom;" parent="1" source="17" target="48" edge="1">
+                    <mxGeometry x="-1" y="3" relative="1" as="geometry">
+                        <mxPoint x="40" y="920" as="sourcePoint"/>
+                        <mxPoint x="200" y="920" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="220" y="730"/>
+                            <mxPoint x="220" y="730"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="123" value="&lt;br&gt;&lt;b&gt;JournaledSequence::Iterator&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="-1100" y="250" width="460" height="852.6000000000004" as="geometry"/>
+                </mxCell>
+                <mxCell id="124" value="bool is_const" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" parent="123" vertex="1">
+                    <mxGeometry y="55" width="460" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="125" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="100" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="361" value="- _journal: maybe_const_journal_type *" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="120" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="126" value="- _journal_it: journal_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="140" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="362" value="- _sequence_it: sequence_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="160" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="128" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="180" width="460" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="129" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="188" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="347" value="- maybe_const_journal_type: /*unspecified*/" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="208" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="357" value="- journal_iterator: std::ranges::range_iterator_t&amp;lt;maybe_const_journal_type&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="228" width="460" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="359" value="- position_type: JournalPosition&amp;lt;journal_iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="250" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="360" value="- sequence_iterator: position_type::sequence_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="270" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="130" value="+ value_type: std::iter_value_t&amp;lt;&amp;nbsp;sequence_iterator &amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="290" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="131" value="+ reference: JournaledSequence::ElementProxy&amp;lt;is_const&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="310" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="133" value="+ difference_type: std::iter_difference_t&amp;lt;journal_iterator&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="330" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="135" value="+ pointer: std::iterator_traits&amp;lt;sequence_iterator&amp;gt;::pointer;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="350" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="136" value="+ iterator_category: std::random_access_iterator_tag" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="370" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="137" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="390" width="460" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="138" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="398" width="460" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="139" value="- Iterator(j: maybe_const_journal_type *, position_type p):" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="418" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="363" value="+ Iterator():" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="439.73" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="364" value="+ Iterator(Iterator&lt;!is_const&gt; other): /*requires is_const */" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="461.46000000000004" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="351" value="- operator position_type() const &amp;: position_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="483.19000000000005" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="352" value="- operator position_type() &amp;&amp;: position_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="504.9200000000001" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="140" value="+ operator*() const: reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="526.6500000000001" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="365" value="+ operator-&gt;() const: pointer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="123">
+                    <mxGeometry y="548.3800000000001" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="141" value="+ operator[](d: difference_type) const: reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="570.1100000000001" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="142" value="+ operator++(): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="123" vertex="1">
+                    <mxGeometry y="591.8400000000001" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="143" value="+ operator++(int): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="613.5700000000002" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="144" value="+ operator--(): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="635.3000000000002" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="145" value="+ operator--(int): Iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="657.0300000000002" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="146" value="+ operator+=(d: difference_type): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="678.7600000000002" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="149" value="+ operator-=(d: difference_type): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="700.4900000000002" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="147" value="+ friend operator+(i: Iterator const &amp;, d: difference_type): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="722.2200000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="148" value="+ friend operator+(d: difference_type, i: Iterator const &amp;): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="743.9500000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="154" value="+ friend operator-(i: Iterator const &amp;, d: difference_type): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="765.6800000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="155" value="+ friend operator-(i: Iterator const &amp;, j: Iterator const &amp;): difference_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="787.4100000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="156" value="+ friend operator==(i: Iterator const &amp;, j: Iterator const &amp;): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="809.1400000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="157" value="+ friend operator&lt;=&gt;(i: Iterator const &amp;, j: Iterator const &amp;): std::strong_ordering" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="123" vertex="1">
+                    <mxGeometry y="830.8700000000003" width="460" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="197" value="" style="endArrow=none;html=1;endSize=12;startArrow=none;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;align=left;verticalAlign=bottom;endFill=0;" parent="1" source="366" target="123" edge="1">
+                    <mxGeometry x="-1" y="3" relative="1" as="geometry">
+                        <mxPoint x="-650" y="770" as="sourcePoint"/>
+                        <mxPoint x="-490" y="770" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="407" style="edgeStyle=none;html=1;endArrow=none;endFill=0;dashed=1;" edge="1" parent="1" source="261" target="48">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="261" value="&lt;span style=&quot;&quot;&gt;The Journal invariants:&lt;br&gt;is regular type&lt;br&gt;first journal entry must have begin_position() equal to 0&lt;br&gt;two adjacent journal entries are linked i.e. e1.end_position()== e2.begin_position()&lt;br&gt;&lt;br&gt;&lt;/span&gt;Journal always contains at least one entry that represents the end of the underlying sequence.&lt;br&gt;&lt;span style=&quot;&quot;&gt;size():= _dictionary.back().begin_position()&lt;br&gt;&lt;/span&gt;&lt;span style=&quot;&quot;&gt;&lt;br&gt;Thus the end of the journal is dreferencable. However, this is only part of the implementation detail and should not be used outside of the class.&lt;br&gt;&lt;/span&gt;" style="shape=note2;boundedLbl=1;whiteSpace=wrap;html=1;size=25;verticalAlign=top;align=left;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="219" y="1580" width="490" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="296" value="&lt;span style=&quot;&quot;&gt;Check if journal invariants are maintained&lt;br&gt;&lt;/span&gt;" style="shape=note2;boundedLbl=1;whiteSpace=wrap;html=1;size=25;verticalAlign=top;align=left;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="1285.41" width="160" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="297" value="" style="endArrow=none;dashed=1;html=1;fontFamily=Courier New;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="296" target="72" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="760" y="1262.604210526316" as="sourcePoint"/>
+                        <mxPoint x="650" y="1252.4350000000004" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="303" value="" style="edgeStyle=elbowEdgeStyle;html=1;endArrow=none;elbow=vertical;" parent="1" source="48" target="311" edge="1">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="710" y="1060" as="sourcePoint"/>
+                        <mxPoint x="1255" y="1160.0000000000005" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="790" y="1080"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="308" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;dashed=1;" parent="1" source="307" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="240" y="1088.5950000000003" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="307" value="&lt;span style=&quot;&quot;&gt;&lt;br&gt;Initializable with segment&lt;br&gt;&lt;/span&gt;" style="shape=note2;boundedLbl=1;whiteSpace=wrap;html=1;size=25;verticalAlign=top;align=left;fontFamily=Courier New;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="970.98" width="160" height="99.02" as="geometry"/>
+                </mxCell>
+                <mxCell id="311" value="&lt;br&gt;&lt;b&gt;Journal::Iterator&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="1090" y="560" width="590" height="787.1400000000003" as="geometry"/>
+                </mxCell>
+                <mxCell id="312" value="bool is_const" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" parent="311" vertex="1">
+                    <mxGeometry y="55" width="590" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="313" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="100" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="314" value="- _journal_it: dictionary_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="120" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="316" value="- _position: size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="140" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="317" value="- _next_segment_position: size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="160" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="318" value="- _previous_segment_position: size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="180" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="319" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="200" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="320" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="208" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="343" value="- maybe_const_journal_type: /*unspecified*/" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="228" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="344" value="- journal_iterator: std::rangesd::range_iterator_t&amp;lt;maybe_const_journal_type&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="248" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="321" value="+ value_type: std::iter_value_t&amp;lt;&amp;nbsp;journal_iterator &amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="268" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="322" value="+ reference: std::iter_const_reference_t&amp;lt;&amp;nbsp;journal_iterator &amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="288" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="323" value="+ difference_type: std::iter_difference_t&amp;lt;&amp;nbsp;journal_iterator &amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="308" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="324" value="+ pointer: iterator_traits&amp;lt;&amp;nbsp;journal_iterator &amp;gt;::pointer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="328" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="325" value="+ iterator_category: std::random_access_iterator_tag" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="348" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="326" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="368" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="327" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="376" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="402" value="- Iterator(i: journal_iterator, j): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="311">
+                    <mxGeometry y="396" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="403" value="+ Iterator(): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="311">
+                    <mxGeometry y="417.73" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="328" value="+ Iterator(o: Iterator&lt;!is_const&gt;): /*requires is_const */" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="439.46000000000004" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="329" value="+ operator*() const: reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="461.19000000000005" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="404" value="+ operator-&gt;() const: reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="311">
+                    <mxGeometry y="482.9200000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="330" value="+ operator[](d: difference_type) const: reference" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="504.6500000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="331" value="+ operator++(): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="311" vertex="1">
+                    <mxGeometry y="526.3800000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="332" value="+ operator++(int): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="548.1100000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="333" value="+ operator--(): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="569.8400000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="334" value="+ operator--(int): Iterator " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="591.5700000000002" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="335" value="+ operator+=(d: difference_type): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="613.3000000000002" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="336" value="+ operator-=(d: difference_type): Iterator &amp;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="635.0300000000002" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="337" value="+ operator+(d: difference_type) const: Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="656.7600000000002" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="338" value="+ friend operator+(d: difference_type, i: Iterator const &amp;): Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="678.4900000000002" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="339" value="+ friend operator-(i: Iterator const &amp;, d: difference_type) const: Iterator" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="700.2200000000003" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="340" value="+ friend operator-(i: Iterator const &amp;, j: Iterator const &amp;): difference_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="721.9500000000003" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="341" value="+ friend operator==(i: Iterator const &amp;, j: Iterator const &amp;): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="743.6800000000003" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="342" value="+ friend operator&lt;=&gt;(i: Iterator const &amp;, j: Iterator const &amp;): std::strong_ordering" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="311" vertex="1">
+                    <mxGeometry y="765.4100000000003" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="367" value="&lt;br&gt;&lt;b&gt;JournalPosition&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=55;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-70" y="-10" width="590" height="489.84000000000015" as="geometry"/>
+                </mxCell>
+                <mxCell id="368" value="typename journal_iterator_t: iterator" style="shape=partialRectangle;html=1;top=1;align=left;dashed=1;" vertex="1" parent="367">
+                    <mxGeometry y="55" width="590" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="369" value="attributes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="100" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="370" value="+ journal_it: journal_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="120" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="371" value="+ sequence_it: sequence_iterator" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="140" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="372" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="160" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="373" value="types" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="168" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="374" value="- journal_entry_type: std::iter_value_t&amp;lt;journal_iterator_t&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="188" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="375" value="- sequence_type: journal_entry_type::sequence_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="208" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="387" value="+ journal_iterator: journal_iterator_t" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="228" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="388" value="+ sequence_iterator: std::ranges::iterator_t&amp;lt;sequence_type&amp;gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="248" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="389" value="+ size_type: journal_entry::size_type" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="268" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="376" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="288" width="590" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="377" value="operations" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="296" width="590" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="378" value="+ JournalPosition(): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="316" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="379" value="+ begin_position() const noexcept: position_type " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="337.73" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="390" value="+ JournalPosition(i: journal_iterator): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="359.46000000000004" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="391" value="+ JournalPosition(i: journal_iterator, j: sequence_iterator): " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="381.19000000000005" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="383" value="+ friend to_sequence_position(p: JournalPosition const &amp;) const noexcept: size_type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="402.9200000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="384" value="+ friend split_at(p: JournalPosition const &amp;) const noexcept: pair&lt;journal_entry_type, journal_entry_type&gt; " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="424.6500000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="385" value="+ friend operator==(l: JournalPosition const &amp;, r: JournalPosition const &amp;) noexcept: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="446.3800000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="386" value="+ friend operator&lt;=&gt;(l: JournalPosition const &amp;, r: JournalPosition const &amp;) noexcept: std::total_ordering" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="367">
+                    <mxGeometry y="468.1100000000001" width="590" height="21.73" as="geometry"/>
+                </mxCell>
+                <mxCell id="406" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="359" target="367">
+                    <mxGeometry width="160" relative="1" as="geometry">
+                        <mxPoint x="140" y="740" as="sourcePoint"/>
+                        <mxPoint x="300" y="740" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="409" style="edgeStyle=none;html=1;dashed=1;endArrow=none;endFill=0;" edge="1" parent="1" source="408" target="15">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="408" value="&lt;span style=&quot;&quot;&gt;Wraps journal and offers pure sequence interface.&lt;br&gt;&lt;/span&gt;" style="shape=note2;boundedLbl=1;whiteSpace=wrap;html=1;size=25;verticalAlign=top;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="-540" y="1470" width="430" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="411" style="edgeStyle=none;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="367" target="79">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="414" style="edgeStyle=none;html=1;endArrow=none;endFill=0;dashed=1;" edge="1" parent="1" source="413" target="367">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="417" style="edgeStyle=none;html=1;dashed=1;endArrow=none;endFill=0;" edge="1" parent="1" source="413" target="79">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="413" value="&lt;span style=&quot;&quot;&gt;Journal offers a dedicated position type to refer to a specific element within the segment of a journal entry.&lt;br&gt;The Iterator of the Journal is implicitly convertible to&amp;nbsp;&lt;br&gt;the position type. In this case the position type refers to the first element of the segment stored in the referenced journal entry.&lt;br&gt;&lt;/span&gt;" style="shape=note2;boundedLbl=1;whiteSpace=wrap;html=1;size=25;verticalAlign=top;align=left;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="440" y="-220" width="430" height="130" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
