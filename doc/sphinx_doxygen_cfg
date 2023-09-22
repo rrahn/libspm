@@ -42,7 +42,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = fastq_to_fasta
+PROJECT_NAME           = JuST::lib
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -68,7 +68,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = ${APP_TEMPLATE_DOXYGEN_OUTPUT_DIR}
+OUTPUT_DIRECTORY       = ${LIBJST_DOC_BINARY_DIR}/build
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create up to 4096
 # sub-directories (in 2 levels) under the output directory of each output format
@@ -185,6 +185,7 @@ FULL_PATH_NAMES        = YES
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
 STRIP_FROM_PATH        = ${CMAKE_SOURCE_DIR}
+STRIP_FROM_PATH        += ${CMAKE_SOURCE_DIR}/libjst
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -194,6 +195,7 @@ STRIP_FROM_PATH        = ${CMAKE_SOURCE_DIR}
 # using the -I flag.
 
 STRIP_FROM_INC_PATH    = ${CMAKE_SOURCE_DIR}/include
+STRIP_FROM_INC_PATH    += ${CMAKE_SOURCE_DIR}/libjst
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -283,7 +285,9 @@ TAB_SIZE               = 4
 # with the commands \{ and \} for these it is advised to use the version @{ and
 # @} or use a double escape (\\{ and \\})
 
-ALIASES                =
+# Allow for rst directives and advanced functions e.g. grid tables
+ALIASES  = "rst=\verbatim embed:rst:leading-asterisk"
+ALIASES += "endrst=\endverbatim"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -943,9 +947,7 @@ WARN_LOGFILE           = ${JSTMAP_DOXYGEN_LOGFILE}
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ${CMAKE_SOURCE_DIR}/jstmap \
-                         ${CMAKE_SOURCE_DIR}/jstmap-index \
-                         ${CMAKE_SOURCE_DIR}/libjst \
+INPUT                  = ${CMAKE_SOURCE_DIR}/libjst \
                          ${CMAKE_SOURCE_DIR}/LICENSE.md
 
 # This tag can be used to specify the character encoding of the source files
@@ -1253,7 +1255,7 @@ USE_HTAGS              = NO
 # See also: Section \class.
 # The default value is: YES.
 
-VERBATIM_HEADERS       = YES
+VERBATIM_HEADERS       = NO
 
 #---------------------------------------------------------------------------
 # Configuration options related to the alphabetical class index
@@ -2205,7 +2207,7 @@ MAN_LINKS              = NO
 # captures the structure of the code including all documentation.
 # The default value is: NO.
 
-GENERATE_XML           = NO
+GENERATE_XML           = YES
 
 # The XML_OUTPUT tag is used to specify where the XML pages will be put. If a
 # relative path is entered the value of OUTPUT_DIRECTORY will be put in front of

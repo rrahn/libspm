@@ -1,0 +1,91 @@
+name: Build and Test Documentation
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: "The operating system to run the build on."
+        required: true
+        type: string
+      cache_doc_artefacts:
+        description: "Whether to cache the build documentation artefacts."
+        type: boolean
+        required: false
+        default: false
+    outputs:
+      artefact_cache_key:
+        description: "The key to identify the artefact cache containing the documentation."
+        value: ${{ jobs.build_and_test.outputs.artefact_cache_key }}
+
+env:
+  TZ: Europe/Berlin
+
+defaults:
+  run:
+    shell: bash -Eexuo pipefail {0}
+
+jobs:
+    # add job to build, configure and test doxygen documentation
+    build_and_test:
+      runs-on: ${{ inputs.os }}
+      timeout-minutes: 120
+      outputs:
+        artefact_cache_key: ${{ runner.os }}-doc-artefacts-cache
+      steps:
+        # add Checkout step to fetch the repository with submodules
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            submodules: recursive
+
+        # add Install Cmake step to install cmake from seqan/actions/setup-cmake
+        - name: Install CMake
+          uses: seqan/actions/setup-cmake@main
+          with:
+            cmake: 3.27.4
+
+        # add Install latex step to install latex from ubuntu package manager
+        - name: Install Latex
+          run: |
+            sudo apt-get update
+            sudo apt-get install texlive texlive-font-utils -y
+
+        # add Install Doxygen step to install doxygen from seqan/actions/setup-doxygen
+        - name: Install Doxygen
+          uses: seqan/actions/setup-doxygen@main
+          with:
+            doxygen: 1.9.6
+
+        # Install python 3.11
+        - name: Set up Python 3.11
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.11
+
+        # Install sphinx, breathe, furo, and exhale into virtual environment
+        - name: Run Python commands
+          run: |
+            pip install --upgrade pip
+            pip install -r doc/requirements.txt
+            sphinx-build --version
+
+        # add Build Tests step to configure and build documentation tests
+        - name: Build Tests
+          run: |
+            mkdir -p build
+            cd build
+            cmake ..
+            make docs_sphinx
+
+        # add Run Tests step to run documentation tests using 2 threads in current directory with outputting on failure
+        - name: Run Tests
+          run: |
+            cd build
+            ctest --output-on-failure --test-dir doc
+
+        - name: Cache documentation artefacts
+          uses: actions/cache/save@v3
+          if: ${{ inputs.cache_doc_artefacts }}
+          with:
+            path: build/doc/
+            key: ${{ runner.os }}-doc-artefacts-cache

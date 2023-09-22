@@ -7,21 +7,44 @@ if (${DOXYGEN_FOUND})
     message (STATUS "Found Doxygen: ${DOXYGEN_EXECUTABLE}")
 
     # Configure doxygen options.
-    set (APP_TEMPLATE_DOXYFILE_IN ${CMAKE_SOURCE_DIR}/doc/doxygen_cfg)
-    set (APP_TEMPLATE_DOXYGEN_OUTPUT_DIR "${PROJECT_BINARY_DIR}/doc")
+    set (LIBJST_DOC_SOURCE_DIR ${CMAKE_SOURCE_DIR}/doc)
+    set (LIBJST_DOC_BINARY_DIR ${PROJECT_BINARY_DIR}/doc)
+
     set (APP_TEMPLATE_DOXYGEN_EXCLUDE_SYMBOLS "")
     set (APP_TEMPLATE_DOXYGEN_PREDEFINED_NDEBUG "")
     set (APP_TEMPLATE_DOXYGEN_ENABLED_SECTIONS "DEV")
     set (APP_TEMPLATE_DOXYGEN_EXTRACT_PRIVATE "YES")
-    set (JSTMAP_DOXYGEN_LOGFILE "${CMAKE_CURRENT_BINARY_DIR}/doxygen.log")
+    set (JSTMAP_DOXYGEN_LOGFILE "${LIBJST_DOC_BINARY_DIR}/doxygen.log")
 
-    configure_file (${APP_TEMPLATE_DOXYFILE_IN} ${APP_TEMPLATE_DOXYGEN_OUTPUT_DIR}/Doxyfile)
-    add_custom_target (doc
+    configure_file (${LIBJST_DOC_SOURCE_DIR}/sphinx_doxygen_cfg ${LIBJST_DOC_BINARY_DIR}/build/Doxyfile)
+    configure_file (${LIBJST_DOC_SOURCE_DIR}/conf.py.in ${LIBJST_DOC_BINARY_DIR}/source/conf.py)
+    configure_file (${LIBJST_DOC_SOURCE_DIR}/index.rst.in ${LIBJST_DOC_BINARY_DIR}/source/index.rst)
+    FILE(MAKE_DIRECTORY ${LIBJST_DOC_BINARY_DIR}/source/_static)
+    FILE(MAKE_DIRECTORY ${LIBJST_DOC_BINARY_DIR}/source/_template)
+
+    add_custom_target (docs_base
                        COMMAND ${DOXYGEN_EXECUTABLE}
-                       WORKING_DIRECTORY ${APP_TEMPLATE_DOXYGEN_OUTPUT_DIR}
-                       COMMENT "Generating (developer) API documentation with Doxygen."
+                       WORKING_DIRECTORY ${LIBJST_DOC_BINARY_DIR}/build
+                       COMMENT "Generating API documentation with Doxygen."
                        VERBATIM)
-    message (STATUS "${FontBold}You can run `make doc` to build api documentation.${FontReset}")
+
+    message (STATUS "${FontBold}You can run `make docs_base` to build api documentation.${FontReset}")
+
+    find_package (Sphinx HINTS "${CMAKE_SOURCE_DIR}/doc" NO_DEFAULT_PATH)
+    if (SPHINX_FOUND)
+        message (STATUS "Found Sphinx: ${SPHINX_EXECUTABLE}")
+
+        # Configure sphinx options.
+        add_custom_target (docs_sphinx
+                           COMMAND ${SPHINX_EXECUTABLE} -b html ${LIBJST_DOC_BINARY_DIR}/source ${LIBJST_DOC_BINARY_DIR}/build
+                           WORKING_DIRECTORY ${LIBJST_DOC_BINARY_DIR}
+                           COMMENT "Generating documentation with Sphinx."
+                           VERBATIM
+                           DEPENDS docs_base)
+        message (STATUS "${FontBold}You can run `make docs_sphinx` to build html documentation.${FontReset}")
+    else ()
+        message (STATUS "Sphinx not found.")
+    endif ()
 else ()
     message (STATUS "Doxygen not found.")
 endif ()
