@@ -11,9 +11,6 @@
 #include <concepts>
 #include <string>
 
-#include <algorithm>
-#include <seqan3/core/debug_stream.hpp>
-
 #include <libjst/search/polymorphic_sequence_searcher.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
@@ -63,7 +60,6 @@ struct naive_matcher {
 
     template <typename seq_t, typename callback_t>
     constexpr void operator()(seq_t && seq, callback_t && callback) const {
-        seqan3::debug_stream << "Hystk: " << seq << "\n";
         if (std::ranges::size(seq) < window_size())
             return;
 

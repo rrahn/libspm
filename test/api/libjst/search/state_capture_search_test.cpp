@@ -11,9 +11,6 @@
 #include <concepts>
 #include <string>
 
-#include <algorithm>
-#include <seqan3/core/debug_stream.hpp>
-
 #include <libjst/matcher/shiftor_matcher_restorable.hpp>
 #include <libjst/search/polymorphic_sequence_searcher.hpp>
 

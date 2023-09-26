@@ -14,8 +14,6 @@
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
 
-#include <seqan3/core/debug_stream.hpp>
-
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/coverage/concept.hpp>
