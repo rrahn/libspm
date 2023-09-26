@@ -16,7 +16,7 @@
 #include <exception>
 #include <type_traits>
 
-#include <libjst/journal.hpp>
+#include <libjst/sequence/journaled_sequence.hpp>
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
@@ -27,12 +27,11 @@ namespace libjst
     class journaled_sequence_label {
     private:
 
-        using journal_type = journal<position_t, source_t>;
-        using journaled_sequence_type = typename journal_type::journaled_sequence_type;
-        using journaled_sequence_iterator = std::ranges::iterator_t<journaled_sequence_type>;
+        using journaled_sequence_type = journaled_sequence<source_t, position_t>;
+        using journaled_sequence_iterator = std::ranges::iterator_t<journaled_sequence_type const>;
         using offset_type = std::make_signed_t<position_t>;
 
-        journal_type _journal{}; //!\brief Journal structure managing alternate path sequence.
+        journaled_sequence_type _journaled_source{}; //!\brief Journal structure managing alternate path sequence.
         position_t _left_position{}; //!\brief Left journaled sequence position marking begin of node label.
         position_t _right_position{}; //!\brief Right journaled sequence position marking end of node label.
         offset_type _offset{}; //!\brief Offset between journaled sequence positions and corresponding source position.
@@ -47,17 +46,16 @@ namespace libjst
 
         journaled_sequence_label() = default;
         journaled_sequence_label(source_t source) noexcept :
-            _journal{(source_t &&) source},
+            _journaled_source{(source_t &&) source},
             _left_position{0},
-            _right_position{static_cast<position_t>(std::ranges::size(_journal.sequence()))}
+            _right_position{static_cast<position_t>(std::ranges::size(_journaled_source))}
         {}
 
         constexpr sequence_type sequence(size_type const first = 0, size_type const last = npos) const noexcept {
             assert(first <= last);
-            auto jseq = _journal.sequence();
-            size_type max_end = std::min<size_type>(last, std::ranges::size(jseq));
-            return std::ranges::subrange{std::ranges::next(jseq.begin(), to_alt_position(first)),
-                                         std::ranges::next(jseq.begin(), to_alt_position(max_end))};
+            size_type max_end = std::min<size_type>(last, std::ranges::size(_journaled_source));
+            return std::ranges::subrange{std::ranges::next(_journaled_source.begin(), to_alt_position(first)),
+                                         std::ranges::next(_journaled_source.begin(), to_alt_position(max_end))};
         }
 
         constexpr sequence_type node_sequence() const noexcept {
@@ -97,17 +95,19 @@ namespace libjst
 
         template <typename variant_t>
         constexpr void record_variant_impl(variant_t && variant) {
-            position_type const alt_position = to_alt_position(libjst::low_breakend(variant)); // TODO: replace with low_breakend
+            auto const alt_position = _journaled_source.begin() + to_alt_position(libjst::low_breakend(variant)); // TODO: replace with low_breakend
+            auto alt_seq = libjst::alt_sequence(variant);
             switch (libjst::alt_kind(variant)) {
                 case alternate_sequence_kind::replacement: {
-                    _journal.record_substitution(alt_position, libjst::alt_sequence(variant));
+                    auto alt_seq_size = std::ranges::size(alt_seq);
+                    _journaled_source.replace(alt_position, alt_position + alt_seq_size, std::move(alt_seq));
                     break;
                 } case alternate_sequence_kind::deletion: {
                     auto && breakpt = libjst::get_breakpoint(variant);
-                    _journal.record_deletion(alt_position, libjst::breakpoint_span(breakpt));
+                    _journaled_source.erase(alt_position, alt_position + libjst::breakpoint_span(breakpt));
                     break;
                 } case alternate_sequence_kind::insertion: {
-                    _journal.record_insertion(alt_position, libjst::alt_sequence(variant));
+                    _journaled_source.insert(alt_position, std::move(alt_seq));
                     break;
                 } default: {
                     //no-op
