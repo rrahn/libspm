@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <string>
 
-#include <seqan3/utility/views/slice.hpp>
-
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
@@ -84,7 +82,9 @@ struct volatile_sequence_tree_test : public jst::test::volatile_sequence_tree::t
         if (!GetParam().variants.empty()) {
             label_end = libjst::left_breakpoint(*GetParam().variants.begin());
         }
-        return _mock.source() | seqan3::views::slice(0, label_end);
+
+        return std::ranges::subrange{_mock.source().begin(),
+                                     std::ranges::next(_mock.source().begin(), label_end, _mock.source().end())};
     }
 
     auto expected_reference_path() const noexcept {

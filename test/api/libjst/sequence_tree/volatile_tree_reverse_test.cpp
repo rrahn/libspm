@@ -7,12 +7,10 @@
 
 #include <gtest/gtest.h>
 
-#include <concepts>
 #include <algorithm>
+#include <concepts>
 #include <stack>
 #include <string>
-
-#include <seqan3/utility/views/slice.hpp>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
