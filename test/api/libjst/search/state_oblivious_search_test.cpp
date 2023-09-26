@@ -11,7 +11,7 @@
 #include <concepts>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 #include <seqan3/core/debug_stream.hpp>
 
 #include <libjst/search/polymorphic_sequence_searcher.hpp>
@@ -141,7 +141,7 @@ TEST_P(polymorphic_sequence_searcher_test, search) {
     });
 
     std::ranges::sort(actual_occurrences);
-    EXPECT_RANGE_EQ(actual_occurrences, GetParam().expected_occurrences);
+    EXPECT_TRUE(std::ranges::equal(actual_occurrences, GetParam().expected_occurrences));
 }
 
 // ----------------------------------------------------------------------------

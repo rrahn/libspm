@@ -7,7 +7,6 @@
 
 #include <gtest/gtest.h>
 
-#include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
 
 #include <libjst/journal.hpp>
@@ -41,7 +40,7 @@ struct iterator_fixture<journal_sequence_iterator> : public ::testing::Test
         journal.record_deletion(9, 4); // aaaaccccggggtttt
         test_range = journal.sequence();
 
-        EXPECT_RANGE_EQ(test_range, expected_range);
+        ASSERT_TRUE(std::ranges::equal(test_range, expected_range));
     }
 };
 

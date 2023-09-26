@@ -15,7 +15,6 @@
 #include <cereal/types/vector.hpp>
 
 #include <seqan3/core/debug_stream.hpp>
-#include <seqan3/test/expect_range_eq.hpp>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
@@ -42,7 +41,7 @@ TEST_F(compressed_multisequence_test, construct) {
     coverage_domain_type domain{0, 10};
     test_type multisequence{src, domain};
 
-    EXPECT_RANGE_EQ(multisequence.source(), source_type{"AAAAAAAAAAAAAAA"_dna4});
+    EXPECT_TRUE(std::ranges::equal(multisequence.source(), source_type{"AAAAAAAAAAAAAAA"_dna4}));
     EXPECT_TRUE(multisequence.coverage_domain() == domain);
 }
 
@@ -166,10 +165,10 @@ TEST_F(compressed_multisequence_test, source) {
     source_type src{"AAAAAAAAAAAAAAA"_dna4};
 
     test_type rcms{};
-    EXPECT_RANGE_EQ(rcms.source(), ""_dna4);
+    EXPECT_TRUE(std::ranges::equal(rcms.source(), ""_dna4));
 
     rcms = test_type{src, coverage_domain_type{0, 10}};
-    EXPECT_RANGE_EQ(rcms.source(), src);
+    EXPECT_TRUE(std::ranges::equal(rcms.source(), src));
 }
 
 TEST_F(compressed_multisequence_test, empty) {

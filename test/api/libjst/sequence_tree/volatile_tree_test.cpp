@@ -12,7 +12,6 @@
 #include <stack>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
 #include <seqan3/utility/views/slice.hpp>
 
 #include <libcontrib/seqan/alphabet.hpp>
@@ -130,7 +129,7 @@ TEST_P(volatile_tree_test, root_sink) {
     }
     std::cout << "\n";
 
-    EXPECT_RANGE_EQ(GetParam().expected_traversal, actual_traversal);
+    EXPECT_TRUE(std::ranges::equal(GetParam().expected_traversal, actual_traversal));
 }
 
 // ----------------------------------------------------------------------------

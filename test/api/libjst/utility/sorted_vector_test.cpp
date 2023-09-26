@@ -7,10 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <concepts>
 #include <type_traits>
-
-#include <seqan3/test/expect_range_eq.hpp>
 
 #include <libjst/utility/sorted_vector.hpp>
 
@@ -36,7 +35,7 @@ TEST_F(sorted_vector_test, insert)
     EXPECT_EQ(*vec.insert(10), 10);
     EXPECT_EQ(*vec.insert(3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
 }
 
 TEST_F(sorted_vector_test, insert_hint)
@@ -52,7 +51,7 @@ TEST_F(sorted_vector_test, insert_hint)
     EXPECT_EQ(*vec.insert(vec.end(), 10), 10);
     EXPECT_EQ(*vec.insert(std::ranges::next(vec.begin(), 1), 3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
 }
 
 TEST_F(sorted_vector_test, emplace)
@@ -68,7 +67,7 @@ TEST_F(sorted_vector_test, emplace)
     EXPECT_EQ(*vec.emplace(10), 10);
     EXPECT_EQ(*vec.emplace(3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
 }
 
 TEST_F(sorted_vector_test, emplace_hint)
@@ -84,7 +83,7 @@ TEST_F(sorted_vector_test, emplace_hint)
     EXPECT_EQ(*vec.emplace_hint(vec.end(), 10), 10);
     EXPECT_EQ(*vec.emplace_hint(std::ranges::next(vec.begin(), 1), 3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
 }
 
 TEST_F(sorted_vector_test, erase)
@@ -100,14 +99,14 @@ TEST_F(sorted_vector_test, erase)
     EXPECT_EQ(*vec.emplace(10), 10);
     EXPECT_EQ(*vec.emplace(3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
     EXPECT_EQ(*vec.erase(vec.begin()), 3);
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{3, 3, 5, 5, 5, 6, 10})));
     EXPECT_EQ(*vec.erase(std::ranges::next(vec.begin())), 5);
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{3, 5, 5, 5, 6, 10})));
     auto it = vec.erase(std::ranges::next(vec.begin(), 5));
     EXPECT_TRUE(it == vec.end());
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{3, 5, 5, 5, 6}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{3, 5, 5, 5, 6})));
 }
 
 TEST_F(sorted_vector_test, erase_range)
@@ -123,9 +122,9 @@ TEST_F(sorted_vector_test, erase_range)
     EXPECT_EQ(*vec.emplace(10), 10);
     EXPECT_EQ(*vec.emplace(3), 3);
 
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 3, 3, 5, 5, 5, 6, 10})));
     EXPECT_EQ(*vec.erase(std::ranges::next(vec.begin()), std::ranges::next(vec.begin(), 6)), 6);
-    EXPECT_RANGE_EQ(vec, (std::vector<size_t>{1, 6, 10}));
+    EXPECT_TRUE(std::ranges::equal(vec, (std::vector<size_t>{1, 6, 10})));
 
     vec.erase(vec.begin(), vec.end());
     EXPECT_TRUE(vec.empty());

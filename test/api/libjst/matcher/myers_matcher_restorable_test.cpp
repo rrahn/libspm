@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
@@ -49,7 +49,7 @@ TEST_F(myers_matcher_restorable_test, dna4_pattern)
     matcher(haystack, [&] (auto const & finder) {
         actual_positions.push_back(seqan::endPosition(finder));
     });
-    EXPECT_RANGE_EQ(actual_positions, expected_positions);
+    EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }
 
 TEST_F(myers_matcher_restorable_test, dna4_pattern_captured)
@@ -70,5 +70,5 @@ TEST_F(myers_matcher_restorable_test, dna4_pattern_captured)
         });
         state = matcher.capture();
     }
-    EXPECT_RANGE_EQ(actual_positions, expected_positions);
+    EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }

@@ -11,8 +11,6 @@
 #include <stack>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
-
 #include <libcontrib/seqan/alphabet.hpp>
 
 #include <libjst/sequence_tree/coloured_tree.hpp>
@@ -127,7 +125,7 @@ TEST_P(sequence_tree_stats, max_subtree_depth) {
 
 TEST_P(sequence_tree_stats, subtree_depths) {
     auto actual_stats = libjst::stats(make_tree());
-    EXPECT_RANGE_EQ(actual_stats.subtree_depths, GetParam().expected_stats.subtree_depths);
+    EXPECT_TRUE(std::ranges::equal(actual_stats.subtree_depths, GetParam().expected_stats.subtree_depths));
 }
 
 // ----------------------------------------------------------------------------

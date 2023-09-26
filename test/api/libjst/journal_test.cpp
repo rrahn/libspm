@@ -6,9 +6,6 @@
 // -----------------------------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
-
-#include <seqan3/test/expect_range_eq.hpp>
-
 #include <libjst/journal.hpp>
 
 struct journal_test : public ::testing::Test
@@ -34,7 +31,7 @@ TEST_F(journal_test, construction)
 TEST_F(journal_test, sequence)
 {
     journal_type journal{sequence};
-    EXPECT_RANGE_EQ(journal.sequence(), sequence);
+    EXPECT_TRUE(std::ranges::equal(journal.sequence(), sequence));
 
     // TODO: Check const iterator
 }
@@ -58,12 +55,12 @@ TEST_F(journal_test, record_insertion)
 
         auto [pos, seq] = *(journal.record_insertion(8u, segment));
         EXPECT_EQ(pos, 8u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         auto journal_range = journal.sequence();
 
         EXPECT_EQ(journal_range.size(), sequence.size() + segment.size());
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal_range, expected.insert(8, segment));
+        EXPECT_TRUE(std::ranges::equal(journal_range, expected.insert(8, segment)));
     }
 
     // insert in empty
@@ -74,13 +71,13 @@ TEST_F(journal_test, record_insertion)
         // auto [pos, seq] = *journal.record_insertion(8, segment);
 
         // EXPECT_FALSE(insert_result);
-        // EXPECT_RANGE_EQ(seq, segment);
-        // EXPECT_RANGE_EQ(journal.sequence(), std::string{}); TODO: check me!
+        // EXPECT_TRUE(std::ranges::equal(seq, segment));
+        // EXPECT_TRUE(std::ranges::equal(journal.sequence(), std::string{}); TODO: check me)!
 
         auto [pos, seq] = *journal.record_insertion(0, segment);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, segment);
-        EXPECT_RANGE_EQ(journal.sequence(), segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), segment));
     }
 
     // insert at end
@@ -89,13 +86,13 @@ TEST_F(journal_test, record_insertion)
         // auto [pos, seq] = *journal.record_insertion(sequence.size() + 1, segment);
 
         // EXPECT_FALSE(insert_result);
-        // EXPECT_RANGE_EQ(seq, segment.size());
-        // EXPECT_RANGE_EQ(journal.sequence(), sequence);
+        // EXPECT_TRUE(std::ranges::equal(seq, segment.size()));
+        // EXPECT_TRUE(std::ranges::equal(journal.sequence(), sequence));
 
         auto [pos, seq] = *journal.record_insertion(sequence.size(), segment);
         EXPECT_EQ(pos, sequence.size());
-        EXPECT_RANGE_EQ(seq, segment);
-        EXPECT_RANGE_EQ(journal.sequence(), sequence + segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), sequence + segment));
     }
 
     // insert at beginning
@@ -103,8 +100,8 @@ TEST_F(journal_test, record_insertion)
         journal_type journal{sequence};
         auto [pos, seq] = *journal.record_insertion(0, segment);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, segment);
-        EXPECT_RANGE_EQ(journal.sequence(), segment + sequence);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), segment + sequence));
     }
 
     // insert on same position twice.
@@ -113,13 +110,13 @@ TEST_F(journal_test, record_insertion)
 
         auto [pos, seq] = *journal.record_insertion(8, segment);
         EXPECT_EQ(pos, 8u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
 
         auto [pos2, seq2] = *journal.record_insertion(8, segment);
         EXPECT_EQ(pos2, 8u);
-        EXPECT_RANGE_EQ(seq2, segment);
+        EXPECT_TRUE(std::ranges::equal(seq2, segment));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.insert(8, segment).insert(8, segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.insert(8, segment).insert(8, segment)));
     }
 }
 
@@ -132,14 +129,14 @@ TEST_F(journal_test, record_insertion_in_empty_journal_sequence)
 
     journal_type journal{empty_ref};
     EXPECT_FALSE(journal.empty());
-    EXPECT_RANGE_EQ(journal.sequence(), empty_ref);
+    EXPECT_TRUE(std::ranges::equal(journal.sequence(), empty_ref));
 
     auto [pos, seq] = *journal.record_insertion(0, single_insertion);
 
     EXPECT_EQ(pos, 0);
-    EXPECT_RANGE_EQ(seq, single_insertion);
+    EXPECT_TRUE(std::ranges::equal(seq, single_insertion));
     EXPECT_FALSE(journal.empty());
-    EXPECT_RANGE_EQ(journal.sequence(), single_insertion);
+    EXPECT_TRUE(std::ranges::equal(journal.sequence(), single_insertion));
 }
 
 TEST_F(journal_test, record_deletion)
@@ -155,7 +152,7 @@ TEST_F(journal_test, record_deletion)
     //     auto [pos, seq] = *journal.record_deletion(0, 10);
 
     //     EXPECT_EQ(pos, 0);
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_TRUE(journal.empty());
     // }
 
@@ -165,7 +162,7 @@ TEST_F(journal_test, record_deletion)
     //     auto [pos, seq] = *journal.record_deletion(5, 4);
 
     //     EXPECT_EQ(pos, );
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -175,7 +172,7 @@ TEST_F(journal_test, record_deletion)
     //     auto [pos, seq] = *journal.record_deletion(5, 17);
 
     //     EXPECT_EQ(pos, );
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -185,7 +182,7 @@ TEST_F(journal_test, record_deletion)
     //     auto [pos, seq] = *journal.record_deletion(16, 17);
 
     //     EXPECT_EQ(pos, );
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -195,7 +192,7 @@ TEST_F(journal_test, record_deletion)
     //     auto [pos, seq] = *journal.record_deletion(5, 5);
 
     //     EXPECT_EQ(pos, );
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -207,9 +204,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(4, 4);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, sequence.substr(8));
+        EXPECT_TRUE(std::ranges::equal(seq, sequence.substr(8)));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(4, 4));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(4, 4)));
     }
 
     { // erase single element within entry
@@ -218,9 +215,9 @@ TEST_F(journal_test, record_deletion)
         auto [pos, seq] = *journal.record_deletion(7, 1);
 
         EXPECT_EQ(pos, 7u);
-        EXPECT_RANGE_EQ(seq, sequence.substr(8));
+        EXPECT_TRUE(std::ranges::equal(seq, sequence.substr(8)));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(7, 1));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(7, 1)));
     }
 
     { // erase entire entry
@@ -228,7 +225,7 @@ TEST_F(journal_test, record_deletion)
 
         auto it = journal.record_deletion(0, 16);
         EXPECT_EQ(it, std::ranges::end(journal));
-        EXPECT_RANGE_EQ(journal.sequence(), ""s);
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), ""s));
     }
 
     { // erase suffix of entry
@@ -237,7 +234,7 @@ TEST_F(journal_test, record_deletion)
         auto it = journal.record_deletion(5, 11);
         EXPECT_EQ(it, std::ranges::end(journal));
         EXPECT_EQ(journal.size(), 1u);
-        EXPECT_RANGE_EQ(journal.sequence(), sequence.substr(0, 5));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), sequence.substr(0, 5)));
     }
 
     // erase prefix of entry
@@ -247,9 +244,9 @@ TEST_F(journal_test, record_deletion)
         auto [pos, seq] = *journal.record_deletion(0, 5);
 
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, sequence.substr(5));
+        EXPECT_TRUE(std::ranges::equal(seq, sequence.substr(5)));
         EXPECT_EQ(journal.size(), 1u);
-        EXPECT_RANGE_EQ(journal.sequence(), sequence.substr(5));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), sequence.substr(5)));
     }
 
     //-------------------------------------------------------------------------
@@ -268,17 +265,17 @@ TEST_F(journal_test, record_deletion)
     EXPECT_NE(it, std::ranges::end(journal_base));
 
     std::string expected_base{sequence};
-    EXPECT_RANGE_EQ(journal_base.sequence(), expected_base.erase(12, 1).erase(8, 1).erase(4, 1).erase(0, 1));
+    EXPECT_TRUE(std::ranges::equal(journal_base.sequence(), expected_base.erase(12, 1).erase(8, 1).erase(4, 1).erase(0, 1)));
 
     { // erase begin from first to last
         journal_type journal{journal_base};
 
         auto [pos, seq] = *journal.record_deletion(3, 6);
         EXPECT_EQ(pos, 3u);
-        EXPECT_RANGE_EQ(seq, "ttt"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "ttt"s));
 
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(3, 6));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(3, 6)));
     }
 
     { // from last of first to first of last // two elements are delted
@@ -286,9 +283,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(5, 2);
         EXPECT_EQ(pos, 5u);
-        EXPECT_RANGE_EQ(seq, "gg"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "gg"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(5, 2));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(5, 2)));
     }
 
     { // from middle to middle - some range is deleted
@@ -296,9 +293,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(4, 4);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, "g"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "g"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(4, 4));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(4, 4)));
     }
 
     { // from middle to end of second - entire second entry is deleted
@@ -306,9 +303,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(4, 5);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, "ttt"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "ttt"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(4, 5));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(4, 5)));
     }
 
     { // from begin to middle of second - entire first entry is deleted
@@ -316,9 +313,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(3, 5);
         EXPECT_EQ(pos, 3u);
-        EXPECT_RANGE_EQ(seq, "g"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "g"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(3, 5));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(3, 5)));
     }
 
     //-------------------------------------------------------------------------
@@ -330,10 +327,10 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(0, 9);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, "ttt"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "ttt"s));
         EXPECT_FALSE(journal.empty());
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(0, 9));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(0, 9)));
     }
 
     { // erase everything
@@ -341,27 +338,27 @@ TEST_F(journal_test, record_deletion)
 
         auto it = journal.record_deletion(0, 12);
         EXPECT_EQ(it, std::ranges::end(journal));
-        EXPECT_RANGE_EQ(journal.sequence(), ""s);
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), ""s));
     }
 
     { // from last of first to first of last - two elements are delted and all entries in between
         journal_type journal{journal_base};
         auto [pos, seq] = *journal.record_deletion(2, 8);
         EXPECT_EQ(pos, 2u);
-        EXPECT_RANGE_EQ(seq, "tt"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "tt"s));
         EXPECT_FALSE(journal.empty());
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(2, 8));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(2, 8)));
     }
 
     { // from last of first to first of last - two elements are delted and all entries in between
         journal_type journal{journal_base};
         auto [pos, seq] = *journal.record_deletion(1, 9);
         EXPECT_EQ(pos, 1u);
-        EXPECT_RANGE_EQ(seq, "tt"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "tt"s));
         EXPECT_FALSE(journal.empty());
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(1, 9));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(1, 9)));
     }
 
     { // from middle to middle - some elements are delted and all entries in between
@@ -369,9 +366,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(1, 10);
         EXPECT_EQ(pos, 1u);
-        EXPECT_RANGE_EQ(seq, "t"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "t"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(1, 10));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(1, 10)));
     }
 
     { // from middle to end - some elements are delted and all entries in between
@@ -380,7 +377,7 @@ TEST_F(journal_test, record_deletion)
         auto it = journal.record_deletion(1, 11);
         EXPECT_EQ(it, std::ranges::end(journal));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(1, 11));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(1, 11)));
     }
 
     { // from begin to middle - some elements are delted and all entries in between
@@ -388,9 +385,9 @@ TEST_F(journal_test, record_deletion)
 
         auto [pos, seq] = *journal.record_deletion(0, 11);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, "t"s);
+        EXPECT_TRUE(std::ranges::equal(seq, "t"s));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.erase(0, 11));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.erase(0, 11)));
     }
 }
 
@@ -407,11 +404,11 @@ TEST_F(journal_test, record_substitution)
     //     journal_type journal{};
 
     //     EXPECT_FALSE(journal.record_substitution(0, segment));
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_TRUE(journal.empty());
 
     //     EXPECT_FALSE(journal.record_substitution(10, segment));
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_TRUE(journal.empty());
     // }
 
@@ -419,7 +416,7 @@ TEST_F(journal_test, record_substitution)
     //     journal_type journal{sequence};
 
     //     EXPECT_FALSE(journal.record_substitution(17, segment));
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -427,14 +424,14 @@ TEST_F(journal_test, record_substitution)
     //     journal_type journal{sequence};
 
     //     EXPECT_FALSE(journal.record_substitution(15, segment));
-    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
     // { // segment is empty
     //     journal_type journal{sequence};
 
-    //     EXPECT_FALSE(journal.record_substitution(10, mapped_type}));    //     EXPECT_RANGE_EQ(seq, segment);
+    //     EXPECT_FALSE(journal.record_substitution(10, mapped_type}));    //     EXPECT_TRUE(std::ranges::equal(seq, segment));
     //     EXPECT_FALSE(journal.empty());
     // }
 
@@ -446,9 +443,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(4, segment);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(4, segment.size(), segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(4, segment.size(), segment)));
     }
 
     { // replace entire entry
@@ -457,8 +454,8 @@ TEST_F(journal_test, record_substitution)
         std::string replace_all(sequence.size(), 'u');
         auto [pos, seq] = *journal.record_substitution(0, replace_all);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, replace_all);
-        EXPECT_RANGE_EQ(journal.sequence(), replace_all);
+        EXPECT_TRUE(std::ranges::equal(seq, replace_all));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), replace_all));
     }
 
     { // replace prefix of entry
@@ -466,9 +463,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(0, segment);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(0, segment.size(), segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(0, segment.size(), segment)));
     }
 
     { // replace suffix of entry
@@ -476,9 +473,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(14, segment);
         EXPECT_EQ(pos, 14u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         std::string expected{sequence};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(14, segment.size(), segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(14, segment.size(), segment)));
     }
 
     //-------------------------------------------------------------------------
@@ -503,9 +500,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(5, segment);
         EXPECT_EQ(pos, 5u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(5, segment.size(), segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(5, segment.size(), segment)));
     }
 
     {
@@ -513,9 +510,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(8, segment);
         EXPECT_EQ(pos, 8u);
-        EXPECT_RANGE_EQ(seq, segment);
+        EXPECT_TRUE(std::ranges::equal(seq, segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(8, segment.size(), segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(8, segment.size(), segment)));
     }
 
     { // replace from begin of node to end of next node.
@@ -524,9 +521,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(4, new_segment);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(4, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(4, new_segment.size(), new_segment)));
     }
 
     {
@@ -535,9 +532,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(4, new_segment);
         EXPECT_EQ(pos, 4u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(4, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(4, new_segment.size(), new_segment)));
     }
 
     {
@@ -545,9 +542,9 @@ TEST_F(journal_test, record_substitution)
         journal_type journal{journal_base};
         auto [pos, seq] = *journal.record_substitution(5, new_segment);
         EXPECT_EQ(pos, 5u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(5, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(5, new_segment.size(), new_segment)));
     }
 
     {
@@ -555,13 +552,14 @@ TEST_F(journal_test, record_substitution)
         journal_type journal{journal_base};
         auto [pos, seq] = *journal.record_substitution(5, new_segment);
         EXPECT_EQ(pos, 5u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         auto [pos2, seq2] = *journal.record_substitution(4, new_segment);
         EXPECT_EQ(pos2, 4u);
-        EXPECT_RANGE_EQ(seq2, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq2, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(5, new_segment.size(), new_segment).
-                                     replace(4, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(
+                        journal.sequence(),
+                        expected.replace(5, new_segment.size(), new_segment).replace(4, new_segment.size(), new_segment)));
     }
 
     //-------------------------------------------------------------------------
@@ -574,8 +572,8 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(0, new_segment);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, new_segment);
-        EXPECT_RANGE_EQ(journal.sequence(), new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), new_segment));
     }
 
     std::string new_segment(sequence.size() - 5, 'y');
@@ -584,9 +582,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(0, new_segment);
         EXPECT_EQ(pos, 0u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(0, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(0, new_segment.size(), new_segment)));
     }
 
     { // replace suffix
@@ -594,9 +592,9 @@ TEST_F(journal_test, record_substitution)
         size_t const replace_position = journal.sequence().size() - new_segment.size();
         auto [pos, seq] = *journal.record_substitution(replace_position, new_segment);
         EXPECT_EQ(pos, replace_position);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(replace_position, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(replace_position, new_segment.size(), new_segment)));
     }
 
     { // replace middle from begin
@@ -604,9 +602,9 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(3, new_segment);
         EXPECT_EQ(pos, 3u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(3, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(3, new_segment.size(), new_segment)));
     }
 
     {
@@ -614,8 +612,8 @@ TEST_F(journal_test, record_substitution)
 
         auto [pos, seq] = *journal.record_substitution(2, new_segment);
         EXPECT_EQ(pos, 2u);
-        EXPECT_RANGE_EQ(seq, new_segment);
+        EXPECT_TRUE(std::ranges::equal(seq, new_segment));
         std::string expected{expected_base};
-        EXPECT_RANGE_EQ(journal.sequence(), expected.replace(2, new_segment.size(), new_segment));
+        EXPECT_TRUE(std::ranges::equal(journal.sequence(), expected.replace(2, new_segment.size(), new_segment)));
     }
 }
