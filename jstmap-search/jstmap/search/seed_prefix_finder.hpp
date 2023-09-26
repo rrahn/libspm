@@ -12,9 +12,8 @@
 
 #pragma once
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/sequence_tree/seek_position.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 namespace jstmap
 {

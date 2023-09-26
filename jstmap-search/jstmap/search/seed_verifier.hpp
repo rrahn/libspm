@@ -14,9 +14,8 @@
 
 #include <ranges>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/sequence_tree/seek_position.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 #include <jstmap/global/application_logger.hpp>
 #include <jstmap/global/match_position.hpp>
@@ -81,7 +80,7 @@ namespace jstmap
 
         constexpr libjst::seek_position join(libjst::seek_position prefix_position,
                                              libjst::seek_position suffix_position) const noexcept {
-            return suffix_position.visit(seqan3::detail::multi_invocable{
+            return suffix_position.visit(libjst::multi_invocable{
                 [&] (libjst::alternate_path_descriptor const & suffix_position_descriptor) {
                     prefix_position.visit([&] <typename descriptor_t> (descriptor_t const &) {
                         if constexpr (std::same_as<descriptor_t, libjst::breakpoint_end>)

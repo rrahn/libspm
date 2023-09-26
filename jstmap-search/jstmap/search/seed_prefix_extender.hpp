@@ -96,7 +96,7 @@ namespace jstmap
                     return libjst::high_breakend(breakend);
             };
 
-            prefix_position.visit(seqan3::detail::multi_invocable{
+            prefix_position.visit(libjst::multi_invocable{
                 [&] (libjst::breakpoint_end) {
                     // log_debug("On reference path");
                     while (breakend_it != _base_tree.data().variants().begin() &&
@@ -143,7 +143,7 @@ namespace jstmap
 
 
             // } else {
-            //     prefix_position.visit(seqan3::detail::multi_invocable{
+            //     prefix_position.visit(libjst::multi_invocable{
             //         [&] (libjst::breakpoint_end site) {
             //             std::ptrdiff_t reverse_index_of_forward_low = breakend_count - prefix_position.get_variant_index();
             //             // The forward low represents the reverse high, so that the next forward breakend represents the
