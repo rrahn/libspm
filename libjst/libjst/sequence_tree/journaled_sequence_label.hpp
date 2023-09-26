@@ -16,8 +16,6 @@
 #include <exception>
 #include <type_traits>
 
-#include <seqan3/utility/views/slice.hpp>
-
 #include <libjst/journal.hpp>
 #include <libjst/variant/concept.hpp>
 
@@ -60,7 +58,6 @@ namespace libjst
             size_type max_end = std::min<size_type>(last, std::ranges::size(jseq));
             return std::ranges::subrange{std::ranges::next(jseq.begin(), to_alt_position(first)),
                                          std::ranges::next(jseq.begin(), to_alt_position(max_end))};
-            // return std::move(jseq) | seqan3::views::slice(to_alt_position(first), to_alt_position(max_end));
         }
 
         constexpr sequence_type node_sequence() const noexcept {
