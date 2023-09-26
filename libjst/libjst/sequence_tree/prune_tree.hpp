@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <seqan3/core/debug_stream.hpp>
-
 #include <libcontrib/closure_adaptor.hpp>
 
 #include <libjst/coverage/concept.hpp>
@@ -111,17 +109,12 @@ namespace libjst
         template <bool is_alt>
         constexpr coverage_type compute_child_coverage(base_node_type const & base_child) const {
             if constexpr (is_alt) {
-                // seqan3::debug_stream << "Cld cov: " << (*base_child).coverage() << "\n";
-                // new_coverage &= (*base_child).coverage();
                 return libjst::coverage_intersection(_path_coverage, (*base_child).coverage());
             } else if (this->on_alternate_path() && this->high_boundary().is_low_end()) {
-                    // seqan3::debug_stream << "Alt cov:" << libjst::coverage(base_node_type::right_variant()) << "\n";
                     return libjst::coverage_difference(_path_coverage, libjst::coverage(*(this->high_boundary())));
             } else {
                 return _path_coverage;
             }
-            // seqan3::debug_stream << "New cov: " << new_coverage << "\n";
-            // return new_coverage;
         }
 
         constexpr friend bool operator==(node_impl const & lhs, sink_type const & rhs) noexcept
