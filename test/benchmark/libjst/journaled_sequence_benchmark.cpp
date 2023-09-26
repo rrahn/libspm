@@ -12,7 +12,7 @@
 #include <seqan3/test/performance/sequence_generator.hpp>
 #include <seqan3/test/performance/units.hpp>
 
-#include <libjst/journal.hpp>
+#include <libjst/sequence/journaled_sequence.hpp>
 
 #include "sequence_variant_simulation.hpp"
 
@@ -70,17 +70,7 @@ void benchmark_sequential_access(benchmark::State & state) {
     base_sequence.resize(sequence_size, 'A');
 
     auto sequence_variants = generate_variants(base_sequence.size(), state.range(1));
-    auto modified_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
-
-    auto as_sequence = [] (auto && source) {
-        if constexpr (std::same_as<container_t, std::vector<char>>) {
-            return std::forward<decltype(source)>(source);
-        } else {
-            return source.sequence();
-        }
-    };
-
-    auto target_seq = as_sequence(modified_seq);
+    auto target_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
 
     size_t b_count{};
     size_t A_count{};
@@ -98,8 +88,8 @@ void benchmark_sequential_access(benchmark::State & state) {
     state.counters["b_count"] = b_count;
 }
 
-BENCHMARK_TEMPLATE(benchmark_sequential_access, std::vector<char>)->Apply(benchmark_args);
-BENCHMARK_TEMPLATE(benchmark_sequential_access, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
+// BENCHMARK_TEMPLATE(benchmark_sequential_access, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_access, libjst::journaled_sequence<std::vector<char>, uint32_t>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark access random
@@ -113,17 +103,7 @@ void benchmark_random_access(benchmark::State & state) {
     base_sequence.resize(sequence_size, 'A');
 
     auto sequence_variants = generate_variants(base_sequence.size(), state.range(1));
-    auto generated_sequence = generate_sequence<container_t>(base_sequence, sequence_variants);
-
-    auto as_sequence = [] (auto && source) {
-        if constexpr (std::same_as<container_t, std::vector<char>>) {
-            return std::forward<decltype(source)>(source);
-        } else {
-            return source.sequence();
-        }
-    };
-
-    auto target_seq = as_sequence(generated_sequence);
+    auto target_seq = generate_sequence<container_t>(base_sequence, sequence_variants);
 
     std::vector<size_t> positions{};
     positions.resize(10000);
@@ -149,8 +129,8 @@ void benchmark_random_access(benchmark::State & state) {
     state.counters["b_count"] = b_count;
 }
 
-BENCHMARK_TEMPLATE(benchmark_random_access, std::vector<char>)->Apply(benchmark_args);
-BENCHMARK_TEMPLATE(benchmark_random_access, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
+// BENCHMARK_TEMPLATE(benchmark_random_access, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_access, libjst::journaled_sequence<std::vector<char>, uint32_t>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark record back
@@ -168,11 +148,7 @@ static size_t run_record(benchmark::State & state, sequence_t && base_sequence, 
         for (auto && variant : variants) {
             record_variant(target_seq, offset, variant);
         }
-        if constexpr (std::same_as<container_t, std::vector<char>>) {
-            target_size = target_seq.size();
-        }  else {
-            target_size = target_seq.sequence().size();
-        }
+        target_size = target_seq.size();
     }
     return target_size;
 }
@@ -195,8 +171,8 @@ void benchmark_sequential_record(benchmark::State & state) {
     state.counters["size"] = target_size;
 }
 
-BENCHMARK_TEMPLATE(benchmark_sequential_record, std::vector<char>)->Apply(benchmark_args);
-BENCHMARK_TEMPLATE(benchmark_sequential_record, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
+// BENCHMARK_TEMPLATE(benchmark_sequential_record, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_sequential_record, libjst::journaled_sequence<std::vector<char>, uint32_t>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Benchmark record random
@@ -217,8 +193,8 @@ void benchmark_random_record(benchmark::State & state) {
     state.counters["size"] = target_size;
 }
 
-BENCHMARK_TEMPLATE(benchmark_random_record, std::vector<char>)->Apply(benchmark_args);
-BENCHMARK_TEMPLATE(benchmark_random_record, libjst::journal<uint32_t, std::vector<char> &>)->Apply(benchmark_args);
+// BENCHMARK_TEMPLATE(benchmark_random_record, std::vector<char>)->Apply(benchmark_args);
+BENCHMARK_TEMPLATE(benchmark_random_record, libjst::journaled_sequence<std::vector<char>, uint32_t>)->Apply(benchmark_args);
 
 // ----------------------------------------------------------------------------
 // Run benchmark
