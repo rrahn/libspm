@@ -15,6 +15,7 @@
 #include <atomic>
 #include <iostream>
 
+#include <seqan3/core/debug_stream.hpp>
 #include <seqan3/core/debug_stream/detail/to_string.hpp>
 
 namespace jstmap
