@@ -14,8 +14,6 @@
 
 #include <algorithm>
 
-#include <seqan3/alphabet/range/sequence.hpp>
-
 #include <libjst/rcms/compressed_multisequence_reversed.hpp>
 
 namespace libjst

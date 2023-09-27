@@ -12,11 +12,10 @@
 
 #pragma once
 
-#include <concepts>
-#include <stack>
 #include <bitset>
-
-#include <seqan3/core/debug_stream.hpp>
+#include <concepts>
+#include <iostream>
+#include <stack>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/left_extend_tree.hpp>
@@ -92,11 +91,11 @@ namespace libjst
         }
 
         constexpr void print_state() const noexcept {
-            seqan3::debug_stream << "[";
+            std::cout << "[";
             std::ranges::for_each(_matcher.capture(), [] (uint64_t word) {
-                seqan3::debug_stream << std::bitset<64>{word} << ", ";
+                std::cout << std::bitset<64>{word} << ", ";
             });
-            seqan3::debug_stream << "]\n";
+            std::cout << "]\n";
         }
     };
 

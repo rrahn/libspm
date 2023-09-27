@@ -7,8 +7,6 @@
 
 #include <gtest/gtest.h>
 
-#include <seqan3/test/expect_range_eq.hpp>
-
 #include <libjst/sequence_tree/path_descriptor.hpp>
 
 struct path_descriptor_test : public ::testing::Test {
@@ -39,7 +37,7 @@ TEST(path_descriptor_test, use_case) {
         v = !v;
     }
 
-    EXPECT_RANGE_EQ(descr, expected_path);
+    EXPECT_TRUE(std::ranges::equal(descr, expected_path));
 }
 
 // TEST(path_descriptor_test, )

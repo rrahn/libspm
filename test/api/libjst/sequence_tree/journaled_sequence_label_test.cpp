@@ -9,7 +9,7 @@
 
 #include <string_view>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libjst/sequence_tree/journaled_sequence_label.hpp>
 
@@ -31,8 +31,8 @@ TEST_F(js_label_fixture, create_from_source) {
     EXPECT_EQ(lbl.get_left_position(), 0);
     EXPECT_EQ(lbl.get_right_position(), std::ranges::ssize(this->source));
     EXPECT_EQ(lbl.label_size(), std::ranges::ssize(this->source));
-    EXPECT_RANGE_EQ(lbl.path_sequence(), this->source);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), this->source);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), this->source));
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), this->source));
 }
 
 TEST_F(js_label_fixture, record_variant) {
@@ -43,22 +43,22 @@ TEST_F(js_label_fixture, record_variant) {
     EXPECT_EQ(lbl.get_left_position(), 8);
     EXPECT_EQ(lbl.get_right_position(), 8);
     EXPECT_EQ(lbl.label_size(), 0u);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldcat"sv);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), ""sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldcat"sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), ""sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "fat"sv, .deletion = 0});
     EXPECT_EQ(lbl.get_left_position(), 8);
     EXPECT_EQ(lbl.get_right_position(), 11);
     EXPECT_EQ(lbl.label_size(), 3u);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldfatcat"sv);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "fat"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldfatcat"sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "fat"sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "r"sv, .deletion = 1});
     EXPECT_EQ(lbl.get_left_position(), 11);
     EXPECT_EQ(lbl.get_right_position(), 12);
     EXPECT_EQ(lbl.label_size(), 1u);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldfatrat"sv);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "r"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldfatrat"sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "r"sv));
 }
 
 TEST_F(js_label_fixture, path_sequence) {
@@ -66,13 +66,13 @@ TEST_F(js_label_fixture, path_sequence) {
     label_type lbl{this->source};
 
     lbl.record_variant(jst::test::variant{.position = 8, .insertion = ""sv, .deletion = 3});
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldcat"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldcat"sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "fat"sv, .deletion = 0});
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldfatcat"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldfatcat"sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "r"sv, .deletion = 1});
-    EXPECT_RANGE_EQ(lbl.path_sequence(), "garfieldfatrat"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), "garfieldfatrat"sv));
 }
 
 TEST_F(js_label_fixture, node_sequence) {
@@ -80,13 +80,13 @@ TEST_F(js_label_fixture, node_sequence) {
     label_type lbl{this->source};
 
     lbl.record_variant(jst::test::variant{.position = 8, .insertion = ""sv, .deletion = 3});
-    EXPECT_RANGE_EQ(lbl.node_sequence(), ""sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), ""sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "fat"sv, .deletion = 0});
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "fat"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "fat"sv));
 
     lbl.record_variant(jst::test::variant{.position = 11, .insertion = "r"sv, .deletion = 1});
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "r"sv);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "r"sv));
 }
 
 TEST_F(js_label_fixture, get_left_position) {
@@ -122,14 +122,14 @@ TEST_F(js_label_fixture, reset_positions) {
     label_type lbl{this->source};
 
     lbl.reset_positions(0, 0);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), ""sv);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), this->source);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), ""sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), this->source));
 
     lbl.reset_positions(8, 11);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "the"sv);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), this->source);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "the"sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), this->source));
 
     lbl.reset_positions(11, 14);
-    EXPECT_RANGE_EQ(lbl.node_sequence(), "cat"sv);
-    EXPECT_RANGE_EQ(lbl.path_sequence(), this->source);
+    EXPECT_TRUE(std::ranges::equal(lbl.node_sequence(), "cat"sv));
+    EXPECT_TRUE(std::ranges::equal(lbl.path_sequence(), this->source));
 }

@@ -12,9 +12,8 @@
 
 #pragma once
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/sequence_tree/seek_position.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 namespace jstmap
 {
@@ -29,7 +28,7 @@ namespace jstmap
         explicit constexpr seed_prefix_seek_position(base_t seed_position, size_t breakends_count) noexcept : base_t{}
         {
             size_t reverse_breakend_idx = breakends_count - seed_position.get_variant_index();
-            seed_position.visit(seqan3::detail::multi_invocable{
+            seed_position.visit(libjst::multi_invocable{
                 [&, reverse_breakend_idx] (libjst::breakpoint_end site) {
                     base_t::reset(reverse_breakend_idx, site);
                 },

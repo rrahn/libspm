@@ -13,15 +13,15 @@
 #pragma once
 
 #include <algorithm>
-
-#include <seqan3/alphabet/range/sequence.hpp>
+#include <ranges>
 
 #include <libjst/variant/concept.hpp>
 
 namespace libjst
 {
     // Client needs to make sure that the value types are compatible!?
-    template <seqan3::sequence source_sequence_t, typename cms_t>
+    template <std::ranges::random_access_range source_sequence_t, typename cms_t>
+        requires (!std::ranges::range<std::ranges::range_value_t<source_sequence_t>>)
     class rcs_store
     {
     private:

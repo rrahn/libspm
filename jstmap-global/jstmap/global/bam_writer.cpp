@@ -13,10 +13,9 @@
 #include <iostream>
 #include <string>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/sequence_tree/path_descriptor.hpp>
 #include <libjst/sequence_tree/node_descriptor.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 #include <jstmap/global/bam_writer.hpp>
 #include <jstmap/global/search_query.hpp>
@@ -67,7 +66,7 @@ namespace jstmap {
         seqan3::sam_tag_dictionary dict{};
 
         // conversion to byte value?
-        position.tree_position.visit(seqan3::detail::multi_invocable {
+        position.tree_position.visit(libjst::multi_invocable {
             [&](libjst::alternate_path_descriptor descriptor) {
                 size_t max_byte_count = (descriptor.size() + 7) / 8;
 

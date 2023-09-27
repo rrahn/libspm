@@ -10,9 +10,6 @@
 #include <algorithm>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
-#include <seqan3/utility/views/slice.hpp>
-
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
@@ -85,7 +82,9 @@ struct volatile_sequence_tree_test : public jst::test::volatile_sequence_tree::t
         if (!GetParam().variants.empty()) {
             label_end = libjst::left_breakpoint(*GetParam().variants.begin());
         }
-        return _mock.source() | seqan3::views::slice(0, label_end);
+
+        return std::ranges::subrange{_mock.source().begin(),
+                                     std::ranges::next(_mock.source().begin(), label_end, _mock.source().end())};
     }
 
     auto expected_reference_path() const noexcept {
@@ -103,7 +102,7 @@ TEST_P(volatile_sequence_tree_test, root_label) {
     auto s = tree.sink();
     EXPECT_TRUE(r != s);
 
-    EXPECT_RANGE_EQ(r.label(), expected_root_label());
+    EXPECT_TRUE(std::ranges::equal(r.label(), expected_root_label()));
 }
 
 TEST_P(volatile_sequence_tree_test, reference_path_label) {
@@ -125,7 +124,7 @@ TEST_P(volatile_sequence_tree_test, reference_path_label) {
     }
 
     EXPECT_TRUE(v == s);
-    EXPECT_RANGE_EQ(actual_ref_path, expected_reference_path());
+    EXPECT_TRUE(std::ranges::equal(actual_ref_path, expected_reference_path()));
 }
 
 TEST_P(volatile_sequence_tree_test, reference_path_coverage) {
@@ -137,7 +136,7 @@ TEST_P(volatile_sequence_tree_test, reference_path_coverage) {
 
     coverage_t base_cov(GetParam().coverage_size, true);
     while (v != s) {
-        EXPECT_RANGE_EQ(v.coverage(), base_cov);
+        EXPECT_TRUE(std::ranges::equal(v.coverage(), base_cov));
         v = *v.next_ref();
     }
 

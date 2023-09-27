@@ -11,7 +11,7 @@
 
 // #include <cereal/archives/json.hpp>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libjst/rcms/generic_delta.hpp>
 #include <libjst/variant/breakpoint.hpp>
@@ -41,8 +41,8 @@ TYPED_TEST(generic_delta_test, snv)
     EXPECT_EQ(libjst::low_breakend(delta), 9);
     EXPECT_EQ(libjst::high_breakend(delta), 10);
     EXPECT_EQ(libjst::breakpoint_span(delta), 1);
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{"G"});
-    EXPECT_RANGE_EQ(libjst::coverage(delta), (coverage_type{0, 2}));
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{"G"}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), (coverage_type{0, 2})));
 }
 
 TYPED_TEST(generic_delta_test, deletion)
@@ -56,8 +56,8 @@ TYPED_TEST(generic_delta_test, deletion)
     EXPECT_EQ(libjst::low_breakend(delta), 1);
     EXPECT_EQ(libjst::high_breakend(delta), 8);
     EXPECT_EQ(libjst::breakpoint_span(delta), 7);
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{""});
-    EXPECT_RANGE_EQ(libjst::coverage(delta), coverage_type{1});
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{""}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), coverage_type{1}));
 }
 
 TYPED_TEST(generic_delta_test, insertion)
@@ -71,8 +71,8 @@ TYPED_TEST(generic_delta_test, insertion)
     EXPECT_EQ(libjst::low_breakend(delta), 13);
     EXPECT_EQ(libjst::high_breakend(delta), 13);
     EXPECT_EQ(libjst::breakpoint_span(delta), 0);
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{"AAA"});
-    EXPECT_RANGE_EQ(libjst::coverage(delta), (coverage_type{0, 1, 2, 3}));
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{"AAA"}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), (coverage_type{0, 1, 2, 3})));
 }
 
 TYPED_TEST(generic_delta_test, unbalanced_replacement)
@@ -86,8 +86,8 @@ TYPED_TEST(generic_delta_test, unbalanced_replacement)
     EXPECT_EQ(libjst::low_breakend(delta), 14);
     EXPECT_EQ(libjst::high_breakend(delta), 17);
     EXPECT_EQ(libjst::breakpoint_span(delta), 3);
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{"A"});
-    EXPECT_RANGE_EQ(libjst::coverage(delta), (coverage_type{0, 4}));
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{"A"}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), (coverage_type{0, 4})));
 }
 
 TYPED_TEST(generic_delta_test, assign)
@@ -101,18 +101,18 @@ TYPED_TEST(generic_delta_test, assign)
     EXPECT_EQ(libjst::low_breakend(delta), 0);
     EXPECT_EQ(libjst::high_breakend(delta), 0);
     EXPECT_EQ(libjst::breakpoint_span(delta), 0);
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{""});
-    EXPECT_RANGE_EQ(libjst::coverage(delta), (coverage_type{}));
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{""}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), (coverage_type{})));
 
     libjst::get_breakpoint(delta) = breakpoint_type{2, 4};
     EXPECT_EQ(libjst::low_breakend(delta), 2);
     EXPECT_EQ(libjst::high_breakend(delta), 6);
 
     libjst::alt_sequence(delta) = source_type{"AAA"};
-    EXPECT_RANGE_EQ(libjst::alt_sequence(delta), source_type{"AAA"});
+    EXPECT_TRUE(std::ranges::equal(libjst::alt_sequence(delta), source_type{"AAA"}));
 
     libjst::coverage(delta) = coverage_type{0, 1, 2};
-    EXPECT_RANGE_EQ(libjst::coverage(delta), (coverage_type{0, 1, 2}));
+    EXPECT_TRUE(std::ranges::equal(libjst::coverage(delta), (coverage_type{0, 1, 2})));
 }
 
 TYPED_TEST(generic_delta_test, lvalue_reference)
@@ -193,13 +193,13 @@ TYPED_TEST(generic_delta_test, const_rvalue_reference)
 
 //     EXPECT_EQ(libjst::position(var_sub_in), libjst::position(var_sub_out));
 //     EXPECT_EQ(libjst::deletion(var_sub_in), libjst::deletion(var_sub_out));
-//     EXPECT_RANGE_EQ(libjst::insertion(var_sub_in), libjst::insertion(var_sub_out));
+//     EXPECT_TRUE(std::ranges::equal(libjst::insertion(var_sub_in), libjst::insertion(var_sub_out)));
 
 //     EXPECT_EQ(libjst::position(var_del_in), libjst::position(var_del_out));
 //     EXPECT_EQ(libjst::deletion(var_del_in), libjst::deletion(var_del_out));
-//     EXPECT_RANGE_EQ(libjst::insertion(var_del_in), libjst::insertion(var_del_out));
+//     EXPECT_TRUE(std::ranges::equal(libjst::insertion(var_del_in), libjst::insertion(var_del_out)));
 
 //     EXPECT_EQ(libjst::position(var_ins_in), libjst::position(var_ins_out));
 //     EXPECT_EQ(libjst::deletion(var_ins_in), libjst::deletion(var_ins_out));
-//     EXPECT_RANGE_EQ(libjst::insertion(var_ins_in), libjst::insertion(var_ins_out));
+//     EXPECT_TRUE(std::ranges::equal(libjst::insertion(var_ins_in), libjst::insertion(var_ins_out)));
 // }

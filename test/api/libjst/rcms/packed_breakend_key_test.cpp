@@ -7,9 +7,8 @@
 
 #include <gtest/gtest.h>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/rcms/packed_breakend_key.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 struct packed_breakend_key : public ::testing::Test {
     using test_type = libjst::packed_breakend_key<>;
@@ -60,13 +59,13 @@ TEST_F(packed_breakend_key, max_position) {
 TEST_F(packed_breakend_key, visit) {
     using value_t = typename test_type::underlying_type;
     test_type test_snv{static_cast<uint8_t>(2), 3000};
-    test_snv.visit(seqan3::detail::multi_invocable{
+    test_snv.visit(libjst::multi_invocable{
         [] (libjst::indel_breakend_kind) { FAIL() << "Expected snv."; },
         [] (value_t snv) { EXPECT_EQ(snv, 2); }
     });
 
     test_type test_del{libjst::indel_breakend_kind::deletion_high, 6321};
-    test_del.visit(seqan3::detail::multi_invocable{
+    test_del.visit(libjst::multi_invocable{
         [] (libjst::indel_breakend_kind indel) { EXPECT_EQ(indel, libjst::indel_breakend_kind::deletion_high); },
         [] (value_t ) { FAIL() << "Expected indel."; }
     });

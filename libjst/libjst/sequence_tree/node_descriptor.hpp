@@ -15,8 +15,6 @@
 #include <iosfwd>
 #include <string_view>
 
-#include <seqan3/core/add_enum_bitwise_operators.hpp>
-
 namespace libjst
 {
     enum class node_state : uint8_t {
@@ -38,16 +36,17 @@ namespace libjst
         reference                       = nil,
     };
 
-} // namespace libjst
+    constexpr node_state operator|(node_state const lhs, node_state const rhs) noexcept
+    {
+        using underlying_t = std::underlying_type_t<node_state>;
+        return static_cast<node_state>(static_cast<underlying_t>(lhs) | static_cast<underlying_t>(rhs));
+    }
 
-namespace seqan3 {
-    //!\cond
-    template <>
-    constexpr bool add_enum_bitwise_operators<libjst::node_state> = true;
-    //!\endcond
-} // namespace seqan3
-
-namespace libjst {
+    constexpr node_state operator&(node_state const lhs, node_state const rhs) noexcept
+    {
+        using underlying_t = std::underlying_type_t<node_state>;
+        return static_cast<node_state>(static_cast<underlying_t>(lhs) & static_cast<underlying_t>(rhs));
+    }
 
     class node_descriptor {
     private:
@@ -124,15 +123,11 @@ namespace libjst {
         }
 
         constexpr break_descriptor left_break() const noexcept {
-            using seqan3::operator|;
-            using seqan3::operator&;
             return is_left_only() ? break_descriptor{node_state::left_begin}
                                   : break_descriptor{_state & (node_state::left_begin | node_state::left_end)};
         }
 
         constexpr break_descriptor right_break() const noexcept {
-            using seqan3::operator|;
-            using seqan3::operator&;
             return is_left_only() ? break_descriptor{node_state::left_end}
                                   : break_descriptor{_state & (node_state::right_begin | node_state::right_end)};
         }
@@ -156,12 +151,10 @@ namespace libjst {
     private:
 
         constexpr bool is_left_only() const noexcept {
-            using seqan3::operator|;
             return is_active(_state, node_state::left_begin | node_state::left_end);
         }
 
         static constexpr bool is_active(node_state const state, node_state const query_state) noexcept {
-            using seqan3::operator&;
             return (state & query_state) == query_state;
         }
 

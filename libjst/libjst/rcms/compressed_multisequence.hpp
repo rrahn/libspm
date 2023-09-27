@@ -16,8 +16,6 @@
 #include <ranges>
 #include <unordered_map>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libcontrib/type_traits.hpp>
 #include <libcontrib/std/tag_invoke.hpp>
 
@@ -27,6 +25,7 @@
 #include <libjst/rcms/generic_delta.hpp>
 #include <libjst/rcms/indel_variant.hpp>
 #include <libjst/rcms/packed_breakend_key.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 namespace libjst
 {
@@ -403,7 +402,7 @@ namespace libjst
         }
 
         constexpr breakpoint_end get_breakpoint_end() const noexcept {
-            return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
+            return _breakend_reference.first.visit(libjst::multi_invocable{
                 [pos = _breakend_reference.first.position()] (indel_breakend_kind code) {
                     switch (code) {
                         case indel_breakend_kind::deletion_low: [[fallthrough]];
@@ -421,13 +420,13 @@ namespace libjst
         constexpr std::optional<iterator_impl<true>> jump_to_mate() const noexcept {
             using mate_iterator = iterator_impl<true>;
             using optional_mate = std::optional<mate_iterator>;
-            return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
+            return _breakend_reference.first.visit(libjst::multi_invocable{
                 [&] (indel_breakend_kind code) {
                     switch (code) {
                         case indel_breakend_kind::deletion_low: [[fallthrough]];
                         case indel_breakend_kind::deletion_high: {
                             indel_key_type key{_breakend_reference.first, _breakend_reference.second.front()};
-                            return _indel_map.find(key)->second.visit(seqan3::detail::multi_invocable{
+                            return _indel_map.find(key)->second.visit(libjst::multi_invocable{
                                 [&] (deletion_type const & deletion) -> optional_mate {
                                     return iterator_impl<true>{deletion.value(), std::addressof(_indel_map)};
                                 },
@@ -448,7 +447,7 @@ namespace libjst
         constexpr breakend_reference_t get_breakend_mate(indel_key_type key) const noexcept {
             using optional_it_t = std::optional<breakend_iterator>;
             assert(_indel_map.contains(key));
-            optional_it_t mate = _indel_map.find(key)->second.visit(seqan3::detail::multi_invocable{
+            optional_it_t mate = _indel_map.find(key)->second.visit(libjst::multi_invocable{
                 [] (deletion_type const & deletion) -> optional_it_t { return deletion.value(); },
                 [&] (insertion_type const &) -> optional_it_t { return std::nullopt; }
             });
@@ -484,7 +483,7 @@ namespace libjst
             using position_t = breakend_key_type::underlying_type;
             breakend_key_type key = _breakend_reference.first;
             position_t const position = key.position();
-            return key.visit(seqan3::detail::multi_invocable{
+            return key.visit(libjst::multi_invocable{
                 [&] (indel_breakend_kind indel_kind) {
                     if (indel_kind == indel_breakend_kind::deletion_low ||
                         indel_kind == indel_breakend_kind::deletion_high) {
@@ -499,12 +498,12 @@ namespace libjst
 
         constexpr sequence_reference extract_alt_sequence() const noexcept {
             // what can we have:
-            return _breakend_reference.first.visit(seqan3::detail::multi_invocable{
+            return _breakend_reference.first.visit(libjst::multi_invocable{
                 [&] (indel_breakend_kind breakend_kind) {
                     indel_key_type indel_key{_breakend_reference.first, _breakend_reference.second.front()};
                     if (breakend_kind != indel_breakend_kind::nil) {
                         assert(_indel_map.contains(indel_key));
-                        return _indel_map.find(indel_key)->second.visit(seqan3::detail::multi_invocable{
+                        return _indel_map.find(indel_key)->second.visit(libjst::multi_invocable{
                             [] (insertion_type const & insertion) { return sequence_reference{insertion.value()}; },
                             [] (deletion_type const &) { return sequence_reference{}; }
                         });
@@ -554,7 +553,7 @@ namespace libjst
 
         friend constexpr alternate_sequence_kind tag_invoke(std::tag_t<libjst::alt_kind>, delta_proxy me) noexcept
         {
-            return me._breakend_reference.first.visit(seqan3::detail::multi_invocable{
+            return me._breakend_reference.first.visit(libjst::multi_invocable{
                 [&] (indel_breakend_kind indel_kind) {
                     switch (indel_kind) {
                         case indel_breakend_kind::insertion_low: return alternate_sequence_kind::insertion;

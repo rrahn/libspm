@@ -7,7 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
@@ -59,7 +59,7 @@ TEST_F(pigeonhole_matcher_test, dna4_pattern)
     matcher(haystack, [&] (auto const & finder) {
         actual_positions.push_back(seqan::beginPosition(finder));
     });
-    EXPECT_RANGE_EQ(actual_positions, expected_positions);
+    EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }
 
 TEST_F(pigeonhole_matcher_test, dna4_multi_pattern)
@@ -70,7 +70,7 @@ TEST_F(pigeonhole_matcher_test, dna4_multi_pattern)
     matcher(haystack, [&] (auto const & finder) {
         actual_positions.push_back(seqan::beginPosition(finder));
     });
-    EXPECT_RANGE_EQ(actual_positions, expected_multi_positions);
+    EXPECT_TRUE(std::ranges::equal(actual_positions, expected_multi_positions));
 }
 
 TEST_F(pigeonhole_matcher_test, dna4_multi_pattern_position)

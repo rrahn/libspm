@@ -14,8 +14,6 @@
 
 #include <ranges>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libcontrib/type_traits.hpp>
 #include <libcontrib/std/tag_invoke.hpp>
 
@@ -23,6 +21,7 @@
 #include <libjst/rcms/packed_breakend_key.hpp>
 #include <libjst/variant/concept.hpp>
 #include <libjst/variant/breakpoint_reversed.hpp>
+#include <libjst/utility/multi_invocable.hpp>
 
 namespace libjst
 {
@@ -195,7 +194,7 @@ namespace libjst
 
         constexpr breakpoint_end get_breakpoint_end() const noexcept {
             auto breakend_key = get_key(); // the pointed to object!
-            return breakend_key.visit(seqan3::detail::multi_invocable{
+            return breakend_key.visit(libjst::multi_invocable{
                 [pos = breakend_key.position()] (indel_breakend_kind code) {
                     switch (code) {
                         case indel_breakend_kind::deletion_low: return breakpoint_end::high;

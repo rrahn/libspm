@@ -11,8 +11,7 @@
 #include <ranges>
 #include <sstream>
 
-#include <seqan3/core/debug_stream.hpp>
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libcontrib/seqan/alphabet.hpp>
 
@@ -41,7 +40,7 @@ TEST_F(compressed_multisequence_reversed_test, construct) {
     coverage_domain_type domain{0, 10};
     wrapped_test_type multisequence{src, domain};
     test_type reverse_rcms{multisequence};
-    EXPECT_RANGE_EQ(reverse_rcms.source(), source_type{"GGGGGGGAAAAAAAA"_dna4});
+    EXPECT_TRUE(std::ranges::equal(reverse_rcms.source(), source_type{"GGGGGGGAAAAAAAA"_dna4}));
     EXPECT_TRUE(reverse_rcms.coverage_domain() == domain);
 }
 
@@ -126,10 +125,10 @@ TEST_F(compressed_multisequence_reversed_test, source) {
     wrapped_test_type rcms{};
     test_type reverse_rcms{rcms};
 
-    EXPECT_RANGE_EQ(reverse_rcms.source(), ""_dna4);
+    EXPECT_TRUE(std::ranges::equal(reverse_rcms.source(), ""_dna4));
 
     rcms = wrapped_test_type{src, coverage_domain_type{0, 10}};
-    EXPECT_RANGE_EQ(reverse_rcms.source(), "GCCCAAATTGGCCAA"_dna4);
+    EXPECT_TRUE(std::ranges::equal(reverse_rcms.source(), "GCCCAAATTGGCCAA"_dna4));
 }
 
 TEST_F(compressed_multisequence_reversed_test, empty) {

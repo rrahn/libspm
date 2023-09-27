@@ -16,8 +16,6 @@
 #include <span>
 #include <variant>
 
-#include <seqan3/utility/detail/multi_invocable.hpp>
-
 #include <libjst/rcms/packed_breakend_key.hpp>
 
 namespace libjst

@@ -10,10 +10,9 @@
 #include <concepts>
 #include <type_traits>
 
- #include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
+#include "iterator_test_template.hpp"
 
 #include <libjst/utility/bit_vector.hpp>
-#include <libjst/utility/bit_vector_simd.hpp>
 
 template <typename t>
 struct bit_vector_test : public testing::Test
@@ -24,7 +23,7 @@ struct bit_vector_test : public testing::Test
 // Next, associate a list of types with the test suite, which will be
 // repeated for each type in the list.  The typedef is necessary for
 // the macro to parse correctly.
-using bit_vector_types = testing::Types<libjst::bit_vector<>, libjst::bit_vector_simd<>>;
+using bit_vector_types = testing::Types<libjst::bit_vector<>>;
 TYPED_TEST_SUITE(bit_vector_test, bit_vector_types, );
 
 // ----------------------------------------------------------------------------
@@ -768,7 +767,7 @@ struct iterator_fixture<bit_vector_iterator> : public ::testing::Test
 
     static constexpr bool const_iterable = true;
 
-    libjst::bit_vector<> test_range = libjst::bit_vector(100, true);
+    libjst::bit_vector<> test_range = libjst::bit_vector<>(100, true);
     std::vector<bool> expected_range = std::vector<bool>(100, true);
 };
 
@@ -781,7 +780,7 @@ TYPED_TEST(bit_vector_test, output_iterator)
     EXPECT_TRUE((std::output_iterator<typename libjst::bit_vector<>::iterator, bool>));
     EXPECT_FALSE((std::output_iterator<typename libjst::bit_vector<>::const_iterator, bool>));
 
-    libjst::bit_vector test_vector(100, true);
+    libjst::bit_vector<> test_vector(100, true);
     for (auto it = test_vector.begin(); it != test_vector.end(); it += 2)
         *it = false;
 

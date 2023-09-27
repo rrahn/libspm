@@ -16,7 +16,7 @@
 #include <ranges>
 #include <type_traits>
 
-#include <libjst/journal.hpp>
+#include <libjst/sequence/journaled_sequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/variant/concept.hpp>
 
@@ -33,7 +33,7 @@ namespace libjst
         using variant_type = typename rcs_store_t::reference;
         using difference_type = std::remove_cvref_t<libjst::variant_position_t<variant_type>>;
 
-        using journal_type = journal<difference_type, source_type>;
+        using journaled_sequence_type = journaled_sequence<source_type, difference_type>;
 
         class proxy;
 
@@ -69,10 +69,10 @@ namespace libjst
 
         friend haplotype_viewer;
 
-        journal_type _journal{};
+        journaled_sequence_type _journaled_source{};
 
         constexpr explicit proxy(haplotype_viewer const & host, difference_type const offset) :
-            _journal{host.base().source()}
+            _journaled_source{host.base().source()}
         {
             if (offset >= 0 && offset < host.base().size()) {
                 std::ptrdiff_t journal_offset{};
@@ -92,25 +92,26 @@ namespace libjst
         proxy() = default;
 
         constexpr auto begin() const noexcept {
-            return std::ranges::begin(_journal.sequence());
+            return std::ranges::begin(_journaled_source);
         }
 
         constexpr auto end() const noexcept {
-            return std::ranges::end(_journal.sequence());
+            return std::ranges::end(_journaled_source);
         }
 
     private:
 
         constexpr void record(variant_type const & variant, std::size_t position) {
+            auto hint = _journaled_source.begin() + position;
             switch (libjst::alt_kind(variant)) {
                 case alternate_sequence_kind::replacement: {
-                    _journal.record_substitution(position, libjst::alt_sequence(variant));
+                    _journaled_source.replace(hint, hint + 1, libjst::alt_sequence(variant));
                     break;
                 } case alternate_sequence_kind::deletion: {
-                    _journal.record_deletion(position, libjst::breakpoint_span(libjst::get_breakpoint(variant)));
+                    _journaled_source.erase(hint, hint + libjst::breakpoint_span(libjst::get_breakpoint(variant)));
                     break;
                 } case alternate_sequence_kind::insertion: {
-                    _journal.record_insertion(position, libjst::alt_sequence(variant));
+                    _journaled_source.insert(hint, libjst::alt_sequence(variant));
                     break;
                 } case alternate_sequence_kind::unknown: {
                     break;

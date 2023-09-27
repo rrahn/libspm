@@ -99,22 +99,21 @@ void record_variant(container_t & sequence, std::ptrdiff_t & offset, variant_t &
                 // sequence.erase(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + l));
                 // sequence.insert(sequence.begin() + begin_pos, s.begin(), s.end());
             } else {
-                // sequence.record_substitution(begin_pos, std::span{s});
-                sequence.record_substitution(begin_pos, s);
+                sequence.replace(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + std::ranges::size(s)), s);
             }
             break;
         } case variant_kind::deletion: {
             if constexpr (std::same_as<container_t, std::vector<char>>) {
                 sequence.erase(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + l));
             } else {
-                sequence.record_deletion(begin_pos, l);
+                sequence.erase(sequence.begin() + begin_pos, sequence.begin() + (begin_pos + l));
             }
             break;
         } case variant_kind::insertion: {
             if constexpr (std::same_as<container_t, std::vector<char>>) {
                 sequence.insert(sequence.begin() + begin_pos, s.begin(), s.end());
             } else {
-                sequence.record_insertion(begin_pos, s);
+                sequence.insert(sequence.begin() + begin_pos, s);
             }
             break;
         }

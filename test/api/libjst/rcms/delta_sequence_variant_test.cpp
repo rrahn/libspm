@@ -10,7 +10,7 @@
 #include <ranges>
 #include <string>
 
-#include <seqan3/test/expect_range_eq.hpp>
+#include <algorithm>
 
 #include <libcontrib/seqan/alphabet.hpp>
 #include <libjst/rcms/delta_sequence_variant.hpp>
@@ -34,16 +34,16 @@ TEST_F(delta_sequence_variant_test, concept) {
 TEST_F(delta_sequence_variant_test, snv) {
     jst::contrib::dna4 snv{'A'};
     sequence_type test{snv};
-    EXPECT_RANGE_EQ(test, "A"_dna4);
+    EXPECT_TRUE(std::ranges::equal(test, "A"_dna4));
 }
 
 TEST_F(delta_sequence_variant_test, deletion) {
     sequence_type test{};
-    EXPECT_RANGE_EQ(test, source_t{});
+    EXPECT_TRUE(std::ranges::equal(test, source_t{}));
 }
 
 TEST_F(delta_sequence_variant_test, insertion) {
     source_t src{"CGGACG"_dna4};
     sequence_type test{src};
-    EXPECT_RANGE_EQ(test, src);
+    EXPECT_TRUE(std::ranges::equal(test, src));
 }
