@@ -34,7 +34,7 @@ namespace libjst
  * This is an abstract base class which can only be instantiated thorugh its derived class.
  * The behaviour of the binary bit vector operations must be implemented by the derived class.
  */
-template <typename derived_t, typename allocator_t>
+template <typename derived_t, typename allocator_t = std::allocator<uint64_t>>
 class bit_vector_base :
     public std::vector<uint64_t, typename std::allocator_traits<allocator_t>::rebind_alloc<uint64_t>>
 {
@@ -86,6 +86,8 @@ private:
     static constexpr size_type modulo_mask = chunk_size - 1;
     //!\brief The mask used for the division operations using bitwise shift operator, e.g. >> 6.
     static constexpr size_type division_mask = std::countr_zero(chunk_size);
+    //!\brief The number of chunks to roll out in a SIMD operation.
+    static constexpr std::ptrdiff_t _unroll_factor{32};
 
     // ----------------------------------------------------------------------------
     // member variables
@@ -96,6 +98,7 @@ private:
     /*!\name Constructors, destructor and assignment
      * \{
      */
+public:
     //!\brief The default constructor which optionally sets the allocator.
     bit_vector_base(allocator_t const & alloc = allocator_t{}) : base_t{alloc}
     {}
@@ -105,6 +108,32 @@ private:
     bit_vector_base & operator=(bit_vector_base const &) = default; //!< Default.
     bit_vector_base & operator=(bit_vector_base &&) = default; //!< Default.
     ~bit_vector_base() = default; //!< Default.
+
+    constexpr bit_vector_base(size_type const count, bool const bit, allocator_t const & alloc = allocator_t{}) :
+        base_t{alloc}
+    {
+        assign(count, bit);
+    }
+
+    /*!\brief Constructs the container initialised with the elements in `list`.
+     *
+     * \param[in] list An initialiser list with the bits set.
+     * \param[in] alloc The allocator to use [optional].
+     */
+    constexpr bit_vector_base(std::initializer_list<bool> list, allocator_t const & alloc = allocator_t{})
+        : base_t{alloc}
+    {
+        assign(list);
+    }
+
+    /*!\brief Constructs the container with `count` default-inserted instances of `bool`. No copies are made.
+     *
+     * \param[in] count The number of elements to create the bit vector with.
+     * \param[in] alloc The allocator to use [optional].
+     */
+    constexpr bit_vector_base(size_type const count, allocator_t const & alloc = allocator_t{}) :
+        bit_vector_base{count, bool{}, alloc}
+    {}
     //!\}
 
 public:
@@ -255,25 +284,6 @@ public:
 
         return (*this)[size() - 1];
     }
-
-    //!\brief Checks if all bits are set to `true`.
-    constexpr bool all() const noexcept
-    {
-        constexpr chunk_type mask = ~static_cast<chunk_type>(0);
-        return std::ranges::all_of(*as_base(), [mask] (chunk_type const & chunk) { return chunk == mask; });
-    }
-
-    //!\brief Checks if any bit is set to `true`.
-    constexpr bool any() const noexcept
-    {
-        return std::ranges::any_of(*as_base(), [] (chunk_type const a) { return a > 0; });
-    }
-
-    //!\brief Checks if none of the bits is set to `true`.
-    constexpr bool none() const noexcept
-    {
-        return !any();
-    }
     //!\}
 
     /*!\name Capacity
@@ -379,7 +389,7 @@ public:
     {
         assert(rhs.size() == size());
 
-        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a & b; });
+        binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a & b; });
 
         return *as_derived();
     }
@@ -389,7 +399,7 @@ public:
     {
         assert(rhs.size() == size());
 
-        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a | b; });
+        binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a | b; });
 
         return *as_derived();
     }
@@ -399,7 +409,7 @@ public:
     {
         assert(rhs.size() == size());
 
-        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a ^ b; });
+        binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a ^ b; });
 
         return *as_derived();
     }
@@ -447,15 +457,42 @@ public:
     {
         assert(rhs.size() == size());
 
-        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a & ~b; });
+        binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a & ~b; });
 
         return *as_derived();
+    }
+
+    constexpr bool all() const noexcept
+    {
+        size_t data_size = base_t::size(); // number of words
+        for (size_t i = 0; i < data_size; ++i)
+        {
+            if (~base_t::data()[i] != 0)
+                return false;
+        }
+        return true;
+    }
+
+    constexpr bool any() const noexcept
+    {
+        size_t data_size = base_t::size(); // number of words
+        for (size_t i = 0; i < data_size; ++i)
+        {
+            if (base_t::data()[i] > 0)
+                return true;
+        }
+        return false;
+    }
+
+    constexpr bool none() const noexcept
+    {
+        return !any();
     }
 
     //!\brief Flips all bits in-place.
     constexpr derived_t & flip() noexcept
     {
-        unary_transform_impl(*as_derived(), *as_derived(), [] (auto const a) { return ~a; });
+        unary_transform_impl(*this, *this, [] (auto const a) { return ~a; });
         return *as_derived();
     }
 
@@ -549,22 +586,65 @@ public:
     //!\}
 
 private:
-
+    //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    static constexpr void binary_transform_impl(derived_t & res,
-                                                derived_t const & lhs,
-                                                derived_t const & rhs,
+    static constexpr void binary_transform_impl(bit_vector_base & res,
+                                                bit_vector_base const & lhs,
+                                                bit_vector_base const & rhs,
                                                 binary_operator_t && op) noexcept
     {
-        derived_t::binary_transform_impl(res, lhs, rhs, (binary_operator_t &&) op);
+        assert(lhs.size() == rhs.size());
+        assert(res.size() == lhs.size());
+
+        size_t unroll_offset = _unroll_factor;
+        size_t data_size = lhs.as_base()->size(); // number of words
+
+        for (; unroll_offset < data_size; unroll_offset += _unroll_factor)
+        {
+            auto start = unroll_offset - _unroll_factor;
+            for (size_t i = 0; i < _unroll_factor; ++i)
+            {
+                res.data()[start + i] = op(lhs.data()[start + i], rhs.data()[start + i]);
+            }
+        }
+
+        for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
+        {
+            res.data()[i] = op(lhs.data()[i], rhs.data()[i]);
+        }
     }
 
+    //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    static constexpr void unary_transform_impl(derived_t & res,
-                                               derived_t const & lhs,
+    static constexpr void unary_transform_impl(bit_vector_base & res,
+                                               bit_vector_base const & lhs,
                                                binary_operator_t && op) noexcept
     {
-        derived_t::unary_transform_impl(res, lhs, (binary_operator_t &&) op);
+        assert(res.size() == lhs.size());
+
+        size_t unroll_offset = _unroll_factor;
+        size_t data_size = lhs.as_base()->size(); // number of words of inherited vector.
+
+        for (; unroll_offset < data_size; unroll_offset += _unroll_factor)
+        {
+            auto start = unroll_offset - _unroll_factor;
+            for (size_t i = 0; i < _unroll_factor; ++i)
+            {
+                res.data()[start + i] = op(lhs.data()[start + i]);
+            }
+        }
+
+        for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
+        {
+            res.data()[i] = op(lhs.data()[i]);
+        }
+    }
+
+    //!\brief Computes the minimal size needed for the host vector.
+    //!\param[in] count The number of bits to allocate memory for.
+    constexpr size_type host_size_impl(size_type const count) const noexcept
+    {
+        return static_cast<uint64_t>(chunks_needed(count));
     }
 
     //!\brief Sets the new size.

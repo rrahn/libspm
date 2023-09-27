@@ -768,7 +768,7 @@ struct iterator_fixture<bit_vector_iterator> : public ::testing::Test
 
     static constexpr bool const_iterable = true;
 
-    libjst::bit_vector<> test_range = libjst::bit_vector(100, true);
+    libjst::bit_vector<> test_range = libjst::bit_vector<>(100, true);
     std::vector<bool> expected_range = std::vector<bool>(100, true);
 };
 
@@ -781,7 +781,7 @@ TYPED_TEST(bit_vector_test, output_iterator)
     EXPECT_TRUE((std::output_iterator<typename libjst::bit_vector<>::iterator, bool>));
     EXPECT_FALSE((std::output_iterator<typename libjst::bit_vector<>::const_iterator, bool>));
 
-    libjst::bit_vector test_vector(100, true);
+    libjst::bit_vector<> test_vector(100, true);
     for (auto it = test_vector.begin(); it != test_vector.end(); it += 2)
         *it = false;
 
