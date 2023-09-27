@@ -21,8 +21,6 @@
 
 #include <cereal/types/base_class.hpp>
 
-#include <seqan3/utility/detail/bits_of.hpp>
-
 namespace libjst
 {
 
@@ -78,7 +76,7 @@ private:
     // ----------------------------------------------------------------------------
 
     //!\brief The number of bits represented in one chunk, e.g. 64.
-    static constexpr size_type chunk_size = seqan3::detail::bits_of<chunk_type>;
+    static constexpr size_type chunk_size = sizeof(chunk_type) * 8;
     //!\brief The mask used for the modulo operations using the bitwise and operator, e.g. & 63.
     static constexpr size_type modulo_mask = chunk_size - 1;
     //!\brief The mask used for the division operations using bitwise shift operator, e.g. >> 6.
