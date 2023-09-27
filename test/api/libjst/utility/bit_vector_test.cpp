@@ -10,7 +10,7 @@
 #include <concepts>
 #include <type_traits>
 
- #include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
+#include "iterator_test_template.hpp"
 
 #include <libjst/utility/bit_vector.hpp>
 
