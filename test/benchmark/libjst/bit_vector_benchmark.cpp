@@ -21,7 +21,6 @@
 
 #include <libjst/utility/bit_vector_adaptor.hpp>
 #include <libjst/utility/bit_vector.hpp>
-#include <libjst/utility/bit_vector_simd.hpp>
 
 template <typename result_vector_t>
 auto generate_bit_vector_pair(size_t const size)
@@ -212,65 +211,6 @@ BENCHMARK_CAPTURE(benchmark_bit_vector_reduce,
 BENCHMARK_CAPTURE(benchmark_bit_vector_reduce_zero,
                   libjst_bv_any,
                   libjst::bit_vector<>{},
-                  bitparallel_any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-// ----------------------------------------------------------------------------
-// Benchmark libjst::bit_vector_simd
-// ----------------------------------------------------------------------------
-
-BENCHMARK_CAPTURE(benchmark_bit_vector,
-                  libjst_bv_simd_and,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_and)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector,
-                  libjst_bv_simd_and_eq,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_and_eq)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector,
-                  libjst_bv_simd_and_not,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_and_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector,
-                  libjst_bv_simd_not,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_not)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector,
-                  libjst_bv_simd_flip,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_flip)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce,
-                  libjst_bv_simd_none,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce_zero,
-                  libjst_bv_simd_none,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_none)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce,
-                  libjst_bv_simd_all,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce_all,
-                  libjst_bv_simd_all,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_all)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce,
-                  libjst_bv_simd_any,
-                  libjst::bit_vector_simd<>{},
-                  bitparallel_any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
-
-BENCHMARK_CAPTURE(benchmark_bit_vector_reduce_zero,
-                  libjst_bv_simd_any,
-                  libjst::bit_vector_simd<>{},
                   bitparallel_any)->RangeMultiplier(range_multiplier)->Range(min_range, max_range);
 
 // // ----------------------------------------------------------------------------

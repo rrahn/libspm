@@ -13,7 +13,6 @@
  #include <seqan3/test/../../../unit/range/iterator_test_template.hpp>
 
 #include <libjst/utility/bit_vector.hpp>
-#include <libjst/utility/bit_vector_simd.hpp>
 
 template <typename t>
 struct bit_vector_test : public testing::Test
@@ -24,7 +23,7 @@ struct bit_vector_test : public testing::Test
 // Next, associate a list of types with the test suite, which will be
 // repeated for each type in the list.  The typedef is necessary for
 // the macro to parse correctly.
-using bit_vector_types = testing::Types<libjst::bit_vector<>, libjst::bit_vector_simd<>>;
+using bit_vector_types = testing::Types<libjst::bit_vector<>>;
 TYPED_TEST_SUITE(bit_vector_test, bit_vector_types, );
 
 // ----------------------------------------------------------------------------
