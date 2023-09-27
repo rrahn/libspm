@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides libjst::utility::bit_vector_base.
+ * \brief Provides libjst::utility::bit_vector.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
@@ -34,8 +34,8 @@ namespace libjst
  * This is an abstract base class which can only be instantiated thorugh its derived class.
  * The behaviour of the binary bit vector operations must be implemented by the derived class.
  */
-template <typename derived_t, typename allocator_t = std::allocator<uint64_t>>
-class bit_vector_base :
+template <typename allocator_t = std::allocator<uint64_t>>
+class bit_vector :
     public std::vector<uint64_t, typename std::allocator_traits<allocator_t>::rebind_alloc<uint64_t>>
 {
 private:
@@ -43,9 +43,6 @@ private:
     using chunk_type = uint64_t;
     //!\brief The base type.
     using base_t = std::vector<chunk_type, typename std::allocator_traits<allocator_t>::rebind_alloc<chunk_type>>;
-
-    //!\brief Befriend the derived class.
-    friend derived_t;
 
     template <bool is_const>
     class bit_reference;
@@ -100,16 +97,16 @@ private:
      */
 public:
     //!\brief The default constructor which optionally sets the allocator.
-    bit_vector_base(allocator_t const & alloc = allocator_t{}) : base_t{alloc}
+    bit_vector(allocator_t const & alloc = allocator_t{}) : base_t{alloc}
     {}
 
-    bit_vector_base(bit_vector_base const &) = default; //!< Default.
-    bit_vector_base(bit_vector_base &&) = default; //!< Default.
-    bit_vector_base & operator=(bit_vector_base const &) = default; //!< Default.
-    bit_vector_base & operator=(bit_vector_base &&) = default; //!< Default.
-    ~bit_vector_base() = default; //!< Default.
+    bit_vector(bit_vector const &) = default; //!< Default.
+    bit_vector(bit_vector &&) = default; //!< Default.
+    bit_vector & operator=(bit_vector const &) = default; //!< Default.
+    bit_vector & operator=(bit_vector &&) = default; //!< Default.
+    ~bit_vector() = default; //!< Default.
 
-    constexpr bit_vector_base(size_type const count, bool const bit, allocator_t const & alloc = allocator_t{}) :
+    constexpr bit_vector(size_type const count, bool const bit, allocator_t const & alloc = allocator_t{}) :
         base_t{alloc}
     {
         assign(count, bit);
@@ -120,7 +117,7 @@ public:
      * \param[in] list An initialiser list with the bits set.
      * \param[in] alloc The allocator to use [optional].
      */
-    constexpr bit_vector_base(std::initializer_list<bool> list, allocator_t const & alloc = allocator_t{})
+    constexpr bit_vector(std::initializer_list<bool> list, allocator_t const & alloc = allocator_t{})
         : base_t{alloc}
     {
         assign(list);
@@ -131,8 +128,8 @@ public:
      * \param[in] count The number of elements to create the bit vector with.
      * \param[in] alloc The allocator to use [optional].
      */
-    constexpr bit_vector_base(size_type const count, allocator_t const & alloc = allocator_t{}) :
-        bit_vector_base{count, bool{}, alloc}
+    constexpr bit_vector(size_type const count, allocator_t const & alloc = allocator_t{}) :
+        bit_vector{count, bool{}, alloc}
     {}
     //!\}
 
@@ -171,7 +168,7 @@ public:
     //!\endcond
     constexpr void assign(iterator_t first, sentinel_t last)
     {
-        derived_t tmp{}; // To ensure strong exception guarantee.
+        bit_vector tmp{}; // To ensure strong exception guarantee.
         if constexpr (std::sized_sentinel_for<sentinel_t, iterator_t>)
             tmp.reserve(std::ranges::distance(first, last));
 
@@ -326,7 +323,7 @@ public:
      */
     constexpr void reserve(size_type const new_capacity)
     {
-        base_t::reserve(as_derived()->host_size_impl(new_capacity));
+        base_t::reserve(host_size_impl(new_capacity));
     }
     //!\}
 
@@ -367,7 +364,7 @@ public:
     constexpr void resize(size_type const count, bool const bit = {})
     {
         size_t const old_size = size();
-        base_t::resize(as_derived()->host_size_impl(count));
+        base_t::resize(host_size_impl(count));
 
         set_new_size(count);
         if (size() > old_size) // If bit is true and we increase the size.
@@ -378,74 +375,74 @@ public:
         {
             size_t const chunk_position = to_chunk_position(size());
             (*as_base())[chunk_position] &= (1 << to_local_chunk_position(size())) - 1;
-            std::ranges::fill(std::ranges::next(as_base()->begin(), chunk_position + 1, as_base()->end()),
-                              as_base()->end(),
+            std::ranges::fill(std::ranges::next(base_t::begin(), chunk_position + 1, base_t::end()),
+                              base_t::end(),
                               0);
         }
     }
 
     //!\brief Performs binary AND between `this` and `rhs`.
-    constexpr derived_t & operator&=(derived_t const & rhs) noexcept
+    constexpr bit_vector & operator&=(bit_vector const & rhs) noexcept
     {
         assert(rhs.size() == size());
 
         binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a & b; });
 
-        return *as_derived();
+        return *this;
     }
 
     //!\brief Performs binary OR between `this` and `rhs`.
-    constexpr derived_t & operator|=(derived_t const & rhs) noexcept
+    constexpr bit_vector & operator|=(bit_vector const & rhs) noexcept
     {
         assert(rhs.size() == size());
 
         binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a | b; });
 
-        return *as_derived();
+        return *this;
     }
 
     //!\brief Performs binary XOR between `this` and `rhs`.
-    constexpr derived_t & operator^=(derived_t const & rhs) noexcept
+    constexpr bit_vector & operator^=(bit_vector const & rhs) noexcept
     {
         assert(rhs.size() == size());
 
         binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a ^ b; });
 
-        return *as_derived();
+        return *this;
     }
 
     //!\brief Performs binary NOT.
-    constexpr derived_t operator~() const noexcept
+    constexpr bit_vector operator~() const noexcept
     {
-        derived_t tmp{};
+        bit_vector tmp{};
         tmp.resize(size());
-        unary_transform_impl(tmp, *as_derived(), [] (auto const a) { return ~a; });
+        unary_transform_impl(tmp, *this, [] (auto const a) { return ~a; });
         return tmp;
     }
 
     //!\brief Performs binary AND.
-    constexpr friend derived_t operator&(derived_t const & lhs, derived_t const & rhs) noexcept
+    constexpr friend bit_vector operator&(bit_vector const & lhs, bit_vector const & rhs) noexcept
     {
-        derived_t tmp{};
+        bit_vector tmp{};
         tmp.resize(lhs.size());
         binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a & b; });
         return tmp;
     }
 
     //!\brief Performs binary OR.
-    constexpr friend derived_t operator|(derived_t const & lhs, derived_t const & rhs) noexcept
+    constexpr friend bit_vector operator|(bit_vector const & lhs, bit_vector const & rhs) noexcept
     {
-        derived_t tmp{};
+        bit_vector tmp{};
         tmp.resize(lhs.size());
         binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a | b; });
         return tmp;
     }
 
     //!\brief Performs binary XOR.
-    constexpr friend derived_t operator^(derived_t const & lhs, derived_t const & rhs) noexcept
+    constexpr friend bit_vector operator^(bit_vector const & lhs, bit_vector const & rhs) noexcept
     {
         assert(lhs.size() == rhs.size());
-        derived_t tmp{};
+        bit_vector tmp{};
         tmp.resize(lhs.size());
 
         binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a ^ b; });
@@ -453,13 +450,13 @@ public:
     }
 
     //!\brief Computes the bitwise `a &= ~b` operator without an additional copy.
-    constexpr derived_t & and_not(derived_t const & rhs) noexcept
+    constexpr bit_vector & and_not(bit_vector const & rhs) noexcept
     {
         assert(rhs.size() == size());
 
         binary_transform_impl(*this, *this, rhs, [] (auto const a, auto const b) { return a & ~b; });
 
-        return *as_derived();
+        return *this;
     }
 
     constexpr bool all() const noexcept
@@ -490,14 +487,14 @@ public:
     }
 
     //!\brief Flips all bits in-place.
-    constexpr derived_t & flip() noexcept
+    constexpr bit_vector & flip() noexcept
     {
         unary_transform_impl(*this, *this, [] (auto const a) { return ~a; });
-        return *as_derived();
+        return *this;
     }
 
     //!\brief Flips the bit at the given position.
-    constexpr derived_t & flip(size_type position)
+    constexpr bit_vector & flip(size_type position)
     {
         using namespace std::literals;
 
@@ -506,11 +503,11 @@ public:
                                     " is out of the range [0, "s + std::to_string(size()) + ")!"s};
 
         (*this)[position].flip();
-        return *as_derived();
+        return *this;
     }
 
     //!\brief Exchanges the contents of the container with those of others.
-    constexpr void swap(derived_t & other) noexcept
+    constexpr void swap(bit_vector & other) noexcept
     {
         base_t::swap(*other.as_base());
         std::swap(_size, other._size);
@@ -526,13 +523,13 @@ public:
         return iterator{base_t::data()};
     }
 
-    //!\copydoc libjst::bit_vector_base::begin
+    //!\copydoc libjst::bit_vector::begin
     constexpr const_iterator begin() const noexcept
     {
         return const_iterator{base_t::data()};
     }
 
-    //!\copydoc libjst::bit_vector_base::begin
+    //!\copydoc libjst::bit_vector::begin
     constexpr const_iterator cbegin() const noexcept
     {
         return begin();
@@ -544,13 +541,13 @@ public:
         return begin() + size();
     }
 
-    //!\copydoc libjst::bit_vector_base::end
+    //!\copydoc libjst::bit_vector::end
     constexpr const_iterator end() const noexcept
     {
         return begin() + size();
     }
 
-    //!\copydoc libjst::bit_vector_base::end
+    //!\copydoc libjst::bit_vector::end
     constexpr const_iterator cend() const noexcept
     {
         return end();
@@ -588,9 +585,9 @@ public:
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    static constexpr void binary_transform_impl(bit_vector_base & res,
-                                                bit_vector_base const & lhs,
-                                                bit_vector_base const & rhs,
+    static constexpr void binary_transform_impl(bit_vector & res,
+                                                bit_vector const & lhs,
+                                                bit_vector const & rhs,
                                                 binary_operator_t && op) noexcept
     {
         assert(lhs.size() == rhs.size());
@@ -604,20 +601,20 @@ private:
             auto start = unroll_offset - _unroll_factor;
             for (size_t i = 0; i < _unroll_factor; ++i)
             {
-                res.data()[start + i] = op(lhs.data()[start + i], rhs.data()[start + i]);
+                res.as_base()->data()[start + i] = op(lhs.as_base()->data()[start + i], rhs.as_base()->data()[start + i]);
             }
         }
 
         for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
         {
-            res.data()[i] = op(lhs.data()[i], rhs.data()[i]);
+            res.as_base()->data()[i] = op(lhs.as_base()->data()[i], rhs.as_base()->data()[i]);
         }
     }
 
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    static constexpr void unary_transform_impl(bit_vector_base & res,
-                                               bit_vector_base const & lhs,
+    static constexpr void unary_transform_impl(bit_vector & res,
+                                               bit_vector const & lhs,
                                                binary_operator_t && op) noexcept
     {
         assert(res.size() == lhs.size());
@@ -630,13 +627,13 @@ private:
             auto start = unroll_offset - _unroll_factor;
             for (size_t i = 0; i < _unroll_factor; ++i)
             {
-                res.data()[start + i] = op(lhs.data()[start + i]);
+                res.as_base()->data()[start + i] = op(lhs.as_base()->data()[start + i]);
             }
         }
 
         for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
         {
-            res.data()[i] = op(lhs.data()[i]);
+            res.as_base()->data()[i] = op(lhs.as_base()->data()[i]);
         }
     }
 
@@ -663,18 +660,6 @@ private:
     base_t * as_base() noexcept
     {
         return static_cast<base_t *>(this);
-    }
-
-    //!\brief Casts `this` to its derived class.
-    derived_t const * as_derived() const noexcept
-    {
-        return static_cast<derived_t const *>(this);
-    }
-
-    //!\overload
-    derived_t * as_derived() noexcept
-    {
-        return static_cast<derived_t *>(this);
     }
 
     //!\brief Returns how many chunks are needed to store `count` many elements.
@@ -713,14 +698,14 @@ private:
  * It cannot be default constructed and can only be instantiated with a particular bit from the bit vector and its
  * associated classes.
  */
-template <typename derived_t, typename allocator_t>
+template <typename allocator_t>
 template <bool is_const>
-class bit_vector_base<derived_t, allocator_t>::bit_reference
+class bit_vector<allocator_t>::bit_reference
 {
 private:
     //!\brief Befriend the bit vector so it can instantiate this proxy with a particular position.
-    template <typename, typename>
-    friend class bit_vector_base;
+    template <typename>
+    friend class bit_vector;
 
     //!\brief The const or non-const chunk type to be represented.
     using maybe_const_chunk_type = std::conditional_t<is_const, chunk_type const, chunk_type>;
@@ -803,9 +788,9 @@ private:
  *
  * \tparam is_const A bool that indicates a const iterator if the value is `true`, or a non-const iterator otherwise.
  */
-template <typename derived_t, typename allocator_t>
+template <typename allocator_t>
 template <bool is_const>
-class bit_vector_base<derived_t, allocator_t>::bit_iterator
+class bit_vector<allocator_t>::bit_iterator
 {
 private:
     //!\brief Befriend the bit_iterator types with different constness.
@@ -983,3 +968,12 @@ public:
 };
 
 }  // namespace libjst::utility
+
+//!\cond
+namespace cereal
+{
+template <typename archive_t, typename allocator_t>
+struct specialize<archive_t, libjst::bit_vector<allocator_t>, cereal::specialization::member_load_save>
+{};
+} // namespace cereal
+//!\endcond
