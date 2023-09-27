@@ -35,7 +35,7 @@ namespace libjst
  * The reference type is a special proxy that provides access to a single bit. Note that it is not a real reference
  * but can be converter to a bool or assigned from a bool.
  */
-template <typename allocator_t = seqan3::aligned_allocator<bool, alignof(seqan3::simd_type_t<uint64_t>)>>
+template <typename allocator_t = std::allocator<uint64_t>/*seqan3::aligned_allocator<bool, alignof(seqan3::simd_type_t<uint64_t>)>*/>
 //!\cond
     requires (!std::integral<allocator_t>)
 //!\endcond
@@ -126,10 +126,10 @@ public:
         bit_vector_simd tmp(base_t::size());
 
         chunk_type const * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + base_t::as_base()->size();
         chunk_type * rhs_data = tmp.as_base()->data();
 
-        for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
+        for (; lhs_data < end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
             seqan3::store(rhs_data, ~seqan3::load<simd_type>(lhs_data));
 
         return tmp;
@@ -154,9 +154,9 @@ public:
         };
 
         chunk_type const * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
+        chunk_type const * end = base_t::as_base()->data() + base_t::as_base()->size();
 
-        for (; lhs_data != end; lhs_data += chunks_per_vector)
+        for (; lhs_data < end; lhs_data += chunks_per_vector)
             if (test_non_zero(seqan3::load<simd_type>(lhs_data)))
                 return true;
 
@@ -187,16 +187,32 @@ public:
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    constexpr bit_vector_simd & binary_transform_impl(bit_vector_simd const & rhs, binary_operator_t && op) noexcept
+    static constexpr void binary_transform_impl(bit_vector_simd & res,
+                                                bit_vector_simd const & lhs,
+                                                bit_vector_simd const & rhs,
+                                                binary_operator_t && op) noexcept
     {
-        chunk_type * lhs_data = base_t::as_base()->data();
-        chunk_type const * end = base_t::as_base()->data() + host_size_impl(base_t::size());
+        chunk_type const * lhs_data = lhs.as_base()->data();
+        chunk_type const * end = lhs.as_base()->data() + lhs.as_base()->size();
         chunk_type const * rhs_data = rhs.as_base()->data();
+        chunk_type * res_data = res.as_base()->data();
 
-        for (; lhs_data != end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector)
-            seqan3::store(lhs_data, op(seqan3::load<simd_type>(lhs_data), seqan3::load<simd_type>(rhs_data)));
+        for (; lhs_data < end; lhs_data += chunks_per_vector, rhs_data += chunks_per_vector, res_data += chunks_per_vector)
+            seqan3::store(res_data, op(seqan3::load<simd_type>(lhs_data), seqan3::load<simd_type>(rhs_data)));
+    }
 
-        return *this;
+    //!\brief Performs the unary bitwise-operation on the underlying chunks.
+    template <typename binary_operator_t>
+    static constexpr void unary_transform_impl(bit_vector_simd & res,
+                                               bit_vector_simd const & lhs,
+                                               binary_operator_t && op) noexcept
+    {
+        chunk_type const * lhs_data = lhs.as_base()->data();
+        chunk_type const * end = lhs.as_base()->data() + lhs.as_base()->size();
+        chunk_type * res_data = res.as_base()->data();
+
+        for (; lhs_data < end; lhs_data += chunks_per_vector, res_data += chunks_per_vector)
+            seqan3::store(res_data, op(seqan3::load<simd_type>(lhs_data)));
     }
 
     /*!\brief Computes the minimal size needed for the host vector.
@@ -211,7 +227,7 @@ private:
      */
     constexpr size_type host_size_impl(size_type const count) const noexcept
     {
-        return (base_t::chunks_needed(count) + chunks_per_vector - 1) & -chunks_per_vector;
+        return ((base_t::chunks_needed(count) + chunks_per_vector - 1) / chunks_per_vector) * chunks_per_vector;
     }
 };
 

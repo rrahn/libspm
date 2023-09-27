@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <seqan3/utility/container/aligned_allocator.hpp>
 #include <libjst/utility/bit_vector_base.hpp>
 
 namespace libjst
@@ -30,7 +31,7 @@ namespace libjst
  * The reference type is a special proxy that provides access to a single bit. Note that it is not a real reference
  * but can be converter to a bool or assigned from a bool.
  */
-template <typename allocator_t = std::allocator<bool>>
+template <typename allocator_t = std::allocator<uint64_t>>
 //!\cond
     requires (!std::integral<allocator_t>)
 //!\endcond
@@ -44,6 +45,8 @@ class bit_vector : public bit_vector_base<bit_vector<allocator_t>, allocator_t>
 
     //!\copydoc libjst::utility::bit_vector_base::chunk_type
     using typename base_t::chunk_type;
+
+    static constexpr std::ptrdiff_t _unroll_factor{32}; //!< The number of chunks to roll out in a SIMD operation.
 
 public:
     /*!\name Associated types
@@ -110,25 +113,88 @@ public:
     {}
     //!\}
 
+    constexpr bool all() const noexcept
+    {
+        size_t data_size = base_t::as_base()->size(); // number of words
+        for (size_t i = 0; i < data_size; ++i)
+        {
+            if (~base_t::as_base()->data()[i] != 0)
+                return false;
+        }
+        return true;
+    }
+
+    constexpr bool any() const noexcept
+    {
+        size_t data_size = base_t::as_base()->size(); // number of words
+        for (size_t i = 0; i < data_size; ++i)
+        {
+            if (base_t::as_base()->data()[i] > 0)
+                return true;
+        }
+        return false;
+    }
+
 private:
     //!\brief Performs the binary bitwise-operation on the underlying chunks.
     template <typename binary_operator_t>
-    constexpr bit_vector & binary_transform_impl(bit_vector const & rhs, binary_operator_t && op) noexcept
+    static constexpr void binary_transform_impl(bit_vector & res,
+                                                bit_vector const & lhs,
+                                                bit_vector const & rhs,
+                                                binary_operator_t && op) noexcept
     {
-        std::ranges::transform(*base_t::as_base(), *rhs.as_base(), base_t::as_base()->data(),
-                               [&] (chunk_type const & left_chunk, chunk_type const & right_chunk) -> chunk_type
-        {
-            return op(left_chunk, right_chunk);
-        });
+        assert(lhs.size() == rhs.size());
+        assert(res.size() == lhs.size());
 
-        return *this;
+        size_t unroll_offset = _unroll_factor;
+        size_t data_size = lhs.as_base()->size(); // number of words
+
+        for (; unroll_offset < data_size; unroll_offset += _unroll_factor)
+        {
+            auto start = unroll_offset - _unroll_factor;
+            for (size_t i = 0; i < _unroll_factor; ++i)
+            {
+                res.as_base()->data()[start + i] = op(lhs.as_base()->data()[start + i], rhs.as_base()->data()[start + i]);
+            }
+        }
+
+        for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
+        {
+            res.as_base()->data()[i] = op(lhs.as_base()->data()[i], rhs.as_base()->data()[i]);
+        }
+    }
+
+    //!\brief Performs the binary bitwise-operation on the underlying chunks.
+    template <typename binary_operator_t>
+    static constexpr void unary_transform_impl(bit_vector & res,
+                                               bit_vector const & lhs,
+                                               binary_operator_t && op) noexcept
+    {
+        assert(res.size() == lhs.size());
+
+        size_t unroll_offset = _unroll_factor;
+        size_t data_size = lhs.as_base()->size(); // number of words
+
+        for (; unroll_offset < data_size; unroll_offset += _unroll_factor)
+        {
+            auto start = unroll_offset - _unroll_factor;
+            for (size_t i = 0; i < _unroll_factor; ++i)
+            {
+                res.as_base()->data()[start + i] = op(lhs.as_base()->data()[start + i]);
+            }
+        }
+
+        for (size_t i = unroll_offset - _unroll_factor; i < data_size; ++i)
+        {
+            res.as_base()->data()[i] = op(lhs.as_base()->data()[i]);
+        }
     }
 
     //!\brief Computes the minimal size needed for the host vector.
     //!\param[in] count The number of bits to allocate memory for.
     constexpr size_type host_size_impl(size_type const count) const noexcept
     {
-        return base_t::chunks_needed(count);
+        return static_cast<uint64_t>(base_t::chunks_needed(count));
     }
 };
 }  // namespace libjst::utility

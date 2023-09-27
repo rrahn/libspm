@@ -266,8 +266,7 @@ public:
     //!\brief Checks if any bit is set to `true`.
     constexpr bool any() const noexcept
     {
-        constexpr chunk_type mask = static_cast<chunk_type>(0);
-        return std::ranges::any_of(*as_base(), [mask] (chunk_type const & chunk) { return chunk | mask; });
+        return std::ranges::any_of(*as_base(), [] (chunk_type const a) { return a > 0; });
     }
 
     //!\brief Checks if none of the bits is set to `true`.
@@ -357,9 +356,9 @@ public:
     //!\brief Changes the number of elements stored, where additional copies of `bit` are appended.
     constexpr void resize(size_type const count, bool const bit = {})
     {
+        size_t const old_size = size();
         base_t::resize(as_derived()->host_size_impl(count));
 
-        size_t const old_size = size();
         set_new_size(count);
         if (size() > old_size) // If bit is true and we increase the size.
         {
@@ -380,10 +379,9 @@ public:
     {
         assert(rhs.size() == size());
 
-        return as_derived()->binary_transform_impl(rhs, [] (auto const & left_chunk, auto const & right_chunk)
-        {
-            return left_chunk & right_chunk;
-        });
+        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a & b; });
+
+        return *as_derived();
     }
 
     //!\brief Performs binary OR between `this` and `rhs`.
@@ -391,10 +389,9 @@ public:
     {
         assert(rhs.size() == size());
 
-        return as_derived()->binary_transform_impl(rhs, [] (auto const & left_chunk, auto const & right_chunk)
-        {
-            return left_chunk | right_chunk;
-        });
+        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a | b; });
+
+        return *as_derived();
     }
 
     //!\brief Performs binary XOR between `this` and `rhs`.
@@ -402,35 +399,47 @@ public:
     {
         assert(rhs.size() == size());
 
-        return as_derived()->binary_transform_impl(rhs, [] (auto const & left_chunk, auto const & right_chunk)
-        {
-            return left_chunk ^ right_chunk;
-        });
+        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a ^ b; });
+
+        return *as_derived();
     }
 
     //!\brief Performs binary NOT.
     constexpr derived_t operator~() const noexcept
     {
-        derived_t tmp{*as_derived()};
-        return tmp.flip();
+        derived_t tmp{};
+        tmp.resize(size());
+        unary_transform_impl(tmp, *as_derived(), [] (auto const a) { return ~a; });
+        return tmp;
     }
 
     //!\brief Performs binary AND.
-    constexpr friend derived_t operator&(derived_t lhs, derived_t const & rhs) noexcept
+    constexpr friend derived_t operator&(derived_t const & lhs, derived_t const & rhs) noexcept
     {
-        return lhs &= rhs;
+        derived_t tmp{};
+        tmp.resize(lhs.size());
+        binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a & b; });
+        return tmp;
     }
 
     //!\brief Performs binary OR.
-    constexpr friend derived_t operator|(derived_t lhs, derived_t const & rhs) noexcept
+    constexpr friend derived_t operator|(derived_t const & lhs, derived_t const & rhs) noexcept
     {
-        return lhs |= rhs;
+        derived_t tmp{};
+        tmp.resize(lhs.size());
+        binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a | b; });
+        return tmp;
     }
 
     //!\brief Performs binary XOR.
-    constexpr friend derived_t operator^(derived_t lhs, derived_t const & rhs) noexcept
+    constexpr friend derived_t operator^(derived_t const & lhs, derived_t const & rhs) noexcept
     {
-        return lhs ^= rhs;
+        assert(lhs.size() == rhs.size());
+        derived_t tmp{};
+        tmp.resize(lhs.size());
+
+        binary_transform_impl(tmp, lhs, rhs, [](auto const a, auto const b) { return a ^ b; });
+        return tmp;
     }
 
     //!\brief Computes the bitwise `a &= ~b` operator without an additional copy.
@@ -438,16 +447,15 @@ public:
     {
         assert(rhs.size() == size());
 
-        return as_derived()->binary_transform_impl(rhs, [] (auto const & left_chunk, auto const & right_chunk)
-        {
-            return left_chunk & ~right_chunk;
-        });
+        binary_transform_impl(*as_derived(), *as_derived(), rhs, [] (auto const a, auto const b) { return a & ~b; });
+
+        return *as_derived();
     }
 
     //!\brief Flips all bits in-place.
     constexpr derived_t & flip() noexcept
     {
-        std::ranges::for_each(*as_base(), [] (chunk_type & chunk) { chunk = ~chunk; });
+        unary_transform_impl(*as_derived(), *as_derived(), [] (auto const a) { return ~a; });
         return *as_derived();
     }
 
@@ -541,6 +549,23 @@ public:
     //!\}
 
 private:
+
+    template <typename binary_operator_t>
+    static constexpr void binary_transform_impl(derived_t & res,
+                                                derived_t const & lhs,
+                                                derived_t const & rhs,
+                                                binary_operator_t && op) noexcept
+    {
+        derived_t::binary_transform_impl(res, lhs, rhs, (binary_operator_t &&) op);
+    }
+
+    template <typename binary_operator_t>
+    static constexpr void unary_transform_impl(derived_t & res,
+                                               derived_t const & lhs,
+                                               binary_operator_t && op) noexcept
+    {
+        derived_t::unary_transform_impl(res, lhs, (binary_operator_t &&) op);
+    }
 
     //!\brief Sets the new size.
     void set_new_size(size_type const new_size) noexcept
