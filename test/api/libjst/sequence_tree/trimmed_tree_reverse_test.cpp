@@ -12,12 +12,12 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/rcms/rcs_store_reversed.hpp>
 
@@ -25,7 +25,7 @@
 
 namespace jst::test::trimmed_tree_reverse {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -47,7 +47,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     using rcs_store_reverse_t = libjst::rcs_store_reversed<cms_t>;
@@ -142,76 +142,76 @@ TEST_P(trimmed_tree_reverse_test, root_sink) {
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{},
-    .expected_labels{"GGGGAAAA"_dna4}
+    .expected_labels{"GGGGAAAA"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv0, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{0}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"GGGGAAA"_dna4, "C"_dna4, ""_dna4, "A"_dna4}
+    .expected_labels{"GGGGAAA"s, "C"s, ""s, "A"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv7, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{7}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "C"_dna4, "GGG"_dna4, "GGGGAAAA"_dna4}
+    .expected_labels{""s, "C"s, "GGG"s, "GGGGAAAA"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"GGG"_dna4, "C"_dna4, "AAA"_dna4, "GAAAA"_dna4}
+    .expected_labels{"GGG"s, "C"s, "AAA"s, "GAAAA"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv6, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{6}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"G"_dna4, "T"_dna4, "G"_dna4, "C"_dna4, "A"_dna4,
-                                                   "GA"_dna4,
-                               "GG"_dna4, "C"_dna4, "AAA"_dna4,
-                                          "GAAAA"_dna4}
+    .expected_labels{"G"s, "T"s, "G"s, "C"s, "A"s,
+                                                   "GA"s,
+                               "GG"s, "C"s, "AAA"s,
+                                          "GAAAA"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv5, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"GG"_dna4, "T"_dna4, ""_dna4, "C"_dna4, "AA"_dna4,
-                                                   "GAA"_dna4,
-                                "G"_dna4, "C"_dna4, "AAA"_dna4,
-                                          "GAAAA"_dna4}
+    .expected_labels{"GG"s, "T"s, ""s, "C"s, "AA"s,
+                                                   "GAA"s,
+                                "G"s, "C"s, "AAA"s,
+                                          "GAAAA"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv4, trimmed_tree_reverse_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .trim_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"GGG"_dna4, "T"_dna4, "AAA"_dna4,
-                                  ""_dna4, "C"_dna4, "AAA"_dna4,
-                                  "GAAAA"_dna4}
+    .expected_labels{"GGG"s, "T"s, "AAA"s,
+                                  ""s, "C"s, "AAA"s,
+                                  "GAAAA"s}
 }));

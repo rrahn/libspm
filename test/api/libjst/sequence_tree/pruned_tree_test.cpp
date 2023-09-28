@@ -12,19 +12,19 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/prune_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
 namespace jst::test::labelled_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -45,7 +45,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -146,43 +146,43 @@ TEST_P(pruned_tree_test, root_sink) {
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .expected_coverages{{0, 1, 2, 3}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv0, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{0}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0}, {0, 1, 2, 3}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv7, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{7}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0}, {0, 1, 2, 3}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0}, {0, 1, 2, 3}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv6, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{6}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0}, {0}, {0},
                                       {0, 1, 2, 3}, {0, 2}, {0, 2},
@@ -190,10 +190,10 @@ INSTANTIATE_TEST_SUITE_P(snv4_snv6, pruned_tree_test, testing::Values(fixture{
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv5, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0}, {0}, {0},
                                       {0, 1, 2, 3}, {0, 2}, {0, 2},
@@ -201,10 +201,10 @@ INSTANTIATE_TEST_SUITE_P(snv4_snv5, pruned_tree_test, testing::Values(fixture{
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv4, pruned_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{1, 2}}
     },
     .expected_coverages{{0, 1, 2, 3}, {0}, {0},
                                       {0, 1, 2, 3}, {1, 2}, {1, 2},

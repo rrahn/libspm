@@ -12,19 +12,19 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
 namespace jst::test::merged_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -45,7 +45,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -136,69 +136,69 @@ TEST_P(merged_tree_test, root_sink) {
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
-    .expected_labels{"AAAAGGGG"_dna4}
+    .expected_labels{"AAAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv0, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{0}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "CAAAGGGG"_dna4, "AAAAGGGG"_dna4}
+    .expected_labels{""s, "CAAAGGGG"s, "AAAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv7, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{7}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAAGGG"_dna4, "C"_dna4, "G"_dna4}
+    .expected_labels{"AAAAGGG"s, "C"s, "G"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAA"_dna4, "CGGG"_dna4, "GGGG"_dna4}
+    .expected_labels{"AAAA"s, "CGGG"s, "GGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv6, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{6}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "CG"_dna4, "TG"_dna4,
-                                             "GG"_dna4,
-                                  "GG"_dna4, "TG"_dna4,
-                                             "GG"_dna4}
+    .expected_labels{"AAAA"s, "CG"s, "TG"s,
+                                             "GG"s,
+                                  "GG"s, "TG"s,
+                                             "GG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv5, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "C"_dna4, "TGG"_dna4,
-                                            "GGG"_dna4,
-                                  "G"_dna4, "TGG"_dna4,
-                                             "GGG"_dna4}
+    .expected_labels{"AAAA"s, "C"s, "TGG"s,
+                                            "GGG"s,
+                                  "G"s, "TGG"s,
+                                             "GGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv4, merged_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "CGGG"_dna4,
-                                  ""_dna4, "TGGG"_dna4,
-                                  "GGGG"_dna4}
+    .expected_labels{"AAAA"s, "CGGG"s,
+                                  ""s, "TGGG"s,
+                                  "GGGG"s}
 }));

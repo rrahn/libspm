@@ -11,14 +11,14 @@
 #include <ranges>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/chunked_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
@@ -26,7 +26,7 @@
 
 namespace jst::test::chunked_sequence_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct expected_root {
@@ -54,7 +54,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -177,123 +177,123 @@ TEST_P(chunked_sequence_tree_test, traverse) {
 // Test values
 // ----------------------------------------------------------------------------
 
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant_single_chunk, chunked_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .chunk_size{8},
     .window_size{4},
-    .expected_labels{{"AAAAGGGG"_dna4}}
+    .expected_labels{{"AAAAGGGG"s}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_two_chunks, chunked_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .chunk_size{4},
     .window_size{2},
-    .expected_labels{{"AAAA"_dna4, "GG"_dna4}, {"GGGG"_dna4}}
+    .expected_labels{{"AAAA"s, "GG"s}, {"GGGG"s}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_three_chunks, chunked_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .chunk_size{3},
     .window_size{2},
-    .expected_labels{{"AAA"_dna4, "AG"_dna4},
-                     {"AGG"_dna4, "GG"_dna4},
-                     {"GG"_dna4}}
+    .expected_labels{{"AAA"s, "AG"s},
+                     {"AGG"s, "GG"s},
+                     {"GG"s}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_single_chunk, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .chunk_size{8},
     .window_size{4},
-    .expected_labels{{"A"_dna4,
-                       "CAAG"_dna4,
-                           "T"_dna4,
-                           "G"_dna4,
-                       "AAAG"_dna4,
-                           "TGG"_dna4,
-                           "GGG"_dna4}}
+    .expected_labels{{"A"s,
+                       "CAAG"s,
+                           "T"s,
+                           "G"s,
+                       "AAAG"s,
+                           "TGG"s,
+                           "GGG"s}}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .chunk_size{4},
     .window_size{3},
-    .expected_labels{{"A"_dna4,
-                        "CAAG"_dna4,
-                        "AAA"_dna4,
-                           "G"_dna4,
-                            "TG"_dna4,
-                            "GG"_dna4
+    .expected_labels{{"A"s,
+                        "CAAG"s,
+                        "AAA"s,
+                           "G"s,
+                            "TG"s,
+                            "GG"s
                      },
                      {
-                        "G"_dna4,
-                          "TGG"_dna4,
-                          "GGG"_dna4
+                        "G"s,
+                          "TGG"s,
+                          "GGG"s
                      }}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_three_chunks, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .chunk_size{3},
     .window_size{4},
-    .expected_labels{{"A"_dna4,
-                       "CAAG"_dna4,
-                           "T"_dna4,
-                           "G"_dna4,
-                       "AA"_dna4,
-                         "AG"_dna4,
-                           "TG"_dna4,
-                           "GG"_dna4
+    .expected_labels{{"A"s,
+                       "CAAG"s,
+                           "T"s,
+                           "G"s,
+                       "AA"s,
+                         "AG"s,
+                           "TG"s,
+                           "GG"s
                      },
                      {
-                      "AG"_dna4,
-                        "TGG"_dna4,
-                        "G"_dna4,
-                         "GG"_dna4
+                      "AG"s,
+                        "TGG"s,
+                        "G"s,
+                         "GG"s
                      },
                      {
-                        "GG"_dna4
+                        "GG"s
                      }}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_two_chunks_overlap, chunked_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .chunk_size{4},
     .overlap_size{2},
     .window_size{2},
-    .expected_labels{{"A"_dna4,
-                       "CAA"_dna4,
-                       "AAAG"_dna4,
-                           "TGG"_dna4,
-                           "G"_dna4,
-                            "GG"_dna4
+    .expected_labels{{"A"s,
+                       "CAA"s,
+                       "AAAG"s,
+                           "TGG"s,
+                           "G"s,
+                            "GG"s
                      },
                      {
-                        "G"_dna4,
-                          "TGG"_dna4,
-                          "GGG"_dna4
+                        "G"s,
+                          "TGG"s,
+                          "GGG"s
                      }}
 }));
