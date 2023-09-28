@@ -154,7 +154,6 @@ namespace libjst
                 }
             };
 
-            using seqan3::operator&;
             if (node_descriptor::right_break().from_left_end()) {
                 return bounded_right_breakpoint(get_left());
             } else if (node_descriptor::right_break().from_right_end()) {
