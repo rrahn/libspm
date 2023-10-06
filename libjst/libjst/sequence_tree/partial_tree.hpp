@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/closure_adaptor.hpp>
+#include <libjst/utility/closure_object.hpp>
 #include <libcontrib/copyable_box.hpp>
 
 #include <libjst/sequence_tree/breakend_site_min.hpp>

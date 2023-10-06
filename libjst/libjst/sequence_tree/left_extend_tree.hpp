@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/closure_adaptor.hpp>
+#include <libjst/utility/closure_object.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/breakend_site_trimmed.hpp>
@@ -162,11 +162,11 @@ namespace libjst
 
             template <std::integral left_extension_t>
             constexpr auto operator()(left_extension_t const left_extension) const
-                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, left_extension_t>)
-                -> jst::contrib::closure_result_t<_left_extend, left_extension_t>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, left_extension_t>)
+                -> libjst::closure_result_t<_left_extend, left_extension_t>
             { // we need to store the type that needs to be called later!
                 assert(left_extension >= 0);
-                return jst::contrib::make_closure(_left_extend{}, left_extension);
+                return libjst::make_closure(_left_extend{}, left_extension);
             }
         } left_extend{};
     } // namespace _tree_adaptor

@@ -137,10 +137,10 @@ namespace libjst
 
             template <typename fn_t>
             constexpr auto operator()(fn_t && transform_fn) const
-                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, fn_t>)
-                -> jst::contrib::closure_result_t<_transform, fn_t>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, fn_t>)
+                -> libjst::closure_result_t<_transform, fn_t>
             { // we need to store the type that needs to be called later!
-                return jst::contrib::make_closure(_transform{}, (fn_t &&)transform_fn);
+                return libjst::make_closure(_transform{}, (fn_t &&)transform_fn);
             }
         } transform{};
     } // namespace _tree_adaptor
