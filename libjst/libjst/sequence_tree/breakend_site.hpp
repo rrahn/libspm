@@ -61,7 +61,7 @@ namespace libjst
     private:
 
         friend constexpr libjst::variant_position_t<delta_reference>
-        tag_invoke(std::tag_t<libjst::position>, breakend_site const & me) noexcept
+        tag_invoke(libjst::tag_t<libjst::position>, breakend_site const & me) noexcept
         {
             if (me.is_low_end()) {
                 return libjst::low_breakend(*me);

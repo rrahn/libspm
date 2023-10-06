@@ -17,7 +17,7 @@
 #include <unordered_map>
 
 #include <libcontrib/type_traits.hpp>
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 #include <libjst/coverage/concept.hpp>
 #include <libjst/rcms/compressed_multisequence.hpp>
@@ -539,35 +539,35 @@ namespace libjst
                                                  result_t>;
 
         template <typename cpo_t>
-            requires std::tag_invocable<cpo_t, breakpoint>
+            requires libjst::tag_invocable<cpo_t, breakpoint>
         friend constexpr auto tag_invoke(cpo_t cpo, delta_proxy me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, breakpoint>)
-            -> make_result_t<std::tag_invoke_result_t<cpo_t, breakpoint>>
+            noexcept(libjst::is_nothrow_tag_invocable_v<cpo_t, breakpoint>)
+            -> make_result_t<libjst::tag_invoke_result_t<cpo_t, breakpoint>>
         {
-            return std::tag_invoke(cpo, libjst::get_breakpoint(std::move(me)));
+            return libjst::tag_invoke(cpo, libjst::get_breakpoint(std::move(me)));
         }
 
-        friend constexpr breakpoint tag_invoke(std::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
+        friend constexpr breakpoint tag_invoke(libjst::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
         {
             return me.extract_breakpoint();
         }
 
-        friend constexpr sequence_reference tag_invoke(std::tag_t<libjst::alt_sequence>, delta_proxy me) noexcept
+        friend constexpr sequence_reference tag_invoke(libjst::tag_t<libjst::alt_sequence>, delta_proxy me) noexcept
         {
             return me.extract_alt_sequence();
         }
 
-        friend constexpr coverage_t const & tag_invoke(std::tag_t<libjst::coverage>, delta_proxy me) noexcept
+        friend constexpr coverage_t const & tag_invoke(libjst::tag_t<libjst::coverage>, delta_proxy me) noexcept
         {
             return me._breakend_reference.second;
         }
 
-        friend constexpr position_type tag_invoke(std::tag_t<libjst::position>, delta_proxy me) noexcept
+        friend constexpr position_type tag_invoke(libjst::tag_t<libjst::position>, delta_proxy me) noexcept
         {
             return me._breakend_reference.first.position();
         }
 
-        friend constexpr alternate_sequence_kind tag_invoke(std::tag_t<libjst::alt_kind>, delta_proxy me) noexcept
+        friend constexpr alternate_sequence_kind tag_invoke(libjst::tag_t<libjst::alt_kind>, delta_proxy me) noexcept
         {
             return me._breakend_reference.first.visit(libjst::multi_invocable{
                 [&] (indel_breakend_kind indel_kind) {
@@ -582,7 +582,7 @@ namespace libjst
             });
         }
 
-        friend constexpr std::ptrdiff_t tag_invoke(std::tag_t<libjst::effective_size>, delta_proxy me) noexcept
+        friend constexpr std::ptrdiff_t tag_invoke(libjst::tag_t<libjst::effective_size>, delta_proxy me) noexcept
         {
             return std::ranges::ssize(libjst::alt_sequence(me)) -
                    static_cast<std::ptrdiff_t>(libjst::breakpoint_span(libjst::get_breakpoint(me)));

@@ -181,7 +181,7 @@ namespace libjst
 
             template <std::unsigned_integral chunk_size_t, std::unsigned_integral overlap_size_t = size_t>
             constexpr auto operator()(chunk_size_t const chunk_size, overlap_size_t const overlap_size = 0) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, chunk_size_t, overlap_size_t>)
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, chunk_size_t, overlap_size_t>)
                 -> jst::contrib::closure_result_t<_chunk, chunk_size_t, overlap_size_t>
             { // we need to store the type that needs to be called later!
                 return jst::contrib::make_closure(_chunk{}, chunk_size, overlap_size);

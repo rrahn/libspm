@@ -94,7 +94,7 @@ namespace libjst
             return static_cast<derived_t const *>(me);
         }
 
-        constexpr friend std::size_t tag_invoke(std::tag_t<libjst::window_size>, seqan_pattern_base const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(libjst::tag_t<libjst::window_size>, seqan_pattern_base const & me) noexcept {
             return (me.empty()) ? 0 : seqan::length(seqan::needle(me.get_pattern()));
         }
     };

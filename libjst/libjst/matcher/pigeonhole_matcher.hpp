@@ -198,7 +198,7 @@ namespace libjst
             return std::tuple{_error_rate};
         }
 
-        constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, pigeonhole_matcher const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(libjst::tag_t<window_size>, pigeonhole_matcher const & me) noexcept {
             return length(getFibre(needle(me._pattern), seqan::QGramShape{}));
         }
 

@@ -14,7 +14,7 @@
 
 #include <concepts>
 
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 namespace libjst
 {
@@ -29,12 +29,12 @@ namespace libjst
     namespace _root {
         inline constexpr struct _cpo  {
             template <typename tree_t>
-                requires std::tag_invocable<_cpo, tree_t>
+                requires libjst::tag_invocable<_cpo, tree_t>
             constexpr auto operator()(tree_t && tree) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, tree_t>)
-                -> std::tag_invoke_result_t<_cpo, tree_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, tree_t>)
+                -> libjst::tag_invoke_result_t<_cpo, tree_t>
             {
-                return std::tag_invoke(_cpo{}, (tree_t &&) tree);
+                return libjst::tag_invoke(_cpo{}, (tree_t &&) tree);
             }
 
         private:
@@ -58,12 +58,12 @@ namespace libjst
     namespace _sink {
         inline constexpr struct _cpo  {
             template <typename tree_t>
-                requires std::tag_invocable<_cpo, tree_t>
+                requires libjst::tag_invocable<_cpo, tree_t>
             constexpr auto operator()(tree_t && tree) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, tree_t>)
-                -> std::tag_invoke_result_t<_cpo, tree_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, tree_t>)
+                -> libjst::tag_invoke_result_t<_cpo, tree_t>
             {
-                return std::tag_invoke(_cpo{}, (tree_t &&)tree);
+                return libjst::tag_invoke(_cpo{}, (tree_t &&)tree);
             }
         private:
 
@@ -98,12 +98,12 @@ namespace libjst
     namespace _next_alt {
         inline constexpr struct _cpo  {
             template <typename node_t>
-                requires std::tag_invocable<_cpo, node_t>
+                requires libjst::tag_invocable<_cpo, node_t>
             constexpr auto operator()(node_t && node) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, node_t>)
-                -> std::tag_invoke_result_t<_cpo, node_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, node_t>)
+                -> libjst::tag_invoke_result_t<_cpo, node_t>
             {
-                return std::tag_invoke(_cpo{}, (node_t &&)node);
+                return libjst::tag_invoke(_cpo{}, (node_t &&)node);
             }
 
         private:
@@ -124,12 +124,12 @@ namespace libjst
     namespace _next_ref {
         inline constexpr struct _cpo  {
             template <typename node_t>
-                requires std::tag_invocable<_cpo, node_t>
+                requires libjst::tag_invocable<_cpo, node_t>
             constexpr auto operator()(node_t && node) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, node_t>)
-                -> std::tag_invoke_result_t<_cpo, node_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, node_t>)
+                -> libjst::tag_invoke_result_t<_cpo, node_t>
             {
-                return std::tag_invoke(_cpo{}, (node_t &&)node);
+                return libjst::tag_invoke(_cpo{}, (node_t &&)node);
             }
 
         private:
@@ -150,12 +150,12 @@ namespace libjst
     namespace _prev_alt {
         inline constexpr struct _cpo  {
             template <typename node_t>
-                requires std::tag_invocable<_cpo, node_t>
+                requires libjst::tag_invocable<_cpo, node_t>
             constexpr auto operator()(node_t && node) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, node_t>)
-                -> std::tag_invoke_result_t<_cpo, node_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, node_t>)
+                -> libjst::tag_invoke_result_t<_cpo, node_t>
             {
-                return std::tag_invoke(_cpo{}, (node_t &&)node);
+                return libjst::tag_invoke(_cpo{}, (node_t &&)node);
             }
 
         private:
@@ -176,12 +176,12 @@ namespace libjst
     namespace _prev_ref {
         inline constexpr struct _cpo  {
             template <typename node_t>
-                requires std::tag_invocable<_cpo, node_t>
+                requires libjst::tag_invocable<_cpo, node_t>
             constexpr auto operator()(node_t && node) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, node_t>)
-                -> std::tag_invoke_result_t<_cpo, node_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, node_t>)
+                -> libjst::tag_invoke_result_t<_cpo, node_t>
             {
-                return std::tag_invoke(_cpo{}, (node_t &&)node);
+                return libjst::tag_invoke(_cpo{}, (node_t &&)node);
             }
 
         private:

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 #if __has_include(<cereal/cereal.hpp>)
 #include <cereal/cereal.hpp>
@@ -57,16 +57,16 @@ namespace libjst {
              * To use this CPO, the object type must offer one of the following three function signatures:
              *   - A member function with the signature `void load(iarchive_t&)`;
              *   - A free function with the signature `void load(object_t&, iarchive_t&)`;
-             *   - Or a std::tag_invocable overload with the signature `friend void tag_invoke(std::tag_t<libjst::load>, object_t&, iarchive_t&)`.
+             *   - Or a libjst::tag_invocable overload with the signature `friend void tag_invoke(libjst::tag_t<libjst::load>, object_t&, iarchive_t&)`.
              *
              * @ingroup serialisation
              */
             template <typename object_t, detail::cereal_input_archive iarchive_t>
-                requires (detail::has_cereal) && (std::tag_invocable<_cpo, object_t&, iarchive_t&>)
+                requires (detail::has_cereal) && (libjst::tag_invocable<_cpo, object_t&, iarchive_t&>)
             constexpr auto operator()(object_t& object, iarchive_t& iarchive) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, object_t&, iarchive_t &>)
-                -> std::tag_invoke_result_t<_cpo, object_t&, iarchive_t&> {
-                return std::tag_invoke(_cpo{}, object, iarchive);
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, object_t&, iarchive_t &>)
+                -> libjst::tag_invoke_result_t<_cpo, object_t&, iarchive_t&> {
+                return libjst::tag_invoke(_cpo{}, object, iarchive);
             }
 
             /**
@@ -130,16 +130,16 @@ namespace libjst {
              * To use this CPO, the object type must offer one of the following three function signatures:
              *  - A member function with the signature `void save(oarchive_t&) const`;
              *  - A free function with the signature `void save(object_t const &, oarchive_t&)`;
-             *  - Or a std::tag_invocable overload with the signature `friend void tag_invoke(std::tag_t<libjst::save>, object_t const &, oarchive_t&)`.
+             *  - Or a libjst::tag_invocable overload with the signature `friend void tag_invoke(libjst::tag_t<libjst::save>, object_t const &, oarchive_t&)`.
              *
              * @ingroup serialisation
              */
             template <typename object_t, detail::cereal_output_archive oarchive_t>
-                requires (detail::has_cereal) && (std::tag_invocable<_cpo, object_t&, oarchive_t&>)
+                requires (detail::has_cereal) && (libjst::tag_invocable<_cpo, object_t&, oarchive_t&>)
             constexpr auto operator()(object_t const & object, oarchive_t& oarchive) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, object_t const &, oarchive_t &>)
-                -> std::tag_invoke_result_t<_cpo, object_t const &, oarchive_t&> {
-                return std::tag_invoke(_cpo{}, object, oarchive);
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, object_t const &, oarchive_t &>)
+                -> libjst::tag_invoke_result_t<_cpo, object_t const &, oarchive_t&> {
+                return libjst::tag_invoke(_cpo{}, object, oarchive);
             }
 
             /**

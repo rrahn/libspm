@@ -147,7 +147,7 @@ namespace libjst
             return _pattern;
         }
 
-        constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, restorable_myers_matcher const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(libjst::tag_t<window_size>, restorable_myers_matcher const & me) noexcept {
             return libjst::window_size(static_cast<base_t const &>(me)) - seqan::scoreLimit(me._pattern);
         }
     };

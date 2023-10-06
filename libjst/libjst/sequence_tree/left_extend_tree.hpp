@@ -162,7 +162,7 @@ namespace libjst
 
             template <std::integral left_extension_t>
             constexpr auto operator()(left_extension_t const left_extension) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, left_extension_t>)
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, left_extension_t>)
                 -> jst::contrib::closure_result_t<_left_extend, left_extension_t>
             { // we need to store the type that needs to be called later!
                 assert(left_extension >= 0);

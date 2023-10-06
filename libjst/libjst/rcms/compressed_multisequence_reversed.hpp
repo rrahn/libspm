@@ -15,7 +15,7 @@
 #include <ranges>
 
 #include <libcontrib/type_traits.hpp>
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 #include <libjst/coverage/concept.hpp>
 #include <libjst/rcms/packed_breakend_key.hpp>
@@ -219,37 +219,37 @@ namespace libjst
 
     private:
 
-        friend constexpr position_t tag_invoke(std::tag_t<libjst::low_breakend>, delta_proxy me) noexcept
+        friend constexpr position_t tag_invoke(libjst::tag_t<libjst::low_breakend>, delta_proxy me) noexcept
         {
             return libjst::low_breakend(libjst::get_breakpoint(me));
         }
 
-        friend constexpr position_t tag_invoke(std::tag_t<libjst::high_breakend>, delta_proxy me) noexcept
+        friend constexpr position_t tag_invoke(libjst::tag_t<libjst::high_breakend>, delta_proxy me) noexcept
         {
             return libjst::high_breakend(libjst::get_breakpoint(me));
         }
 
-        friend constexpr breakpoint_reversed tag_invoke(std::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
+        friend constexpr breakpoint_reversed tag_invoke(libjst::tag_t<libjst::get_breakpoint>, delta_proxy me) noexcept
         {
             return breakpoint_reversed{libjst::get_breakpoint(*me._reverse_it), me._source_size};
         }
 
-        friend constexpr auto tag_invoke(std::tag_t<libjst::alt_sequence>, delta_proxy me) noexcept
+        friend constexpr auto tag_invoke(libjst::tag_t<libjst::alt_sequence>, delta_proxy me) noexcept
         {
             return libjst::alt_sequence(*me._reverse_it) | std::views::reverse;
         }
 
-        friend constexpr position_t tag_invoke(std::tag_t<libjst::position>, delta_proxy me) noexcept
+        friend constexpr position_t tag_invoke(libjst::tag_t<libjst::position>, delta_proxy me) noexcept
         {
             return me._source_size - libjst::position(*me._reverse_it);
         }
 
         template <typename cpo_t, typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, delta_proxy> &&
-                     std::tag_invocable<cpo_t, std::iter_reference_t<wrapped_iterator>>
+                     libjst::tag_invocable<cpo_t, std::iter_reference_t<wrapped_iterator>>
         friend constexpr auto tag_invoke(cpo_t cpo, me_t && me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, std::iter_reference_t<wrapped_iterator>>)
-            -> std::tag_invoke_result_t<cpo_t, std::iter_reference_t<wrapped_iterator>>
+            noexcept(libjst::is_nothrow_tag_invocable_v<cpo_t, std::iter_reference_t<wrapped_iterator>>)
+            -> libjst::tag_invoke_result_t<cpo_t, std::iter_reference_t<wrapped_iterator>>
         {
             return cpo(*me._reverse_it);
         }

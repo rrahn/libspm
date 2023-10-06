@@ -41,23 +41,23 @@ namespace libjst
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint_reversed>
-        constexpr friend value_type tag_invoke(std::tag_t<libjst::low_breakend>, me_t && me) noexcept
+        constexpr friend value_type tag_invoke(libjst::tag_t<libjst::low_breakend>, me_t && me) noexcept
         {
             return me._offset - libjst::high_breakend(me._wrappee);
         }
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint_reversed>
-        constexpr friend value_type tag_invoke(std::tag_t<libjst::high_breakend>, me_t && me) noexcept
+        constexpr friend value_type tag_invoke(libjst::tag_t<libjst::high_breakend>, me_t && me) noexcept
         {
             return me._offset - libjst::low_breakend(me._wrappee);
         }
 
         template <typename cpo_t, typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint_reversed> &&
-                     std::tag_invocable<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+                     libjst::tag_invocable<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
         constexpr friend auto tag_invoke(cpo_t cpo, me_t && me) noexcept
-            -> std::tag_invoke_result_t<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+            -> libjst::tag_invoke_result_t<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
         {
             using member_t = jst::contrib::member_type_t<me_t, breakpoint>;
             return cpo((member_t &&)me._wrappee);

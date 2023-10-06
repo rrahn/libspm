@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 namespace libjst
 {
@@ -20,12 +20,12 @@ namespace libjst
     namespace _coverage_intersection {
         inline constexpr struct _cpo  {
             template <typename coverage1_t, typename coverage2_t>
-                requires std::tag_invocable<_cpo, coverage1_t, coverage2_t>
+                requires libjst::tag_invocable<_cpo, coverage1_t, coverage2_t>
             constexpr auto operator()(coverage1_t && c1, coverage2_t && c2) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, coverage1_t, coverage2_t>)
-                -> std::tag_invoke_result_t<_cpo, coverage1_t, coverage2_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, coverage1_t, coverage2_t>)
+                -> libjst::tag_invoke_result_t<_cpo, coverage1_t, coverage2_t>
             {
-                return std::tag_invoke(_cpo{}, (coverage1_t &&) c1, (coverage2_t &&) c2);
+                return libjst::tag_invoke(_cpo{}, (coverage1_t &&) c1, (coverage2_t &&) c2);
             }
         } coverage_intersection;
     } // namespace _coverage_intersection
@@ -34,12 +34,12 @@ namespace libjst
     namespace _coverage_difference {
         inline constexpr struct _cpo  {
             template <typename coverage1_t, typename coverage2_t>
-                requires std::tag_invocable<_cpo, coverage1_t, coverage2_t>
+                requires libjst::tag_invocable<_cpo, coverage1_t, coverage2_t>
             constexpr auto operator()(coverage1_t && c1, coverage2_t && c2) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, coverage1_t, coverage2_t>)
-                -> std::tag_invoke_result_t<_cpo, coverage1_t, coverage2_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, coverage1_t, coverage2_t>)
+                -> libjst::tag_invoke_result_t<_cpo, coverage1_t, coverage2_t>
             {
-                return std::tag_invoke(_cpo{}, (coverage1_t &&) c1, (coverage2_t &&) c2);
+                return libjst::tag_invoke(_cpo{}, (coverage1_t &&) c1, (coverage2_t &&) c2);
             }
         } coverage_difference;
     } // namespace _coverage_difference
@@ -48,12 +48,12 @@ namespace libjst
     namespace _get_domain {
         inline constexpr struct _cpo  {
             template <typename coverage_t>
-                requires std::tag_invocable<_cpo, coverage_t>
+                requires libjst::tag_invocable<_cpo, coverage_t>
             constexpr auto operator()(coverage_t && coverage) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, coverage_t>)
-                -> std::tag_invoke_result_t<_cpo, coverage_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, coverage_t>)
+                -> libjst::tag_invoke_result_t<_cpo, coverage_t>
             {
-                return std::tag_invoke(_cpo{}, (coverage_t &&) coverage);
+                return libjst::tag_invoke(_cpo{}, (coverage_t &&) coverage);
             }
 
         private:
@@ -71,5 +71,5 @@ namespace libjst
     using _get_domain::get_domain;
 
     template <typename coverage_t>
-    using coverage_domain_t = std::remove_cvref_t<std::tag_invoke_result_t<_get_domain::_cpo, coverage_t>>;
+    using coverage_domain_t = std::remove_cvref_t<libjst::tag_invoke_result_t<_get_domain::_cpo, coverage_t>>;
 }  // namespace libjst

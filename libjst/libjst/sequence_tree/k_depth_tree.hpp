@@ -155,7 +155,7 @@ namespace libjst
 
             template <std::unsigned_integral depth_t>
             constexpr auto operator()(depth_t const depth) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, depth_t>)
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, depth_t>)
                 -> jst::contrib::closure_result_t<_k_depth, depth_t>
             {
                 return jst::contrib::make_closure(_k_depth{}, depth);

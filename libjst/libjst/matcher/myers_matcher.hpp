@@ -48,7 +48,7 @@ namespace libjst
             return std::tuple{_min_score};
         }
 
-        constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, myers_matcher const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(libjst::tag_t<window_size>, myers_matcher const & me) noexcept {
             return libjst::window_size(static_cast<base_t const &>(me)) - me._min_score;
         }
     };

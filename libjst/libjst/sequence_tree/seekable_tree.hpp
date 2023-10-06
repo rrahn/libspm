@@ -236,7 +236,7 @@ namespace libjst
 
             template <typename ...args_t>
             constexpr auto operator()(args_t &&... args) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _seek, args_t...>)
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, _seek, args_t...>)
                 -> jst::contrib::closure_result_t<_seek, args_t...>
             { // we need to store the type that needs to be called later!
                 return jst::contrib::make_closure(_seek{}, (args_t &&)args...);

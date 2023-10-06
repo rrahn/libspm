@@ -145,7 +145,7 @@ namespace libjst
 
             template <typename ...args_t>
             constexpr auto operator()(args_t &&... args) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, args_t...>)
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<jst::contrib::make_closure>, args_t...>)
                 -> jst::contrib::closure_result_t<_cpo, args_t...>
             {
                 return jst::contrib::make_closure(_cpo{}, (args_t &&)args...);

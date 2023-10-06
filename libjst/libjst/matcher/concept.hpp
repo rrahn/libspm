@@ -15,7 +15,7 @@
 #include <concepts>
 #include <type_traits>
 
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 namespace libjst
 {
@@ -27,12 +27,12 @@ namespace libjst
     namespace _window_size {
         inline constexpr struct _cpo  {
             template <typename matcher_t>
-                requires std::tag_invocable<_cpo, matcher_t>
+                requires libjst::tag_invocable<_cpo, matcher_t>
             constexpr auto operator()(matcher_t && matcher) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t>)
-                -> std::tag_invoke_result_t<_cpo, matcher_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t>)
+                -> libjst::tag_invoke_result_t<_cpo, matcher_t>
             {
-                return std::tag_invoke(_cpo{}, (matcher_t &&)matcher);
+                return libjst::tag_invoke(_cpo{}, (matcher_t &&)matcher);
             }
 
         private:
@@ -56,12 +56,12 @@ namespace libjst
     namespace _capture {
         inline constexpr struct _cpo  {
             template <typename matcher_t>
-                requires std::tag_invocable<_cpo, matcher_t const &>
+                requires libjst::tag_invocable<_cpo, matcher_t const &>
             constexpr auto operator()(matcher_t const & matcher) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t const &>)
-                -> std::tag_invoke_result_t<_cpo, matcher_t const &>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t const &>)
+                -> libjst::tag_invoke_result_t<_cpo, matcher_t const &>
             {
-                return std::tag_invoke(_cpo{}, matcher);
+                return libjst::tag_invoke(_cpo{}, matcher);
             }
         private:
 
@@ -81,12 +81,12 @@ namespace libjst
     namespace _restore {
         inline constexpr struct _cpo  {
             template <typename matcher_t, typename state_t>
-                requires std::tag_invocable<_cpo, matcher_t &, state_t>
+                requires libjst::tag_invocable<_cpo, matcher_t &, state_t>
             constexpr auto operator()(matcher_t & matcher, state_t && state) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t &, state_t>)
-                -> std::tag_invoke_result_t<_cpo, matcher_t &, state_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t &, state_t>)
+                -> libjst::tag_invoke_result_t<_cpo, matcher_t &, state_t>
             {
-                return std::tag_invoke(_cpo{}, matcher, (state_t &&) state);
+                return libjst::tag_invoke(_cpo{}, matcher, (state_t &&) state);
             }
         private:
 
@@ -108,12 +108,12 @@ namespace libjst
     namespace _aggregate {
         inline constexpr struct _cpo  {
             template <typename state1_t, typename state2_t>
-                requires std::tag_invocable<_cpo, state1_t, state2_t>
+                requires libjst::tag_invocable<_cpo, state1_t, state2_t>
             constexpr auto operator()(state1_t && state1, state2_t && state2) const
-                noexcept(std::is_nothrow_tag_invocable_v<_cpo, state1_t, state2_t>)
-                -> std::tag_invoke_result_t<_cpo, state1_t, state2_t>
+                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, state1_t, state2_t>)
+                -> libjst::tag_invoke_result_t<_cpo, state1_t, state2_t>
             {
-                return std::tag_invoke(_cpo{}, (state1_t &&) state1, (state2_t &&) state2);
+                return libjst::tag_invoke(_cpo{}, (state1_t &&) state1, (state2_t &&) state2);
             }
         } aggregate;
     } // namespace _aggregate

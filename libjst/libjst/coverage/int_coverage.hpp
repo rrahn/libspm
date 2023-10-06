@@ -162,7 +162,7 @@ namespace libjst
         constexpr friend bool operator==(int_coverage const &, int_coverage const &) noexcept = default;
 
         constexpr friend int_coverage
-        tag_invoke(std::tag_t<coverage_intersection>, int_coverage const & first, int_coverage const & second) {
+        tag_invoke(libjst::tag_t<coverage_intersection>, int_coverage const & first, int_coverage const & second) {
             // if (first.get_domain() != second.get_domain())
             //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
             // we get the first as copy.
@@ -183,7 +183,7 @@ namespace libjst
         }
 
         constexpr friend int_coverage
-        tag_invoke(std::tag_t<coverage_difference>, int_coverage const & first, int_coverage const & second) {
+        tag_invoke(libjst::tag_t<coverage_difference>, int_coverage const & first, int_coverage const & second) {
             // if (first.get_domain() != second.get_domain())
             //     throw std::domain_error{"Trying to intersect elements from different coverage domains."};
 

@@ -15,7 +15,7 @@
 #include <concepts>
 
 #include <libcontrib/type_traits.hpp>
-#include <libcontrib/std/tag_invoke.hpp>
+#include <libjst/utility/tag_invoke.hpp>
 
 #include <libjst/variant/breakpoint.hpp>
 
@@ -57,18 +57,18 @@ namespace libjst
 
         template <typename cpo_t, typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, generic_delta> &&
-                     std::tag_invocable<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+                     libjst::tag_invocable<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
         friend constexpr auto tag_invoke(cpo_t cpo, me_t && me)
-            noexcept(std::is_nothrow_tag_invocable_v<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>)
-            -> std::tag_invoke_result_t<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+            noexcept(libjst::is_nothrow_tag_invocable_v<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>)
+            -> libjst::tag_invoke_result_t<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
         {
             using fwd_breakpoint_t = jst::contrib::member_type_t<me_t, breakpoint>;
-            return std::tag_invoke(cpo, static_cast<fwd_breakpoint_t>(me._breakpoint));
+            return libjst::tag_invoke(cpo, static_cast<fwd_breakpoint_t>(me._breakpoint));
         }
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, generic_delta>
-        friend constexpr auto tag_invoke(std::tag_t<libjst::get_breakpoint>, me_t && me) noexcept
+        friend constexpr auto tag_invoke(libjst::tag_t<libjst::get_breakpoint>, me_t && me) noexcept
             -> jst::contrib::member_type_t<me_t, breakpoint>
         {
             using fwd_breakpoint_t = jst::contrib::member_type_t<me_t, breakpoint>;
@@ -77,7 +77,7 @@ namespace libjst
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, generic_delta>
-        friend constexpr auto tag_invoke(std::tag_t<libjst::coverage>, me_t && me) noexcept
+        friend constexpr auto tag_invoke(libjst::tag_t<libjst::coverage>, me_t && me) noexcept
             -> jst::contrib::member_type_t<me_t, coverage_t>
         {
             using fwd_coverage_t = jst::contrib::member_type_t<me_t, coverage_t>;
@@ -86,7 +86,7 @@ namespace libjst
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, generic_delta>
-        friend constexpr auto tag_invoke(std::tag_t<libjst::alt_sequence>, me_t && me) noexcept
+        friend constexpr auto tag_invoke(libjst::tag_t<libjst::alt_sequence>, me_t && me) noexcept
             -> jst::contrib::member_type_t<me_t, source_t>
         {
             using fwd_source_t = jst::contrib::member_type_t<me_t, source_t>;
