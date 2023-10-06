@@ -16,7 +16,7 @@
 #include <ranges>
 #include <unordered_map>
 
-#include <libcontrib/type_traits.hpp>
+#include <libjst/utility/member_type_trait.hpp>
 #include <libjst/utility/tag_invoke.hpp>
 
 #include <libjst/coverage/concept.hpp>

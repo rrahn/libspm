@@ -16,7 +16,7 @@
 #include <concepts>
 #include <string_view>
 
-#include <libcontrib/type_traits.hpp>
+#include <libjst/utility/member_type_trait.hpp>
 
 #include <libjst/variant/concept.hpp>
 
@@ -113,17 +113,17 @@ namespace libjst
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint>
         constexpr friend auto tag_invoke(libjst::tag_t<libjst::low_breakend>, me_t && me) noexcept
-            -> jst::contrib::member_type_t<me_t, value_type>
+            -> libjst::member_type_t<me_t, value_type>
         {
-            return static_cast<jst::contrib::member_type_t<me_t, value_type>>(me._low);
+            return static_cast<libjst::member_type_t<me_t, value_type>>(me._low);
         }
 
         template <typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint>
         constexpr friend auto tag_invoke(libjst::tag_t<libjst::high_breakend>, me_t && me) noexcept
-            -> jst::contrib::member_type_t<me_t, value_type>
+            -> libjst::member_type_t<me_t, value_type>
         {
-            return static_cast<jst::contrib::member_type_t<me_t, value_type>>(me._high);
+            return static_cast<libjst::member_type_t<me_t, value_type>>(me._high);
         }
 
         template <typename me_t>

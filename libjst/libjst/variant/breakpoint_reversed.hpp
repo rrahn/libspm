@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/type_traits.hpp>
+#include <libjst/utility/member_type_trait.hpp>
 
 #include <libjst/variant/breakpoint.hpp>
 #include <libjst/variant/concept.hpp>
@@ -55,11 +55,11 @@ namespace libjst
 
         template <typename cpo_t, typename me_t>
             requires std::same_as<std::remove_cvref_t<me_t>, breakpoint_reversed> &&
-                     libjst::tag_invocable<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+                     libjst::tag_invocable<cpo_t, libjst::member_type_t<me_t, breakpoint>>
         constexpr friend auto tag_invoke(cpo_t cpo, me_t && me) noexcept
-            -> libjst::tag_invoke_result_t<cpo_t, jst::contrib::member_type_t<me_t, breakpoint>>
+            -> libjst::tag_invoke_result_t<cpo_t, libjst::member_type_t<me_t, breakpoint>>
         {
-            using member_t = jst::contrib::member_type_t<me_t, breakpoint>;
+            using member_t = libjst::member_type_t<me_t, breakpoint>;
             return cpo((member_t &&)me._wrappee);
         }
 
