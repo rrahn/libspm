@@ -5,7 +5,6 @@ find_package (Cereal QUIET)
 
 set (LIBJST_TARGET_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../libjst)
 set (LIBJST_TARGET_COMPILE_FEATURES cxx_std_20)
-set (LIBJST_TARGET_LINK_LIBRARIES libcontrib::libcontrib)
 
 if (Cereal_FOUND)
     message (STATUS "Found cereal: ${Cereal_VERSION}")
