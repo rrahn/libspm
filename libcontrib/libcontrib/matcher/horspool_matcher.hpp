@@ -6,41 +6,41 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides an adapter to make the shiftor online pattern matching algorithm work with the JST.
+ * \brief Provides an adapter to make the horspool online pattern matching algorithm work with the JST.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
 #pragma once
 
-#include <libjst/matcher/seqan_pattern_base.hpp>
+#include <libcontrib/matcher/seqan_pattern_base.hpp>
 
-namespace libjst
+namespace jst::contrib
 {
 
     template <std::ranges::random_access_range needle_t>
-    class shiftor_matcher : public seqan_pattern_base<shiftor_matcher<needle_t>>
+    class horspool_matcher: public seqan_pattern_base<horspool_matcher<needle_t>>
     {
     private:
 
-        friend seqan_pattern_base<shiftor_matcher<needle_t>>;
+        friend seqan_pattern_base<horspool_matcher<needle_t>>;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, seqan::ShiftOr>;
+        using pattern_type = seqan::Pattern<compatible_needle_type, seqan::Horspool>;
 
         pattern_type _pattern{};
 
     public:
 
-        shiftor_matcher() = delete;
+        horspool_matcher() = delete;
         template <std::ranges::viewable_range _needle_t>
-            requires (!std::same_as<_needle_t, shiftor_matcher> &&
+            requires (!std::same_as<_needle_t, horspool_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
-        explicit shiftor_matcher(_needle_t && needle) :
+        explicit horspool_matcher(_needle_t && needle) :
             _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle))}
         {}
     };
 
     template <std::ranges::viewable_range needle_t>
-    shiftor_matcher(needle_t &&) -> shiftor_matcher<std::views::all_t<needle_t>>;
+    horspool_matcher(needle_t &&) -> horspool_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace libjst
+}  // namespace jst::contrib

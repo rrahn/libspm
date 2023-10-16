@@ -11,7 +11,7 @@
 #include <concepts>
 #include <string>
 
-#include <libjst/matcher/shiftor_matcher_restorable.hpp>
+#include <libcontrib/matcher/shiftor_matcher_restorable.hpp>
 #include <libjst/search/polymorphic_sequence_searcher.hpp>
 
 #include "../mock/rcs_store_mock.hpp"

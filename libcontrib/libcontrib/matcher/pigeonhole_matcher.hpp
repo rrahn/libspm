@@ -16,7 +16,7 @@
 
 #include <seqan/index.h>
 
-#include <libjst/matcher/seqan_pattern_base.hpp>
+#include <libcontrib/matcher/seqan_pattern_base.hpp>
 
 namespace seqan {
 
@@ -123,7 +123,7 @@ namespace seqan {
     }
 } // namespace seqan
 
-namespace libjst
+namespace jst::contrib
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -256,4 +256,4 @@ namespace libjst
         requires std::ranges::random_access_range<std::ranges::range_reference_t<multi_needle_t>>
     pigeonhole_matcher(multi_needle_t &&, double) -> pigeonhole_matcher<std::views::all_t<std::ranges::range_reference_t<multi_needle_t>>>;
 
-}  // namespace libjst
+}  // namespace jst::contrib

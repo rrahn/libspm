@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <libjst/matcher/seqan_pattern_base.hpp>
+#include <libcontrib/matcher/seqan_pattern_base.hpp>
 
-namespace libjst
+namespace jst::contrib
 {
     template <std::ranges::random_access_range needle_t>
     class myers_matcher : public seqan_pattern_base<myers_matcher<needle_t>>
@@ -49,7 +49,7 @@ namespace libjst
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, myers_matcher const & me) noexcept {
-            return libjst::window_size(static_cast<base_t const &>(me)) - me._min_score;
+            return jst::contrib::window_size(static_cast<base_t const &>(me)) - me._min_score;
         }
     };
 
@@ -59,4 +59,4 @@ namespace libjst
     template <std::ranges::viewable_range needle_t>
     myers_matcher(needle_t &&, std::size_t) -> myers_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace libjst
+}  // namespace jst::contrib

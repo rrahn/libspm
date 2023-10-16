@@ -75,7 +75,7 @@ namespace libjst
     private:
 
         friend constexpr position_value_type
-        tag_invoke(std::tag_t<libjst::position>, breakend_site_trimmed const & me) noexcept
+        tag_invoke(libjst::tag_t<libjst::position>, breakend_site_trimmed const & me) noexcept
         {
             return std::min(libjst::position(me._wrappee), me._max_position);
         }

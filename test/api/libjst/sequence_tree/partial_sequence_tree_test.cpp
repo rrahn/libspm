@@ -11,14 +11,14 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/partial_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
@@ -26,7 +26,7 @@
 
 namespace jst::test::partial_sequence_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -50,7 +50,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -146,140 +146,140 @@ TEST_P(partial_sequence_tree_test, traverse) {
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant_unbound, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .bin_offset{0},
     .bin_size{8},
     .window_size{4},
-    .expected_labels{"AAAAGGGG"_dna4}
+    .expected_labels{"AAAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_left_bound, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .bin_offset{2},
     .bin_size{6},
     .window_size{4},
-    .expected_labels{"AAGGGG"_dna4}
+    .expected_labels{"AAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_right_bound, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .bin_offset{0},
     .bin_size{6},
     .window_size{4},
-    .expected_labels{"AAAAGG"_dna4, "GG"_dna4}
+    .expected_labels{"AAAAGG"s, "GG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_left_and_right_bound, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .bin_offset{2},
     .bin_size{4},
     .window_size{4},
-    .expected_labels{"AAGG"_dna4, "GG"_dna4}
+    .expected_labels{"AAGG"s, "GG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(no_variant_left_and_right_bound_single, partial_sequence_tree_test, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .bin_offset{2},
     .bin_size{1},
     .window_size{4},
-    .expected_labels{"A"_dna4, "AGGG"_dna4}
+    .expected_labels{"A"s, "AGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_unbound, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .bin_offset{0},
     .bin_size{8},
     .window_size{4},
-    .expected_labels{"A"_dna4,
-                       "CAAG"_dna4,
-                            "T"_dna4,
-                            "G"_dna4,
-                       "AAAG"_dna4,
-                            "TGG"_dna4,
-                            "GGG"_dna4,}
+    .expected_labels{"A"s,
+                       "CAAG"s,
+                            "T"s,
+                            "G"s,
+                       "AAAG"s,
+                            "TGG"s,
+                            "GGG"s,}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_left_bound, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .bin_offset{1},
     .bin_size{7},
     .window_size{4},
-    .expected_labels{"CAAG"_dna4,
-                          "T"_dna4,
-                          "G"_dna4,
-                     "AAAG"_dna4,
-                          "TGG"_dna4,
-                          "GGG"_dna4,}
+    .expected_labels{"CAAG"s,
+                          "T"s,
+                          "G"s,
+                     "AAAG"s,
+                          "TGG"s,
+                          "GGG"s,}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_right_bound, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .bin_offset{0},
     .bin_size{5},
     .window_size{4},
-    .expected_labels{"A"_dna4,
-                      "CAAG"_dna4,
-                          "T"_dna4,
-                          "G"_dna4,
-                      "AAAG"_dna4, // end after here, vvvv overlaps
-                          "TGG"_dna4,
-                          "GGG"_dna4}
+    .expected_labels{"A"s,
+                      "CAAG"s,
+                          "T"s,
+                          "G"s,
+                      "AAAG"s, // end after here, vvvv overlaps
+                          "TGG"s,
+                          "GGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_left_and_right_bound_inclusive, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .bin_offset{1},
     .bin_size{4},
     .window_size{4},
-    .expected_labels{"CAA"_dna4,
-                        "TG"_dna4,
-                        "GG"_dna4,
-                     "AAA"_dna4,
-                        "TGGG"_dna4,
-                        "G"_dna4,
-                         "GGG"_dna4}
+    .expected_labels{"CAA"s,
+                        "TG"s,
+                        "GG"s,
+                     "AAA"s,
+                        "TGGG"s,
+                        "G"s,
+                         "GGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(two_variants_left_and_right_bound_exclusive, partial_sequence_tree_test, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .bin_offset{2},
     .bin_size{3},
     .window_size{4},
-    .expected_labels{"AAG"_dna4,
-                        "TGG"_dna4,
-                        "GGG"_dna4}
+    .expected_labels{"AAG"s,
+                        "TGG"s,
+                        "GGG"s}
 }));
 

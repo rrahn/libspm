@@ -16,7 +16,7 @@
 
 #include <omp.h>
 
-#include <libjst/matcher/concept.hpp>
+#include <libcontrib/matcher/concept.hpp>
 #include <libjst/sequence_tree/chunked_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/traversal/state_capture_traverser.hpp>

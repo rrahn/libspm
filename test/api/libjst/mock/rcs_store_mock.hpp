@@ -37,34 +37,34 @@ namespace jst::test
         libjst::range_domain<uint32_t> domain{};
 
     private:
-        friend position_t & tag_invoke(std::tag_t<libjst::position>, variant & me) {
+        friend position_t & tag_invoke(libjst::tag_t<libjst::position>, variant & me) {
             return me.position;
         }
-        friend position_t tag_invoke(std::tag_t<libjst::position>, variant const & me) {
+        friend position_t tag_invoke(libjst::tag_t<libjst::position>, variant const & me) {
             return me.position;
         }
-        friend position_t & tag_invoke(std::tag_t<libjst::left_breakpoint>, variant & me) {
+        friend position_t & tag_invoke(libjst::tag_t<libjst::left_breakpoint>, variant & me) {
             return libjst::position(me);
         }
-        friend position_t tag_invoke(std::tag_t<libjst::left_breakpoint>, variant const & me) {
+        friend position_t tag_invoke(libjst::tag_t<libjst::left_breakpoint>, variant const & me) {
             return libjst::position(me);
         }
-        friend insertion_t const & tag_invoke(std::tag_t<libjst::alt_sequence>, variant const & me) {
+        friend insertion_t const & tag_invoke(libjst::tag_t<libjst::alt_sequence>, variant const & me) {
             return me.insertion;
         }
-        friend insertion_t & tag_invoke(std::tag_t<libjst::alt_sequence>, variant & me) {
+        friend insertion_t & tag_invoke(libjst::tag_t<libjst::alt_sequence>, variant & me) {
             return me.insertion;
         }
-        friend deletion_t tag_invoke(std::tag_t<libjst::breakpoint_span>, variant const & me) {
+        friend deletion_t tag_invoke(libjst::tag_t<libjst::breakpoint_span>, variant const & me) {
             return me.deletion;
         }
-        friend deletion_t & tag_invoke(std::tag_t<libjst::breakpoint_span>, variant & me) {
+        friend deletion_t & tag_invoke(libjst::tag_t<libjst::breakpoint_span>, variant & me) {
             return me.deletion;
         }
-        friend coverage_t const & tag_invoke(std::tag_t<libjst::coverage>, variant const & me) {
+        friend coverage_t const & tag_invoke(libjst::tag_t<libjst::coverage>, variant const & me) {
             return me.coverage;
         }
-        friend coverage_t & tag_invoke(std::tag_t<libjst::coverage>, variant & me) {
+        friend coverage_t & tag_invoke(libjst::tag_t<libjst::coverage>, variant & me) {
             return me.coverage;
         }
 

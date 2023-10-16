@@ -11,7 +11,7 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
@@ -20,7 +20,7 @@
 #include <libjst/sequence_tree/stats.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
@@ -28,7 +28,7 @@
 
 namespace jst::test::sequence_tree_stats {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -50,7 +50,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -132,10 +132,10 @@ TEST_P(sequence_tree_stats, subtree_depths) {
 // Test values
 // ----------------------------------------------------------------------------
 
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variants, sequence_tree_stats, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{},
     .coverage_size{4},
     .window_size{4},
@@ -148,9 +148,9 @@ INSTANTIATE_TEST_SUITE_P(no_variants, sequence_tree_stats, testing::Values(fixtu
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_first_base, sequence_tree_stats, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{0}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .coverage_size{4},
     .window_size{4},
@@ -163,9 +163,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_first_base, sequence_tree_stats, testing
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_last_base, sequence_tree_stats, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{7}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .coverage_size{4},
     .window_size{4},
@@ -178,9 +178,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_last_base, sequence_tree_stats, testing:
 }));
 
 INSTANTIATE_TEST_SUITE_P(single_variant_middle, sequence_tree_stats, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
     .coverage_size{4},
     .window_size{4},
@@ -194,9 +194,9 @@ INSTANTIATE_TEST_SUITE_P(single_variant_middle, sequence_tree_stats, testing::Va
 
 INSTANTIATE_TEST_SUITE_P(two_variants_non_overlapping, sequence_tree_stats, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0,1}},
-              variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0,2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0,1}},
+              variant_t{.position{6}, .insertion{"T"s}, .deletion{1}, .coverage{0,2}}},
     .coverage_size{4},
     .window_size{4},
     .expected_stats{.node_count = 5,
@@ -209,9 +209,9 @@ INSTANTIATE_TEST_SUITE_P(two_variants_non_overlapping, sequence_tree_stats, test
 
 INSTANTIATE_TEST_SUITE_P(two_variants_overlapping, sequence_tree_stats, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{1}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
-              variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{1}, .insertion{"C"s}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .window_size{4},
     .expected_stats{.node_count = 7,
@@ -224,9 +224,9 @@ INSTANTIATE_TEST_SUITE_P(two_variants_overlapping, sequence_tree_stats, testing:
 
 INSTANTIATE_TEST_SUITE_P(two_variants_overlapping_same_position, sequence_tree_stats, testing::Values(fixture{
          //  01234567
-    .source{"AAAAGGGG"_dna4},
-    .variants{variant_t{.position{3}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0, 1}},
-              variant_t{.position{3}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}},
+    .source{"AAAAGGGG"s},
+    .variants{variant_t{.position{3}, .insertion{"C"s}, .deletion{1}, .coverage{0, 1}},
+              variant_t{.position{3}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}},
     .coverage_size{4},
     .window_size{4},
     .expected_stats{.node_count = 5,

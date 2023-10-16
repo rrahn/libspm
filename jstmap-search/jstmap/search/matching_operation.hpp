@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libjst/matcher/horspool_matcher.hpp>
+#include <libcontrib/matcher/horspool_matcher.hpp>
 #include <libjst/traversal/state_oblivious_traverser.hpp>
 #include <libjst/sequence_tree/seekable_tree.hpp>
 
@@ -32,16 +32,16 @@ namespace jstmap
         constexpr void operator()(haystack_type && haystack, search_queries_type const & bucket, callback_t && callback) const {
 
             std::ranges::for_each(bucket, [&] (search_query const & query) {
-                libjst::horspool_matcher matcher{query.value().sequence()};
+                jst::contrib::horspool_matcher matcher{query.value().sequence()};
 
-                if (libjst::window_size(matcher) == 0)
+                if (jst::contrib::window_size(matcher) == 0)
                     return;
 
                 auto search_tree = haystack | libjst::labelled()
                                             | libjst::coloured()
-                                            | libjst::trim(libjst::window_size(matcher) - 1)
+                                            | libjst::trim(jst::contrib::window_size(matcher) - 1)
                                             | libjst::prune_unsupported()
-                                            | libjst::left_extend(libjst::window_size(matcher) - 1)
+                                            | libjst::left_extend(jst::contrib::window_size(matcher) - 1)
                                             | libjst::merge() // make big nodes
                                             | libjst::seek();
 

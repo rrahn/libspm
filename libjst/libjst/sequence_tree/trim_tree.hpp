@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/closure_adaptor.hpp>
+#include <libjst/utility/closure_object.hpp>
 
 #include <libjst/sequence_tree/breakend_site_trimmed.hpp>
 #include <libjst/sequence_tree/concept.hpp>
@@ -205,10 +205,10 @@ namespace libjst
 
             template <std::unsigned_integral branch_size_t>
             constexpr auto operator()(branch_size_t const branch_size) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _trim, branch_size_t>)
-                -> jst::contrib::closure_result_t<_trim, branch_size_t>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, _trim, branch_size_t>)
+                -> libjst::closure_result_t<_trim, branch_size_t>
             {
-                return jst::contrib::make_closure(_trim{}, branch_size);
+                return libjst::make_closure(_trim{}, branch_size);
             }
         };
         inline constexpr _trim trim{};

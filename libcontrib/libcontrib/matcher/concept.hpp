@@ -17,7 +17,7 @@
 
 #include <libcontrib/std/tag_invoke.hpp>
 
-namespace libjst
+namespace jst::contrib
 {
     // ----------------------------------------------------------------------------
     // Operation CPOs for matcher
@@ -126,15 +126,15 @@ namespace libjst
     template <typename matcher_t>
     concept window_matcher = std::copyable<std::remove_cvref_t<matcher_t>> && requires (matcher_t && matcher)
     {
-        { libjst::window_size((matcher_t &&) matcher)} -> std::integral;
+        { jst::contrib::window_size((matcher_t &&) matcher)} -> std::integral;
     };
 
     namespace detail {
         template <typename matcher_t>
         concept stateful_matcher = requires
         {
-            typename libjst::matcher_state_t<matcher_t>;
-            requires std::semiregular<libjst::matcher_state_t<matcher_t>>;
+            typename jst::contrib::matcher_state_t<matcher_t>;
+            requires std::semiregular<jst::contrib::matcher_state_t<matcher_t>>;
         };
     } // namespace detail
 
@@ -143,15 +143,15 @@ namespace libjst
                                  detail::stateful_matcher<matcher_t> &&
                                  requires (matcher_t && matcher)
     {
-        { libjst::capture((matcher_t &&) matcher) } -> std::convertible_to<libjst::matcher_state_t<matcher_t>>;
-        { libjst::restore(matcher, std::declval<libjst::matcher_state_t<matcher_t>>()) };
+        { jst::contrib::capture((matcher_t &&) matcher) } -> std::convertible_to<jst::contrib::matcher_state_t<matcher_t>>;
+        { jst::contrib::restore(matcher, std::declval<jst::contrib::matcher_state_t<matcher_t>>()) };
     };
 
     template <typename t1, typename t2>
     concept reducable_with = std::common_with<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>> &&
                              requires (std::remove_cvref_t<t1> const & lhs, std::remove_cvref_t<t2> const & rhs)
     {
-        { libjst::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
+        { jst::contrib::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
     };
 
     template <typename state_t>
@@ -159,4 +159,4 @@ namespace libjst
 
     template <typename matcher_t, typename ...args_t>
     concept online_matcher_for = window_matcher<matcher_t> && std::invocable<matcher_t, args_t...>;
-}  // namespace libjst
+}  // namespace jst::contrib

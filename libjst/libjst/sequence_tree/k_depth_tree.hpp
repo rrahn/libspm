@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include <libcontrib/closure_adaptor.hpp>
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/closure_object.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 // #include <libjst/sequence_tree/rcs_node_traits.hpp>
 #include <libjst/sequence_tree/concept.hpp>
@@ -24,7 +24,7 @@ namespace libjst
         // requires covered tree
     class k_depth_tree_impl {
     private:
-        using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
+        using wrappee_t = copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
 
         class node_impl;
@@ -155,10 +155,10 @@ namespace libjst
 
             template <std::unsigned_integral depth_t>
             constexpr auto operator()(depth_t const depth) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, depth_t>)
-                -> jst::contrib::closure_result_t<_k_depth, depth_t>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, depth_t>)
+                -> libjst::closure_result_t<_k_depth, depth_t>
             {
-                return jst::contrib::make_closure(_k_depth{}, depth);
+                return libjst::make_closure(_k_depth{}, depth);
             }
         } k_depth{};
     } // namespace _tree_adaptor

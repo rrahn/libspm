@@ -122,7 +122,7 @@ namespace libjst::test
 
     private:
         template <typename archive_t>
-        friend void tag_invoke(std::tag_t<libjst::save>, test_object_save_tag_invoke const &object, archive_t &archive)
+        friend void tag_invoke(libjst::tag_t<libjst::save>, test_object_save_tag_invoke const &object, archive_t &archive)
         {
             archive(object.a, object.b, object.c);
         }

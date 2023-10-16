@@ -7,14 +7,14 @@
 
 #include <benchmark/benchmark.h>
 
-#include <libjst/matcher/myers_matcher_restorable.hpp>
+#include <libcontrib/matcher/myers_matcher_restorable.hpp>
 
 #include "fixture_resumable_pattern.hpp"
 
 namespace just::bench {
 
 BENCHMARK_TEMPLATE_DEFINE_F(fixture_resumable_pattern, myers, capture<&chr22_needle128>)(benchmark::State& state) {
-    run(state, libjst::restorable_myers_matcher(needle(), (size_t) state.range(1)));
+    run(state, jst::contrib::restorable_myers_matcher(needle(), (size_t) state.range(1)));
 }
 
 BENCHMARK_REGISTER_F(fixture_resumable_pattern, myers)

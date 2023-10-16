@@ -14,7 +14,7 @@
 
 #include <functional>
 
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 
@@ -29,8 +29,8 @@ namespace libjst
         class node_impl;
         class sink_impl;
 
-        using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
-        using transform_box_t = jst::contrib::copyable_box<fn_t>;
+        using tree_box_t = copyable_box<base_tree_t>;
+        using transform_box_t = copyable_box<fn_t>;
 
         base_tree_t _wrappee{};
         transform_box_t _label_fn{};
@@ -137,10 +137,10 @@ namespace libjst
 
             template <typename fn_t>
             constexpr auto operator()(fn_t && transform_fn) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, fn_t>)
-                -> jst::contrib::closure_result_t<_transform, fn_t>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, fn_t>)
+                -> libjst::closure_result_t<_transform, fn_t>
             { // we need to store the type that needs to be called later!
-                return jst::contrib::make_closure(_transform{}, (fn_t &&)transform_fn);
+                return libjst::make_closure(_transform{}, (fn_t &&)transform_fn);
             }
         } transform{};
     } // namespace _tree_adaptor

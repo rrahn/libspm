@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libjst/matcher/concept.hpp>
+#include <libcontrib/matcher/concept.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/volatile_tree.hpp>

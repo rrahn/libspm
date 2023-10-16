@@ -12,19 +12,19 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/volatile_tree.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/left_extend_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 
 #include "../mock/rcs_store_mock.hpp"
 
 namespace jst::test::left_extended_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -46,7 +46,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -137,76 +137,76 @@ TEST_P(left_extended_tree, root_sink) {
 // ----------------------------------------------------------------------------
 // Test values
 // ----------------------------------------------------------------------------
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(no_variant, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{},
-    .expected_labels{"AAAAGGGG"_dna4}
+    .expected_labels{"AAAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv0, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{0}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{0}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{""_dna4, "C"_dna4, "CAAAGGGG"_dna4, "AAAAGGGG"_dna4}
+    .expected_labels{""s, "C"s, "CAAAGGGG"s, "AAAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv7, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{7}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{7}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAAGGG"_dna4, "GGGC"_dna4, "GGC"_dna4, "GGGG"_dna4}
+    .expected_labels{"AAAAGGG"s, "GGGC"s, "GGC"s, "GGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}}
     },
-    .expected_labels{"AAAA"_dna4, "AAAC"_dna4, "AACGGG"_dna4, "AAAGGGG"_dna4}
+    .expected_labels{"AAAA"s, "AAAC"s, "AACGGG"s, "AAAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv6, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{6}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{6}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "AAAC"_dna4, "AACG"_dna4, "ACGT"_dna4, "CGTG"_dna4,
-                                                      "ACGGG"_dna4,
-                                  "AAAGG"_dna4, "AGGT"_dna4, "GGTG"_dna4,
-                                             "AGGGG"_dna4}
+    .expected_labels{"AAAA"s, "AAAC"s, "AACG"s, "ACGT"s, "CGTG"s,
+                                                      "ACGGG"s,
+                                  "AAAGG"s, "AGGT"s, "GGTG"s,
+                                             "AGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv5, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{5}, .insertion{"T"_dna4}, .deletion{1}, .coverage{0, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{5}, .insertion{"T"s}, .deletion{1}, .coverage{0, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "AAAC"_dna4, "AAC"_dna4, "AACT"_dna4, "ACTGG"_dna4,
-                                                      "AACGGG"_dna4,
-                                  "AAAG"_dna4, "AAGT"_dna4, "AGTGG"_dna4,
-                                             "AAGGGG"_dna4}
+    .expected_labels{"AAAA"s, "AAAC"s, "AAC"s, "AACT"s, "ACTGG"s,
+                                                      "AACGGG"s,
+                                  "AAAG"s, "AAGT"s, "AGTGG"s,
+                                             "AAGGGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(snv4_snv4, left_extended_tree, testing::Values(fixture{
-    .source{"AAAAGGGG"_dna4},
+    .source{"AAAAGGGG"s},
     .extend_size{3},
     .variants{
-        variant_t{.position{4}, .insertion{"C"_dna4}, .deletion{1}, .coverage{0}},
-        variant_t{.position{4}, .insertion{"T"_dna4}, .deletion{1}, .coverage{1, 2}}
+        variant_t{.position{4}, .insertion{"C"s}, .deletion{1}, .coverage{0}},
+        variant_t{.position{4}, .insertion{"T"s}, .deletion{1}, .coverage{1, 2}}
     },
-    .expected_labels{"AAAA"_dna4, "AAAC"_dna4, "AACGGG"_dna4,
-                                  "AAA"_dna4, "AAAT"_dna4, "AATGGG"_dna4,
-                                  "AAAGGGG"_dna4}
+    .expected_labels{"AAAA"s, "AAAC"s, "AACGGG"s,
+                                  "AAA"s, "AAAT"s, "AATGGG"s,
+                                  "AAAGGGG"s}
 }));

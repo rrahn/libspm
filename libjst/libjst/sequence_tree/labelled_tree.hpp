@@ -14,8 +14,8 @@
 
 #include <type_traits>
 
-#include <libcontrib/closure_adaptor.hpp>
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/closure_object.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/journaled_sequence_label.hpp>
@@ -39,7 +39,7 @@ namespace libjst
         // static_assert(std::same_as<void, sequence_type>);
 
         using label_strategy_type = journaled_sequence_label<position_type, sequence_type>;
-        using tree_box_t = jst::contrib::copyable_box<wrapped_tree_t>;
+        using tree_box_t = copyable_box<wrapped_tree_t>;
 
         class node_impl;
         class cargo_impl;
@@ -270,10 +270,10 @@ namespace libjst
 
             template <typename ...args_t>
             constexpr auto operator()(args_t &&... args) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _labelled,  args_t...>)
-                -> jst::contrib::closure_result_t<_labelled, args_t...>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, _labelled,  args_t...>)
+                -> libjst::closure_result_t<_labelled, args_t...>
             {
-                return jst::contrib::make_closure(_labelled{}, (args_t &&)args...);
+                return libjst::make_closure(_labelled{}, (args_t &&)args...);
             }
         };
 

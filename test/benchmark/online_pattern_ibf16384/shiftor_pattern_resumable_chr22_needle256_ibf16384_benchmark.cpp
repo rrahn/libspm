@@ -7,14 +7,14 @@
 
 #include <benchmark/benchmark.h>
 
-#include <libjst/matcher/shiftor_matcher_restorable.hpp>
+#include <libcontrib/matcher/shiftor_matcher_restorable.hpp>
 
 #include "fixture_resumable_pattern_ibf.hpp"
 
 namespace just::bench {
 
 BENCHMARK_TEMPLATE_DEFINE_F(fixture_resumable_pattern_ibf, shiftor, capture<&chr22_needle256_ibf16384>)(benchmark::State& state) {
-    libjst::restorable_shiftor_matcher matcher{needle()};
+    jst::contrib::restorable_shiftor_matcher matcher{needle()};
     run(state, matcher);
 }
 

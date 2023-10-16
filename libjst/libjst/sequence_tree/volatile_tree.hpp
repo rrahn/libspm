@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libcontrib/closure_adaptor.hpp>
+#include <libjst/utility/closure_object.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/empty_label.hpp>
@@ -132,10 +132,10 @@ namespace libjst
             template <typename ...args_t>
                 requires (sizeof...(args_t) == 0)
             constexpr auto operator()(args_t &&... args) const
-                noexcept(std::is_nothrow_invocable_v<std::tag_t<jst::contrib::make_closure>, _make_volatile, args_t...>)
-                -> jst::contrib::closure_result_t<_make_volatile, args_t...>
+                noexcept(std::is_nothrow_invocable_v<libjst::tag_t<libjst::make_closure>, _make_volatile, args_t...>)
+                -> libjst::closure_result_t<_make_volatile, args_t...>
             {
-                return jst::contrib::make_closure(_make_volatile{}, (args_t&&) args...);
+                return libjst::make_closure(_make_volatile{}, (args_t&&) args...);
             }
         } make_volatile{};
     } // namespace _tree_factory

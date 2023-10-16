@@ -11,14 +11,14 @@
 #include <stack>
 #include <string>
 
-#include <libcontrib/seqan/alphabet.hpp>
+
 
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/merge_tree.hpp>
 #include <libjst/sequence_tree/seekable_tree.hpp>
 #include <libjst/sequence_tree/trim_tree.hpp>
 #include <libjst/sequence_tree/partial_tree.hpp>
-#include <libjst/rcms/compressed_multisequence.hpp>
+#include <libjst/rcms/dna_compressed_multisequence.hpp>
 #include <libjst/rcms/rcs_store.hpp>
 #include <libjst/traversal/tree_traverser_base.hpp>
 
@@ -26,7 +26,7 @@
 
 namespace jst::test::seek_partial_tree {
 
-using source_t = std::vector<jst::contrib::dna4>;
+using source_t = std::string;
 using variant_t = jst::test::variant<uint32_t, source_t, uint32_t, std::vector<uint32_t>>;
 
 struct fixture {
@@ -50,7 +50,7 @@ struct test : public ::testing::TestWithParam<fixture> {
     using coverage_type = libjst::bit_coverage<uint32_t>;
     using coverage_domain_type = libjst::coverage_domain_t<coverage_type>;
 
-    using cms_t = libjst::compressed_multisequence<source_t, coverage_type>;
+    using cms_t = libjst::dna_compressed_multisequence<source_t, coverage_type>;
     using cms_value_t = std::ranges::range_value_t<cms_t>;
     using rcs_store_t = libjst::rcs_store<source_t, cms_t>;
     rcs_store_t _mock;
@@ -143,24 +143,24 @@ TEST_P(seek_partial_tree_test, seek) {
 // Test values
 // ----------------------------------------------------------------------------
 
-using jst::contrib::operator""_dna4;
+using namespace std::literals;
 
 INSTANTIATE_TEST_SUITE_P(variant_on_partial_sink, seek_partial_tree_test, testing::Values(fixture{
-    .source{"AAAACCCCGGGGTTTT"_dna4},
-    .variants{variant_t{.position{8}, .insertion{"A"_dna4}, .deletion{1}, .coverage{0,1}}},
+    .source{"AAAACCCCGGGGTTTT"s},
+    .variants{variant_t{.position{8}, .insertion{"A"s}, .deletion{1}, .coverage{0,1}}},
     .coverage_size{4},
     .bin_offset{4},
     .bin_size{4},
     .window_size{3},
-    .expected_labels{"CCCC"_dna4, "AGG"_dna4, "GGG"_dna4}
+    .expected_labels{"CCCC"s, "AGG"s, "GGG"s}
 }));
 
 INSTANTIATE_TEST_SUITE_P(variant_before_partial_sink, seek_partial_tree_test, testing::Values(fixture{
-    .source{"AAAACCCCGGGGTTTT"_dna4},
-    .variants{variant_t{.position{7}, .insertion{"A"_dna4}, .deletion{1}, .coverage{0,1}}},
+    .source{"AAAACCCCGGGGTTTT"s},
+    .variants{variant_t{.position{7}, .insertion{"A"s}, .deletion{1}, .coverage{0,1}}},
     .coverage_size{4},
     .bin_offset{4},
     .bin_size{4},
     .window_size{3},
-    .expected_labels{"CCC"_dna4, "AGGG"_dna4, "C"_dna4, "GGG"_dna4}
+    .expected_labels{"CCC"s, "AGGG"s, "C"s, "GGG"s}
 }));
