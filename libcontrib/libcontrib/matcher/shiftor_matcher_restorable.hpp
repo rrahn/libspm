@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <libjst/matcher/seqan_pattern_base.hpp>
-#include <libjst/matcher/seqan_restorable_pattern.hpp>
+#include <libcontrib/matcher/seqan_pattern_base.hpp>
+#include <libcontrib/matcher/seqan_restorable_pattern.hpp>
 
 namespace seqan {
     template <typename needle_t>
-    class Pattern<needle_t, libjst::Restorable<ShiftOr>> : public Pattern<needle_t, ShiftOr>
+    class Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> : public Pattern<needle_t, ShiftOr>
     {
     private:
         using base_type = Pattern<needle_t, ShiftOr>;
@@ -78,12 +78,12 @@ namespace seqan {
     };
 
     template <typename finder_t, typename needle_t>
-    constexpr bool find(finder_t & finder, Pattern<needle_t, libjst::Restorable<ShiftOr>> & pattern) {
+    constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> & pattern) {
         return pattern(finder);
     }
 } // namespace seqan
 
-namespace libjst
+namespace jst::contrib
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -128,4 +128,4 @@ namespace libjst
     template <std::ranges::viewable_range needle_t>
     restorable_shiftor_matcher(needle_t &&) -> restorable_shiftor_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace libjst
+}  // namespace jst::contrib

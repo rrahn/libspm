@@ -12,15 +12,17 @@
 
 #pragma once
 
-#include <libjst/matcher/seqan_pattern_base.hpp>
-#include <libjst/matcher/seqan_restorable_pattern.hpp>
+#include <libcontrib/matcher/seqan_pattern_base.hpp>
+#include <libcontrib/matcher/seqan_restorable_pattern.hpp>
 
 namespace seqan {
+
     template <typename needle_t>
-    class Pattern<needle_t, libjst::Restorable<Myers<>>> : public Pattern<needle_t, Myers<>>
+    class Pattern<needle_t, jst::contrib::Restorable<MyersUkkonenGlobal>> :
+        public Pattern<needle_t, MyersUkkonenGlobal>
     {
     private:
-        using base_type = Pattern<needle_t, Myers<>>;
+        using base_type = Pattern<needle_t, MyersUkkonenGlobal>;
 
         bool _first_find{true};
 
@@ -32,11 +34,14 @@ namespace seqan {
 
         template <std::ranges::viewable_range _needle_t, std::unsigned_integral error_count_t>
             requires (!std::same_as<_needle_t, Pattern>)
-        constexpr explicit Pattern(_needle_t && needle, error_count_t const max_error_count = 0u) :
-            base_type{(_needle_t &&) needle, -static_cast<int32_t>(max_error_count)}
+        constexpr explicit Pattern(_needle_t && needle, error_count_t const max_error_count = 0u) : base_type{}
         {
-            _patternFirstInit(to_base(), seqan::needle(to_base()));
-            _patternInit(to_base(), to_state(), std::ignore);
+            if (!std::ranges::empty(needle)) {
+                setHost(to_base(), (_needle_t &&)needle);
+                setScoreLimit(to_base(), -static_cast<int32_t>(max_error_count));
+                _patternFirstInit(to_base(), seqan::needle(to_base()));
+                _patternInit(to_base(), to_state(), std::ignore);
+            }
         }
 
         template <typename finder_t>
@@ -44,10 +49,11 @@ namespace seqan {
             using haystack_t = typename Haystack<finder_t>::Type;
             using haystack_size_t = typename Size<haystack_t>::Type;
 
-            if (!initialise(finder))
-                return false;
+            if (empty(to_base().data_host) || !initialise(finder)) return false;
 
-            haystack_size_t haystack_length = length(container(finder));
+            haystack_size_t haystack_length = std::min<haystack_size_t>(length(haystack(finder)),
+                                                                        this->needleSize - scoreLimit(to_state()) + 1);
+
             if (is_short())
                 return _findMyersSmallPatterns(finder, to_base(), to_state(), haystack_length);
             else
@@ -99,25 +105,26 @@ namespace seqan {
     };
 
     template <typename finder_t, typename needle_t>
-    constexpr bool find(finder_t & finder, Pattern<needle_t, libjst::Restorable<Myers<>>> & pattern) {
+    constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<MyersUkkonenGlobal>> & pattern) {
         return pattern(finder);
     }
+
 } // namespace seqan
 
-namespace libjst
+namespace jst::contrib
 {
 
     template <std::ranges::random_access_range needle_t>
-    class restorable_myers_matcher : public seqan_pattern_base<restorable_myers_matcher<needle_t>>
+    class restorable_myers_prefix_matcher : public seqan_pattern_base<restorable_myers_prefix_matcher<needle_t>>
     {
     private:
 
-        using base_t = seqan_pattern_base<restorable_myers_matcher<needle_t>>;
+        using base_t = seqan_pattern_base<restorable_myers_prefix_matcher<needle_t>>;
 
         friend base_t;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, Restorable<seqan::Myers<>>>;
+        using pattern_type = seqan::Pattern<compatible_needle_type, Restorable<seqan::MyersUkkonenGlobal>>;
 
         pattern_type _pattern{};
 
@@ -125,11 +132,11 @@ namespace libjst
 
         using state_type = typename pattern_type::state_type;
 
-        restorable_myers_matcher() = delete;
+        restorable_myers_prefix_matcher() = delete;
         template <std::ranges::viewable_range _needle_t, std::unsigned_integral error_count_t>
-            requires (!std::same_as<_needle_t, restorable_myers_matcher> &&
+            requires (!std::same_as<_needle_t, restorable_myers_prefix_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
-        explicit restorable_myers_matcher(_needle_t && needle, error_count_t const error_count) :
+        explicit restorable_myers_prefix_matcher(_needle_t && needle, error_count_t const error_count) :
             _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)), error_count}
         {}
 
@@ -147,12 +154,12 @@ namespace libjst
             return _pattern;
         }
 
-        constexpr friend std::size_t tag_invoke(libjst::tag_t<window_size>, restorable_myers_matcher const & me) noexcept {
-            return libjst::window_size(static_cast<base_t const &>(me)) - seqan::scoreLimit(me._pattern);
+        constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, restorable_myers_prefix_matcher const & me) noexcept {
+            return jst::contrib::window_size(static_cast<base_t const &>(me)) - seqan::scoreLimit(me._pattern.capture());
         }
     };
 
     template <std::ranges::viewable_range needle_t, std::unsigned_integral error_count_t>
-    restorable_myers_matcher(needle_t &&, error_count_t) -> restorable_myers_matcher<std::views::all_t<needle_t>>;
+    restorable_myers_prefix_matcher(needle_t &&, error_count_t) -> restorable_myers_prefix_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace libjst
+}  // namespace jst::contrib

@@ -11,8 +11,8 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/matcher/concept.hpp>
-#include <libjst/matcher/shiftor_matcher.hpp>
+#include <libcontrib/matcher/concept.hpp>
+#include <libcontrib/matcher/shiftor_matcher.hpp>
 
 using jst::contrib::operator""_dna4;
 
@@ -26,18 +26,18 @@ struct shiftor_matcher_test : public ::testing::Test {
     std::vector<std::size_t> expected_positions{9, 20, 31};
 
     auto get_matcher() const noexcept {
-        return libjst::shiftor_matcher{needle};
+        return jst::contrib::shiftor_matcher{needle};
     }
 };
 
 TEST_F(shiftor_matcher_test, concept_tests) {
     using matcher_t = decltype(get_matcher());
-    EXPECT_TRUE(libjst::window_matcher<matcher_t>);
+    EXPECT_TRUE(jst::contrib::window_matcher<matcher_t>);
 }
 
 TEST_F(shiftor_matcher_test, window_size) {
     auto matcher = get_matcher();
-    EXPECT_EQ(libjst::window_size(matcher), std::ranges::size(needle));
+    EXPECT_EQ(jst::contrib::window_size(matcher), std::ranges::size(needle));
 }
 
 TEST_F(shiftor_matcher_test, dna4_pattern)

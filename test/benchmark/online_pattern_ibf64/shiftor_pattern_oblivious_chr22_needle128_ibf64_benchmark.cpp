@@ -7,14 +7,14 @@
 
 #include <benchmark/benchmark.h>
 
-#include <libjst/matcher/shiftor_matcher.hpp>
+#include <libcontrib/matcher/shiftor_matcher.hpp>
 
 #include "fixture_oblivious_pattern_ibf.hpp"
 
 namespace just::bench {
 
 BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern_ibf, shiftor, capture<&chr22_needle128_ibf64>)(benchmark::State& state) {
-    run(state, libjst::shiftor_matcher(needle()));
+    run(state, jst::contrib::shiftor_matcher(needle()));
 }
 
 BENCHMARK_REGISTER_F(fixture_oblivious_pattern_ibf, shiftor)

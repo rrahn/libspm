@@ -11,8 +11,8 @@
 
 #include <libcontrib/seqan/alphabet.hpp>
 
-#include <libjst/matcher/concept.hpp>
-#include <libjst/matcher/pigeonhole_matcher.hpp>
+#include <libcontrib/matcher/concept.hpp>
+#include <libcontrib/matcher/pigeonhole_matcher.hpp>
 
 using jst::contrib::operator""_dna4;
 
@@ -33,22 +33,22 @@ struct pigeonhole_matcher_test : public ::testing::Test {
                                                              {0, 0, 5}, {1, 0, 5}, {1, 5, 5}, {0, 0, 5}, {1, 0, 5}};
 
     auto get_matcher() const noexcept {
-        return libjst::pigeonhole_matcher{needle, errors};
+        return jst::contrib::pigeonhole_matcher{needle, errors};
     }
 
     auto get_multi_matcher() const noexcept {
-        return libjst::pigeonhole_matcher{multi_needle, errors};
+        return jst::contrib::pigeonhole_matcher{multi_needle, errors};
     }
 };
 
 TEST_F(pigeonhole_matcher_test, concept_tests) {
     using matcher_t = decltype(get_matcher());
-    EXPECT_TRUE(libjst::window_matcher<matcher_t>);
+    EXPECT_TRUE(jst::contrib::window_matcher<matcher_t>);
 }
 
 TEST_F(pigeonhole_matcher_test, window_size) {
     auto matcher = get_matcher();
-    EXPECT_EQ(libjst::window_size(matcher), std::ranges::size(needle));
+    EXPECT_EQ(jst::contrib::window_size(matcher), std::ranges::size(needle));
 }
 
 TEST_F(pigeonhole_matcher_test, dna4_pattern)

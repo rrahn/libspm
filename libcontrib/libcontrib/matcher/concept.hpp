@@ -15,9 +15,9 @@
 #include <concepts>
 #include <type_traits>
 
-#include <libjst/utility/tag_invoke.hpp>
+#include <libcontrib/std/tag_invoke.hpp>
 
-namespace libjst
+namespace jst::contrib
 {
     // ----------------------------------------------------------------------------
     // Operation CPOs for matcher
@@ -27,12 +27,12 @@ namespace libjst
     namespace _window_size {
         inline constexpr struct _cpo  {
             template <typename matcher_t>
-                requires libjst::tag_invocable<_cpo, matcher_t>
+                requires std::tag_invocable<_cpo, matcher_t>
             constexpr auto operator()(matcher_t && matcher) const
-                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t>)
-                -> libjst::tag_invoke_result_t<_cpo, matcher_t>
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t>)
+                -> std::tag_invoke_result_t<_cpo, matcher_t>
             {
-                return libjst::tag_invoke(_cpo{}, (matcher_t &&)matcher);
+                return std::tag_invoke(_cpo{}, (matcher_t &&)matcher);
             }
 
         private:
@@ -56,12 +56,12 @@ namespace libjst
     namespace _capture {
         inline constexpr struct _cpo  {
             template <typename matcher_t>
-                requires libjst::tag_invocable<_cpo, matcher_t const &>
+                requires std::tag_invocable<_cpo, matcher_t const &>
             constexpr auto operator()(matcher_t const & matcher) const
-                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t const &>)
-                -> libjst::tag_invoke_result_t<_cpo, matcher_t const &>
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t const &>)
+                -> std::tag_invoke_result_t<_cpo, matcher_t const &>
             {
-                return libjst::tag_invoke(_cpo{}, matcher);
+                return std::tag_invoke(_cpo{}, matcher);
             }
         private:
 
@@ -81,12 +81,12 @@ namespace libjst
     namespace _restore {
         inline constexpr struct _cpo  {
             template <typename matcher_t, typename state_t>
-                requires libjst::tag_invocable<_cpo, matcher_t &, state_t>
+                requires std::tag_invocable<_cpo, matcher_t &, state_t>
             constexpr auto operator()(matcher_t & matcher, state_t && state) const
-                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, matcher_t &, state_t>)
-                -> libjst::tag_invoke_result_t<_cpo, matcher_t &, state_t>
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, matcher_t &, state_t>)
+                -> std::tag_invoke_result_t<_cpo, matcher_t &, state_t>
             {
-                return libjst::tag_invoke(_cpo{}, matcher, (state_t &&) state);
+                return std::tag_invoke(_cpo{}, matcher, (state_t &&) state);
             }
         private:
 
@@ -108,12 +108,12 @@ namespace libjst
     namespace _aggregate {
         inline constexpr struct _cpo  {
             template <typename state1_t, typename state2_t>
-                requires libjst::tag_invocable<_cpo, state1_t, state2_t>
+                requires std::tag_invocable<_cpo, state1_t, state2_t>
             constexpr auto operator()(state1_t && state1, state2_t && state2) const
-                noexcept(libjst::is_nothrow_tag_invocable_v<_cpo, state1_t, state2_t>)
-                -> libjst::tag_invoke_result_t<_cpo, state1_t, state2_t>
+                noexcept(std::is_nothrow_tag_invocable_v<_cpo, state1_t, state2_t>)
+                -> std::tag_invoke_result_t<_cpo, state1_t, state2_t>
             {
-                return libjst::tag_invoke(_cpo{}, (state1_t &&) state1, (state2_t &&) state2);
+                return std::tag_invoke(_cpo{}, (state1_t &&) state1, (state2_t &&) state2);
             }
         } aggregate;
     } // namespace _aggregate
@@ -126,15 +126,15 @@ namespace libjst
     template <typename matcher_t>
     concept window_matcher = std::copyable<std::remove_cvref_t<matcher_t>> && requires (matcher_t && matcher)
     {
-        { libjst::window_size((matcher_t &&) matcher)} -> std::integral;
+        { jst::contrib::window_size((matcher_t &&) matcher)} -> std::integral;
     };
 
     namespace detail {
         template <typename matcher_t>
         concept stateful_matcher = requires
         {
-            typename libjst::matcher_state_t<matcher_t>;
-            requires std::semiregular<libjst::matcher_state_t<matcher_t>>;
+            typename jst::contrib::matcher_state_t<matcher_t>;
+            requires std::semiregular<jst::contrib::matcher_state_t<matcher_t>>;
         };
     } // namespace detail
 
@@ -143,15 +143,15 @@ namespace libjst
                                  detail::stateful_matcher<matcher_t> &&
                                  requires (matcher_t && matcher)
     {
-        { libjst::capture((matcher_t &&) matcher) } -> std::convertible_to<libjst::matcher_state_t<matcher_t>>;
-        { libjst::restore(matcher, std::declval<libjst::matcher_state_t<matcher_t>>()) };
+        { jst::contrib::capture((matcher_t &&) matcher) } -> std::convertible_to<jst::contrib::matcher_state_t<matcher_t>>;
+        { jst::contrib::restore(matcher, std::declval<jst::contrib::matcher_state_t<matcher_t>>()) };
     };
 
     template <typename t1, typename t2>
     concept reducable_with = std::common_with<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>> &&
                              requires (std::remove_cvref_t<t1> const & lhs, std::remove_cvref_t<t2> const & rhs)
     {
-        { libjst::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
+        { jst::contrib::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
     };
 
     template <typename state_t>
@@ -159,4 +159,4 @@ namespace libjst
 
     template <typename matcher_t, typename ...args_t>
     concept online_matcher_for = window_matcher<matcher_t> && std::invocable<matcher_t, args_t...>;
-}  // namespace libjst
+}  // namespace jst::contrib

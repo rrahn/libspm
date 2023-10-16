@@ -21,9 +21,9 @@
 #include <libcontrib/seqan/concept.hpp>
 #include <libcontrib/seqan/container_adapter.hpp>
 
-#include <libjst/matcher/concept.hpp>
+#include <libcontrib/matcher/concept.hpp>
 
-namespace libjst
+namespace jst::contrib
 {
     template <typename derived_t>
     class seqan_pattern_base
@@ -94,9 +94,9 @@ namespace libjst
             return static_cast<derived_t const *>(me);
         }
 
-        constexpr friend std::size_t tag_invoke(libjst::tag_t<libjst::window_size>, seqan_pattern_base const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(std::tag_t<jst::contrib::window_size>, seqan_pattern_base const & me) noexcept {
             return (me.empty()) ? 0 : seqan::length(seqan::needle(me.get_pattern()));
         }
     };
 
-}  // namespace libjst
+}  // namespace jst::contrib

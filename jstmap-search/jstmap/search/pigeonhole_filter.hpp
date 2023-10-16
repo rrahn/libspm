@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <libjst/matcher/pigeonhole_matcher.hpp>
+#include <libcontrib/matcher/pigeonhole_matcher.hpp>
 #include <libjst/sequence_tree/labelled_tree.hpp>
 #include <libjst/sequence_tree/coloured_tree.hpp>
 #include <libjst/sequence_tree/left_extend_tree.hpp>
@@ -42,16 +42,16 @@ namespace jstmap
 
         template <typename callback_t>
         constexpr void operator()(callback_t && callback) const {
-            libjst::pigeonhole_matcher filter{_bucket.needle_list, _error_rate};
+            jst::contrib::pigeonhole_matcher filter{_bucket.needle_list, _error_rate};
 
-            assert(libjst::window_size(filter) > 0);
-            // std::cout << "libjst::window_size(filter) = " << libjst::window_size(filter) << "\n";
+            assert(jst::contrib::window_size(filter) > 0);
+            // std::cout << "jst::contrib::window_size(filter) = " << jst::contrib::window_size(filter) << "\n";
 
             auto filter_tree = _bucket.base_tree | libjst::labelled()
                                                  | libjst::coloured()
-                                                 | libjst::trim(libjst::window_size(filter) - 1)
+                                                 | libjst::trim(jst::contrib::window_size(filter) - 1)
                                                  | libjst::prune()
-                                                 | libjst::left_extend(libjst::window_size(filter) - 1)
+                                                 | libjst::left_extend(jst::contrib::window_size(filter) - 1)
                                                  | libjst::merge()
                                                  | libjst::seek();
 

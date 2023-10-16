@@ -12,7 +12,7 @@
 
 #pragma once
 
-namespace libjst
+namespace jst::contrib
 {
     template <typename tag_t>
     struct Restorable : public tag_t {
@@ -22,4 +22,4 @@ namespace libjst
         // }
     };
 
-}  // namespace libjst
+}  // namespace jst::contrib

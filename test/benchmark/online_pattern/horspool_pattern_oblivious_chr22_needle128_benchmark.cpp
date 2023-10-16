@@ -7,14 +7,14 @@
 
 #include <benchmark/benchmark.h>
 
-#include <libjst/matcher/horspool_matcher.hpp>
+#include <libcontrib/matcher/horspool_matcher.hpp>
 
 #include "fixture_oblivious_pattern.hpp"
 
 namespace just::bench {
 
 BENCHMARK_TEMPLATE_DEFINE_F(fixture_oblivious_pattern, horspool, capture<&chr22_needle128>)(benchmark::State& state) {
-    run(state, libjst::horspool_matcher(needle()));
+    run(state, jst::contrib::horspool_matcher(needle()));
 }
 
 BENCHMARK_REGISTER_F(fixture_oblivious_pattern, horspool)
