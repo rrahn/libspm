@@ -14,7 +14,7 @@
 
 #include <functional>
 
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 
@@ -29,8 +29,8 @@ namespace libjst
         class node_impl;
         class sink_impl;
 
-        using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
-        using transform_box_t = jst::contrib::copyable_box<fn_t>;
+        using tree_box_t = copyable_box<base_tree_t>;
+        using transform_box_t = copyable_box<fn_t>;
 
         base_tree_t _wrappee{};
         transform_box_t _label_fn{};

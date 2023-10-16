@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <libcontrib/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 namespace libjst
 {
@@ -29,7 +29,7 @@ namespace libjst
 
         class node_impl;
 
-        using tree_box_t = jst::contrib::copyable_box<base_tree_t>;
+        using tree_box_t = copyable_box<base_tree_t>;
 
         base_tree_t _wrappee{};
 

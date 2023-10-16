@@ -13,7 +13,7 @@
 #pragma once
 
 #include <libjst/utility/closure_object.hpp>
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 // #include <libjst/sequence_tree/rcs_node_traits.hpp>
 #include <libjst/sequence_tree/concept.hpp>
@@ -24,7 +24,7 @@ namespace libjst
         // requires covered tree
     class k_depth_tree_impl {
     private:
-        using wrappee_t = jst::contrib::copyable_box<base_tree_t>;
+        using wrappee_t = copyable_box<base_tree_t>;
         using base_node_type = libjst::tree_node_t<base_tree_t>;
 
         class node_impl;

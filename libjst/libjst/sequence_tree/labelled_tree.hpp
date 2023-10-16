@@ -15,7 +15,7 @@
 #include <type_traits>
 
 #include <libjst/utility/closure_object.hpp>
-#include <libcontrib/copyable_box.hpp>
+#include <libjst/utility/copyable_box.hpp>
 
 #include <libjst/sequence_tree/concept.hpp>
 #include <libjst/sequence_tree/journaled_sequence_label.hpp>
@@ -39,7 +39,7 @@ namespace libjst
         // static_assert(std::same_as<void, sequence_type>);
 
         using label_strategy_type = journaled_sequence_label<position_type, sequence_type>;
-        using tree_box_t = jst::contrib::copyable_box<wrapped_tree_t>;
+        using tree_box_t = copyable_box<wrapped_tree_t>;
 
         class node_impl;
         class cargo_impl;
