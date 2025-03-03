@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 if (NOT DATA_ROOT_DIR)
     set(DATA_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}")

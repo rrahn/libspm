@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 set (JSTMAP_BENCHMARK_MIN_TIME "1" CACHE STRING "Set --benchmark_min_time= for each benchmark.")
 set (JSTMAP_BENCHMARK_TIME_UNIT "ns" CACHE STRING "Set --benchmark_time_unit= for each benchmark.")
