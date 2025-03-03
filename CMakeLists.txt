@@ -1,10 +1,10 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 ## CUSTOMISE
 
 # Define the application name and version.
 project (jstmap VERSION 0.0.1 LANGUAGES CXX)
-set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## BUILD
@@ -26,9 +26,28 @@ string (ASCII 27 Esc)
 set (FontBold "")
 set (FontReset "")
 
-# Dependency: SeqAn3.
-message (STATUS "Configure SeqAn3 dependency")
-find_package (SeqAn3 REQUIRED HINTS lib/seqan3/build_system)
+# This allows including `*.cmake` files from the `cmake` directory without specifying the full path.
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+# LTO support. -> only for hibf?
+include (CheckIPOSupported)
+check_ipo_supported (RESULT result OUTPUT output LANGUAGES CXX)
+if (result)
+    set (CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif ()
+
+# Add packages.
+# We use CPM for package management: https://github.com/cpm-cmake/CPM.cmake
+# The added packages (e.g., hibf, sharg, seqan3) are defined in the `cmake/package-lock.cmake` file.
+message (STATUS "CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+include (CPM)
+CPMUsePackageLock (${CMAKE_CURRENT_LIST_DIR}/cmake/package-lock.cmake)
+
+# Use ccache if available. This speeds up the build process by caching files that have been compiled before.
+CPMGetPackage (use_ccache)
+CPMGetPackage (hibf)
+CPMGetPackage (sharg)
+CPMGetPackage (seqan3)
 
 # Dependency: SeqAn.
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
