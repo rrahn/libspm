@@ -105,5 +105,6 @@ include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (add_subdirectories)
 include (get_test_component)
+enable_testing ()
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")
