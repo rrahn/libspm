@@ -50,6 +50,17 @@ CPMDeclarePackage (googletest
                            "CMAKE_MESSAGE_LOG_LEVEL WARNING"
 )
 
+# catch2
+set (CATCH2_VERSION 3.8.0)
+CPMDeclarePackage (catch2
+                   NAME Catch2
+                   VERSION ${CATCH2_VERSION}
+                   GITHUB_REPOSITORY catchorg/Catch2
+                   SYSTEM TRUE
+                   EXCLUDE_FROM_ALL TRUE
+                   OPTIONS "CMAKE_MESSAGE_LOG_LEVEL WARNING"
+)
+
 # use_ccache
 set (USE_CCACHE_VERSION d2a54ef555b6fc2d496a4c9506dbeb7cf899ce37)
 CPMDeclarePackage (use_ccache

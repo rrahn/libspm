@@ -30,11 +30,11 @@ set (FontReset "")
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 # LTO support. -> only for hibf?
-include (CheckIPOSupported)
-check_ipo_supported (RESULT result OUTPUT output LANGUAGES CXX)
-if (result)
-    set (CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif ()
+# include (CheckIPOSupported)
+# check_ipo_supported (RESULT result OUTPUT output LANGUAGES CXX)
+# if (result)
+#     set (CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# endif ()
 
 # Add packages.
 # We use CPM for package management: https://github.com/cpm-cmake/CPM.cmake
@@ -45,9 +45,10 @@ CPMUsePackageLock (${CMAKE_CURRENT_LIST_DIR}/cmake/package-lock.cmake)
 
 # Use ccache if available. This speeds up the build process by caching files that have been compiled before.
 CPMGetPackage (use_ccache)
-CPMGetPackage (hibf)
+# CPMGetPackage (hibf)
 CPMGetPackage (sharg)
 CPMGetPackage (seqan3)
+CPMGetPackage (catch2)
 
 # Dependency: SeqAn.
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")

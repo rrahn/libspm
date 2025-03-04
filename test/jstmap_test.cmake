@@ -101,7 +101,6 @@ add_library (jstmap::test::tsan ALIAS jstmap_test_tsan)
 
 include (app_datasources)
 include (read_simulation)
-include (require_catch2)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
 include (seqan3_require_benchmark)

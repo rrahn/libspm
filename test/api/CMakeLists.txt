@@ -74,7 +74,6 @@ endmacro()
 
 seqan3_require_ccache ()
 seqan3_require_test ()
-require_catch2 ()
 
 # Load the tests from the subdirectories
 add_subdirectories ()
