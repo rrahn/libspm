@@ -38,6 +38,18 @@ CPMDeclarePackage (seqan3
                    OPTIONS "INSTALL_SEQAN3 OFF" "CMAKE_MESSAGE_LOG_LEVEL WARNING"
 )
 
+# seqan2
+set (SEQAN2_VERSION 981f322465bce0ee994a47fce880feb531a9ab23)
+CPMDeclarePackage (seqan2
+                   NAME seqan2
+                   GIT_TAG ${SEQAN2_VERSION}
+                #    VERSION ${SEQAN2_VERSION} # main
+                   GITHUB_REPOSITORY rrahn/seqan
+                   SYSTEM TRUE
+                   EXCLUDE_FROM_ALL TRUE
+                   OPTIONS "SEQAN_BUILD_SYSTEM DEVELOP" "CMAKE_MESSAGE_LOG_LEVEL WARNING"
+)
+
 # googletest
 set (GOOGLETEST_VERSION 1.16.0)
 CPMDeclarePackage (googletest

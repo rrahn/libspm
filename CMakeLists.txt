@@ -48,33 +48,15 @@ CPMGetPackage (use_ccache)
 # CPMGetPackage (hibf)
 CPMGetPackage (sharg)
 CPMGetPackage (seqan3)
+CPMGetPackage (seqan2)
+if (seqan2_ADDED)
+    add_library (seqan2_seqan2 INTERFACE IMPORTED)
+    target_include_directories (seqan2_seqan2 INTERFACE ${seqan2_SOURCE_DIR}/include)
+    add_library (seqan2::seqan2 ALIAS seqan2_seqan2)
+endif ()
 CPMGetPackage (catch2)
 CPMGetPackage (googletest)
 CPMGetPackage (googlebenchmark)
-
-# Dependency: SeqAn.
-set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")
-find_package (SeqAn REQUIRED HINTS "lib/seqan/util/cmake" NO_DEFAULT_PATH)
-
-separate_arguments (SEQAN_CXX_FLAGS_LIST UNIX_COMMAND "${SEQAN_CXX_FLAGS}")
-
-add_library (seqan2_seqan2 INTERFACE IMPORTED)
-target_compile_definitions (seqan2_seqan2 INTERFACE ${SEQAN_DEFINITIONS})
-target_compile_options (seqan2_seqan2 INTERFACE "${SEQAN_CXX_FLAGS_LIST}")
-target_link_libraries (seqan2_seqan2 INTERFACE ${SEQAN_LIBRARIES})
-target_include_directories (seqan2_seqan2 INTERFACE ${SEQAN_INCLUDE_DIRS})
-add_library (seqan2::seqan2 ALIAS seqan2_seqan2)
-
-get_target_property(seqan2_definitions seqan2::seqan2 INTERFACE_COMPILE_DEFINITIONS)
-get_target_property(seqan2_options seqan2::seqan2 INTERFACE_COMPILE_OPTIONS)
-get_target_property(seqan2_libs seqan2::seqan2 INTERFACE_LINK_LIBRARIES)
-get_target_property(seqan2_dirs seqan2::seqan2 INTERFACE_INCLUDE_DIRECTORIES)
-
-message(STATUS "seqan2_lib: ${SEQAN_FOUND}")
-message(STATUS "seqan2_definitions: ${SEQAN_DEFINITIONS}")
-message(STATUS "seqan2_options: ${SEQAN_CXX_FLAGS} ${SEQAN3_CXX_FLAGS}")
-message(STATUS "seqan2_libs: ${SEQAN_LIBRARIES} | ${SEQAN3_LIBRARIES}")
-message(STATUS "seqan2_dirs: ${SEQAN_INCLUDE_DIRS}")
 
 # Dependency: OpenMP
 find_package(OpenMP REQUIRED)
