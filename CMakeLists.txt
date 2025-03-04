@@ -49,6 +49,7 @@ CPMGetPackage (use_ccache)
 CPMGetPackage (sharg)
 CPMGetPackage (seqan3)
 CPMGetPackage (catch2)
+CPMGetPackage (googletest)
 
 # Dependency: SeqAn.
 set (SEQAN_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/lib/seqan/include")

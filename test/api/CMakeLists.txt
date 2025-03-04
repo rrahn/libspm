@@ -73,7 +73,6 @@ macro (add_catch2_test test_filename)
 endmacro()
 
 seqan3_require_ccache ()
-seqan3_require_test ()
 
 # Load the tests from the subdirectories
 add_subdirectories ()
