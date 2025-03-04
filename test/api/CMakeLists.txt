@@ -5,8 +5,8 @@ macro (add_app_test test_filename test_alternative target_dependencies)
     enable_testing ()
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
-    seqan3_test_component (target "${source_file}" TARGET_NAME)
-    seqan3_test_component (test_name "${source_file}" TEST_NAME)
+    get_test_component (target "${source_file}" TARGET_NAME)
+    get_test_component (test_name "${source_file}" TEST_NAME)
 
     include_directories (${SEQAN_INCLUDE_DIRS})
 
@@ -56,8 +56,8 @@ macro (add_catch2_test test_filename)
 
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
-    seqan3_test_component (target "${source_file}" TARGET_NAME)
-    seqan3_test_component (test_name "${source_file}" TEST_NAME)
+    get_test_component (target "${source_file}" TARGET_NAME)
+    get_test_component (test_name "${source_file}" TEST_NAME)
 
     add_executable (${target} ${test_filename})
     target_link_libraries (${target} PRIVATE "libjst::test::catch2")

@@ -106,6 +106,6 @@ include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 include (seqan3_require_benchmark)
 include (seqan3_require_ccache)
 include (add_subdirectories)
-include (seqan3_test_component)
+include (get_test_component)
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")
