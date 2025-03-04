@@ -103,8 +103,6 @@ include (app_datasources)
 include (read_simulation)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
-include (seqan3_require_benchmark)
-include (seqan3_require_ccache)
 include (add_subdirectories)
 include (get_test_component)
 

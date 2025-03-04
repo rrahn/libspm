@@ -72,7 +72,5 @@ macro (add_catch2_test test_filename)
     unset (test_name)
 endmacro()
 
-seqan3_require_ccache ()
-
 # Load the tests from the subdirectories
 add_subdirectories ()

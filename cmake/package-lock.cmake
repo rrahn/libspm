@@ -50,6 +50,18 @@ CPMDeclarePackage (googletest
                            "CMAKE_MESSAGE_LOG_LEVEL WARNING"
 )
 
+#googlebenchmark
+set (GOOGLEBENCHMARK_VERSION 1.9.1)
+CPMDeclarePackage (googlebenchmark
+                   NAME benchmark
+                   VERSION ${GOOGLEBENCHMARK_VERSION}
+                   GITHUB_REPOSITORY google/benchmark
+                   SYSTEM TRUE
+                   EXCLUDE_FROM_ALL TRUE
+                   OPTIONS "BENCHMARK_ENABLE_TESTING OFF" "BENCHMARK_ENABLE_WERROR OFF" "BENCHMARK_ENABLE_INSTALL OFF"
+                           "CMAKE_MESSAGE_LOG_LEVEL WARNING" "CMAKE_CXX_STANDARD 20"
+)
+
 # catch2
 set (CATCH2_VERSION 3.8.0)
 CPMDeclarePackage (catch2
