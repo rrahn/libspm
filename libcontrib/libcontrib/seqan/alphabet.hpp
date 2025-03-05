@@ -124,10 +124,10 @@ namespace jst::contrib
         return dna4{c};
     }
 
-    inline std::vector<dna4> operator""_dna4(char const * s, std::size_t n)
+    inline std::vector<dna4> operator""_dna4(char const * s, std::size_t const n)
     {
         std::vector<dna4> r;
-        r.reserve(n);
+        r.reserve(std::max<std::size_t>(n, 16));
         std::ranges::copy(std::string_view{s, n} | std::views::transform([] (char c) {
             return dna4{c};
         }), std::back_inserter(r));
@@ -142,7 +142,7 @@ namespace jst::contrib
     inline std::vector<dna5> operator""_dna5(char const * s, std::size_t n)
     {
         std::vector<dna5> r;
-        r.reserve(n);
+        r.reserve(std::max<std::size_t>(n, 16));
         std::ranges::copy(std::string_view{s, n} | std::views::transform([] (char c) {
             return dna5{c};
         }), std::back_inserter(r));
