@@ -43,7 +43,7 @@ jobs:
     steps:
       # add Checkout step to fetch repository with recursive submodules
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
