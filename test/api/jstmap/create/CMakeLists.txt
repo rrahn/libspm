@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 macro (add_jstmap_create_test test_filename)
     add_api_test(${test_filename} "jstmap::create")

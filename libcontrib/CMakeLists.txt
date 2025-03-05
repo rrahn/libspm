@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.18)
+cmake_minimum_required (VERSION 3.20)
 
 ### Adds an interface library for contribs to libjst.
 add_library (libcontrib_libcontrib INTERFACE)

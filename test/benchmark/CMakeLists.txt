@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 set (JSTMAP_BENCHMARK_MIN_TIME "1" CACHE STRING "Set --benchmark_min_time= for each benchmark.")
 set (JSTMAP_BENCHMARK_TIME_UNIT "ns" CACHE STRING "Set --benchmark_time_unit= for each benchmark.")
@@ -15,9 +15,9 @@ macro (jstmap_benchmark)
 
     file (RELATIVE_PATH benchmark "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${MACRO_BENCHMARK_SOURCE}")
 
-    include (seqan3_test_component)
-    seqan3_test_component (target "${benchmark}" TARGET_NAME)
-    seqan3_test_component (test_name "${benchmark}" TEST_NAME)
+    include (get_test_component)
+    get_test_component (target "${benchmark}" TARGET_NAME)
+    get_test_component (test_name "${benchmark}" TEST_NAME)
 
     add_executable (${target} ${MACRO_BENCHMARK_SOURCE})
     target_link_libraries (${target} jstmap::test::performance ${MACRO_BENCHMARK_DEPENDS})
@@ -49,9 +49,5 @@ function (jstmap_macro_benchmark macro_benchmark_cpp)
                      REPETITIONS ${MACRO_BENCHMARK_REPETITIONS}
                      DEPENDS jstmap::create jstmap::search)
 endfunction ()
-
-# Download and build Googlebenchmark module.
-seqan3_require_ccache ()
-seqan3_require_benchmark ()
 
 add_subdirectories ()

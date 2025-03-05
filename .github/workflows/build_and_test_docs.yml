@@ -75,7 +75,7 @@ jobs:
             mkdir -p build
             cd build
             cmake ..
-            make docs_sphinx
+            make docs_base
 
         # add Run Tests step to run documentation tests using 2 threads in current directory with outputting on failure
         - name: Run Tests

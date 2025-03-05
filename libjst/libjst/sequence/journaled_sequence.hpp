@@ -147,7 +147,8 @@ namespace libjst
     template <std::ranges::viewable_range sequence_range_t>
     journaled_sequence(sequence_range_t &&) -> journaled_sequence<sequence_range_t>;
 
-    template <std::ranges::forward_range sequence_t, std::integral sequence_size_t>
+    template <std::ranges::random_access_range sequence_t,
+              std::integral sequence_size_t>
     template <bool is_const>
     class journaled_sequence<sequence_t, sequence_size_t>::iterator_impl
     {

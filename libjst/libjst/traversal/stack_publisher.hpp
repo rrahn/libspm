@@ -101,12 +101,12 @@ namespace libjst
             subscriber_impl(subscriber_t &subscriber) noexcept : _subscriber{subscriber}
             {}
 
-            void notify_pop() noexcept(noexcept(_subscriber.notify_pop())) override
+            void notify_pop() override
             {
                 _subscriber.notify_pop();
             }
 
-            void notify_push() noexcept(noexcept(_subscriber.notify_push())) override
+            void notify_push() override
             {
                 _subscriber.notify_push();
             }

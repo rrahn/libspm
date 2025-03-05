@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 macro (add_jstmap_test test_filename target_dependencies)
     add_api_test(${test_filename} "${target_dependencies}")

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 if (NOT DATA_ROOT_DIR)
     set(DATA_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
@@ -32,7 +32,7 @@ find_path (JSTMAP_TEST_CMAKE_MODULE_DIR NAMES app_datasources.cmake HINTS "${CMA
 list(APPEND CMAKE_MODULE_PATH "${JSTMAP_TEST_CMAKE_MODULE_DIR}")
 
 find_path (SEQAN3_TEST_CMAKE_MODULE_DIR NAMES seqan3_test_component.cmake
-                                        HINTS "${CMAKE_SOURCE_DIR}/lib/seqan3/test/cmake/")
+                                        HINTS "${seqan3_SOURCE_DIR}/test/cmake/")
 list(APPEND CMAKE_MODULE_PATH "${SEQAN3_TEST_CMAKE_MODULE_DIR}")
 
 # Build tests just before their execution, because they have not been built with "all" target.
@@ -55,7 +55,7 @@ unset (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
 # Define some helper interface libraries for the test
 find_path (SEQAN3_TEST_INCLUDE_DIR NAMES seqan3/test/expect_range_eq.hpp
-                                   HINTS "${CMAKE_SOURCE_DIR}/lib/seqan3/test/include/")
+                                   HINTS "${seqan3_SOURCE_DIR}/test/include/")
 
 #--------------------------------------------------------------------
 # Cmake interface targets
@@ -101,13 +101,10 @@ add_library (jstmap::test::tsan ALIAS jstmap_test_tsan)
 
 include (app_datasources)
 include (read_simulation)
-include (require_catch2)
 include (${CMAKE_CURRENT_LIST_DIR}/data/datasources.cmake)
 
-include (seqan3_require_benchmark)
-include (seqan3_require_ccache)
-include (seqan3_require_test)
 include (add_subdirectories)
-include (seqan3_test_component)
+include (get_test_component)
+enable_testing ()
 
 message (STATUS "${FontBold}You can run `make test` to build and run tests.${FontReset}")

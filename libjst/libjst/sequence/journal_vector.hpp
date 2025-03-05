@@ -246,7 +246,7 @@ namespace libjst
         {
             for (; journal_it != std::ranges::end(_journal); ++journal_it)
                 *journal_it = entry_type{static_cast<size_type>(journal_it->begin_position() + offset),
-                                         std::move(journal_it->segment())};
+                                         journal_it->segment()};
         }
 
         bool check_journal_invariants() const noexcept {

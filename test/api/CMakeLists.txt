@@ -1,12 +1,12 @@
-cmake_minimum_required (VERSION 3.14)
+cmake_minimum_required (VERSION 3.20)
 
 # A macro that adds an api or cli test.
 macro (add_app_test test_filename test_alternative target_dependencies)
     enable_testing ()
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
-    seqan3_test_component (target "${source_file}" TARGET_NAME)
-    seqan3_test_component (test_name "${source_file}" TEST_NAME)
+    get_test_component (target "${source_file}" TARGET_NAME)
+    get_test_component (test_name "${source_file}" TEST_NAME)
 
     include_directories (${SEQAN_INCLUDE_DIRS})
 
@@ -26,7 +26,7 @@ macro (add_app_test test_filename test_alternative target_dependencies)
     # Add the test to its general target (cli or api).
     if (${test_alternative} STREQUAL "CLI_TEST")
         add_dependencies (${target} "${PROJECT_NAME}") # cli test needs the application executable
-        target_include_directories(${target} PUBLIC "${SEQAN3_CLONE_DIR}/test/include")
+        target_include_directories(${target} PUBLIC "${seqan3_SOURCE_DIR}/test/include")
         add_dependencies (cli_test ${target})
     elseif (${test_alternative} STREQUAL "API_TEST")
         add_dependencies (api_test ${target})
@@ -56,8 +56,8 @@ macro (add_catch2_test test_filename)
 
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
-    seqan3_test_component (target "${source_file}" TARGET_NAME)
-    seqan3_test_component (test_name "${source_file}" TEST_NAME)
+    get_test_component (target "${source_file}" TARGET_NAME)
+    get_test_component (test_name "${source_file}" TEST_NAME)
 
     add_executable (${target} ${test_filename})
     target_link_libraries (${target} PRIVATE "libjst::test::catch2")
@@ -71,10 +71,6 @@ macro (add_catch2_test test_filename)
     unset (target)
     unset (test_name)
 endmacro()
-
-seqan3_require_ccache ()
-seqan3_require_test ()
-require_catch2 ()
 
 # Load the tests from the subdirectories
 add_subdirectories ()

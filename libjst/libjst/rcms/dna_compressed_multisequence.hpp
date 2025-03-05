@@ -286,6 +286,7 @@ namespace libjst
     };
 
     template <typename source_t, typename coverage_t>
+        requires std::same_as<std::ranges::range_value_t<source_t>, char>
     template <bool is_const>
     class dna_compressed_multisequence<source_t, coverage_t>::iterator_impl {
 
@@ -387,6 +388,7 @@ namespace libjst
     };
 
     template <typename source_t, typename coverage_t>
+        requires std::same_as<std::ranges::range_value_t<source_t>, char>
     template <typename breakend_iterator>
     class dna_compressed_multisequence<source_t, coverage_t>::delta_proxy {
 

@@ -23,13 +23,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-12]
-        compiler: [gcc-12]
+        os: [ubuntu-22.04, macos-14]
+        compiler: [gcc-13]
         build_type: [Release]
         test_suite: ["test/api/libjst"]
         cxx_flags: ["-fdiagnostics-color -ftemplate-backtrace-limit=0 -fconcepts-diagnostics-depth=2"]
         include:
-          - os: macos-12
+          - os: macos-14
             threads: 3
           - os: ubuntu-22.04
             threads: 2
