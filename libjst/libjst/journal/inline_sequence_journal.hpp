@@ -282,7 +282,7 @@ namespace libjst
 
             for (; journal_it != std::ranges::end(_journal); ++journal_it)
                 *journal_it = record_impl{static_cast<size_type>(journal_it->position() + offset),
-                                          std::move(journal_it->sequence())};
+                                          journal_it->sequence()};
         }
 
         bool check_journal_invariants() const noexcept {
