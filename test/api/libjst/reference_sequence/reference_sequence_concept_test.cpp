@@ -168,7 +168,7 @@ SCENARIO("Getting the slice of a reference sequence below a given breakpoint", "
         using breakpoint_t = libjst::sequence_breakpoint_t<std::string>;
         THEN("the breakpoint slice can be retrieved via the default implementation")
         {
-            REQUIRE(std::same_as<libjst::breakpoint_slice_t<std::string>, std::span<char>>);
+            REQUIRE(std::same_as<libjst::breakpoint_slice_t<std::string>, std::string_view>);
             auto breakpoint_slice = libjst::breakpoint_slice(obj, breakpoint_t{.low = 0, .high = 16});
             REQUIRE(std::string_view{breakpoint_slice.begin(), breakpoint_slice.end()} == expected_slice);
         }
