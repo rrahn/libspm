@@ -172,7 +172,7 @@ namespace libjst
     // ----------------------------------------------------------------------------
 
     /**
-     * @concept
+     * @concept sequence_breakpoint
      * @brief Concept describing the constraints of a sequence breakpoint.
      * @tparam object_t The object type to check.
      *
@@ -195,6 +195,7 @@ namespace libjst
         };
 
     /**
+     * @concept common_sequence_breakpoint
      * @brief Concept describing the constraints for a type modelling a common sequence breakpoint.
      * @tparam object_t The object type to check.
      *

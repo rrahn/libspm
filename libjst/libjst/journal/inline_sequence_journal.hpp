@@ -206,17 +206,17 @@ namespace libjst
         /**
          * @brief Splits the journal entry at the given position.
          *
-         * @param split_it The iterator pointing to the split position.
+         * @param breakend The breakend at which to split the entry.
          * @retval std::pair<record_impl, record_impl> A pair of journal entries, where the first entry covers the
-         *         interval `[segment().begin(), split_it)` and the second entry covers the interval
-         *         `[split_it, segment().end())`.
+         *         interval `[segment().begin(), breakend)` and the second entry covers the interval
+         *         `[breakend, segment().end())`.
          * @rst
-         * .. note:: If ``split_it`` is out of bounds, either the first entry or the second entry will have an
+         * .. note:: If ``breakend`` is out of bounds, either the first entry or the second entry will have an
          *           empty segment.
          * @endrst
          *
          * @rst
-         * .. danger:: If ``split_it`` is not a valid iterator of the sequence segment, the behaviour is undefined.
+         * .. danger:: If ``breakend`` is not a valid iterator of the sequence segment, the behaviour is undefined.
          * @endrst
          */
         constexpr std::pair<record_impl, record_impl> split_at(breakend_type breakend) const noexcept
