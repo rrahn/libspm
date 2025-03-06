@@ -215,3 +215,91 @@ SCENARIO("Modifying a journaled sequence", "[sequence][journaled_sequence]")
         }
     }
 }
+
+SCENARIO("Iterating over a journaled sequence", "[sequence][journaled_sequence]")
+{
+    GIVEN("A journaled sequence initialized with some sequence")
+    {
+        std::vector sequence{'A', 'C', 'G', 'T'};
+        libjst::journaled_sequence journaled_sequence{sequence};
+        THEN("The journaled sequence is not empty and its range spells the original sequence")
+        {
+            CHECK_FALSE(journaled_sequence.empty());
+            REQUIRE(journaled_sequence.size() == sequence.size());
+            REQUIRE(std::ranges::equal(journaled_sequence, sequence));
+        }
+        WHEN("Iterating over the journaled sequence")
+        {
+            std::vector<char> result;
+            for (auto && c : journaled_sequence)
+                result.push_back(c);
+            THEN("The result is the original sequence")
+            {
+                REQUIRE(std::ranges::equal(result, sequence));
+            }
+        }
+        WHEN("Iterating over the journaled sequence with a const_iterator")
+        {
+            std::vector<char> result;
+            for (auto it = std::ranges::cbegin(journaled_sequence); it != std::ranges::cend(journaled_sequence); ++it)
+                result.push_back(*it);
+            THEN("The result is the original sequence")
+            {
+                REQUIRE(std::ranges::equal(result, sequence));
+            }
+        }
+        WHEN("Iterating over the journaled sequence with a reverse_iterator")
+        {
+            std::vector<char> result;
+            for (auto it = std::ranges::rbegin(journaled_sequence); it != std::ranges::rend(journaled_sequence); ++it)
+                result.push_back(*it);
+            THEN("The result is the original sequence in reverse order")
+            {
+                std::reverse(sequence.begin(), sequence.end());
+                REQUIRE(std::ranges::equal(result, sequence));
+            }
+        }
+        WHEN("Iterating over the journaled sequence with a const_reverse_iterator")
+        {
+            std::vector<char> result;
+            for (auto it = std::ranges::crbegin(journaled_sequence); it != std::ranges::crend(journaled_sequence); ++it)
+                result.push_back(*it);
+            THEN("The result is the original sequence in reverse order")
+            {
+                std::reverse(sequence.begin(), sequence.end());
+                REQUIRE(std::ranges::equal(result, sequence));
+            }
+        }
+        WHEN("Jumping to the end of the journaled sequence")
+        {
+            auto it = journaled_sequence.begin() + journaled_sequence.size();
+            THEN("The iterator is at the end of the sequence")
+            {
+                REQUIRE(it == journaled_sequence.end());
+            }
+        }
+    }
+    GIVEN("A journaled sequence initialized with 'AAAAGGGG' and a substitution at position 4 and 6") {
+        std::vector sequence{'A', 'A', 'A', 'A', 'G', 'G', 'G', 'G'};
+        libjst::journaled_sequence journaled_sequence{sequence};
+        std::vector substitution{'C'};
+        journaled_sequence.replace(journaled_sequence.begin() + 4, journaled_sequence.begin() + 5, substitution);
+        journaled_sequence.replace(journaled_sequence.begin() + 6, journaled_sequence.begin() + 7, substitution);
+        THEN("The journaled sequence is 'AAAACGCG'")
+        {
+            std::vector expected_sequence{'A', 'A', 'A', 'A', 'C', 'G', 'C', 'G'};
+            REQUIRE(std::ranges::equal(journaled_sequence, expected_sequence));
+        }
+        WHEN("Iterating over the journaled sequence")
+        {
+            std::vector<char> result;
+            for (auto && c : journaled_sequence)
+                result.push_back(c);
+            THEN("The result is 'AAAACGCG'")
+            {
+                std::vector expected_sequence{'A', 'A', 'A', 'A', 'C', 'G', 'C', 'G'};
+                REQUIRE(std::ranges::equal(result, expected_sequence));
+            }
+        }
+    }
+}

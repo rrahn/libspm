@@ -286,7 +286,11 @@ namespace libjst
                 _sequence_it += count;
             } else {
                 _journal_it = _journal->lower_bound(next_position);
-                assert(current_record_covers(next_position));
+                if (static_cast<difference_type>(_journal_it->position()) > next_position)
+                    --_journal_it;
+
+                assert(static_cast<difference_type>(_journal_it->position()) <= next_position);
+                assert(next_position - _journal_it->position() <= std::ranges::size(_journal_it->sequence()));
                 _sequence_it = std::ranges::next(std::ranges::begin(_journal_it->sequence()),
                                                  next_position - _journal_it->position());
             }
