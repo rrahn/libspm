@@ -19,9 +19,9 @@ struct alphabet_test : ::testing::Test
 };
 
 using test_types = ::testing::Types<
-    jst::contrib::dna4,
-    jst::contrib::dna5,
-    jst::contrib::dna15
+    spm::dna4,
+    spm::dna5,
+    spm::dna15
 >;
 
 TYPED_TEST_SUITE(alphabet_test, test_types);

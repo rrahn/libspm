@@ -23,7 +23,7 @@
 
 #include <libspm/matcher/concept.hpp>
 
-namespace jst::contrib
+namespace spm
 {
     template <typename derived_t>
     class seqan_pattern_base
@@ -39,10 +39,10 @@ namespace jst::contrib
         // Note const is disabled since seqan use non-const pattern ;(
         template <std::ranges::viewable_range haystack_t, typename callback_t>
         constexpr void operator()(haystack_t && haystack, callback_t && callback) /*const*/ noexcept {
-            using compatible_haystack_t = jst::contrib::seqan_container_t<std::views::all_t<haystack_t>>;
+            using compatible_haystack_t = spm::seqan_container_t<std::views::all_t<haystack_t>>;
 
             compatible_haystack_t seqan_haystack =
-                jst::contrib::make_seqan_container(std::views::all((haystack_t &&)haystack));
+                spm::make_seqan_container(std::views::all((haystack_t &&)haystack));
 
             auto finder = to_derived(this)->make_finder(seqan_haystack);
 
@@ -94,9 +94,9 @@ namespace jst::contrib
             return static_cast<derived_t const *>(me);
         }
 
-        constexpr friend std::size_t tag_invoke(std::tag_t<jst::contrib::window_size>, seqan_pattern_base const & me) noexcept {
+        constexpr friend std::size_t tag_invoke(std::tag_t<spm::window_size>, seqan_pattern_base const & me) noexcept {
             return (me.empty()) ? 0 : seqan2::length(seqan2::needle(me.get_pattern()));
         }
     };
 
-}  // namespace jst::contrib
+}  // namespace spm

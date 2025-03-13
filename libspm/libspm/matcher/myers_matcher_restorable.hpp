@@ -17,7 +17,7 @@
 
 namespace seqan2 {
     template <typename needle_t>
-    class Pattern<needle_t, jst::contrib::Restorable<Myers<>>> : public Pattern<needle_t, Myers<>>
+    class Pattern<needle_t, spm::Restorable<Myers<>>> : public Pattern<needle_t, Myers<>>
     {
     private:
         using base_type = Pattern<needle_t, Myers<>>;
@@ -99,12 +99,12 @@ namespace seqan2 {
     };
 
     template <typename finder_t, typename needle_t>
-    constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<Myers<>>> & pattern) {
+    constexpr bool find(finder_t & finder, Pattern<needle_t, spm::Restorable<Myers<>>> & pattern) {
         return pattern(finder);
     }
 } // namespace seqan2
 
-namespace jst::contrib
+namespace spm
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -116,7 +116,7 @@ namespace jst::contrib
 
         friend base_t;
 
-        using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
+        using compatible_needle_type = spm::seqan_container_t<needle_t>;
         using pattern_type = seqan2::Pattern<compatible_needle_type, Restorable<seqan2::Myers<>>>;
 
         pattern_type _pattern{};
@@ -130,7 +130,7 @@ namespace jst::contrib
             requires (!std::same_as<_needle_t, restorable_myers_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
         explicit restorable_myers_matcher(_needle_t && needle, error_count_t const error_count) :
-            _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)), error_count}
+            _pattern{spm::make_seqan_container(std::views::all((_needle_t &&) needle)), error_count}
         {}
 
         constexpr state_type const & capture() const noexcept {
@@ -148,11 +148,11 @@ namespace jst::contrib
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, restorable_myers_matcher const & me) noexcept {
-            return jst::contrib::window_size(static_cast<base_t const &>(me)) - seqan2::scoreLimit(me._pattern);
+            return spm::window_size(static_cast<base_t const &>(me)) - seqan2::scoreLimit(me._pattern);
         }
     };
 
     template <std::ranges::viewable_range needle_t, std::unsigned_integral error_count_t>
     restorable_myers_matcher(needle_t &&, error_count_t) -> restorable_myers_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace jst::contrib
+}  // namespace spm

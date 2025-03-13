@@ -113,7 +113,7 @@ namespace seqan2
 
 } // namespace seqan2
 
-namespace jst::contrib
+namespace spm
 {
     using dna4 =  seqan2::alphabet_adaptor<seqan3::dna4>;  //seqan2::Dna;
     using dna5 =  seqan2::alphabet_adaptor<seqan3::dna5>;  //seqan2::Dna5;
@@ -148,7 +148,7 @@ namespace jst::contrib
         }), std::back_inserter(r));
         return r;
     }
-} // namespace jst::contrib
+} // namespace spm
 
 namespace seqan2
 {

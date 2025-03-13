@@ -67,10 +67,10 @@ namespace execute
 
             template <typename ...args_t>
             auto operator()(args_t&& ...args) const
-                noexcept(noexcept(jst::contrib::make_closure(std::declval<closure>(), (args_t&&)args...)))
-                -> jst::contrib::closure_result_t<closure, args_t...>
+                noexcept(noexcept(spm::make_closure(std::declval<closure>(), (args_t&&)args...)))
+                -> spm::closure_result_t<closure, args_t...>
             {
-                return jst::contrib::make_closure(*this, (args_t&&)args...);
+                return spm::make_closure(*this, (args_t&&)args...);
             }
         } make_sender;
 

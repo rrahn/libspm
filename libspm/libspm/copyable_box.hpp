@@ -16,7 +16,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace jst::contrib
+namespace spm
 {
 
     namespace detail
@@ -158,4 +158,4 @@ namespace jst::contrib
             return std::invoke(base_t::value(), (args_t &&) args...);
         }
     };
-}  // namespace jst::contrib
+}  // namespace spm

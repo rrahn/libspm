@@ -17,7 +17,7 @@
 
 #include <libspm/std/tag_invoke.hpp>
 
-namespace jst::contrib
+namespace spm
 {
     // ----------------------------------------------------------------------------
     // Operation CPOs for matcher
@@ -126,15 +126,15 @@ namespace jst::contrib
     template <typename matcher_t>
     concept window_matcher = std::copyable<std::remove_cvref_t<matcher_t>> && requires (matcher_t && matcher)
     {
-        { jst::contrib::window_size((matcher_t &&) matcher)} -> std::integral;
+        { spm::window_size((matcher_t &&) matcher)} -> std::integral;
     };
 
     namespace detail {
         template <typename matcher_t>
         concept stateful_matcher = requires
         {
-            typename jst::contrib::matcher_state_t<matcher_t>;
-            requires std::semiregular<jst::contrib::matcher_state_t<matcher_t>>;
+            typename spm::matcher_state_t<matcher_t>;
+            requires std::semiregular<spm::matcher_state_t<matcher_t>>;
         };
     } // namespace detail
 
@@ -143,15 +143,15 @@ namespace jst::contrib
                                  detail::stateful_matcher<matcher_t> &&
                                  requires (matcher_t && matcher)
     {
-        { jst::contrib::capture((matcher_t &&) matcher) } -> std::convertible_to<jst::contrib::matcher_state_t<matcher_t>>;
-        { jst::contrib::restore(matcher, std::declval<jst::contrib::matcher_state_t<matcher_t>>()) };
+        { spm::capture((matcher_t &&) matcher) } -> std::convertible_to<spm::matcher_state_t<matcher_t>>;
+        { spm::restore(matcher, std::declval<spm::matcher_state_t<matcher_t>>()) };
     };
 
     template <typename t1, typename t2>
     concept reducable_with = std::common_with<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>> &&
                              requires (std::remove_cvref_t<t1> const & lhs, std::remove_cvref_t<t2> const & rhs)
     {
-        { jst::contrib::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
+        { spm::aggregate(lhs, rhs) } -> std::convertible_to<std::common_type_t<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>>;
     };
 
     template <typename state_t>
@@ -159,4 +159,4 @@ namespace jst::contrib
 
     template <typename matcher_t, typename ...args_t>
     concept online_matcher_for = window_matcher<matcher_t> && std::invocable<matcher_t, args_t...>;
-}  // namespace jst::contrib
+}  // namespace spm

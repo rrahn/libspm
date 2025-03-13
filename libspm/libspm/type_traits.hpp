@@ -15,7 +15,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace jst::contrib
+namespace spm
 {
     namespace detail
     {
@@ -69,4 +69,4 @@ namespace jst::contrib
     template <typename t>
     using maybe_unwrap_t = typename maybe_unwrap<std::decay_t<t>, t>::type;
 
-} // namespace jst::contrib
+} // namespace spm

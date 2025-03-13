@@ -17,7 +17,7 @@
 
 namespace seqan2 {
     template <typename needle_t>
-    class Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> : public Pattern<needle_t, ShiftOr>
+    class Pattern<needle_t, spm::Restorable<ShiftOr>> : public Pattern<needle_t, ShiftOr>
     {
     private:
         using base_type = Pattern<needle_t, ShiftOr>;
@@ -78,12 +78,12 @@ namespace seqan2 {
     };
 
     template <typename finder_t, typename needle_t>
-    constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> & pattern) {
+    constexpr bool find(finder_t & finder, Pattern<needle_t, spm::Restorable<ShiftOr>> & pattern) {
         return pattern(finder);
     }
 } // namespace seqan2
 
-namespace jst::contrib
+namespace spm
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -93,7 +93,7 @@ namespace jst::contrib
 
         friend seqan_pattern_base<restorable_shiftor_matcher<needle_t>>;
 
-        using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
+        using compatible_needle_type = spm::seqan_container_t<needle_t>;
         using pattern_type = seqan2::Pattern<compatible_needle_type, Restorable<seqan2::ShiftOr>>;
 
         pattern_type _pattern{};
@@ -107,7 +107,7 @@ namespace jst::contrib
             requires (!std::same_as<_needle_t, restorable_shiftor_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
         explicit restorable_shiftor_matcher(_needle_t && needle) :
-            _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle))}
+            _pattern{spm::make_seqan_container(std::views::all((_needle_t &&) needle))}
         {}
 
         constexpr state_type const & capture() const noexcept {
@@ -128,4 +128,4 @@ namespace jst::contrib
     template <std::ranges::viewable_range needle_t>
     restorable_shiftor_matcher(needle_t &&) -> restorable_shiftor_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace jst::contrib
+}  // namespace spm

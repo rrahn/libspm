@@ -14,10 +14,10 @@
 #include <libspm/matcher/concept.hpp>
 #include <libspm/matcher/pigeonhole_matcher.hpp>
 
-using jst::contrib::operator""_dna4;
+using spm::operator""_dna4;
 
 struct pigeonhole_matcher_test : public ::testing::Test {
-    using sequence_t = std::vector<jst::contrib::dna4>;
+    using sequence_t = std::vector<spm::dna4>;
     using needle_position_t = seqan2::PigeonholeSeedOnlyPosition;
                          //0         1         2         3         4
                          //012345678901234567890123456789012345678901234
@@ -33,22 +33,22 @@ struct pigeonhole_matcher_test : public ::testing::Test {
                                                              {0, 0, 5}, {1, 0, 5}, {1, 5, 5}, {0, 0, 5}, {1, 0, 5}};
 
     auto get_matcher() const noexcept {
-        return jst::contrib::pigeonhole_matcher{needle, errors};
+        return spm::pigeonhole_matcher{needle, errors};
     }
 
     auto get_multi_matcher() const noexcept {
-        return jst::contrib::pigeonhole_matcher{multi_needle, errors};
+        return spm::pigeonhole_matcher{multi_needle, errors};
     }
 };
 
 TEST_F(pigeonhole_matcher_test, concept_tests) {
     using matcher_t = decltype(get_matcher());
-    EXPECT_TRUE(jst::contrib::window_matcher<matcher_t>);
+    EXPECT_TRUE(spm::window_matcher<matcher_t>);
 }
 
 TEST_F(pigeonhole_matcher_test, window_size) {
     auto matcher = get_matcher();
-    EXPECT_EQ(jst::contrib::window_size(matcher), std::ranges::size(needle));
+    EXPECT_EQ(spm::window_size(matcher), std::ranges::size(needle));
 }
 
 TEST_F(pigeonhole_matcher_test, dna4_pattern)

@@ -14,7 +14,7 @@
 
 #include <libspm/std/tag_invoke.hpp>
 
-namespace jst::contrib
+namespace spm
 {
 
     namespace _set_up
@@ -49,4 +49,4 @@ namespace jst::contrib
     } // namespace _tear_down
     using _tear_down::tear_down;
 
-}  // namespace jst::contrib
+}  // namespace spm

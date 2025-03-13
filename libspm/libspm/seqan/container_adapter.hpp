@@ -18,7 +18,7 @@
 
 #include <seqan/sequence.h>
 
-namespace jst::contrib
+namespace spm
 {
     template <typename range_t>
     class seqan_container_adapter
@@ -106,78 +106,78 @@ namespace jst::contrib
         seqan2::assign(me, source);
     }
 
-}  // namespace jst::contrib
+}  // namespace spm
 
 namespace seqan2
 {
     namespace detail
     {
         template <typename range_t>
-        using container_t = jst::contrib::seqan_container_adapter<range_t>;
+        using container_t = spm::seqan_container_adapter<range_t>;
     } // namespace detail
 
     template <typename range_t>
-    struct Value<jst::contrib::seqan_container_adapter<range_t>>
+    struct Value<spm::seqan_container_adapter<range_t>>
     {
         using Type = typename detail::container_t<range_t>::value_type;
     };
     template <typename range_t>
-    struct Value<jst::contrib::seqan_container_adapter<range_t> const>
+    struct Value<spm::seqan_container_adapter<range_t> const>
     {
         using Type = typename detail::container_t<range_t>::value_type;
     };
     template <typename range_t>
-    struct Reference<jst::contrib::seqan_container_adapter<range_t>>
+    struct Reference<spm::seqan_container_adapter<range_t>>
     {
         using Type = typename detail::container_t<range_t>::reference;
     };
     template <typename range_t>
-    struct Reference<jst::contrib::seqan_container_adapter<range_t> const>
+    struct Reference<spm::seqan_container_adapter<range_t> const>
     {
         using Type = typename detail::container_t<range_t>::const_reference;
     };
     template <typename range_t>
-    struct GetValue<jst::contrib::seqan_container_adapter<range_t>>
+    struct GetValue<spm::seqan_container_adapter<range_t>>
     {
         using Type = typename detail::container_t<range_t>::const_reference;
     };
     template <typename range_t>
-    struct GetValue<jst::contrib::seqan_container_adapter<range_t> const>
+    struct GetValue<spm::seqan_container_adapter<range_t> const>
     {
         using Type = typename detail::container_t<range_t>::const_reference;
     };
     template <typename range_t>
-    struct Position<jst::contrib::seqan_container_adapter<range_t>>
+    struct Position<spm::seqan_container_adapter<range_t>>
     {
         using Type = typename detail::container_t<range_t>::difference_type;
     };
     template <typename range_t>
-    struct Position<jst::contrib::seqan_container_adapter<range_t> const>
+    struct Position<spm::seqan_container_adapter<range_t> const>
     {
         using Type = typename detail::container_t<range_t>::difference_type;
     };
     template <typename range_t>
-    struct Size<jst::contrib::seqan_container_adapter<range_t>>
+    struct Size<spm::seqan_container_adapter<range_t>>
     {
         using Type = typename detail::container_t<range_t>::size_type;
     };
     template <typename range_t>
-    struct Size<jst::contrib::seqan_container_adapter<range_t> const>
+    struct Size<spm::seqan_container_adapter<range_t> const>
     {
         using Type = typename detail::container_t<range_t>::size_type;
     };
     template <typename range_t>
-    struct Iterator<jst::contrib::seqan_container_adapter<range_t>, Standard>
+    struct Iterator<spm::seqan_container_adapter<range_t>, Standard>
     {
         typedef Iter<detail::container_t<range_t>, StdIteratorAdaptor> Type;
     };
     template <typename range_t>
-    struct Iterator<jst::contrib::seqan_container_adapter<range_t> const, Standard>
+    struct Iterator<spm::seqan_container_adapter<range_t> const, Standard>
     {
         typedef Iter<detail::container_t<range_t> const, StdIteratorAdaptor> Type;
     };
     template <typename range_t>
-    struct Iterator<jst::contrib::seqan_container_adapter<range_t>, Rooted>
+    struct Iterator<spm::seqan_container_adapter<range_t>, Rooted>
     {
 
         typedef Iter<detail::container_t<range_t>,
@@ -190,7 +190,7 @@ namespace seqan2
                 > Type;
     };
     template <typename range_t>
-    struct Iterator<jst::contrib::seqan_container_adapter<range_t> const, Rooted>
+    struct Iterator<spm::seqan_container_adapter<range_t> const, Rooted>
     {
         typedef Iter<detail::container_t<range_t> const,
                      AdaptorIterator<
@@ -203,9 +203,9 @@ namespace seqan2
     };
 
     template <typename range_t>
-    SEQAN_CONCEPT_IMPL((jst::contrib::seqan_container_adapter<range_t>), (StlContainerConcept));
+    SEQAN_CONCEPT_IMPL((spm::seqan_container_adapter<range_t>), (StlContainerConcept));
 
     template <typename range_t>
-    SEQAN_CONCEPT_IMPL((jst::contrib::seqan_container_adapter<range_t> const), (StlContainerConcept));
+    SEQAN_CONCEPT_IMPL((spm::seqan_container_adapter<range_t> const), (StlContainerConcept));
 
 } // namespace seqan2

@@ -80,10 +80,10 @@ namespace execute
 
             template <typename fn_t>
             auto operator()(fn_t && fn) const
-                noexcept(noexcept(jst::contrib::make_closure(std::declval<closure>(), (fn_t&&)fn)))
-                -> jst::contrib::closure_result_t<closure, fn_t>
+                noexcept(noexcept(spm::make_closure(std::declval<closure>(), (fn_t&&)fn)))
+                -> spm::closure_result_t<closure, fn_t>
             {
-                return jst::contrib::make_closure(closure{}, (fn_t &&)fn);
+                return spm::make_closure(closure{}, (fn_t &&)fn);
             }
         } then;
 

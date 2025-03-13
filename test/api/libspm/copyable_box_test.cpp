@@ -59,7 +59,7 @@ template <typename t>
 struct copyable_box_test : ::testing::Test
 {
     using type = t;
-    using box_t = jst::contrib::copyable_box<t>;
+    using box_t = spm::copyable_box<t>;
 };
 
 using test_types = ::testing::Types<int,

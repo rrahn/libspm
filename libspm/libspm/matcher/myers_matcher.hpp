@@ -14,7 +14,7 @@
 
 #include <libspm/matcher/seqan_pattern_base.hpp>
 
-namespace jst::contrib
+namespace spm
 {
     template <std::ranges::random_access_range needle_t>
     class myers_matcher : public seqan_pattern_base<myers_matcher<needle_t>>
@@ -25,7 +25,7 @@ namespace jst::contrib
 
         friend base_t;
 
-        using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
+        using compatible_needle_type = spm::seqan_container_t<needle_t>;
         using pattern_type = seqan2::Pattern<compatible_needle_type, seqan2::Myers<>>;
 
         pattern_type _pattern{};
@@ -38,7 +38,7 @@ namespace jst::contrib
             requires (!std::same_as<_needle_t, myers_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
         explicit myers_matcher(_needle_t && needle, std::size_t max_error_count = 0) :
-            _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle))},
+            _pattern{spm::make_seqan_container(std::views::all((_needle_t &&) needle))},
             _min_score{-static_cast<int32_t>(max_error_count)}
         {}
 
@@ -49,7 +49,7 @@ namespace jst::contrib
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, myers_matcher const & me) noexcept {
-            return jst::contrib::window_size(static_cast<base_t const &>(me)) - me._min_score;
+            return spm::window_size(static_cast<base_t const &>(me)) - me._min_score;
         }
     };
 
@@ -59,4 +59,4 @@ namespace jst::contrib
     template <std::ranges::viewable_range needle_t>
     myers_matcher(needle_t &&, std::size_t) -> myers_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace jst::contrib
+}  // namespace spm

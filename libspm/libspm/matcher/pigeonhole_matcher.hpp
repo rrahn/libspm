@@ -21,9 +21,9 @@
 namespace seqan2 {
 
     template <typename TRange, typename TFinderSpec, typename TIteratorSpec>
-    struct Iterator<Finder<jst::contrib::seqan_container_adapter<TRange>, TFinderSpec> const, TIteratorSpec>
+    struct Iterator<Finder<spm::seqan_container_adapter<TRange>, TFinderSpec> const, TIteratorSpec>
     {
-        using Type = typename Iterator<jst::contrib::seqan_container_adapter<TRange> const, TIteratorSpec>::Type;
+        using Type = typename Iterator<spm::seqan_container_adapter<TRange> const, TIteratorSpec>::Type;
     };
 
     using PigeonholeSeedOnlyTag = seqan2::Tag<struct SeedOnly>;
@@ -123,7 +123,7 @@ namespace seqan2 {
     }
 } // namespace seqan2
 
-namespace jst::contrib
+namespace spm
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -135,7 +135,7 @@ namespace jst::contrib
 
         friend base_t;
 
-        using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
+        using compatible_needle_type = spm::seqan_container_t<needle_t>;
         using multi_needle_type = seqan2::StringSet<compatible_needle_type>;
         using qgram_shape_type = seqan2::Shape<std::ranges::range_value_t<compatible_needle_type>, seqan2::SimpleShape>;
         using finder_spec_type = seqan2::PigeonholeSeedOnly;
@@ -157,7 +157,7 @@ namespace jst::contrib
             _error_rate{error_rate}
         {
             appendValue(getFibre(_needle_index, seqan2::QGramText{}),
-                        jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)));
+                        spm::make_seqan_container(std::views::all((_needle_t &&) needle)));
             _patternInit(_pattern, _error_rate);
         }
 
@@ -170,7 +170,7 @@ namespace jst::contrib
         {
             for (auto && needle : multi_needle)
                 appendValue(getFibre(_needle_index, seqan2::QGramText{}),
-                            jst::contrib::make_seqan_container(std::views::all((decltype(needle) &&) needle)));
+                            spm::make_seqan_container(std::views::all((decltype(needle) &&) needle)));
 
             _patternInit(_pattern, _error_rate);
         }
@@ -256,4 +256,4 @@ namespace jst::contrib
         requires std::ranges::random_access_range<std::ranges::range_reference_t<multi_needle_t>>
     pigeonhole_matcher(multi_needle_t &&, double) -> pigeonhole_matcher<std::views::all_t<std::ranges::range_reference_t<multi_needle_t>>>;
 
-}  // namespace jst::contrib
+}  // namespace spm

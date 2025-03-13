@@ -15,7 +15,7 @@
 #include <functional>
 #include <type_traits>
 
-namespace jst::contrib
+namespace spm
 {
 
     namespace detail {
@@ -133,4 +133,4 @@ namespace jst::contrib
 
     template <typename enclosee_t, typename ...args_t>
     using closure_result_t = std::invoke_result_t<_make_closure::_fn, enclosee_t, args_t...>;
-}  // namespace jst::contrib
+}  // namespace spm

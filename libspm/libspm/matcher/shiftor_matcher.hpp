@@ -14,7 +14,7 @@
 
 #include <libspm/matcher/seqan_pattern_base.hpp>
 
-namespace jst::contrib
+namespace spm
 {
 
     template <std::ranges::random_access_range needle_t>
@@ -24,7 +24,7 @@ namespace jst::contrib
 
         friend seqan_pattern_base<shiftor_matcher<needle_t>>;
 
-        using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
+        using compatible_needle_type = spm::seqan_container_t<needle_t>;
         using pattern_type = seqan2::Pattern<compatible_needle_type, seqan2::ShiftOr>;
 
         pattern_type _pattern{};
@@ -36,11 +36,11 @@ namespace jst::contrib
             requires (!std::same_as<_needle_t, shiftor_matcher> &&
                        std::constructible_from<compatible_needle_type, _needle_t>)
         explicit shiftor_matcher(_needle_t && needle) :
-            _pattern{jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle))}
+            _pattern{spm::make_seqan_container(std::views::all((_needle_t &&) needle))}
         {}
     };
 
     template <std::ranges::viewable_range needle_t>
     shiftor_matcher(needle_t &&) -> shiftor_matcher<std::views::all_t<needle_t>>;
 
-}  // namespace jst::contrib
+}  // namespace spm
