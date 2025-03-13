@@ -54,7 +54,7 @@ find_package(Threads REQUIRED)
 
 ## APPLICATION
 
-add_subdirectory (libcontrib)
+add_subdirectory (libspm)
 
 option (LIBSPM_DEVELOPER_MODE "Enable developer mode for libspm." ON)
 

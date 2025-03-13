@@ -43,7 +43,7 @@ unset (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 add_library (jstmap_test INTERFACE)
 target_compile_options (jstmap_test INTERFACE "-pedantic"  "-Wall" "-Wextra" "-Werror")
 target_compile_features (jstmap_test INTERFACE cxx_std_20)
-target_link_libraries (jstmap_test INTERFACE "pthread" "libcontrib::libcontrib")
+target_link_libraries (jstmap_test INTERFACE "pthread" "libspm::libspm")
 add_library (jstmap::test ALIAS jstmap_test)
 
 add_library (jstmap_test_unit INTERFACE)
