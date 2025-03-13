@@ -29,13 +29,6 @@ set (FontReset "")
 # This allows including `*.cmake` files from the `cmake` directory without specifying the full path.
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-# LTO support. -> only for hibf?
-# include (CheckIPOSupported)
-# check_ipo_supported (RESULT result OUTPUT output LANGUAGES CXX)
-# if (result)
-#     set (CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-# endif ()
-
 # Add packages.
 # We use CPM for package management: https://github.com/cpm-cmake/CPM.cmake
 # The added packages (e.g., hibf, sharg, seqan3) are defined in the `cmake/package-lock.cmake` file.
@@ -45,12 +38,9 @@ CPMUsePackageLock (${CMAKE_CURRENT_LIST_DIR}/cmake/package-lock.cmake)
 
 # Use ccache if available. This speeds up the build process by caching files that have been compiled before.
 CPMGetPackage (use_ccache)
+CPMGetPackage (seqan3)
 CPMGetPackage (seqan2)
-if (seqan2_ADDED AND NOT TARGET seqan2::seqan2)
-    add_library (seqan2_seqan2 INTERFACE IMPORTED)
-    target_include_directories (seqan2_seqan2 INTERFACE ${seqan2_SOURCE_DIR}/include)
-    add_library (seqan2::seqan2 ALIAS seqan2_seqan2)
-endif ()
+
 CPMGetPackage (catch2)
 CPMGetPackage (googletest)
 CPMGetPackage (googlebenchmark)
