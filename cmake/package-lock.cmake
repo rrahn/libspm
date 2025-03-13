@@ -6,10 +6,10 @@
 # This file should be committed to version control
 
 # seqan3
-set (SEQAN3_VERSION 7e0d88d15fc82b8b8a5548f6eebea8602faf6446)
+set (LIBSPM_SEQAN3_VERSION 7e0d88d15fc82b8b8a5548f6eebea8602faf6446)
 CPMDeclarePackage (seqan3
                    NAME seqan3
-                   GIT_TAG ${SEQAN3_VERSION} # main
+                   GIT_TAG ${LIBSPM_SEQAN3_VERSION} # main
                    GITHUB_REPOSITORY seqan/seqan3
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
@@ -17,11 +17,10 @@ CPMDeclarePackage (seqan3
 )
 
 # seqan2
-set (SEQAN2_VERSION 7a8ef3cef61c57a4098018c3906daf9802cbfc4e)
+set (LIBSPM_SEQAN2_VERSION 7a8ef3cef61c57a4098018c3906daf9802cbfc4e)
 CPMDeclarePackage (seqan2
                    NAME seqan2
-                   GIT_TAG ${SEQAN2_VERSION}
-                #    VERSION ${SEQAN2_VERSION} # main
+                   GIT_TAG ${LIBSPM_SEQAN2_VERSION}
                    GITHUB_REPOSITORY rrahn/seqan
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
@@ -29,10 +28,10 @@ CPMDeclarePackage (seqan2
 )
 
 # googletest
-set (GOOGLETEST_VERSION 1.16.0)
+set (LIBSPM_GOOGLETEST_VERSION 1.16.0)
 CPMDeclarePackage (googletest
                    NAME GTest
-                   VERSION ${GOOGLETEST_VERSION}
+                   VERSION ${LIBSPM_GOOGLETEST_VERSION}
                    GITHUB_REPOSITORY google/googletest
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
@@ -41,10 +40,10 @@ CPMDeclarePackage (googletest
 )
 
 #googlebenchmark
-set (GOOGLEBENCHMARK_VERSION 1.9.1)
+set (LIBSPM_GOOGLEBENCHMARK_VERSION 1.9.1)
 CPMDeclarePackage (googlebenchmark
                    NAME benchmark
-                   VERSION ${GOOGLEBENCHMARK_VERSION}
+                   VERSION ${LIBSPM_GOOGLEBENCHMARK_VERSION}
                    GITHUB_REPOSITORY google/benchmark
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
@@ -53,10 +52,10 @@ CPMDeclarePackage (googlebenchmark
 )
 
 # catch2
-set (CATCH2_VERSION 3.8.0)
+set (LIBSPM_CATCH2_VERSION 3.8.0)
 CPMDeclarePackage (catch2
                    NAME Catch2
-                   VERSION ${CATCH2_VERSION}
+                   VERSION ${LIBSPM_CATCH2_VERSION}
                    GITHUB_REPOSITORY catchorg/Catch2
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
@@ -64,10 +63,10 @@ CPMDeclarePackage (catch2
 )
 
 # use_ccache
-set (USE_CCACHE_VERSION d2a54ef555b6fc2d496a4c9506dbeb7cf899ce37)
+set (LIBSPM_USE_CCACHE_VERSION d2a54ef555b6fc2d496a4c9506dbeb7cf899ce37)
 CPMDeclarePackage (use_ccache
                    NAME use_ccache
-                   GIT_TAG ${USE_CCACHE_VERSION} # main
+                   GIT_TAG ${LIBSPM_USE_CCACHE_VERSION} # main
                    GITHUB_REPOSITORY seqan/cmake-scripts
                    SOURCE_SUBDIR ccache
                    SYSTEM TRUE
