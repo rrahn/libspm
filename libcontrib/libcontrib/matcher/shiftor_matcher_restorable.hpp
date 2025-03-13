@@ -15,7 +15,7 @@
 #include <libcontrib/matcher/seqan_pattern_base.hpp>
 #include <libcontrib/matcher/seqan_restorable_pattern.hpp>
 
-namespace seqan {
+namespace seqan2 {
     template <typename needle_t>
     class Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> : public Pattern<needle_t, ShiftOr>
     {
@@ -36,9 +36,9 @@ namespace seqan {
         constexpr bool operator()(finder_t & finder) noexcept {
             initialise(finder);
             if (is_short())
-                return seqan::_findShiftOrSmallNeedle(finder, to_base(*this));
+                return seqan2::_findShiftOrSmallNeedle(finder, to_base(*this));
             else
-                return seqan::_findShiftOrLargeNeedle(finder, to_base(*this));
+                return seqan2::_findShiftOrLargeNeedle(finder, to_base(*this));
         }
 
         constexpr state_type const & capture() const noexcept {
@@ -81,7 +81,7 @@ namespace seqan {
     constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<ShiftOr>> & pattern) {
         return pattern(finder);
     }
-} // namespace seqan
+} // namespace seqan2
 
 namespace jst::contrib
 {
@@ -94,7 +94,7 @@ namespace jst::contrib
         friend seqan_pattern_base<restorable_shiftor_matcher<needle_t>>;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, Restorable<seqan::ShiftOr>>;
+        using pattern_type = seqan2::Pattern<compatible_needle_type, Restorable<seqan2::ShiftOr>>;
 
         pattern_type _pattern{};
 

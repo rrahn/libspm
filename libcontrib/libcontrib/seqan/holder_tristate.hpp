@@ -12,7 +12,7 @@
 #include <string>
 #include <type_traits>
 
-namespace seqan
+namespace seqan2
 {
     inline void set(std::string & target, std::string const & source)
     {
@@ -25,4 +25,4 @@ namespace seqan
         target.resize(source.size());
         std::ranges::copy(source, target.begin());
     }
-} // namespace seqan
+} // namespace seqan2

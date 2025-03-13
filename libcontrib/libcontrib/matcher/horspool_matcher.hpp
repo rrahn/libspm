@@ -25,7 +25,7 @@ namespace jst::contrib
         friend seqan_pattern_base<horspool_matcher<needle_t>>;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, seqan::Horspool>;
+        using pattern_type = seqan2::Pattern<compatible_needle_type, seqan2::Horspool>;
 
         pattern_type _pattern{};
 

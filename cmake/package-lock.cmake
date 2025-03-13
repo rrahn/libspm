@@ -17,7 +17,7 @@ CPMDeclarePackage (seqan3
 )
 
 # seqan2
-set (SEQAN2_VERSION 981f322465bce0ee994a47fce880feb531a9ab23)
+set (SEQAN2_VERSION 54822bfb216243e19ce217e995dccee93f4dd79f)
 CPMDeclarePackage (seqan2
                    NAME seqan2
                    GIT_TAG ${SEQAN2_VERSION}

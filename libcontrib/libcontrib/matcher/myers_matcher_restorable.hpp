@@ -15,7 +15,7 @@
 #include <libcontrib/matcher/seqan_pattern_base.hpp>
 #include <libcontrib/matcher/seqan_restorable_pattern.hpp>
 
-namespace seqan {
+namespace seqan2 {
     template <typename needle_t>
     class Pattern<needle_t, jst::contrib::Restorable<Myers<>>> : public Pattern<needle_t, Myers<>>
     {
@@ -35,7 +35,7 @@ namespace seqan {
         constexpr explicit Pattern(_needle_t && needle, error_count_t const max_error_count = 0u) :
             base_type{(_needle_t &&) needle, -static_cast<int32_t>(max_error_count)}
         {
-            _patternFirstInit(to_base(), seqan::needle(to_base()));
+            _patternFirstInit(to_base(), seqan2::needle(to_base()));
             _patternInit(to_base(), to_state(), std::ignore);
         }
 
@@ -102,7 +102,7 @@ namespace seqan {
     constexpr bool find(finder_t & finder, Pattern<needle_t, jst::contrib::Restorable<Myers<>>> & pattern) {
         return pattern(finder);
     }
-} // namespace seqan
+} // namespace seqan2
 
 namespace jst::contrib
 {
@@ -117,7 +117,7 @@ namespace jst::contrib
         friend base_t;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, Restorable<seqan::Myers<>>>;
+        using pattern_type = seqan2::Pattern<compatible_needle_type, Restorable<seqan2::Myers<>>>;
 
         pattern_type _pattern{};
 
@@ -148,7 +148,7 @@ namespace jst::contrib
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, restorable_myers_matcher const & me) noexcept {
-            return jst::contrib::window_size(static_cast<base_t const &>(me)) - seqan::scoreLimit(me._pattern);
+            return jst::contrib::window_size(static_cast<base_t const &>(me)) - seqan2::scoreLimit(me._pattern);
         }
     };
 
