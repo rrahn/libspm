@@ -1,0 +1,5 @@
+add_libspm_test (horspool_matcher_test.cpp)
+add_libspm_test (shiftor_matcher_test.cpp)
+add_libspm_test (myers_matcher_test.cpp)
+add_libspm_test (myers_matcher_restorable_test.cpp)
+add_libspm_test (pigeonhole_matcher_test.cpp)
