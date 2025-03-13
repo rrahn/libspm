@@ -66,14 +66,16 @@ find_package(Threads REQUIRED)
 
 add_subdirectory (libcontrib)
 
-## DOCUMENTATION
+option (LIBSPM_DEVELOPER_MODE "Enable developer mode for libspm." ON)
 
-add_subdirectory (doc EXCLUDE_FROM_ALL)
+if (LIBSPM_DEVELOPER_MODE)
 
-## TEST
+    ## DOCUMENTATION
+    add_subdirectory (doc EXCLUDE_FROM_ALL)
 
-include (test/jstmap_test.cmake)
+    ## TEST
+    include (test/jstmap_test.cmake)
+    add_subdirectory (test/api EXCLUDE_FROM_ALL)
+    add_subdirectory (test/benchmark EXCLUDE_FROM_ALL)
 
-add_subdirectory (test/api EXCLUDE_FROM_ALL)
-
-add_subdirectory (test/benchmark EXCLUDE_FROM_ALL)
+endif ()
