@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.20)
 
 # A macro that adds an api or cli test.
-macro (add_app_test test_filename test_alternative target_dependencies)
+macro (add_app_test test_filename test_alternative)
     enable_testing ()
     # Extract the test target name.
     file (RELATIVE_PATH source_file "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}/${test_filename}")
@@ -21,7 +21,7 @@ macro (add_app_test test_filename test_alternative target_dependencies)
     endif ()
 
     add_executable (${target} ${test_filename})
-    target_link_libraries (${target} "${base_lib_dependency}" "${target_dependencies}")
+    target_link_libraries (${target} "${base_lib_dependency}")
 
     # Add the test to its general target (cli or api).
     if (${test_alternative} STREQUAL "CLI_TEST")
@@ -41,8 +41,8 @@ macro (add_app_test test_filename test_alternative target_dependencies)
 endmacro ()
 
 # A macro that adds an api test.
-macro (add_api_test test_filename target_dependencies)
-    add_app_test (${test_filename} API_TEST ${target_dependencies})
+macro (add_api_test test_filename)
+    add_app_test (${test_filename} API_TEST)
 endmacro ()
 
 # A macro that adds a cli test.
