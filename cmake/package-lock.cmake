@@ -5,28 +5,6 @@
 # CPM Package Lock
 # This file should be committed to version control
 
-# hibf
-set (HIBF_VERSION af26c24dfbd8489760166acdb68b84921866ce3f)
-CPMDeclarePackage (hibf
-                   NAME hibf
-                   GIT_TAG ${HIBF_VERSION} # main
-                   GITHUB_REPOSITORY seqan/hibf
-                   SYSTEM TRUE
-                   EXCLUDE_FROM_ALL TRUE
-                   OPTIONS "INSTALL_HIBF OFF" "CMAKE_MESSAGE_LOG_LEVEL WARNING"
-)
-
-# sharg
-set (SHARG_VERSION e9bc14ba8818f980727221dc936dbe6361eb87fd)
-CPMDeclarePackage (sharg
-                   NAME sharg
-                   GIT_TAG ${SHARG_VERSION} # main
-                   GITHUB_REPOSITORY seqan/sharg-parser
-                   SYSTEM TRUE
-                   EXCLUDE_FROM_ALL TRUE
-                   OPTIONS "INSTALL_SHARG OFF" "INSTALL_TDL OFF" "CMAKE_MESSAGE_LOG_LEVEL WARNING" "SHARG_NO_TDL ON"
-)
-
 # seqan3
 set (SEQAN3_VERSION 7e0d88d15fc82b8b8a5548f6eebea8602faf6446)
 CPMDeclarePackage (seqan3
