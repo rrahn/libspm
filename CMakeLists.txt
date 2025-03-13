@@ -45,11 +45,8 @@ CPMUsePackageLock (${CMAKE_CURRENT_LIST_DIR}/cmake/package-lock.cmake)
 
 # Use ccache if available. This speeds up the build process by caching files that have been compiled before.
 CPMGetPackage (use_ccache)
-# CPMGetPackage (hibf)
-CPMGetPackage (sharg)
-CPMGetPackage (seqan3)
 CPMGetPackage (seqan2)
-if (seqan2_ADDED)
+if (seqan2_ADDED AND NOT TARGET seqan2::seqan2)
     add_library (seqan2_seqan2 INTERFACE IMPORTED)
     target_include_directories (seqan2_seqan2 INTERFACE ${seqan2_SOURCE_DIR}/include)
     add_library (seqan2::seqan2 ALIAS seqan2_seqan2)
@@ -68,25 +65,17 @@ find_package(Threads REQUIRED)
 ## APPLICATION
 
 add_subdirectory (libcontrib)
-add_subdirectory (libjst)
-add_subdirectory (jstmap-global)
-add_subdirectory (jstmap-create)
-add_subdirectory (jstmap-index)
-add_subdirectory (jstmap-linear)
-add_subdirectory (jstmap-search)
-add_subdirectory (jstmap-simulate)
-add_subdirectory (jstmap-view)
-add_subdirectory (jstmap)
 
-## DOCUMENTATION
+option (LIBSPM_DEVELOPER_MODE "Enable developer mode for libspm." ON)
 
-add_subdirectory (doc EXCLUDE_FROM_ALL)
+if (LIBSPM_DEVELOPER_MODE)
 
-## TEST
+    ## DOCUMENTATION
+    add_subdirectory (doc EXCLUDE_FROM_ALL)
 
-include (test/jstmap_test.cmake)
+    ## TEST
+    include (test/jstmap_test.cmake)
+    add_subdirectory (test/api EXCLUDE_FROM_ALL)
+    add_subdirectory (test/benchmark EXCLUDE_FROM_ALL)
 
-add_subdirectory (test/api EXCLUDE_FROM_ALL)
-add_subdirectory (test/cli EXCLUDE_FROM_ALL)
-
-add_subdirectory (test/benchmark EXCLUDE_FROM_ALL)
+endif ()

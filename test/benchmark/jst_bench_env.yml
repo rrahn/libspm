@@ -1,7 +1,0 @@
-name: jst_bench_env
-channels:
-  - bioconda
-  - defaults
-  - conda-forge
-dependencies:
-  - mason

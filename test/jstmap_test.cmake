@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.20)
 
+CPMGetPackage (seqan3)
+
 if (NOT DATA_ROOT_DIR)
     set(DATA_ROOT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
