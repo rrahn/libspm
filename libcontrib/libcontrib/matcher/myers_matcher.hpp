@@ -26,7 +26,7 @@ namespace jst::contrib
         friend base_t;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, seqan::Myers<>>;
+        using pattern_type = seqan2::Pattern<compatible_needle_type, seqan2::Myers<>>;
 
         pattern_type _pattern{};
         int32_t _min_score{};

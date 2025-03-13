@@ -13,7 +13,7 @@
 
 #include <seqan/basic.h>
 
-namespace seqan
+namespace seqan2
 {
     namespace detail
     {
@@ -290,4 +290,4 @@ namespace seqan
         return iter_t{range, end(range, Standard{})};
     }
 
-} // namespace seqan
+} // namespace seqan2

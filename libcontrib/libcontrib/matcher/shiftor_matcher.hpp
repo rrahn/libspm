@@ -25,7 +25,7 @@ namespace jst::contrib
         friend seqan_pattern_base<shiftor_matcher<needle_t>>;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using pattern_type = seqan::Pattern<compatible_needle_type, seqan::ShiftOr>;
+        using pattern_type = seqan2::Pattern<compatible_needle_type, seqan2::ShiftOr>;
 
         pattern_type _pattern{};
 

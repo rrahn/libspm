@@ -103,12 +103,12 @@ namespace jst::contrib
     inline void
     assign(seqan_container_adapter<range_t> & me, seqan_container_adapter<range_t> const & source)
     {
-        seqan::assign(me, source);
+        seqan2::assign(me, source);
     }
 
 }  // namespace jst::contrib
 
-namespace seqan
+namespace seqan2
 {
     namespace detail
     {
@@ -208,4 +208,4 @@ namespace seqan
     template <typename range_t>
     SEQAN_CONCEPT_IMPL((jst::contrib::seqan_container_adapter<range_t> const), (StlContainerConcept));
 
-} // namespace seqan
+} // namespace seqan2

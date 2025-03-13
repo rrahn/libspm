@@ -18,7 +18,7 @@
 
 #include <libcontrib/matcher/seqan_pattern_base.hpp>
 
-namespace seqan {
+namespace seqan2 {
 
     template <typename TRange, typename TFinderSpec, typename TIteratorSpec>
     struct Iterator<Finder<jst::contrib::seqan_container_adapter<TRange>, TFinderSpec> const, TIteratorSpec>
@@ -26,7 +26,7 @@ namespace seqan {
         using Type = typename Iterator<jst::contrib::seqan_container_adapter<TRange> const, TIteratorSpec>::Type;
     };
 
-    using PigeonholeSeedOnlyTag = seqan::Tag<struct SeedOnly>;
+    using PigeonholeSeedOnlyTag = seqan2::Tag<struct SeedOnly>;
     template <>
     struct Pigeonhole<PigeonholeSeedOnlyTag>
     {
@@ -121,7 +121,7 @@ namespace seqan {
                 .offset = static_cast<std::ptrdiff_t>(pattern.curBeginPos),
                 .count = static_cast<std::ptrdiff_t>(pattern.curEndPos - pattern.curBeginPos)};
     }
-} // namespace seqan
+} // namespace seqan2
 
 namespace jst::contrib
 {
@@ -136,11 +136,11 @@ namespace jst::contrib
         friend base_t;
 
         using compatible_needle_type = jst::contrib::seqan_container_t<needle_t>;
-        using multi_needle_type = seqan::StringSet<compatible_needle_type>;
-        using qgram_shape_type = seqan::Shape<std::ranges::range_value_t<compatible_needle_type>, seqan::SimpleShape>;
-        using finder_spec_type = seqan::PigeonholeSeedOnly;
-        using index_type = seqan::Index<multi_needle_type, seqan::IndexQGram<qgram_shape_type, seqan::OpenAddressing>>;
-        using pattern_type = seqan::Pattern<index_type, finder_spec_type>;
+        using multi_needle_type = seqan2::StringSet<compatible_needle_type>;
+        using qgram_shape_type = seqan2::Shape<std::ranges::range_value_t<compatible_needle_type>, seqan2::SimpleShape>;
+        using finder_spec_type = seqan2::PigeonholeSeedOnly;
+        using index_type = seqan2::Index<multi_needle_type, seqan2::IndexQGram<qgram_shape_type, seqan2::OpenAddressing>>;
+        using pattern_type = seqan2::Pattern<index_type, finder_spec_type>;
 
         multi_needle_type _multi_needle{};
         index_type _needle_index{_multi_needle};
@@ -156,7 +156,7 @@ namespace jst::contrib
         explicit pigeonhole_matcher(_needle_t && needle, double error_rate = 0.0) :
             _error_rate{error_rate}
         {
-            appendValue(getFibre(_needle_index, seqan::QGramText{}),
+            appendValue(getFibre(_needle_index, seqan2::QGramText{}),
                         jst::contrib::make_seqan_container(std::views::all((_needle_t &&) needle)));
             _patternInit(_pattern, _error_rate);
         }
@@ -169,14 +169,14 @@ namespace jst::contrib
             _error_rate{error_rate}
         {
             for (auto && needle : multi_needle)
-                appendValue(getFibre(_needle_index, seqan::QGramText{}),
+                appendValue(getFibre(_needle_index, seqan2::QGramText{}),
                             jst::contrib::make_seqan_container(std::views::all((decltype(needle) &&) needle)));
 
             _patternInit(_pattern, _error_rate);
         }
 
         constexpr auto position() const noexcept {
-            return seqan::position(_pattern);
+            return seqan2::position(_pattern);
         }
     private:
 
@@ -185,9 +185,9 @@ namespace jst::contrib
         {
             // TODO: configure repeat length and finder.
             if (std::ranges::size(haystack) > 1000)
-                return seqan::Finder<haystack_t, finder_spec_type>{haystack, 1000, 1};
+                return seqan2::Finder<haystack_t, finder_spec_type>{haystack, 1000, 1};
             else
-                return seqan::Finder<haystack_t, finder_spec_type>{haystack};
+                return seqan2::Finder<haystack_t, finder_spec_type>{haystack};
         }
 
         constexpr pigeonhole_matcher & get_pattern() noexcept {
@@ -199,11 +199,11 @@ namespace jst::contrib
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<window_size>, pigeonhole_matcher const & me) noexcept {
-            return length(getFibre(needle(me._pattern), seqan::QGramShape{}));
+            return length(getFibre(needle(me._pattern), seqan2::QGramShape{}));
         }
 
         template <typename haystack_t>
-        constexpr bool initialise(seqan::Finder<haystack_t, finder_spec_type> & finder,
+        constexpr bool initialise(seqan2::Finder<haystack_t, finder_spec_type> & finder,
                                   pattern_type & pattern)
         {
             pattern.finderLength = std::ranges::size(haystack(finder));
@@ -225,7 +225,7 @@ namespace jst::contrib
         }
 
         template <typename haystack_t, typename ...args_t>
-        friend bool find(seqan::Finder<haystack_t, finder_spec_type> & finder,
+        friend bool find(seqan2::Finder<haystack_t, finder_spec_type> & finder,
                          pigeonhole_matcher & matcher,
                          args_t && ...args)
         {

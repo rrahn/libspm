@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------------------------------
 
 /*!\file
- * \brief Provides the basic adapter for the seqan::Pattern objects.
+ * \brief Provides the basic adapter for the seqan2::Pattern objects.
  * \author Rene Rahn <rene.rahn AT fu-berlin.de>
  */
 
@@ -52,7 +52,7 @@ namespace jst::contrib
         }
 
         constexpr bool empty() const noexcept {
-            return seqan::empty(get_pattern().data_host);
+            return seqan2::empty(get_pattern().data_host);
         }
 
     private:
@@ -67,7 +67,7 @@ namespace jst::contrib
         template <typename haystack_t>
         constexpr auto make_finder(haystack_t & haystack) const noexcept
         {
-            return seqan::Finder<haystack_t>{haystack};
+            return seqan2::Finder<haystack_t>{haystack};
         }
 
         constexpr auto & get_pattern() noexcept
@@ -95,7 +95,7 @@ namespace jst::contrib
         }
 
         constexpr friend std::size_t tag_invoke(std::tag_t<jst::contrib::window_size>, seqan_pattern_base const & me) noexcept {
-            return (me.empty()) ? 0 : seqan::length(seqan::needle(me.get_pattern()));
+            return (me.empty()) ? 0 : seqan2::length(seqan2::needle(me.get_pattern()));
         }
     };
 

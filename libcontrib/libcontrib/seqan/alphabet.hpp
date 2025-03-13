@@ -29,7 +29,7 @@
 #include <seqan3/utility/math.hpp>
 
 #include <libcontrib/std/tag_invoke.hpp>
-namespace seqan
+namespace seqan2
 {
     template <seqan3::alphabet alphabet_t>
     struct alphabet_adaptor
@@ -111,13 +111,13 @@ namespace seqan
         static constexpr Type VALUE = seqan3::detail::ceil_log2(seqan3::alphabet_size<alphabet_t>);
     };
 
-} //namespace seqan
+} // namespace seqan2
 
 namespace jst::contrib
 {
-    using dna4 =  seqan::alphabet_adaptor<seqan3::dna4>;  //seqan::Dna;
-    using dna5 =  seqan::alphabet_adaptor<seqan3::dna5>;  //seqan::Dna5;
-    using dna15 = seqan::alphabet_adaptor<seqan3::dna15>; //seqan::Iupac;
+    using dna4 =  seqan2::alphabet_adaptor<seqan3::dna4>;  //seqan2::Dna;
+    using dna5 =  seqan2::alphabet_adaptor<seqan3::dna5>;  //seqan2::Dna5;
+    using dna15 = seqan2::alphabet_adaptor<seqan3::dna15>; //seqan2::Iupac;
 
     inline dna4 operator""_dna4(char const c) noexcept
     {
@@ -150,7 +150,7 @@ namespace jst::contrib
     }
 } // namespace jst::contrib
 
-namespace seqan
+namespace seqan2
 {
     template <typename char_t, typename alphabet_value_t, typename spec_t>
     inline seqan3::debug_stream_type<char_t> & operator<<(seqan3::debug_stream_type<char_t> & stream,
@@ -158,9 +158,9 @@ namespace seqan
     {
         return stream << seqan3::to_char(symbol);
     }
-} // namespace seqan
+} // namespace seqan2
 //     // use a simple adaptor!
-//     // Idea: define a wrapper for seqan3::dna5 as seqan::SimpleType<seqan3::dna5, struct _>
+//     // Idea: define a wrapper for seqan3::dna5 as seqan2::SimpleType<seqan3::dna5, struct _>
 //     // then provide
 //     template <seqan3::alphabet alphabet_t>
 //     struct adapted;
@@ -186,7 +186,7 @@ namespace seqan
 //         c_target = seqan3::to_char(source);
 //     }
 
-//     // need a wrapper that implements seqan::FiniteOrderedAlphabetConcept
+//     // need a wrapper that implements seqan2::FiniteOrderedAlphabetConcept
 
 //     template <typename rank_t, seqan3::alphabet alphabet_t>
 //     struct ValueSize<SimpleType<rank_t, adapted<alphabet_t>>>
@@ -241,17 +241,17 @@ namespace seqan
 //     {
 //         return seqan3::to_rank(seqan3::assign_rank_to(seqan3::to_rank(source), target_t{}));
 //     }
-// }  // namespace seqan
+// }  // namespace seqan2
 
 namespace seqan3::custom
 {
     template <typename char_t, typename spec_t>
-    struct alphabet<seqan::SimpleType<char_t, spec_t>>
+    struct alphabet<seqan2::SimpleType<char_t, spec_t>>
     {
-        using alphabet_t = seqan::SimpleType<char_t, spec_t>;
-        using rank_t = typename seqan::ValueSize<alphabet_t>::Type;
+        using alphabet_t = seqan2::SimpleType<char_t, spec_t>;
+        using rank_t = typename seqan2::ValueSize<alphabet_t>::Type;
 
-        static constexpr rank_t alphabet_size = seqan::ValueSize<alphabet_t>::VALUE;
+        static constexpr rank_t alphabet_size = seqan2::ValueSize<alphabet_t>::VALUE;
 
         static rank_t to_rank(alphabet_t const a) noexcept
         {
@@ -277,9 +277,9 @@ namespace seqan3::custom
     };
 
     template <seqan3::alphabet wrapped_t>
-    struct alphabet<seqan::alphabet_adaptor<wrapped_t>>
+    struct alphabet<seqan2::alphabet_adaptor<wrapped_t>>
     {
-        using alphabet_t = seqan::alphabet_adaptor<wrapped_t>;
+        using alphabet_t = seqan2::alphabet_adaptor<wrapped_t>;
         using rank_t = seqan3::alphabet_rank_t<wrapped_t>;
         using char_t = seqan3::alphabet_char_t<wrapped_t>;
 
@@ -323,20 +323,20 @@ namespace seqan3::custom
     };
 } // namespace seqan3::custom
 
-namespace seqan
+namespace seqan2
 {
     template <seqan3::cereal_output_archive archive_t, typename char_t, typename spec_t>
-    seqan3::alphabet_rank_t<seqan::SimpleType<char_t, spec_t>>
-    CEREAL_SAVE_MINIMAL_FUNCTION_NAME(archive_t const &, seqan::SimpleType<char_t, spec_t> const & l)
+    seqan3::alphabet_rank_t<seqan2::SimpleType<char_t, spec_t>>
+    CEREAL_SAVE_MINIMAL_FUNCTION_NAME(archive_t const &, seqan2::SimpleType<char_t, spec_t> const & l)
     {
         return seqan3::to_rank(l);
     }
 
     template <seqan3::cereal_input_archive archive_t, typename char_t, typename spec_t>
     void CEREAL_LOAD_MINIMAL_FUNCTION_NAME(archive_t const &,
-                                           seqan::SimpleType<char_t, spec_t> & l,
-                                           seqan3::alphabet_rank_t<seqan::SimpleType<char_t, spec_t>> const & r)
+                                           seqan2::SimpleType<char_t, spec_t> & l,
+                                           seqan3::alphabet_rank_t<seqan2::SimpleType<char_t, spec_t>> const & r)
     {
         seqan3::assign_rank_to(r, l);
     }
-} // namespace seqan
+} // namespace seqan2

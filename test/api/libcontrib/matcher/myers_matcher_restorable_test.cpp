@@ -47,7 +47,7 @@ TEST_F(myers_matcher_restorable_test, dna4_pattern)
 
     std::vector<size_t> actual_positions{};
     matcher(haystack, [&] (auto const & finder) {
-        actual_positions.push_back(seqan::endPosition(finder));
+        actual_positions.push_back(seqan2::endPosition(finder));
     });
     EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }
@@ -66,7 +66,7 @@ TEST_F(myers_matcher_restorable_test, dna4_pattern_captured)
                          haystack.begin() + std::min<std::ptrdiff_t>(offset + chunk_size, haystack.size())};
         matcher.restore(state);
         matcher(chunk, [&] (auto const & finder) {
-            actual_positions.push_back(seqan::endPosition(finder) + offset);
+            actual_positions.push_back(seqan2::endPosition(finder) + offset);
         });
         state = matcher.capture();
     }

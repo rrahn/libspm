@@ -46,7 +46,7 @@ TEST_F(horspool_matcher_test, dna4_pattern)
 
     std::vector<size_t> actual_positions{};
     matcher(haystack, [&] (auto const & finder) {
-        actual_positions.push_back(seqan::beginPosition(finder));
+        actual_positions.push_back(seqan2::beginPosition(finder));
     });
     EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }

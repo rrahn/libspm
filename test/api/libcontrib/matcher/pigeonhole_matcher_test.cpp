@@ -18,7 +18,7 @@ using jst::contrib::operator""_dna4;
 
 struct pigeonhole_matcher_test : public ::testing::Test {
     using sequence_t = std::vector<jst::contrib::dna4>;
-    using needle_position_t = seqan::PigeonholeSeedOnlyPosition;
+    using needle_position_t = seqan2::PigeonholeSeedOnlyPosition;
                          //0         1         2         3         4
                          //012345678901234567890123456789012345678901234
     sequence_t haystack = "ACGTGACTAGCACGTGACTAGCACGTGACTAGCACGTGACTAGC"_dna4;
@@ -57,7 +57,7 @@ TEST_F(pigeonhole_matcher_test, dna4_pattern)
 
     std::vector<size_t> actual_positions{};
     matcher(haystack, [&] (auto const & finder) {
-        actual_positions.push_back(seqan::beginPosition(finder));
+        actual_positions.push_back(seqan2::beginPosition(finder));
     });
     EXPECT_TRUE(std::ranges::equal(actual_positions, expected_positions));
 }
@@ -68,7 +68,7 @@ TEST_F(pigeonhole_matcher_test, dna4_multi_pattern)
 
     std::vector<size_t> actual_positions{};
     matcher(haystack, [&] (auto const & finder) {
-        actual_positions.push_back(seqan::beginPosition(finder));
+        actual_positions.push_back(seqan2::beginPosition(finder));
     });
     EXPECT_TRUE(std::ranges::equal(actual_positions, expected_multi_positions));
 }
