@@ -17,11 +17,11 @@ CPMDeclarePackage (seqan3
 )
 
 # seqan2
-set (LIBSPM_SEQAN2_VERSION 7a8ef3cef61c57a4098018c3906daf9802cbfc4e)
+set (LIBSPM_SEQAN2_VERSION 401854f6224eb729b77ba56cdf2c6e255f5e113a)
 CPMDeclarePackage (seqan2
                    NAME seqan2
                    GIT_TAG ${LIBSPM_SEQAN2_VERSION}
-                   GITHUB_REPOSITORY rrahn/seqan
+                   GITHUB_REPOSITORY seqan/seqan
                    SYSTEM TRUE
                    EXCLUDE_FROM_ALL TRUE
                    OPTIONS "SEQAN_BUILD_SYSTEM DEVELOP" "CMAKE_MESSAGE_LOG_LEVEL WARNING"
